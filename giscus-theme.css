@@ -1,0 +1,177 @@
+/*! MIT License
+ * Copyright (c) 2018 GitHub Inc.
+ * https://github.com/primer/primitives/blob/main/LICENSE
+ */
+
+main {
+  --color-prettylights-syntax-comment: #6e7781;
+  --color-prettylights-syntax-constant: #0550ae;
+  --color-prettylights-syntax-entity: #8250df;
+  --color-prettylights-syntax-storage-modifier-import: #24292f;
+  --color-prettylights-syntax-entity-tag: #116329;
+  --color-prettylights-syntax-keyword: #cf222e;
+  --color-prettylights-syntax-string: #0a3069;
+  --color-prettylights-syntax-variable: #953800;
+  --color-prettylights-syntax-brackethighlighter-unmatched: #82071e;
+  --color-prettylights-syntax-invalid-illegal-text: #f6f8fa;
+  --color-prettylights-syntax-invalid-illegal-bg: #82071e;
+  --color-prettylights-syntax-carriage-return-text: #f6f8fa;
+  --color-prettylights-syntax-carriage-return-bg: #cf222e;
+  --color-prettylights-syntax-string-regexp: #116329;
+  --color-prettylights-syntax-markup-list: #3b2300;
+  --color-prettylights-syntax-markup-heading: #0550ae;
+  --color-prettylights-syntax-markup-italic: #24292f;
+  --color-prettylights-syntax-markup-bold: #24292f;
+  --color-prettylights-syntax-markup-deleted-text: #82071e;
+  --color-prettylights-syntax-markup-deleted-bg: #ffebe9;
+  --color-prettylights-syntax-markup-inserted-text: #116329;
+  --color-prettylights-syntax-markup-inserted-bg: #dafbe1;
+  --color-prettylights-syntax-markup-changed-text: #953800;
+  --color-prettylights-syntax-markup-changed-bg: #ffd8b5;
+  --color-prettylights-syntax-markup-ignored-text: #eaeef2;
+  --color-prettylights-syntax-markup-ignored-bg: #0550ae;
+  --color-prettylights-syntax-meta-diff-range: #8250df;
+  --color-prettylights-syntax-brackethighlighter-angle: #57606a;
+  --color-prettylights-syntax-sublimelinter-gutter-mark: #8c959f;
+  --color-prettylights-syntax-constant-other-reference-link: #0a3069;
+  --color-btn-text: #24292f;
+  --color-btn-bg: #f6f8fa;
+  --color-btn-border: rgb(31 35 40 / 15%);
+  --color-btn-shadow: 0 1px 0 rgb(31 35 40 / 4%);
+  --color-btn-inset-shadow: inset 0 1px 0 rgb(255 255 255 / 25%);
+  --color-btn-hover-bg: #f3f4f6;
+  --color-btn-hover-border: rgb(31 35 40 / 15%);
+  --color-btn-active-bg: hsl(220deg 14% 93% / 100%);
+  --color-btn-active-border: rgb(31 35 40 / 15%);
+  --color-btn-selected-bg: hsl(220deg 14% 94% / 100%);
+  --color-btn-primary-text: #fff;
+  --color-btn-primary-bg: #1f883d;
+  --color-btn-primary-border: rgb(31 35 40 / 15%);
+  --color-btn-primary-shadow: 0 1px 0 rgb(31 35 40 / 10%);
+  --color-btn-primary-inset-shadow: inset 0 1px 0 rgb(255 255 255 / 3%);
+  --color-btn-primary-hover-bg: #1a7f37;
+  --color-btn-primary-hover-border: rgb(31 35 40 / 15%);
+  --color-btn-primary-selected-bg: hsl(137deg 66% 28% / 100%);
+  --color-btn-primary-selected-shadow: inset 0 1px 0 rgb(0 45 17 / 20%);
+  --color-btn-primary-disabled-text: rgb(255 255 255 / 80%);
+  --color-btn-primary-disabled-bg: #94d3a2;
+  --color-btn-primary-disabled-border: rgb(31 35 40 / 15%);
+  --color-action-list-item-default-hover-bg: rgb(208 215 222 / 32%);
+  --color-segmented-control-bg: #eaeef2;
+  --color-segmented-control-button-bg: #fff;
+  --color-segmented-control-button-selected-border: #8c959f;
+  --color-fg-default: #1F2328;
+  --color-fg-muted: #656d76;
+  --color-fg-subtle: #6e7781;
+  --color-canvas-default: #fff;
+  --color-canvas-overlay: #fff;
+  --color-canvas-inset: #f6f8fa;
+  --color-canvas-subtle: #f6f8fa;
+  --color-border-default: #d0d7de;
+  --color-border-muted: hsl(210deg 18% 87% / 100%);
+  --color-neutral-muted: rgb(175 184 193 / 20%);
+  --color-accent-fg: #0969da;
+  --color-accent-emphasis: #0969da;
+  --color-accent-muted: rgb(84 174 255 / 40%);
+  --color-accent-subtle: #ddf4ff;
+  --color-success-fg: #1a7f37;
+  --color-attention-fg: #9a6700;
+  --color-attention-muted: rgb(212 167 44 / 40%);
+  --color-attention-subtle: #fff8c5;
+  --color-danger-fg: #d1242f;
+  --color-danger-muted: rgb(255 129 130 / 40%);
+  --color-danger-subtle: #ffebe9;
+  --color-primer-shadow-inset: inset 0 1px 0 rgb(208 215 222 / 20%);
+  --color-scale-gray-1: #eaeef2;
+  --color-scale-blue-1: #b6e3ff;
+
+  /*! Extensions from @primer/css/alerts/flash.scss */
+  --color-social-reaction-bg-hover: var(--color-scale-gray-1);
+  --color-social-reaction-bg-reacted-hover: var(--color-scale-blue-1);
+}
+
+main .pagination-loader-container {
+  background-image: url("https://github.com/images/modules/pulls/progressive-disclosure-line.svg");
+}
+
+main .gsc-loading-image {
+  background-image: url("https://github.githubassets.com/images/mona-loading-default.gif");
+}
+
+/* ===== Mudmode members chat theme (soft teal, light) =====
+ * Loaded by giscus inside its iframe; served from GitHub Pages.
+ */
+main {
+  --sl-text: #1B1F24;
+  --sl-bg: #F7F8F6;
+  --sl-el: #FFFFFF;
+  --sl-sel: #E3ECEA;
+  --sl-text2: #5B636B;
+  --sl-border: #E1E4E2;
+  --sl-accent: #1F7A70;
+  --sl-accent-soft: #DDEFEC;
+  --sl-on-accent: #FFFFFF;
+  --sl-danger: #B42318;
+
+  --color-fg-default: var(--sl-text);
+  --color-fg-muted: var(--sl-text2);
+  --color-fg-subtle: #7A8289;
+  --color-canvas-default: var(--sl-el);
+  --color-canvas-overlay: var(--sl-el);
+  --color-canvas-inset: var(--sl-bg);
+  --color-canvas-subtle: var(--sl-bg);
+  --color-border-default: var(--sl-border);
+  --color-border-muted: var(--sl-border);
+  --color-neutral-muted: rgba(31, 122, 112, 0.12);
+  --color-accent-fg: var(--sl-accent);
+  --color-accent-emphasis: var(--sl-accent);
+  --color-accent-muted: rgba(31, 122, 112, 0.4);
+  --color-accent-subtle: var(--sl-accent-soft);
+  --color-success-fg: var(--sl-accent);
+  --color-danger-fg: var(--sl-danger);
+  --color-btn-text: var(--sl-text);
+  --color-btn-bg: var(--sl-sel);
+  --color-btn-border: transparent;
+  --color-btn-hover-bg: #D6E4E1;
+  --color-btn-hover-border: transparent;
+  --color-btn-active-bg: #CBDDD9;
+  --color-btn-selected-bg: var(--sl-sel);
+  --color-btn-primary-text: var(--sl-on-accent);
+  --color-btn-primary-bg: var(--sl-accent);
+  --color-btn-primary-border: transparent;
+  --color-btn-primary-hover-bg: #1A6A61;
+  --color-btn-primary-hover-border: transparent;
+  --color-btn-primary-selected-bg: #175E56;
+  --color-btn-primary-disabled-text: rgba(255, 255, 255, 0.85);
+  --color-btn-primary-disabled-bg: rgba(31, 122, 112, 0.5);
+  --color-btn-primary-disabled-border: transparent;
+  --color-social-reaction-bg-hover: var(--sl-sel);
+  --color-social-reaction-bg-reacted-hover: var(--sl-accent-soft);
+  --color-segmented-control-bg: var(--sl-sel);
+  --color-segmented-control-button-bg: var(--sl-el);
+  --color-segmented-control-button-selected-border: var(--sl-border);
+  --color-action-list-item-default-hover-bg: var(--sl-sel);
+  --color-scale-blue-1: var(--sl-accent-soft);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Thread background = chat screen background */
+main, .gsc-main { background: var(--sl-bg); }
+
+/* Each comment = a chat bubble: white, hairline border, 20px radius, 6px bottom-left */
+.gsc-comment > div { border: 1px solid var(--sl-border) !important; border-radius: 20px 20px 20px 6px !important; background: var(--sl-el); overflow: hidden; }
+.gsc-comment-header { background: transparent !important; border: 0 !important; padding-top: 10px; }
+.gsc-comment-author a, .gsc-reply-author a { color: var(--sl-accent) !important; font-weight: 600; }
+.gsc-comment-content, .gsc-reply-content { font-size: 17px; line-height: 1.45; }
+.gsc-comment-header time, .gsc-reply-header time { font-size: 11px; opacity: .8; }
+.gsc-comment-author-avatar img, .gsc-reply-author-avatar img { border-radius: 50% !important; }
+.gsc-comment-footer, .gsc-reply-box { background: var(--sl-bg) !important; border-color: var(--sl-border) !important; }
+.gsc-replies { border-color: var(--sl-border) !important; }
+.gsc-tl-line { border-color: var(--sl-border) !important; }
+
+/* Composer = chat input bar: rounded field, round teal send */
+.gsc-comment-box { border-radius: 20px !important; border-color: var(--sl-border) !important; background: var(--sl-el); }
+.gsc-comment-box-textarea { border-radius: 16px !important; font-size: 17px; }
+.gsc-comment-box-buttons .btn, .gsc-comment-box-buttons button { border-radius: 999px !important; min-height: 44px; padding-left: 18px; padding-right: 18px; }
+.gsc-reactions-button, .gsc-direct-reaction-button, .gsc-social-reaction-summary-item { border-radius: 999px !important; }
+.gsc-comments-count, .gsc-header { color: var(--sl-text2); }

@@ -57,11 +57,21 @@ code{font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;font-size:
 pre code{background:none;padding:0}
 footer{background:#2b1d12;color:#d9c7b0;padding:34px 0;font-size:15px}
 footer a{color:var(--gold)}
+/* Members chat frame (soft teal, light) */
+.sl-chat{--sl-text:#1B1F24;--sl-bg:#F7F8F6;--sl-el:#fff;--sl-sel:#E3ECEA;--sl-text2:#5B636B;--sl-border:#E1E4E2;--sl-accent:#1F7A70;--sl-soft:#DDEFEC;max-width:720px;margin:18px 0 0;background:var(--sl-bg);border:1px solid var(--sl-border);border-radius:20px;overflow:hidden;color:var(--sl-text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.sl-head{display:flex;align-items:center;gap:8px;padding:8px 16px;border-bottom:1px solid var(--sl-border);background:var(--sl-bg)}
+.sl-round{width:44px;height:44px;border-radius:22px;display:grid;place-items:center;background:var(--sl-sel);flex:none;border:0;color:var(--sl-text)}
+.sl-round.a{background:var(--sl-accent);color:#fff;cursor:pointer}
+.sl-title{flex:1;min-width:0}.sl-title b{display:block;font-size:18px;font-weight:600;line-height:1.3}.sl-title span{font-size:15px;color:var(--sl-text2)}
+.sl-body{padding:16px;min-height:120px}
+.sl-body p{margin:0;font-size:15px;color:var(--sl-text2);text-align:center}
+.sl-open{display:block;margin:14px auto 0;background:var(--sl-accent);color:#fff;border:0;border-radius:14px;min-height:52px;padding:0 22px;font:inherit;font-size:17px;font-weight:600;cursor:pointer}
+.sl-open:disabled{opacity:.5}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 </style>
 </head>
 <body>
-<nav aria-label="Sections"><div class="wrap"><b>Mudmode</b><a href="#what">Why Mudmode</a><a href="#save">Get more done</a><a href="#results">Results</a><a href="#safety">You're in control</a><a href="#kit">Full kit</a><a href="#community">Community</a></div></nav>
+<nav aria-label="Sections"><div class="wrap"><b>Mudmode</b><a href="#what">Why Mudmode</a><a href="#save">Get more done</a><a href="#results">Results</a><a href="#safety">You're in control</a><a href="#kit">Full kit</a><a href="#community">Community</a><a href="members.html" style="color:#5CC2B4;font-weight:650">Members</a></div></nav>
 
 <header class="hero" id="top"><div class="wrap">
 <h1>Mudmode: a crew of AIs<br><span>that works like one.</span></h1>
@@ -135,16 +145,19 @@ footer a{color:var(--gold)}
 <div class="card"><h3>Share a win</h3><p>Tell others what your crew got done. Please never post private details or secrets.</p></div>
 <div class="card"><h3>Ideas and Q&amp;A</h3><p>Ask questions, suggest ideas and show what your crew has done.</p></div>
 </div>
-<div class="btns" style="margin-top:22px"><a class="btn p" href="https://github.com/bottledhatecom-cmd/mudmode/discussions">Join the community on GitHub</a><button class="btn s" id="chat-load" type="button" style="color:var(--mud);border-color:var(--mud2);background:none;cursor:pointer;font:inherit;font-weight:650">Open the members chat here</button></div>
-<div id="chat" class="card" style="margin-top:18px;min-height:90px"><p id="chat-note">The members chat loads from GitHub (giscus) only when you open it, so this page stays fast and sends nothing to anyone until you click.</p></div>
+<div class="btns" style="margin-top:22px"><a class="btn p" href="https://github.com/bottledhatecom-cmd/mudmode/discussions">Join the community on GitHub</a><a class="btn s" href="members.html" style="color:var(--mud);border-color:var(--mud2)">Members page</a></div>
+<div class="sl-chat" id="chat-frame">
+<div class="sl-head"><span class="sl-round" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5h16v11H8l-4 4z"/></svg></span><div class="sl-title"><b>Members chat</b><span>Open thread · GitHub Discussions</span></div></div>
+<div class="sl-body" id="chat"><p id="chat-note">The members chat loads from GitHub (giscus) only when you open it, so this page stays fast and sends nothing to anyone until you click.</p><button class="sl-open" id="chat-load" type="button">Open the members chat here</button></div>
+</div>
 <script>
 document.getElementById('chat-load').addEventListener('click',function(){
  if(document.querySelector('#chat script'))return;
  var s=document.createElement('script');s.src='https://giscus.app/client.js';s.async=true;s.crossOrigin='anonymous';
- var d={'repo':'bottledhatecom-cmd/mudmode','repo-id':'R_kgDOVSuD8A','category':'General','category-id':'DIC_kwDOVSuD8M4DJSOe','mapping':'specific','term':'Members chat','strict':'0','reactions-enabled':'1','emit-metadata':'0','input-position':'top','theme':'light','lang':'en','loading':'lazy'};
+ var d={'repo':'bottledhatecom-cmd/mudmode','repo-id':'R_kgDOVSuD8A','category':'General','category-id':'DIC_kwDOVSuD8M4DJSOe','mapping':'specific','term':'Members chat','strict':'0','reactions-enabled':'1','emit-metadata':'0','input-position':'bottom','theme':'https://mudmodecrew.com/giscus-theme.css','lang':'en','loading':'lazy'};
  for(var k in d)s.setAttribute('data-'+k,d[k]);
  document.getElementById('chat-note').textContent='Loading the members chat from GitHub...';
- document.getElementById('chat').appendChild(s);this.disabled=true;
+ document.getElementById('chat').appendChild(s);this.remove();
 });
 </script>
 </div></section>
@@ -152,7 +165,7 @@ document.getElementById('chat-load').addEventListener('click',function(){
 
 <footer><div class="wrap">
 <p><b style="color:#f3c969">Mudmode</b>: a crew of AIs that works like one. Licensed under the <a href="https://github.com/bottledhatecom-cmd/mudmode/blob/main/LICENSE">Mudmode Personal Use License</a>: personal, non-commercial use only. Provided as is, no warranty.</p>
-<p>A single static page: no trackers, no cookies, no external fonts. The members chat (giscus, GitHub Discussions) loads only when you open it. <a href="https://github.com/bottledhatecom-cmd/mudmode">Source on GitHub</a> · <a href="#top">Back to top</a></p>
+<p>Static pages: no trackers, no cookies, no external fonts. The members chat (giscus, GitHub Discussions) loads only when you open it. <a href="https://github.com/bottledhatecom-cmd/mudmode">Source on GitHub</a> · <a href="#top">Back to top</a></p>
 <p>© 2026 Mudmode. All rights reserved. Mudmode is a trademark of its owner.</p>
 </div></footer>
 </body>
