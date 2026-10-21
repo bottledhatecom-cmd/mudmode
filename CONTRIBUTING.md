@@ -25,4 +25,4 @@ mudmodecrew.com, you agree that:
 Please never post secrets, passwords, private details, other people's personal
 data, or anything you are not allowed to share.
 
-Contact: see the owner's GitHub profile, https://github.com/bottledhatecom-cmd
+Contact: bottledhate.com@gmail.com
