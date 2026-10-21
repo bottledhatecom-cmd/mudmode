@@ -8,3 +8,5 @@ Mudmode turns a group of AI assistants into one dependable crew: more finished w
 
 ## NOTICE
 Mudmode is © 2026 Mudmode, all rights reserved, and is licensed under the **Mudmode Personal Use License** (see [LICENSE](LICENSE)): free for your own personal, non-commercial setup; no resale, redistribution, rebranding or derivative kits, templates or courses; commercial or team use needs a paid license (ask in Discussions). Mudmode is a trademark of its owner.
+
+**No AI training or scraping.** Text and data mining rights are reserved (see `/.well-known/tdmrep.json`, `ai.txt`, `robots.txt`). Do not use this content to train, fine-tune or evaluate AI models, to feed AI agents building competing products, or for automated scraping.

@@ -1,0 +1,7 @@
+# ai.txt for mudmodecrew.com
+# Text and data mining (TDM) rights are RESERVED (EU DSM Directive Art. 4(3); TDMRep: /.well-known/tdmrep.json).
+# No use of this site or repository to train, fine-tune or evaluate AI models,
+# no feeding it to AI agents to generate competing products, kits, prompts or services,
+# and no automated scraping. See LICENSE (Mudmode Personal Use License).
+User-Agent: *
+Disallow: /
