@@ -9,6 +9,7 @@ The full Mudmode kit comes with Mudmode, **coming soon**.
 - Work that's checked before it's called done
 - A crew that gets smarter every week
 - You stay in control of everything that matters
+- Works on any ordinary computer, even a laptop with no graphics card. Got a strong PC? You can let Mudmode use it. No strong PC? Everything still works.
 
 ## Stay in the loop
 Join GitHub Discussions on this repo to hear when it launches. Team or commercial use: ask there.
