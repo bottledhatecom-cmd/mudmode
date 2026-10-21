@@ -1,19 +1,58 @@
-Mudmode Personal Use License (version 1.0, 2026)
+Mudmode Personal Use License, version 1.1 (2026)
 
-Copyright (c) 2026 the Mudmode owner. All rights reserved.
+Copyright (c) 2026 Michael J Hester ("Owner"). All rights reserved.
+Contact: see the Owner's GitHub profile, https://github.com/bottledhatecom-cmd
 
-"Mudmode" covers the website text, the starter kit preview in this repository, and any Mudmode rules, templates and adapters shared here.
+"Mudmode Materials" means the website text, the kit files, rules, templates,
+adapters and other materials the Owner publishes under this license.
 
-1. You MAY read Mudmode and use it for your own personal, non-commercial setup, free of charge.
-2. You may NOT sell, resell, redistribute, sublicense or rebrand Mudmode, in whole or in part.
-3. You may NOT publish modified versions of Mudmode, or derivative kits, templates, rule books, guides or courses based on it.
-4. You may NOT use the Mudmode name or marks for other products, services or projects, or in a way that suggests endorsement.
-5. Commercial use and use by teams or organizations need a paid license. Ask via GitHub Discussions on this repository.
-6. No warranty. Mudmode is provided "as is", without warranty of any kind. The owner is not liable for any damage or loss from its use.
-7. Any use outside this license, or a breach of it, ends your permission to use Mudmode.
+1. Personal use. You may read the Mudmode Materials and use and privately modify
+   them for your own personal, non-commercial setup, on devices you own or
+   control, free of charge.
+   "Personal, non-commercial" means use by one individual for their own projects,
+   not on behalf of an employer, client or organization and not as part of a
+   paid service. Commercial, team and organization use need a separate paid
+   license from the Owner (contact above).
+2. No redistribution. You may not sell, resell, share, publish, sublicense,
+   rebrand, or otherwise distribute the Mudmode Materials, or modified versions,
+   in whole or in part, except forking within GitHub as GitHub's Terms of
+   Service allow for public repositories.
+3. No competing copies. You may not publish kits, templates, rule books, guides,
+   courses, prompts or datasets that copy, or are substantially similar to, the
+   Mudmode Materials.
+4. No AI training or dataset use. You may not use the Mudmode Materials, or
+   allow them to be used, to train, fine-tune or evaluate an AI model, or
+   include them in a dataset, except as the law allows without permission.
+   You may not feed them to AI agents or tools to generate competing products,
+   kits, rule books, prompts or services, or copy them by automated means
+   (bots, crawlers, scrapers). Text-and-data-mining rights are expressly
+   reserved, including under Article 4(3) of EU Directive 2019/790.
+5. Names and marks. "Mudmode" is a trademark of the Owner. This license grants
+   no trademark rights; do not use the name or marks for other products or in a
+   way that suggests endorsement.
+6. Contributions. Lessons, ideas and other contributions are covered by
+   CONTRIBUTING.md, not by this license.
+7. No warranty. TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE MUDMODE MATERIALS
+   ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, INCLUDING
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+   AI tools you run act on your instructions; you are responsible for what they
+   do, for checking their work, and for following your AI providers' terms and
+   paying their costs.
+8. Limitation of liability. TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE OWNER IS
+   NOT LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL OR CONSEQUENTIAL DAMAGES, OR
+   LOST PROFITS OR DATA, AND THE OWNER'S TOTAL LIABILITY IS LIMITED TO THE
+   AMOUNT YOU PAID FOR THE MUDMODE MATERIALS (OR ZERO IF FREE).
+9. Termination. Your permission ends automatically if you breach this license.
+   For a first, unintentional breach it is reinstated if you cure it within 30
+   days of notice. On termination you must stop using and delete the Mudmode
+   Materials. Sections 3, 4, 5, 7, 8 and 10 survive.
+10. General. This license is governed by the laws of the United States and of
+   the U.S. state where the Owner lives, and disputes go to the state or federal
+   courts serving the Owner's home county, except that the Owner may seek
+   injunctive relief anywhere. If any part is unenforceable, the rest remains in
+   effect. Each copy is governed by the license version included with it; the
+   Owner may offer newer versions. Infringement reports and permission
+   requests: see the contact above.
 
-8. No AI use. You may NOT use Mudmode, in whole or in part, to train, fine-tune or evaluate AI models; you may NOT feed it to AI agents or tools to generate competing products, kits, rule books, prompts or services; and you may NOT scrape or copy it by automated means (bots, crawlers, scrapers). Text and data mining rights are expressly reserved (including under EU Directive 2019/790, Art. 4(3)).
-
-Note: this license is a plain-language draft, not reviewed by a lawyer. A lawyer review is advised before relying on it or selling paid licenses.
-
-Mudmode is a trademark of its owner.
+Note: this license is a plain-language draft, not reviewed by a lawyer. A lawyer
+review is advised before relying on it or selling paid licenses.
