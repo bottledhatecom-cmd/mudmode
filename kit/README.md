@@ -7,7 +7,7 @@ The full Mudmode kit comes with Mudmode, **coming soon**.
 - More finished work from the resources you spend
 - Pick up exactly where you left off, in any new chat
 - Work that's checked before it's called done
-- A crew that gets smarter every week
+- A crew that gets smarter every week, and as the community grows (opt-in, privacy-scrubbed)
 - You stay in control of everything that matters
 - Works on any ordinary computer, even a laptop with no graphics card. Got a strong PC? You can let Mudmode use it. No strong PC? Everything still works.
 
