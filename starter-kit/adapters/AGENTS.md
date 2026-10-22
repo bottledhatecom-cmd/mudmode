@@ -4,6 +4,7 @@
 
 ## Before every job
 1. Read `mudmode/CORE.md` (the rules) and `mudmode/LESSONS.md` (your areas only).
+   Also read `mudmode/CORE-LOCAL.md`, `mudmode/MODULES-ON.md` and every module file it lists. In lite mode (`Mode: lite`), skip `LESSONS.md`, `JOBS.md` and `PROGRESS.md` unless the `lessons` or `jobs` module is on.
 2. Read `mudmode/HANDOFF.md` and check it against the live state (branch, last commit, test result). If they differ, stop and refresh the handoff first.
 3. Register the job: add a row to `mudmode/JOBS.md` and create `mudmode/jobs/<job-name>/PROGRESS.md`.
 
@@ -20,4 +21,4 @@
 - Where this tool loads rules from: <e.g. AGENTS.md, or its own rules file pointing here>
 - Guard for "always ask" actions: <hook / permission setting / none: then ask by hand>
 - Memory between chats: <yes / no: then HANDOFF.md and PROGRESS.md are the memory>
-- Scheduler: <yes / no: then list wanted schedules in OPEN-QUESTIONS.md for the owner>
+- Scheduler: <yes / no: then list wanted schedules in OPEN.md for the owner>

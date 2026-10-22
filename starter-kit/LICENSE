@@ -1,0 +1,138 @@
+mudmode Personal Use License, version 1.2 (2026), effective October 22, 2026
+
+Copyright (c) 2026 Michael J Hester (the "Copyright Owner"). All rights reserved.
+Licensor: Hestertainment LLC, an Illinois limited liability company
+("Licensor", "we", "us"), which licenses the mudmode Materials under an
+exclusive license from the Copyright Owner.
+Contact: bottledhate.com@gmail.com (also listed at
+mudmodecrew.com/privacy.html#contact; the same page is privacy.html in this
+repository).
+
+"mudmode Materials" means the free mudmode kit files, setup scripts, rules,
+templates, adapters and other mudmode materials the Licensor publishes under
+this license, including mudmode material shown on mudmodecrew.com.
+"Your AI tools" means AI assistants, agents, chat apps and coding tools that
+you use for yourself, under your own account or on your own devices,
+including online AI services such as chat apps with project files or memory.
+
+1. Personal use. You may read the mudmode Materials and use and privately modify
+   them for your own personal, non-commercial setup, free of charge, on devices
+   you own or control and in your own accounts with online services (for
+   example your AI tools, cloud storage and backups) that only you use.
+   "Personal, non-commercial" means use by one individual for their own projects,
+   not on behalf of an employer, client or organization and not as part of a
+   paid service. Commercial, team and organization use need a separate paid
+   license from the Licensor (contact above).
+2. No redistribution. Except as section 4 allows, you may not sell, resell,
+   share, publish, upload, sublicense, rebrand, or otherwise distribute the
+   mudmode Materials, or modified versions, in whole or in part, except forking
+   within GitHub as GitHub's Terms of Service allow for public repositories.
+   You may share links to the official free download, and short quotes (for
+   example to ask for help in the members chat), as long as you don't post
+   whole files. Copying the mudmode Materials onto your own devices, into your
+   own accounts, into your own backups, or into your own AI tools, as section 4
+   describes, is not sharing.
+3. No competing copies. You may not publish kits, templates, rule books, guides,
+   courses, prompts or datasets that copy the mudmode Materials, or that are
+   made by adapting, translating, summarizing or paraphrasing them. This
+   doesn't stop you from writing about your own experience, or from publishing
+   your own ideas, rules or setups written without copying the mudmode
+   Materials.
+4. Using the mudmode Materials with AI.
+   Allowed (this is what they are for):
+   (a) using them with your own AI tools to run your own setup;
+   (b) loading them, or any part of them, into your own AI tools'
+       instructions, project files, knowledge, memory or search index, for your
+       own use under section 1, including uploading files to your own account
+       with an online AI service;
+   (c) letting your own AI tools, or the kit's own setup scripts, read, copy,
+       install and change your copy on your own devices and in your own
+       accounts;
+   (d) using an AI service in the ordinary way under that service's own terms.
+       That is not a breach of this section even if the service's terms let it
+       learn from what you upload. Where your AI service offers a setting to
+       keep your chats and files out of model training, we ask you to use it
+       for mudmode files.
+   Not allowed:
+   (e) using the mudmode Materials, or knowingly letting them be used, to
+       train, fine-tune or evaluate an AI model, or including them in a
+       dataset, except as the law allows without permission. Picking an AI
+       service or setting for the purpose of getting the mudmode Materials into
+       a training set counts as letting them be used;
+   (f) feeding them to AI agents or tools to generate competing products, kits,
+       rule books, prompts or services (see section 3);
+   (g) copying them by automated means (bots, crawlers, scrapers) for anything
+       other than the allowed uses above.
+   Text-and-data-mining rights are expressly reserved, including under
+   Article 4(3) of EU Directive 2019/790.
+5. Names and marks. "mudmode" is a trademark of Michael J Hester, used under
+   license by the Licensor. This license grants no trademark rights; do not use
+   the name or marks for other products or in a way that suggests endorsement.
+6. Contributions. Lessons, ideas and other contributions are covered by
+   CONTRIBUTING.md (and the mudmode lesson terms, where they apply:
+   mudmodecrew.com/lesson-terms.html), not by this license.
+7. Your AI, your decisions.
+   (a) You are in charge of your AI tools. You decide what they are allowed to
+       do, which permissions and accounts you give them, and whether to accept
+       their work. Review what they plan and what they did, especially before
+       anything risky or hard to undo (deleting, sending, publishing, paying,
+       changing live systems).
+   (b) Guidance, not guarantees. The mudmode Materials are rules, templates
+       and tools designed to help AI assistants work more safely and steadily.
+       They can't control what an AI tool actually does and don't guarantee
+       any result. AI tools make mistakes and can take actions you did not
+       intend. Setup scripts change files only when you choose to run them;
+       read what they will do first and keep backups.
+   (c) Third-party AI tools and services (for example Anthropic, xAI, OpenAI,
+       GitHub or Gumroad) are run by other companies under their own terms.
+       Neither the Licensor nor the Copyright Owner controls them or is
+       responsible for their costs or charges, outages or changes, how they
+       store or use your data, or the actions they take. You are responsible
+       for following their terms and paying their costs.
+   (d) mudmode is a way of organizing AI assistants. It is not legal,
+       financial, security or professional advice. Results vary.
+8. No warranty. TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE MUDMODE MATERIALS
+   ARE PROVIDED "AS IS" AND "AS AVAILABLE", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR
+   PURPOSE, NON-INFRINGEMENT, AND ANY WARRANTY THAT THEY WILL MAKE YOUR AI
+   TOOLS SAFE, ACCURATE OR ERROR-FREE.
+9. Limitation of liability. TO THE MAXIMUM EXTENT PERMITTED BY LAW, NEITHER
+   THE LICENSOR NOR THE COPYRIGHT OWNER IS LIABLE FOR ANY INDIRECT,
+   INCIDENTAL, SPECIAL, CONSEQUENTIAL OR PUNITIVE DAMAGES, OR FOR LOST
+   PROFITS, REVENUE OR DATA, OR FOR WHAT YOUR AI TOOLS OR OTHER THIRD-PARTY
+   SERVICES DO, AND THEIR TOTAL COMBINED LIABILITY IS LIMITED TO THE AMOUNT
+   YOU PAID FOR THE MUDMODE MATERIALS (ZERO IF YOU PAID NOTHING). Some places
+   don't allow some of these limits; where that's the case, they apply only
+   as far as the law allows. Nothing in this license limits liability for
+   fraud, willful misconduct or gross negligence, death or personal injury
+   caused by negligence, or anything else the law doesn't allow to be
+   limited.
+10. Your responsibility for misuse (indemnity). If someone else makes a claim
+   against the Licensor or the Copyright Owner because you broke this
+   license, broke the law, or misused the mudmode Materials or your AI tools,
+   you will cover the reasonable costs of that claim, including reasonable
+   legal fees, to the extent the law allows. This doesn't apply to the extent
+   the claim was caused by the Licensor or the Copyright Owner. We will tell
+   you promptly about any such claim and let you take part in how it is
+   handled.
+11. Termination. Your permission ends automatically if you breach this
+   license. For a first, unintentional breach it is reinstated if you cure it
+   within 30 days of notice. On termination you must stop using and delete
+   the mudmode Materials, including copies in your AI tools. Sections 3, 4,
+   5, 7, 8, 9, 10 and 12 survive.
+12. General. This license is governed by the laws of the State of Illinois and
+   applicable U.S. federal law. Disputes go to the state or federal courts
+   serving Grundy County, Illinois, but if you are a consumer you may instead
+   bring a claim in your local small-claims court or in the courts where you
+   live, and you keep any protections that the law where you live gives you
+   and that a contract can't take away. Either side may ask any court with
+   jurisdiction to stop copyright or trademark infringement, and the
+   Copyright Owner may also enforce sections 2, 3, 4 and 5 directly. If any
+   part is unenforceable, the rest remains in effect. Each copy is governed
+   by the license version included with it; the Licensor may offer newer
+   versions, and you may choose to accept a newer version. The paid mudmode
+   Full Kit has its own license (mudmodecrew.com/full-kit-license.html).
+   Infringement reports and permission requests: see the contact above.
+
+(c) 2026 Michael J Hester. Licensed by Hestertainment LLC (Illinois) under
+license from the copyright owner. mudmode is a trademark of Michael J Hester.
