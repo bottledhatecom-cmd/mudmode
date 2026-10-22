@@ -155,7 +155,7 @@ footer a{color:var(--gold)}
 document.getElementById('chat-load').addEventListener('click',function(){
  if(document.querySelector('#chat script'))return;
  var s=document.createElement('script');s.src='https://giscus.app/client.js';s.async=true;s.crossOrigin='anonymous';
- var d={'repo':'bottledhatecom-cmd/mudmode','repo-id':'R_kgDOVSuD8A','category':'General','category-id':'DIC_kwDOVSuD8M4DJSOe','mapping':'specific','term':'Members chat','strict':'0','reactions-enabled':'1','emit-metadata':'0','input-position':'bottom','theme':'https://mudmodecrew.com/giscus-theme.css','lang':'en','loading':'lazy'};
+ var d={'repo':'bottledhatecom-cmd/mudmode','repo-id':'R_kgDOVSuD8A','category':'Announcements','category-id':'DIC_kwDOVSuD8M4DJSOd','mapping':'number','term':'2','strict':'0','reactions-enabled':'1','emit-metadata':'0','input-position':'bottom','theme':'https://mudmodecrew.com/giscus-theme.css','lang':'en','loading':'lazy'};
  for(var k in d)s.setAttribute('data-'+k,d[k]);
  document.getElementById('chat-note').textContent='Loading the members chat from GitHub...';
  document.getElementById('chat').appendChild(s);this.remove();
