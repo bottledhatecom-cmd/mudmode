@@ -46,6 +46,9 @@ nav a[aria-current]{color:var(--gold);font-weight:650;text-decoration:underline;
 nav a.nav-hl{color:var(--gold);font-weight:650}
 nav a.nav-members{color:var(--on-gold);background:var(--gold);padding:5px 12px;border-radius:99px;font-weight:700;box-shadow:var(--glow)}
 nav a.nav-members:hover{background:#ffe09a;color:var(--on-gold)}
+/* HOME NAV FIT: the home page has the most nav links; on desktop tighten spacing/size so it fits without scrolling (same links, same look). Phones unchanged (they scroll, with the edge glow). */
+@media (min-width:1240px){nav.nav-long .wrap{gap:10px;padding:0 14px}nav.nav-long a{font-size:13.5px}nav.nav-long a.nav-members{padding:5px 10px}}
+@media (min-width:900px) and (max-width:1239.98px){nav.nav-long .wrap{gap:6px;padding:0 10px}nav.nav-long a{font-size:12.5px}nav.nav-long a.nav-members{padding:5px 9px}nav.nav-long .brand{gap:8px}nav.nav-long .brand b{font-size:18px}}
 
 /* HERO */
 header.hero{position:relative;color:var(--ink);padding:76px 0 76px;background:radial-gradient(700px 380px at 78% 30%,rgba(243,201,105,.16),transparent 65%),radial-gradient(900px 500px at 0% 0%,rgba(216,144,42,.10),transparent 60%),linear-gradient(180deg,rgba(10,9,8,.6),rgba(18,17,16,.2))}
