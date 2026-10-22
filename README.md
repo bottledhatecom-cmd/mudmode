@@ -9,6 +9,6 @@ mudmode is designed to turn a group of AI assistants into one dependable crew: l
 - Contact (rights, permissions, licensing, privacy): see the contact details in the [privacy note](privacy.html#contact)
 
 ## NOTICE
-mudmode is © 2026 Michael J Hester. All rights reserved. It is licensed under the **mudmode Personal Use License v1.1** (see [LICENSE](LICENSE)): free for your own personal, non-commercial setup; no resale, redistribution, rebranding or competing kits, templates or courses; commercial or team use needs a paid license (see the contact above). mudmode is a trademark of Michael J Hester. The mudmodecrew.com website is © 2026 Hestertainment LLC. Not affiliated with or endorsed by any AI provider.
+mudmode is © 2026 Michael J Hester. All rights reserved. It is licensed by Hestertainment LLC under the **mudmode Personal Use License v1.2** (see [LICENSE](LICENSE)): free for your own personal, non-commercial setup; no resale, redistribution, rebranding or competing kits, templates or courses; commercial or team use needs a paid license (see the contact above). mudmode is a trademark of Michael J Hester. The mudmodecrew.com website is © 2026 Hestertainment LLC. Not affiliated with or endorsed by any AI provider.
 
 **No AI training or scraping.** Text and data mining rights are reserved (see `/.well-known/tdmrep.json`, `ai.txt`, `robots.txt`). Do not use this content to train, fine-tune or evaluate AI models, to feed AI agents building competing products, or for automated scraping.

@@ -1,4 +1,4 @@
-# Mudmode: AI training and AI-agent scraping are not permitted (see LICENSE). Normal search engines are welcome.
+# mudmode: AI training and AI-agent scraping are not permitted (see LICENSE). Normal search engines are welcome.
 
 User-agent: GPTBot
 Disallow: /
