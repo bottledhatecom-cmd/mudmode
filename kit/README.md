@@ -13,7 +13,7 @@ The full mudmode kit comes with mudmode, **coming soon**.
 - Works on any ordinary computer, even a laptop with no graphics card. Got a strong PC? You can let mudmode use it. No strong PC? Everything still works.
 
 ## Stay in the loop
-Join GitHub Discussions on this repo to hear when it launches (posting is covered by [CONTRIBUTING.md](../CONTRIBUTING.md)). Team or commercial use: bottledhate.com@gmail.com
+Join GitHub Discussions on this repo to hear when it launches (posting is covered by [CONTRIBUTING.md](../CONTRIBUTING.md)). Team or commercial use: see the contact details in the [privacy note](../privacy.html#contact).
 
 ## License
 mudmode Personal Use License v1.1. See [LICENSE](../LICENSE). © 2026 Michael J Hester. All rights reserved. mudmode is a trademark of Michael J Hester.

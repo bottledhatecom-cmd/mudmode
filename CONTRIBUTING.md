@@ -25,4 +25,5 @@ mudmodecrew.com, you agree that:
 Please never post secrets, passwords, private details, other people's personal
 data, or anything you are not allowed to share.
 
-Contact: bottledhate.com@gmail.com
+Contact: see the contact details in the privacy note (privacy.html#contact, also at
+mudmodecrew.com/privacy.html#contact).
