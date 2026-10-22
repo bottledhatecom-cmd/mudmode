@@ -1,4 +1,4 @@
-# mudmode setup v1.2 (Windows PowerShell 5.1+, PowerShell 7 on any system).
+# mudmode setup v1.3.0 (Windows PowerShell 5.1+, PowerShell 7 on any system).
 # Copies the kit into ONE folder you own (default: %USERPROFILE%\mudmode). Outside that folder it
 # only READS, except one optional connector file you say yes to (~\.claude\rules\mudmode.md for
 # Claude Code, ~\.grok\AGENTS.md for Grok Build). It never deletes anything and never replaces an
@@ -6,7 +6,7 @@
 # Opt-in only (-AllowDir yes): adds the folder to Claude Code's permissions.additionalDirectories in
 # ~\.claude\settings.json, after a dated backup, changing nothing else in that file.
 # Usage: powershell -ExecutionPolicy Bypass -File setup\setup.ps1 [-Target DIR]
-#        [-Connect claude|grok|both|none] [-Name NAME] [-Tz ZONE] [-AskFirst TEXT] [-Words TEXT] [-AllowDir yes|no] [-Yes] [-DryRun]
+#        [-Connect claude|grok|both|none] [-Name NAME] [-Tz ZONE] [-AskFirst TEXT] [-Words TEXT] [-AllowDir yes|no] [-Mode lite|full] [-Yes] [-DryRun]
 param(
   [string]$Target = "",
   [string]$Connect = "",
@@ -15,6 +15,7 @@ param(
   [string]$AskFirst = "",
   [string]$Words = "",
   [string]$AllowDir = "",
+  [string]$Mode = "",
   [switch]$Yes,
   [switch]$DryRun
 )
@@ -51,7 +52,7 @@ foreach ($f in "CORE-LOCAL.md","connector-claude.md","connector-agents.md") {
 }
 
 # --- target folder safety ------------------------------------------------------
-if ($Target.StartsWith("~")) { $Target = Join-Path $HomeDir $Target.Substring(1).TrimStart('/','\') }
+if ($Target -eq "~" -or $Target.StartsWith("~/") -or $Target.StartsWith("~\")) { $Target = Join-Path $HomeDir $Target.Substring(1).TrimStart('/','\') }
 $Target = [IO.Path]::GetFullPath($Target).TrimEnd('/','\')
 $HomeFull = [IO.Path]::GetFullPath($HomeDir).TrimEnd('/','\')
 $KitFull = [IO.Path]::GetFullPath($KitDir).TrimEnd('/','\')
@@ -60,6 +61,23 @@ if (($Target + [IO.Path]::DirectorySeparatorChar).StartsWith($KitFull + [IO.Path
 if ($Target.StartsWith($HomeFull + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
   $DirTxt = "~/" + $Target.Substring($HomeFull.Length + 1).Replace('\','/')
 } else { $DirTxt = $Target.Replace('\','/') }
+
+# --- mode (v1.3): the free kit starts in lite mode, the Full Kit in full; a rerun keeps CORE-LOCAL.md's mode --
+$DefMode = "lite"; if ($Full) { $DefMode = "full" }
+$OldMode = ""; $OldMods = "none"
+$LocalPath = Join-Path $Target "CORE-LOCAL.md"
+if (Test-Path $LocalPath) {
+  $ll = [IO.File]::ReadAllLines($LocalPath)
+  $ml = @($ll | Where-Object { $_ -match '^- \*\*Mode \(' })
+  if ($ml.Count -and ($ml[0] -match ':\*\* *([A-Za-z]*)')) { $OldMode = $Matches[1].ToLower() }
+  if (-not $OldMode) { $OldMode = "full" }   # set up before v1.3 (no Mode line): that was full mode
+  $mm = @($ll | Where-Object { $_ -match '^- \*\*Modules [^*]*:\*\*' })
+  if ($mm.Count -and ($mm[0] -match ':\*\* *(.*)$')) { $OldMods = $Matches[1] }
+  if (-not $OldMods) { $OldMods = "none" }
+}
+$Mode = $Mode.ToLower()
+if ($Mode -and ($Mode -cnotin @("lite","full"))) { Stop-Setup "-Mode must be lite or full." 2 }
+if (-not $Mode) { if ($OldMode) { $Mode = $OldMode } else { $Mode = $DefMode } }
 
 # --- questions (only when run by a person) --------------------------------------
 $TzGuess = [System.TimeZoneInfo]::Local.Id
@@ -93,7 +111,7 @@ if ($Connect -notin @("claude","grok","both","none")) { Stop-Setup "-Connect mus
 # --- helpers -------------------------------------------------------------------
 function Fill($tpl) {
   $t = [IO.File]::ReadAllText($tpl)
-  return $t.Replace("{{NAME}}",$Name).Replace("{{TZ}}",$Tz).Replace("{{ASK}}",$AskFirst).Replace("{{WORDS}}",$Words).Replace("{{DIR}}",$DirTxt).Replace("{{DATE}}",$Now).Replace("{{ALLOWDIR}}",$AllowDir)
+  return $t.Replace("{{NAME}}",$Name).Replace("{{TZ}}",$Tz).Replace("{{ASK}}",$AskFirst).Replace("{{WORDS}}",$Words).Replace("{{DIR}}",$DirTxt).Replace("{{DATE}}",$Now).Replace("{{ALLOWDIR}}",$AllowDir).Replace("{{MODE}}",$Mode).Replace("{{MODULES}}",$OldMods)
 }
 function Mkd($d) { if (Test-Path $d) { return }; if ($DryRun) { Say "would make folder $d" } else { New-Item -ItemType Directory -Force -Path $d | Out-Null } }
 function SameFile($a, $b) { return ((Get-FileHash -Algorithm SHA256 $a).Hash -eq (Get-FileHash -Algorithm SHA256 $b).Hash) }
@@ -119,6 +137,33 @@ function PlaceDir($src, $dst) {
     Place $_.FullName (Join-Path $dst $rel) $false
   }
 }
+function NewBak($p) { $b = "$p.bak-$Stamp"; $n = 1; while (Test-Path $b) { $b = "$p.bak-$Stamp-$n"; $n++ }; return $b }
+function CoreBody($p) { return ((@([IO.File]::ReadAllLines($p)) | Where-Object { $_ -notmatch '^Version: ' }) -join "`n") }
+function SameCore($a, $b) { if (-not ((Test-Path $a) -and (Test-Path $b))) { return $false }; return ((CoreBody $a) -ceq (CoreBody $b)) }
+$KitRefresh = -not ((-not $Full) -and (Test-Path (Join-Path $Target "full-kit")))   # never swap Full Kit files for free-kit ones
+function Refresh($src, $dst) {
+  if ($KitRefresh -and (Test-Path $dst) -and -not (SameFile $src $dst)) {
+    if ($DryRun) { Say "would update $dst (backup first)"; $script:Copied++; return }
+    try { $rb = NewBak $dst; Copy-Item $dst $rb; Copy-Item $src $dst -Force; $script:Copied++; Say "updated $dst (backup: $(Split-Path $rb -Leaf))" } catch { Fail "could not update ${dst}: $($_.Exception.Message)" }
+  } else { Place $src $dst $false }
+}
+function RefreshDir($src, $dst) {
+  $base = (Resolve-Path $src).Path
+  Get-ChildItem -Path $src -Recurse -File | Where-Object { $_.Name -notlike "*.bak-*" -and $_.Name -ne ".DS_Store" } | Sort-Object FullName | ForEach-Object {
+    $rel = $_.FullName.Substring($base.Length).TrimStart('/','\')
+    Refresh $_.FullName (Join-Path $dst $rel)
+  }
+}
+function ModsOn {
+  # full mode: the combined core holds every rule, so no module file is listed
+  if ($Mode -eq "full") { return [IO.File]::ReadAllText((Join-Path $Starter "cores/MODULES-ON-FULL.md")) }
+  $l = New-Object System.Collections.Generic.List[string]
+  $l.Add("# MODULES-ON: the module files every new chat loads (mudmode)"); $l.Add("")
+  $l.Add('Kept in step with the `Mode:` and `Modules:` lines in CORE-LOCAL.md: setup writes it once, and the AI rewrites it when the owner switches. A switch never deletes anything.'); $l.Add("")
+  $l.Add("Mode: lite. Modules on: $OldMods. Say ""mudmode full"" for every module, or ""turn on the <name> module"".")
+  foreach ($m in ($OldMods -split '[, ]+')) { if ($m -and (Test-Path (Join-Path $Starter "modules/$m.md"))) { $l.Add("@$DirTxt/modules/$m.md") } }
+  return (($l -join "`n") + "`n")
+}
 $Tmp = Join-Path ([IO.Path]::GetTempPath()) ("mudmode-setup-" + [guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Path $Tmp | Out-Null
 function WriteTmp($name, $text) { $p = Join-Path $Tmp $name; [IO.File]::WriteAllText($p, $text, $Utf8); return $p }
@@ -130,21 +175,55 @@ try {
     Say "$DirTxt already exists. Every file you already have there stays as it is; only missing kit files are added."
     if ($Interactive -and -not (AskYN "Continue?" "y")) { Say "Stopped. Nothing changed."; exit 0 }
   }
-  Mkd $Target; Mkd (Join-Path $Target "jobs")
-  Place (Join-Path $Starter "CORE.md") (Join-Path $Target "CORE.md") $false
-  Place (Join-Path $Starter "SCRUB-CHECKLIST.md") (Join-Path $Target "SCRUB-CHECKLIST.md") $false
+  Mkd $Target; if ($Mode -eq "full") { Mkd (Join-Path $Target "jobs") }
+  # full mode: CORE.md = the combined core (the v1.3.0 rules word for word); lite: the one-page safety core. A mode switch swaps it below (backup first).
+  $CoreSrc = Join-Path $Starter "cores/CORE-FULL.md"; if ($Mode -eq "lite") { $CoreSrc = Join-Path $Starter "cores/CORE-LITE.md" }
+  if (-not ($OldMode -and ($Mode -ne $OldMode) -and (Test-Path (Join-Path $Target "CORE.md")))) { if (SameCore $CoreSrc (Join-Path $Target "CORE.md")) { Refresh $CoreSrc (Join-Path $Target "CORE.md") } else { Place $CoreSrc (Join-Path $Target "CORE.md") $false } }
   PlaceDir (Join-Path $Starter "templates") (Join-Path $Target "templates")
   PlaceDir (Join-Path $Starter "adapters") (Join-Path $Target "adapters")
   PlaceDir (Join-Path $Starter "addons") (Join-Path $Target "addons")
+  RefreshDir (Join-Path $Starter "modules") (Join-Path $Target "modules")
+  RefreshDir (Join-Path $Starter "cores") (Join-Path $Target "cores")
+  Place (Join-Path $Starter "RULE-MAP.md") (Join-Path $Target "RULE-MAP.md") $false
   Place (Join-Path $SetupDir "templates/CORE-LOCAL.md") (Join-Path $Target "templates/CORE-LOCAL.md") $false
-  foreach ($f in "LESSONS.md","JOBS.md","OK-LEDGER.md") { Place (Join-Path $Starter "templates/$f") (Join-Path $Target $f) $true }
+  $liveF = @("OK-LEDGER.md"); if ($Mode -eq "full") { $liveF = @("LESSONS.md","JOBS.md","OK-LEDGER.md") }
+  foreach ($f in $liveF) { Place (Join-Path $Starter "templates/$f") (Join-Path $Target $f) $true }
   Place (WriteTmp "CORE-LOCAL.md" (Fill (Join-Path $SetupDir "templates/CORE-LOCAL.md"))) (Join-Path $Target "CORE-LOCAL.md") $true
+  # --- mode lines + MODULES-ON.md (v1.3) ----------------------------------------------
+  $Switched = $false
+  if ($OldMode -and ($Mode -ne $OldMode)) {
+    if ($DryRun) { Say "would switch $DirTxt to $Mode mode (CORE.md, CORE-LOCAL.md and MODULES-ON.md backed up first)" }
+    else {
+      $lb = NewBak $LocalPath; Copy-Item $LocalPath $lb
+      $out = New-Object System.Collections.Generic.List[string]; $done = $false
+      foreach ($x in [IO.File]::ReadAllLines($LocalPath)) {
+        if ((-not $done) -and ($x -match '^- \*\*Mode \(')) { $out.Add(($x -replace ':\*\* *[A-Za-z]*', (":** " + $Mode))); $out.Add("  - SUPERSEDED $Now, by setup (mode switch): was $OldMode"); $done = $true }
+        else { $out.Add($x) }
+      }
+      if (-not $done) { foreach ($x in ((Fill (Join-Path $SetupDir "templates/CORE-LOCAL.md")) -split "`r?`n")) { if ($x -match '^- \*\*(Mode \(|Modules |Suggestions )') { $out.Add($x) } } }
+      [IO.File]::WriteAllText($LocalPath, (($out -join "`n") + "`n"), $Utf8)
+      $Switched = $true; Say "switched $DirTxt to $Mode mode (backup: $(Split-Path $lb -Leaf))"
+      $coreDst = Join-Path $Target "CORE.md"
+      if ((Test-Path $coreDst) -and -not (SameFile $CoreSrc $coreDst)) {
+        $owned = (SameCore $coreDst (Join-Path $Starter "cores/CORE-FULL.md")) -or (SameCore $coreDst (Join-Path $Starter "cores/CORE-LITE.md"))
+        $cb = NewBak $coreDst; Copy-Item $coreDst $cb; Copy-Item $CoreSrc $coreDst -Force; $script:Copied++; Say "CORE.md is now the $Mode core (backup: $(Split-Path $cb -Leaf))"
+        if (-not $owned) { Say "WARNING: your CORE.md had your own edits. They are NOT in the new CORE.md; your edited copy is kept in $(Split-Path $cb -Leaf). Put your own rules in CORE-LOCAL.md (a mode switch never changes it)." }
+      } elseif (-not (Test-Path $coreDst)) { Copy-Item $CoreSrc $coreDst; $script:Copied++ }
+    }
+  }
+  $modsTxt = WriteTmp "MODULES-ON.md" (ModsOn)
+  $modsDst = Join-Path $Target "MODULES-ON.md"
+  if ($Switched -and (Test-Path $modsDst)) {
+    if (-not (SameFile $modsTxt $modsDst)) { Copy-Item $modsDst (NewBak $modsDst); Copy-Item $modsTxt $modsDst -Force; $script:Copied++ }
+  } elseif ($DryRun -and $OldMode -and ($Mode -ne $OldMode) -and (Test-Path $modsDst)) { }
+  elseif (($Mode -eq "full") -and $KitRefresh -and (Test-Path $modsDst) -and ((@([IO.File]::ReadAllLines($modsDst)) | Select-Object -First 1) -like "# MODULES-ON (mudmode): full mode*") -and -not (SameFile $modsTxt $modsDst)) { Refresh $modsTxt $modsDst }
+  else { Place $modsTxt $modsDst $true }
   $hof = @"
-# HANDOFF (rewrite at the end of every session; keep the last 4 in HANDOFFS.md)
+# HANDOFF (rewrite at the end of every session; keep the last 4 in handoff/, older ones in handoff/archive/)
 
 **Next single action:** ask the owner what the first job is.
 
-- **Written:** $Now, by mudmode setup v1.2
+- **Written:** $Now, by mudmode setup v1.3.0
 - **Goal:** first session with mudmode
 - **Stage:** switched on
 - **Live state to re-check before editing:** none yet
@@ -156,11 +235,24 @@ try {
 - **Risks / watch out:** none
 - **Lessons for the crew:** none
 "@
+  $hofLite = @"
+# HANDOFF (lite: rewrite before you stop; the full form is templates/HANDOFF.md, module handoff-plus)
+
+**Next single action:** ask the owner what the first job is.
+
+- **Written:** $Now, by mudmode setup v1.3.0
+- **What changed:** mudmode folder set up at $DirTxt (lite mode)
+- **Unused OKs (exact scope):** none
+- **Still running:** none
+- **Open asks for the owner:** none
+"@
+  if ($Mode -ne "full") { $hof = $hofLite }
   Place (WriteTmp "HANDOFF.md" (($hof -replace "`r`n","`n") + "`n")) (Join-Path $Target "HANDOFF.md") $true
   if ($Full) {
     foreach ($f in "MUDMODE.md","LICENSE.md","README-START-HERE.md") { Place (Join-Path $KitDir $f) (Join-Path $Target "full-kit/$f") $false }
     PlaceDir (Join-Path $KitDir "adapters") (Join-Path $Target "full-kit/adapters")
     PlaceDir (Join-Path $KitDir "tools") (Join-Path $Target "full-kit/tools")
+    PlaceDir (Join-Path $KitDir "extras") (Join-Path $Target "full-kit/extras")
   } elseif (Test-Path (Join-Path $KitDir "LICENSE")) { Place (Join-Path $KitDir "LICENSE") (Join-Path $Target "LICENSE") $false }
   $claudeTxt = WriteTmp "claude.md" (Fill (Join-Path $SetupDir "templates/connector-claude.md"))
   $agentsTxt = WriteTmp "agents.md" (Fill (Join-Path $SetupDir "templates/connector-agents.md"))
@@ -250,7 +342,7 @@ finally { Remove-Item -Recurse -Force $Tmp -ErrorAction SilentlyContinue }
 # --- 3. log + result ------------------------------------------------------------
 $conn = if ($script:Connected.Count) { " " + ($script:Connected -join " ") } else { "" }
 if (-not $DryRun -and (Test-Path $Target)) {
-  $log = "`n## $Now setup v1.2 from $(Split-Path -Leaf $KitDir)`n- copied $($script:Copied), already the same $($script:Same), kept yours $($script:Kept); connected:$(if ($conn) { $conn } else { ' none' }); allowed folder: $(if ($script:Allowed) { $script:Allowed } else { 'no' })`n"
+  $log = "`n## $Now setup v1.3.0 from $(Split-Path -Leaf $KitDir)`n- copied $($script:Copied), already the same $($script:Same), kept yours $($script:Kept); connected:$(if ($conn) { $conn } else { ' none' }); allowed folder: $(if ($script:Allowed) { $script:Allowed } else { 'no' }); mode: $Mode`n"
   [IO.File]::AppendAllText((Join-Path $Target "SETUP-LOG.md"), $log, $Utf8)
 }
 Say ""
@@ -263,6 +355,8 @@ $lp = Join-Path $Target "CORE-LOCAL.md"
 if (Test-Path $lp) { Say "Your settings ($DirTxt/CORE-LOCAL.md):"; Get-Content $lp | Where-Object { $_ -like "- **NAME**".Replace("NAME","*") } | ForEach-Object { Say $_.Replace("**","") } }
 if ($script:Connected -contains "Claude-Code") { Say "Claude Code connector: ~/.claude/rules/mudmode.md" }
 Say "RESULT: OK"
+if ($Mode -eq "lite") { Say 'You''re in lite mode; say "mudmode full" for every module.' }
+Say 'Daily report: say "mudmode report" any time; if your AI can run scheduled tasks, it will offer to write one nightly in reports/ (only with your OK).'
 Say 'Next: start a NEW chat in your AI. Say "handoff" before you stop, and "mudmode status" any time.'
 Say "Undo: delete ~\.claude\rules\mudmode.md (or ~\.grok\AGENTS.md if setup made it). Your folder stays yours."
 if ($script:Allowed) { Say "Undo the allowed folder: remove it from additionalDirectories in ~\.claude\settings.json (backup beside it)." }

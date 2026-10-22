@@ -2,4 +2,5 @@
 
 | Name | What it does | AI | Started (clock) | Status |
 |---|---|---|---|---|
-| example-job | fix the login timeout bug | AI-1 | 2026-01-15 9:00 AM CST | done 10:40 AM: PR ready, reviewer PASS |
+
+(Empty until your first job: add one row per job, newest at the bottom.)

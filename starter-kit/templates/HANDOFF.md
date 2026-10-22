@@ -1,4 +1,4 @@
-# HANDOFF (rewrite at the end of every session; keep the last 4 in HANDOFFS.md)
+# HANDOFF (rewrite at the end of every session; keep the last 4 in handoff/, older ones in handoff/archive/)
 
 **Next single action:** <one line: the very first thing the next session does>
 
