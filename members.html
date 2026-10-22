@@ -8,72 +8,121 @@
 <meta name="robots" content="noai, noimageai">
 <meta name="tdm-reservation" content="1">
 <title>mudmode members</title>
-<meta name="description" content="mudmode members: sign in with GitHub, talk in the members chat, and get member downloads.">
+<meta name="description" content="mudmode members: open the members chat right on this page (sign in with GitHub inside the chat), join the community and get member downloads.">
 <meta name="theme-color" content="#2b1d12">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%235a3a22'/%3E%3Ctext x='32' y='44' font-size='34' text-anchor='middle' fill='%23f3c969' font-family='Arial' font-weight='700'%3EM%3C/text%3E%3C/svg%3E">
 <style>
-:root{--text:#1B1F24;--bg:#F7F8F6;--el:#fff;--sel:#E3ECEA;--text2:#5B636B;--border:#E1E4E2;--accent:#1F7A70;--soft:#DDEFEC;--gold:#e0a530}
+:root{--bg:#faf6f0;--ink:#21170f;--mud:#5a3a22;--mud2:#7b5233;--gold:#e0a530;--soft:#efe5d6;--line:#e2d4bf;--card:#fff;--muted:#4b3a2c}
 *{box-sizing:border-box}
-body{margin:0;font:17px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--text);background:var(--bg)}
-a{color:var(--accent)}
-nav{position:sticky;top:0;z-index:5;background:rgba(43,29,18,.95)}
+html{scroll-behavior:smooth}
+body{margin:0;font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+a{color:var(--mud2)}
+a[target="_blank"]::after{content:"\00a0\2197";font-size:.85em}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+nav{position:sticky;top:0;z-index:5;background:rgba(43,29,18,.95);backdrop-filter:blur(6px)}
 nav .wrap{display:flex;align-items:center;gap:18px;height:54px;overflow-x:auto;white-space:nowrap}
 nav b{color:var(--gold);font-size:18px;margin-right:auto}
 nav a{color:#f4e9da;text-decoration:none;font-size:15px}
+nav a:hover{color:var(--gold)}
 nav a[aria-current]{color:#5CC2B4;font-weight:650}
-.wrap{max-width:760px;margin:0 auto;padding:0 16px}
-h1{font-size:32px;font-weight:700;margin:32px 0 4px;letter-spacing:-.01em}
-.sub{color:var(--text2);margin:0 0 24px;font-size:17px}
-.card{background:var(--el);border:1px solid var(--border);border-radius:20px;padding:16px;margin-bottom:16px}
-.row{display:flex;align-items:center;gap:12px}
-.round{width:44px;height:44px;border-radius:22px;display:grid;place-items:center;background:var(--soft);color:var(--accent);flex:none;font-weight:700}
-.card h2{font-size:18px;font-weight:600;margin:0}
-.card p{margin:6px 0 0;color:var(--text2);font-size:15px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:0 22px;border-radius:14px;font:inherit;font-weight:600;text-decoration:none;border:0;cursor:pointer}
-.btn.p{background:var(--accent);color:#fff}
-.btn.s{background:var(--sel);color:var(--text)}
-.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
-.chip{display:inline-block;font-size:13px;font-weight:600;padding:2px 10px;border-radius:999px;background:var(--soft);color:var(--accent);margin-left:6px;vertical-align:2px}
-.sl-chat{background:var(--bg);border:1px solid var(--border);border-radius:20px;overflow:hidden;margin-bottom:16px}
-.sl-head{display:flex;align-items:center;gap:8px;padding:8px 16px;border-bottom:1px solid var(--border)}
-.sl-head .round{background:var(--sel);color:var(--text)}
-.sl-title{flex:1;min-width:0}.sl-title b{display:block;font-size:18px;font-weight:600}.sl-title span{font-size:15px;color:var(--text2)}
-.sl-body{padding:16px;min-height:120px;text-align:center}
-.sl-body p{margin:0 0 14px;font-size:15px;color:var(--text2)}
-.dl{display:grid;gap:8px;margin-top:12px}
-.dl div{display:flex;align-items:center;gap:12px;padding:12px;border:1px dashed var(--border);border-radius:14px;color:var(--text2);font-size:15px}
-footer{color:var(--text2);font-size:14px;padding:24px 0 40px}
-footer p{margin:0 0 8px}
-.sl-grant{margin:0 0 12px;font-size:14px;line-height:1.5;color:var(--text2);text-align:left}
+header.hero{background:radial-gradient(1200px 500px at 80% -10%,#8a5a35 0,transparent 60%),linear-gradient(160deg,#2b1d12,#4a2f1b 60%,#5a3a22);color:#fbf3e8;padding:64px 0 56px}
+.hero h1{font-size:clamp(36px,5.5vw,56px);line-height:1.05;margin:0 0 14px;letter-spacing:-.02em}
+.hero h1 span{color:var(--gold)}
+.hero p.lead{font-size:clamp(18px,2.2vw,21px);max-width:680px;margin:0 0 26px;color:#f0e2cf}
+.btns{display:flex;flex-wrap:wrap;gap:12px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:10px;font-weight:650;text-decoration:none}
+.btn.p{background:var(--gold);color:#2b1d12}
+.btn.s{border:1.5px solid #e9d3b3;color:#fbf3e8}
+.btn.o{border:1.5px solid var(--mud2);color:var(--mud)}
+.btn:focus-visible,.sl-open:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:28px 0 0;padding:0;list-style:none}
+.chips li{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);border-radius:99px;padding:5px 12px;font-size:14px;color:#f3e6d4}
+section{padding:56px 0;border-bottom:1px solid var(--line)}
+section h2{font-size:clamp(26px,3.4vw,34px);margin:0 0 10px;letter-spacing:-.01em}
+section p.sub{font-size:19px;color:var(--muted);max-width:760px;margin:0 0 26px}
+.chat-grid{display:grid;gap:24px;grid-template-columns:minmax(0,1fr) 320px;align-items:start}
+ol.steps{counter-reset:s;list-style:none;padding:0;margin:0;display:grid;gap:12px}
+ol.steps li{counter-increment:s;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px 14px 60px;position:relative;font-size:16px;color:#3d2f24}
+ol.steps li::before{content:counter(s);position:absolute;left:16px;top:14px;width:30px;height:30px;border-radius:50%;background:var(--mud);color:#fff;font-weight:700;display:grid;place-items:center;font-size:15px}
+ol.steps b{display:block;color:var(--ink);font-size:17px;margin-bottom:2px}
+.aside h3{margin:0 0 12px;font-size:18px}
+.aside .small{font-size:14px;color:#6b5a4b;margin:12px 0 0}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px}
+.card h3{margin:0 0 6px;font-size:19px}
+.card p{margin:0 0 14px;font-size:16px;color:#3d2f24}
+.chip{display:inline-block;font-size:13px;font-weight:650;padding:2px 10px;border-radius:999px;background:var(--soft);color:var(--mud);margin-left:6px;vertical-align:2px}
+.dl{display:grid;gap:8px}
+.dl div{padding:10px 14px;border:1px dashed var(--line);border-radius:10px;color:#6b5a4b;font-size:15px}
+/* Members chat frame (soft teal, light; same look as on the home page) */
+.sl-chat{--sl-text:#1B1F24;--sl-bg:#F7F8F6;--sl-el:#fff;--sl-sel:#E3ECEA;--sl-text2:#5B636B;--sl-border:#E1E4E2;--sl-accent:#1F7A70;--sl-soft:#DDEFEC;background:var(--sl-bg);border:1px solid var(--sl-border);border-radius:20px;overflow:hidden;color:var(--sl-text);box-shadow:0 10px 30px rgba(43,29,18,.08)}
+.sl-head{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--sl-border);background:var(--sl-el)}
+.sl-round{width:44px;height:44px;border-radius:22px;display:grid;place-items:center;background:var(--sl-soft);color:var(--sl-accent);flex:none}
+.sl-title{flex:1;min-width:0}.sl-title b{display:block;font-size:18px;font-weight:600;line-height:1.3}.sl-title span{font-size:15px;color:var(--sl-text2)}
+.sl-body{padding:20px;min-height:120px}
+.sl-body p{margin:0;font-size:15px;color:var(--sl-text2);text-align:center}
+.sl-body a{color:var(--sl-accent)}
+.sl-grant{margin:0 0 14px!important;font-size:14px!important;line-height:1.55;text-align:left!important;background:var(--sl-el);border:1px solid var(--sl-border);border-radius:12px;padding:12px 14px}
+.sl-open{display:flex;align-items:center;gap:8px;margin:16px auto 0;background:var(--sl-accent);color:#fff;border:0;border-radius:14px;min-height:52px;padding:0 24px;font:inherit;font-size:17px;font-weight:600;cursor:pointer}
+.sl-open:hover{filter:brightness(1.08)}
+footer{background:#2b1d12;color:#d9c7b0;padding:34px 0;font-size:15px}
+footer p{margin:0 0 10px}
+footer a{color:var(--gold)}
+@media (max-width:860px){.chat-grid{grid-template-columns:1fr}}
+@media (max-width:520px){header.hero{padding:44px 0 40px}section{padding:40px 0}.sl-body{padding:16px}.hero .btns .btn{flex:1 1 100%;justify-content:center}.card{padding:18px}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 </style>
 </head>
 <body>
-<nav aria-label="Site"><div class="wrap"><b>mudmode</b><a href="index.html">Home</a><a href="index.html#community">Community</a><a href="members.html" aria-current="page">Members</a></div></nav>
-<main class="wrap">
-<h1>Members</h1>
-<p class="sub">Your home for the mudmode community: talk with the owner and other members, and get member downloads as they land.</p>
+<nav aria-label="Site"><div class="wrap"><b>mudmode</b><a href="index.html">Home</a><a href="index.html#pricing">Pricing</a><a href="index.html#community">Community</a><a href="members.html" aria-current="page">Members</a></div></nav>
 
-<section class="card" aria-labelledby="s1">
-<div class="row"><span class="round">1</span><div><h2 id="s1">Sign in with GitHub</h2><p>One free GitHub account lets you post in the members chat and the community. No new password to remember.</p></div></div>
-<div class="btns"><a class="btn p" href="https://github.com/login?return_to=https%3A%2F%2Fgithub.com%2Fbottledhatecom-cmd%2Fmudmode%2Fdiscussions"><svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>Sign in with GitHub</a><a class="btn s" href="https://github.com/signup">Make a free account</a></div>
-</section>
+<header class="hero"><div class="wrap">
+<h1>mudmode <span>members</span></h1>
+<p class="lead">Your home for the mudmode community: talk with the owner and other members, and get member downloads as they land.</p>
+<div class="btns"><a class="btn p" href="#members-chat">Go to the members chat</a><a class="btn s" href="#how">How signing in works</a></div>
+<ul class="chips"><li>Chat right on this page</li><li>Sign in with GitHub inside the chat</li><li>Nothing loads until you click</li><li>No trackers</li></ul>
+</div></header>
 
+<main>
+<section id="members-chat"><div class="wrap">
+<h2>Members chat</h2>
+<p class="sub">One open thread for the whole crew. Open it here, read along, and sign in with GitHub inside the chat when you want to post. You stay on mudmodecrew.com.</p>
+<div class="chat-grid">
 <div class="sl-chat" aria-labelledby="chat-title">
-<div class="sl-head"><span class="round" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5h16v11H8l-4 4z"/></svg></span><div class="sl-title"><b id="chat-title">Members chat</b><span>Open thread · GitHub Discussions</span></div></div>
-<div class="sl-body" id="chat"><p class="sl-grant" id="chat-grant"><b>Before you post:</b> by posting in the members chat or Discussions, you agree to the <a href="https://github.com/bottledhatecom-cmd/mudmode/blob/main/CONTRIBUTING.md">mudmode contributor terms</a>. You keep ownership of your post, and you give Michael J Hester and Hestertainment LLC a permanent, worldwide, non-exclusive, royalty-free license to use, edit, publish and sell it in free and paid mudmode materials, with or without credit. Posts are public on GitHub and subject to GitHub's Terms. Never post secrets or private details.</p><p id="chat-note">The members chat is not loaded yet. Only when you click the button does your browser load giscus (giscus.app) and GitHub; to post, you sign in with GitHub inside the chat, and giscus keeps a sign-in token in your browser. See the <a href="privacy.html">privacy note</a>.</p><button class="btn p" id="chat-load" type="button">Open the members chat</button></div>
+<div class="sl-head"><span class="sl-round" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5h16v11H8l-4 4z"/></svg></span><div class="sl-title"><b id="chat-title">Members chat</b><span>Open thread · GitHub Discussions</span></div></div>
+<div class="sl-body" id="chat"><p class="sl-grant" id="chat-grant"><b>Before you post:</b> by posting in the members chat or Discussions, you agree to the <a href="https://github.com/bottledhatecom-cmd/mudmode/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">mudmode contributor terms</a>. You keep ownership of your post, and you give Michael J Hester and Hestertainment LLC a permanent, worldwide, non-exclusive, royalty-free license to use, edit, publish and sell it in free and paid mudmode materials, with or without credit. Posts are public on GitHub and subject to GitHub's Terms. Never post secrets or private details.</p><p id="chat-note">The members chat is not loaded yet. Only when you click the button does your browser load giscus (giscus.app) and GitHub; to post, you sign in with GitHub inside the chat, and giscus keeps a sign-in token in your browser. See the <a href="privacy.html">privacy note</a>.</p><button class="sl-open" id="chat-load" type="button">Open the members chat</button></div>
+</div>
+<div class="aside" id="how">
+<h3>How it works</h3>
+<ol class="steps">
+<li><b>Open the chat</b>Click "Open the members chat". Nothing from giscus or GitHub loads before that.</li>
+<li><b>Sign in inside the chat</b>Use "Sign in with GitHub" in the chat box. GitHub asks you to approve giscus once, then brings you straight back to this page.</li>
+<li><b>Say hi</b>Ask a question, share a win or tell us how your crew runs.</li>
+</ol>
+<p class="small">No GitHub account yet? <a href="https://github.com/signup" target="_blank" rel="noopener">Make a free one on GitHub</a> (opens in a new tab), then come back here.</p>
+</div>
 </div>
 <script src="chat.js"></script>
+</div></section>
 
-<section class="card" aria-labelledby="s3">
-<div class="row"><span class="round">#</span><div><h2 id="s3">Community on GitHub</h2><p>Share wins, ask questions and trade ideas with other members.</p></div></div>
-<div class="btns"><a class="btn s" href="https://github.com/bottledhatecom-cmd/mudmode/discussions">Open the community</a></div>
-</section>
-
-<section class="card" aria-labelledby="s4">
-<div class="row"><span class="round">↓</span><div><h2 id="s4">Member downloads <span class="chip">Coming soon</span></h2><p>Full Kit buyers will get the kit and live updates in their Gumroad library (see <a href="index.html#pricing">pricing</a>). The free starter kit will be available the same way.</p></div></div>
+<section id="more"><div class="wrap">
+<h2>More for members</h2>
+<p class="sub">Longer threads, ideas and Q&amp;A live in the community, and your kit lives in your Gumroad library.</p>
+<div class="grid">
+<div class="card" aria-labelledby="s3">
+<h3 id="s3">Community on GitHub</h3>
+<p>Share wins, ask questions and trade ideas with other members. The community lives on GitHub Discussions, so this link opens GitHub in a new tab.</p>
+<a class="btn o" href="https://github.com/bottledhatecom-cmd/mudmode/discussions" target="_blank" rel="noopener"><svg class="gh" width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>Open the community on GitHub</a>
+</div>
+<div class="card" aria-labelledby="s4">
+<h3 id="s4">Member downloads <span class="chip">Coming soon</span></h3>
+<p>Full Kit buyers will get the kit and live updates in their Gumroad library (see <a href="index.html#pricing">pricing</a>). The free starter kit will be available the same way.</p>
 <div class="dl"><div>Full kit: in your Gumroad library at launch</div><div>Updates: in your Gumroad library as they land</div></div>
-</section>
+</div>
+</div>
+</div></section>
 </main>
-<footer><div class="wrap"><p>Like every website, our host (GitHub Pages, run by GitHub, Inc.) receives standard request data such as your IP address. No analytics, no trackers, no cookies on this page. <a href="privacy.html">Privacy note</a> · <a href="terms.html">Terms of use</a> · <a href="full-kit-license.html">Full Kit License</a></p><p>Website © 2026 Hestertainment LLC, which runs mudmodecrew.com. mudmode © 2026 Michael J Hester. All rights reserved. <a href="https://github.com/bottledhatecom-cmd/mudmode/blob/main/LICENSE">mudmode Personal Use License v1.1</a> · <a href="index.html">Back to home</a></p><p>Contact: see our <a href="privacy.html#contact">contact details</a>, or ask in <a href="https://github.com/bottledhatecom-cmd/mudmode/discussions">GitHub Discussions</a>.</p></div></footer>
+
+<footer><div class="wrap"><p>Like every website, our host (GitHub Pages, run by GitHub, Inc.) receives standard request data such as your IP address. No analytics, no trackers, no cookies on this page. <a href="privacy.html">Privacy note</a> · <a href="terms.html">Terms of use</a> · <a href="full-kit-license.html">Full Kit License</a></p><p>Website © 2026 Hestertainment LLC, which runs mudmodecrew.com. mudmode © 2026 Michael J Hester. All rights reserved. <a href="https://github.com/bottledhatecom-cmd/mudmode/blob/main/LICENSE" target="_blank" rel="noopener">mudmode Personal Use License v1.1</a> · <a href="index.html">Back to home</a></p><p>Contact: see our <a href="privacy.html#contact">contact details</a>, or ask in <a href="https://github.com/bottledhatecom-cmd/mudmode/discussions" target="_blank" rel="noopener">GitHub Discussions</a>.</p></div></footer>
 </body>
 </html>
