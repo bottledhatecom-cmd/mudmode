@@ -67,6 +67,9 @@ header.hero::before{content:"";position:absolute;left:0;right:0;bottom:0;height:
 .hero-sm .hero-icon{width:200px;height:200px}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin:30px 0 0;padding:0;list-style:none}
 .chips li{background:rgba(243,201,105,.07);border:1px solid var(--line2);border-radius:99px;padding:5px 12px;font-size:14px;color:#efe3cf}
+.chips li>a{display:block;margin:-5px -12px;padding:5px 12px;border-radius:99px;color:inherit;text-decoration:none;cursor:pointer;transition:box-shadow .2s,color .2s}
+.chips li>a:hover,.chips li>a:focus-visible{box-shadow:0 0 0 1px var(--gold),var(--glow);color:#fff7ea}
+.chips li>a:focus-visible{outline-offset:3px;border-radius:99px}
 
 /* BUTTONS */
 .btns{display:flex;flex-wrap:wrap;gap:12px}
