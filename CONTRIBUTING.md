@@ -17,7 +17,8 @@ mudmodecrew.com, you agree that:
    breach any agreement (for example with an employer or client).
 3. To the extent your Contribution has no copyright (for example AI-generated
    text), you agree we may use it on the same terms.
-4. No payment is owed, and we have no duty to use or credit it.
+4. No payment is owed; approved lessons may earn the rewards in the mudmode
+   lesson terms. We have no duty to use or credit it.
 5. Your post is public on GitHub and subject to GitHub's Terms.
 6. You may delete your post at any time; this does not recall mudmode releases
    that already include it.
