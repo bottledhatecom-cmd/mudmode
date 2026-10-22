@@ -2,7 +2,9 @@
 # Text and data mining (TDM) rights are RESERVED (EU DSM Directive Art. 4(3); TDMRep: /.well-known/tdmrep.json).
 # No use of this site or repository to train, fine-tune or evaluate AI models,
 # no feeding it to AI agents to generate competing products, kits, prompts or services,
-# and no automated scraping. See LICENSE (Mudmode Personal Use License).
+# and no automated scraping. See LICENSE (mudmode Personal Use License v1.2) and
+# https://mudmodecrew.com/full-kit-license.html (mudmode Full Kit License v1.3).
+# People may load mudmode files into their own AI assistants for their own use (free license section 4, Full Kit section 9).
 # Named AI crawlers and agents (same list as robots.txt):
 User-Agent: GPTBot
 Disallow: /
