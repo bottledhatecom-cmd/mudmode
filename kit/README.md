@@ -12,6 +12,9 @@ The full mudmode kit comes with mudmode, **coming soon**.
 - Rules that tell your AIs to wait for your yes before anything risky
 - Works on any ordinary computer, even a laptop with no graphics card. Got a strong PC? You can let mudmode use it. No strong PC? Everything still works.
 
+## Free starter kit now
+The free starter kit is ready today, no email needed: [starter-kit/](../starter-kit/).
+
 ## Stay in the loop
 Join GitHub Discussions on this repo to hear when it launches (posting is covered by [CONTRIBUTING.md](../CONTRIBUTING.md)). Team or commercial use: see the contact details in the [privacy note](../privacy.html#contact).
 
