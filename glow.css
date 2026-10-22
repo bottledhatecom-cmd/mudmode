@@ -19,6 +19,7 @@ a:focus-visible,button:focus-visible{outline:3px solid var(--gold);outline-offse
 .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
 code{font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;font-size:.92em;background:var(--panel2);color:var(--gold);padding:1px 5px;border-radius:5px}
 pre code{background:none;padding:0;color:inherit}
+pre{max-width:100%;white-space:pre-wrap;overflow-wrap:anywhere} /* long lines wrap on phones: an over-wide page made phones zoom out, and the sticky nav slid off-screen once zoomed back in */
 
 /* NAV: icon + word top left = one home link */
 nav{position:-webkit-sticky;position:sticky;top:0;z-index:100;background:rgba(14,13,12,.96);box-shadow:0 2px 14px rgba(0,0,0,.45);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
