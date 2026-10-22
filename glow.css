@@ -25,6 +25,16 @@ pre{max-width:100%;white-space:pre-wrap;overflow-wrap:anywhere} /* long lines wr
 nav{position:-webkit-sticky;position:sticky;top:0;z-index:100;background:rgba(14,13,12,.96);box-shadow:0 2px 14px rgba(0,0,0,.45);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
 nav .wrap{display:flex;align-items:center;gap:16px;height:60px;overflow-x:auto;white-space:nowrap;scrollbar-width:thin}
 @media (min-width:900px){nav .wrap{max-width:1240px}}
+/* NAV SCROLL GLOW: when the nav is wider than the screen, a thin gold glow line shows on the edge that has more links to scroll to.
+   Pure CSS: the gold glows stay put on the edges (scroll); two nav-colored covers ride with the links (local) and slide over each glow as you reach that end.
+   Nav fits (desktop) = both glows covered = looks unchanged. No JS, no layout change, no motion (scroll-linked only). */
+nav .wrap{background:
+  linear-gradient(90deg,#0e0d0c 26px,rgba(14,13,12,0) 40px) 0 0/40px 100% no-repeat local,
+  linear-gradient(270deg,#0e0d0c 26px,rgba(14,13,12,0) 40px) 100% 0/40px 100% no-repeat local,
+  linear-gradient(180deg,rgba(243,201,105,0) 10%,rgba(255,224,154,.9) 50%,rgba(243,201,105,0) 90%) 0 0/2px 100% no-repeat scroll,
+  radial-gradient(farthest-side at 0 50%,rgba(243,201,105,.42),rgba(243,201,105,0)) 0 0/24px 100% no-repeat scroll,
+  linear-gradient(180deg,rgba(243,201,105,0) 10%,rgba(255,224,154,.9) 50%,rgba(243,201,105,0) 90%) 100% 0/2px 100% no-repeat scroll,
+  radial-gradient(farthest-side at 100% 50%,rgba(243,201,105,.42),rgba(243,201,105,0)) 100% 0/24px 100% no-repeat scroll}
 nav .brand{display:flex;align-items:center;gap:10px;margin-right:auto;flex:none;text-decoration:none;padding:4px 6px 4px 0}
 nav .brand img{display:block;width:32px;height:32px;border-radius:8px;box-shadow:0 0 12px rgba(243,201,105,.35);transition:box-shadow .2s}
 nav .brand b{color:var(--gold);font-size:20px;font-weight:750;letter-spacing:-.01em;text-shadow:var(--glow)}
