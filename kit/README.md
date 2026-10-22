@@ -1,6 +1,6 @@
-# mudmode kit: coming soon
+# mudmode kit: out now
 
-The full mudmode kit comes with mudmode, **coming soon**.
+The full mudmode kit is **out now**: see [pricing on mudmodecrew.com](https://mudmodecrew.com/#pricing). The free starter kit is in [starter-kit/](../starter-kit/).
 
 ## What it gets you
 - A crew of AI assistants that works like one, even across different AI makers
@@ -13,7 +13,7 @@ The full mudmode kit comes with mudmode, **coming soon**.
 - Works on any ordinary computer, even a laptop with no graphics card. Got a strong PC? You can let mudmode use it. No strong PC? Everything still works.
 
 ## Stay in the loop
-Join GitHub Discussions on this repo to hear when it launches (posting is covered by [CONTRIBUTING.md](../CONTRIBUTING.md)). Team or commercial use: see the contact details in the [privacy note](../privacy.html#contact).
+Join GitHub Discussions on this repo for news and lessons (posting is covered by [CONTRIBUTING.md](../CONTRIBUTING.md)). Team or commercial use: see the contact details in the [privacy note](../privacy.html#contact).
 
 ## License
 mudmode Personal Use License v1.2. See [LICENSE](../LICENSE). © 2026 Michael J Hester. All rights reserved. mudmode is a trademark of Michael J Hester.
