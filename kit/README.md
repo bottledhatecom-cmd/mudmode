@@ -1,6 +1,6 @@
-# Mudmode kit: coming soon
+# mudmode kit: coming soon
 
-The full Mudmode kit comes with Mudmode, **coming soon**.
+The full mudmode kit comes with mudmode, **coming soon**.
 
 ## What it gets you
 - A crew of AI assistants that works like one, even across different AI makers
@@ -10,10 +10,10 @@ The full Mudmode kit comes with Mudmode, **coming soon**.
 - A crew that gets smarter every week
 - Shared lessons: lessons members choose to share are reviewed and added to new kit releases (always opt-in; short, anonymous and reviewed before use)
 - Rules that tell your AIs to wait for your yes before anything risky
-- Works on any ordinary computer, even a laptop with no graphics card. Got a strong PC? You can let Mudmode use it. No strong PC? Everything still works.
+- Works on any ordinary computer, even a laptop with no graphics card. Got a strong PC? You can let mudmode use it. No strong PC? Everything still works.
 
 ## Stay in the loop
 Join GitHub Discussions on this repo to hear when it launches (posting is covered by [CONTRIBUTING.md](../CONTRIBUTING.md)). Team or commercial use: bottledhate.com@gmail.com
 
 ## License
-Mudmode Personal Use License v1.1. See [LICENSE](../LICENSE). © 2026 Michael J Hester. All rights reserved. Mudmode is a trademark of Michael J Hester.
+mudmode Personal Use License v1.1. See [LICENSE](../LICENSE). © 2026 Michael J Hester. All rights reserved. mudmode is a trademark of Michael J Hester.

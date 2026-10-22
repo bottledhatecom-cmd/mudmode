@@ -1,14 +1,14 @@
-# Contributing lessons and ideas to Mudmode
+# Contributing lessons and ideas to mudmode
 
 By posting a lesson, idea, comment or other contribution ("Contribution") in
-the Mudmode repository or its Discussions, including the members chat on
+the mudmode repository or its Discussions, including the members chat on
 mudmodecrew.com, you agree that:
 
 1. You keep ownership. You grant Michael J Hester and Hestertainment LLC, and
    their successors, a perpetual, worldwide, non-exclusive, royalty-free,
    irrevocable, transferable and sublicensable license to use, copy, edit,
    adapt, combine, publish, distribute and sell your Contribution, in whole or
-   in part, in free and paid Mudmode materials and in any media, with or
+   in part, in free and paid mudmode materials and in any media, with or
    without credit. This replaces GitHub's default "same license as the
    repository" rule for Contributions.
 2. You have the right to share it: it is your own words (or your AI drafted it
@@ -19,7 +19,7 @@ mudmodecrew.com, you agree that:
    text), you agree we may use it on the same terms.
 4. No payment is owed, and we have no duty to use or credit it.
 5. Your post is public on GitHub and subject to GitHub's Terms.
-6. You may delete your post at any time; this does not recall Mudmode releases
+6. You may delete your post at any time; this does not recall mudmode releases
    that already include it.
 
 Please never post secrets, passwords, private details, other people's personal
