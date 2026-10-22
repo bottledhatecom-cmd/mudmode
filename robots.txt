@@ -54,5 +54,71 @@ Disallow: /
 User-agent: FacebookBot
 Disallow: /
 
+User-agent: Claude-SearchBot
+Disallow: /
+
+User-agent: Claude-User
+Disallow: /
+
+User-agent: Perplexity-User
+Disallow: /
+
+User-agent: GoogleOther
+Disallow: /
+
+User-agent: GoogleOther-Image
+Disallow: /
+
+User-agent: GoogleOther-Video
+Disallow: /
+
+User-agent: Google-CloudVertexBot
+Disallow: /
+
+User-agent: Meta-ExternalFetcher
+Disallow: /
+
+User-agent: cohere-training-data-crawler
+Disallow: /
+
+User-agent: DuckAssistBot
+Disallow: /
+
+User-agent: MistralAI-User
+Disallow: /
+
+User-agent: PanguBot
+Disallow: /
+
+User-agent: Timpibot
+Disallow: /
+
+User-agent: omgili
+Disallow: /
+
+User-agent: YouBot
+Disallow: /
+
+User-agent: AI2Bot
+Disallow: /
+
+User-agent: Ai2Bot-Dolma
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
+User-agent: img2dataset
+Disallow: /
+
+User-agent: Scrapy
+Disallow: /
+
+User-agent: Webzio-Extended
+Disallow: /
+
+User-agent: Kangaroo Bot
+Disallow: /
+
 User-agent: *
 Allow: /
