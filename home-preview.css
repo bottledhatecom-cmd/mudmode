@@ -55,6 +55,8 @@ nav.nav-short .nav-links{display:contents}
 /* Phones (hero v3): Members is a gold outline, so the first screen has one gold button; the 4 section links stay on one row (it scrolls sideways if a screen is too narrow) */
 @media (max-width:640px){nav.nav-short .wrap{flex-wrap:wrap;height:auto;padding:6px 14px 6px;gap:2px 16px;overflow:visible}nav.nav-short .brand{flex:1 0 calc(100% - 120px);margin-right:0}nav.nav-short a.nav-members{order:1;margin-left:auto;background:transparent;color:var(--gold);border:1.5px solid var(--gold);box-shadow:none;padding:4px 12px}nav.nav-short a.nav-members:hover{background:rgba(243,201,105,.08);color:#ffe09a}nav.nav-short .nav-links{order:2;flex:1 0 100%;display:flex;gap:16px;overflow-x:auto;white-space:nowrap;scrollbar-width:none;padding-bottom:2px}nav.nav-short .nav-links::-webkit-scrollbar{display:none}nav.nav-short .nav-links a{font-size:14px;padding:4px 0}}
 @media (max-width:640px){html:has(nav.nav-short){scroll-padding-top:104px}}
+/* 641-679px: the one-row nav ran 6px past the right edge (Members pill clipped); tighten the gap just in that range */
+@media (min-width:640.02px) and (max-width:679.98px){nav.nav-short .wrap{gap:10px}}
 @media (max-width:389px){nav.nav-short .nav-links{gap:12px}nav.nav-short .nav-links a{font-size:13px}}
 @media (max-width:339px){nav.nav-short .wrap{padding-left:12px;padding-right:12px}nav.nav-short .nav-links{gap:9px}nav.nav-short .nav-links a{font-size:12.5px}}
 .footer-more{margin:0 0 26px;padding:0 0 22px;border-bottom:1px solid rgba(243,201,105,.14)}

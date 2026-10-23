@@ -1,0 +1,31 @@
+/* mudmode decorative filler art (v3j draft).
+   The art only fills space that is already empty: its box has a zero
+   flex/grid basis, so it never makes a card or column taller. If the
+   leftover space is too small (or a details list is open) it hides. */
+.filler-art{position:relative;min-height:0;min-width:0;container-type:size;pointer-events:none}
+.filler-art img{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:auto;height:auto;max-width:100%;max-height:calc(100% - 14px);border-radius:14px;opacity:.95;
+  -webkit-mask-image:linear-gradient(to bottom,transparent,#000 22%,#000 78%,transparent),linear-gradient(to right,transparent,#000 22%,#000 78%,transparent);-webkit-mask-composite:source-in;
+  mask-image:linear-gradient(to bottom,transparent,#000 22%,#000 78%,transparent),linear-gradient(to right,transparent,#000 22%,#000 78%,transparent);mask-composite:intersect}
+@container (max-height:140px){.filler-art img{display:none}}
+@container (max-width:110px){.filler-art img{display:none}}
+
+/* Home pricing cards (Founding 100, Full Kit): art sits under the button. */
+#pricing .grid>.card:has(>.filler-art){display:flex;flex-direction:column}
+#pricing .grid>.card:has(>.filler-art)>.price{margin-top:0!important} /* flex margins don't collapse; keeps the old 6px gap under the title */
+#pricing .grid>.card:has(>.filler-art)>.btn{align-self:flex-start}
+#pricing .grid>.card:has(>.filler-art)>.tier-list>li:first-child{margin-top:0} /* li margins used to collapse through the list */
+#pricing .grid>.card:has(>.filler-art)>.tier-list>li:last-child{margin-bottom:0}
+#pricing .card>.filler-art{flex:1 1 0}
+/* Contents list open: the art steps aside so nothing gets squished. */
+#pricing .card:has(.kit-det[open])>.filler-art{display:none}
+@media (max-width:640px){#pricing .card>.filler-art{display:none}}
+
+/* Members page: under the chat box, beside the taller "How it works" column. */
+@media (min-width:861px){
+  .chat-grid:has(>.filler-art){grid-template-rows:auto 1fr;row-gap:0}
+  .chat-grid:has(>.filler-art)>.sl-chat{grid-column:1;grid-row:1}
+  .chat-grid:has(>.filler-art)>.aside{grid-column:2;grid-row:1 / span 2}
+  .chat-grid>.filler-art{grid-column:1;grid-row:2;align-self:stretch}
+}
+.chat-grid>.filler-art img{height:calc(100% - 14px);aspect-ratio:4/3;object-fit:cover;object-position:50% 52%} /* marketing tested: fill the members gap (was ~111x148) */
+@media (max-width:860px){.chat-grid>.filler-art{display:none}}
