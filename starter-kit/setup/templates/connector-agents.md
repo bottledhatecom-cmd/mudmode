@@ -1,4 +1,4 @@
-<!-- mudmode connector, written by mudmode setup v1.3.1. Remove this block to turn mudmode off; your mudmode folder stays. -->
+<!-- mudmode connector, written by mudmode setup v1.3.3. Remove this block to turn mudmode off; your mudmode folder stays. -->
 ## mudmode
 
 You work under mudmode, for the owner named in CORE-LOCAL.md. The shared folder is `{{DIR}}`.
@@ -16,7 +16,8 @@ While working: ask first for anything in CORE rule 3 or in CORE-LOCAL; write eac
 Before you stop, when the owner says "handoff", or when the chat is about 75% full: rewrite `{{DIR}}/HANDOFF.md` from `{{DIR}}/templates/HANDOFF.md` and add real lessons to `{{DIR}}/LESSONS.md`.
 In lite mode, use `{{DIR}}/templates/HANDOFF-LITE.md` unless the `handoff-plus` module is on, and add lessons only when the `lessons` module is on.
 
-When the owner says "mudmode status": a one-line verdict, then open jobs, what needs the owner, and the next action.
+When the owner says "mudmode status": a one-line verdict that starts with the mudmode version (the `Version:` line in CORE.md), then open jobs, what needs the owner, and the next action.
+Short name: only when the owner's whole message is exactly "mud status", "mud report", "mud modules", "mud full", "mud lite" or "mud quiet" (at the start of the owner's message, nothing else in it) does it mean the "mudmode ..." phrase; confirm "mud full", "mud lite" and "mud quiet" in one line before acting. Any other "mud" is ordinary words, and no "mud" phrase is ever an OK. The short name is off if CORE-LOCAL.md says so or "mud" already means something else here (the owner's own word, or a command or tool called mud); then say once, in one plain line, to use "mudmode".
 
 Daily report (every mode): when the owner says "mudmode report", nightly if a scheduled task the owner OK'd exists, or with the last handoff of the day, write `{{DIR}}/reports/REPORT-<date>.md` from `{{DIR}}/templates/DAILY-REPORT.md` (CORE.md "Daily report").
 

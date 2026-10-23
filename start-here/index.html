@@ -176,6 +176,7 @@
         </div>
       </div>
       <p class="guard"><b>Buy once, keep it.</b> 14-day money-back promise. Payments are handled by our checkout partner; see the <a href="../privacy.html">privacy note</a>. Results vary.</p>
+      <p class="guard"><b>Your crew, your call.</b> mudmode gives you the starting rules. What your crew learns from there (which lessons stay, which rules you add, what you say yes to) is up to you. Read what your AIs suggest before you keep it, and keep checking their work.</p>
       <p class="hint-row"><svg viewBox="0 0 24 28" aria-hidden="true"><use href="#hexi"/></svg> <span>Not sure? Grab the free Crew kit. Every kit sets up the same way, so nothing you learn here is wasted. Once it's downloaded, tap <b>Next</b>.</span></p>
     </section>
 
@@ -292,6 +293,8 @@
           <li><code>change my mudmode settings</code><span>Change your name, time zone, what your AI must always ask about first, or your word rules.</span></li>
           <li><code>mudmode modules</code><span>In lite mode: see the extra pieces you can turn on, and which ones are on.</span></li>
         </ul>
+        <h4 class="say-h">Short name</h4>
+        <p class="small"><code>mud</code> works too, as the whole message: <code>mud status</code>, <code>mud report</code>, <code>mud modules</code>, and <code>mud full</code>, <code>mud lite</code> or <code>mud quiet</code> (for those three your AI asks you to confirm first). <code>mudmode</code> always works. A "mud" message is never an OK for anything. (If your computer already has a <code>mud</code> command, setup leaves it alone and you keep saying <code>mudmode</code>.)</p>
         <h4 class="say-h">To set up (once)</h4>
         <ul class="say-list">
           <li><code>Read mudmode-chat-lite.md and set me up.</code><span><b>Free Crew kit, chat app</b> (lite mode, the default). Add <b>mudmode-chat-lite.md</b> to the project first.</span></li>
@@ -339,7 +342,7 @@
         <div>
           <p class="term-tag mono" aria-hidden="true">&gt;_ hard nerd mode</p>
           <h1 id="h-nerd" tabindex="-1">hard nerd mode</h1>
-          <p class="sub">Everything on one screen. Kit v1.3.1 installer. <button type="button" class="linkish" data-go="1">← Back to the guided path</button></p>
+          <p class="sub">Everything on one screen. Kit v1.3.3 installer. <button type="button" class="linkish" data-go="1">← Back to the guided path</button></p>
         </div>
       </div>
 
@@ -388,6 +391,7 @@
                 <tr><td><code>-AskFirst TEXT</code></td><td><code>--ask-first</code></td><td>Extra things your AIs must always ask about first</td></tr>
                 <tr><td><code>-Words TEXT</code></td><td><code>--words</code></td><td>Words to always or never use</td></tr>
                 <tr><td><code>-AllowDir yes|no</code></td><td><code>--allow-dir</code></td><td>Opt-in: add the folder to Claude Code's <code>permissions.additionalDirectories</code> (dated backup first)</td></tr>
+                <tr><td><code>-UpdateCheck on|off</code></td><td><code>--update-check</code></td><td>Optional update check, off unless you turn it on: when on, "mudmode status" reads one small public file on mudmodecrew.com and only tells you if a newer kit is out. It never downloads or installs anything and sends no personal info, just a normal web request</td></tr>
                 <tr><td><code>-DryRun</code></td><td><code>--dry-run</code></td><td>Show what it would do, write nothing</td></tr>
                 <tr><td><code>-Yes</code></td><td><code>--yes</code> / <code>-y</code></td><td>No prompts; keeps any existing file and tells you</td></tr>
                 <tr><td>—</td><td><code>--help</code> / <code>-h</code></td><td>Usage</td></tr>
@@ -430,6 +434,8 @@
             <span><code>mudmode report</code></span>
             <span><code>handoff</code> before you stop</span>
             <span><code>mudmode quiet</code> no side notes</span>
+            <span><code>mud status</code> short name</span>
+            <p class="c-dim"># short name: the whole message is "mud" plus one word: status, report, modules, full, lite, quiet. mud full / mud lite / mud quiet ask you to confirm first. "mudmode" always works. a "mud" message is never an OK for anything</p>
             <p class="c-dim"># switching never deletes anything; safety rules are on in every mode</p>
           </div>
         </div>
