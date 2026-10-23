@@ -3,7 +3,7 @@
 mudmode is designed to turn a group of AI assistants into one dependable crew: less wasted effort from the resources you spend, pick up where you left off in any new chat, and you in control. Results vary.
 
 - Website: https://mudmodecrew.com (run by Hestertainment LLC)
-- Full kit: out now, see [pricing](https://mudmodecrew.com/#pricing) (free starter kit: [starter-kit/](starter-kit/))
+- Full kit: out now, see [pricing](https://mudmodecrew.com/#pricing) (free Crew kit: [starter-kit/](starter-kit/))
 - Community and members chat: GitHub Discussions on this repo. Posting is covered by [CONTRIBUTING.md](CONTRIBUTING.md) (the contributor terms).
 - Privacy note: https://mudmodecrew.com/privacy.html · Terms of use: https://mudmodecrew.com/terms.html
 - Contact (rights, permissions, licensing, privacy): see the contact details in the [privacy note](privacy.html#contact)

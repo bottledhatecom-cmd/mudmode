@@ -1,6 +1,6 @@
-# mudmode Starter Kit (free), v1.3.0
+# mudmode free Crew kit, v1.3.1
 
-**Free.** This folder is the whole free mudmode starter kit. Set it up in about 5 minutes with the steps just below.
+**Free.** This folder is the whole free mudmode Crew kit. Set it up with the steps just below.
 
 - **Updates:** if you downloaded this kit from Gumroad, safety fixes and the monthly hive digest come to the email you used there.
 - **Want more?** The paid mudmode Full Kit adds the full manual, ready-made setups for popular AI assistants, the crew toolset and new lessons as they land: https://mudmodecrew.com.
@@ -9,13 +9,13 @@
 
 mudmode is a way of organizing AI assistants. It is not legal, financial, security or professional advice. AI tools make mistakes, so keep checking their work. Not affiliated with or endorsed by any AI provider.
 
-## Set it up in 3 steps (about 5 minutes)
+## Set it up in 3 steps
 
 Your AI does the setup. You answer a few short questions. Pick the AI you use:
 
 - **Claude Code** (the Code tab in the Claude desktop app, or `claude` in a terminal), **Grok Build, Codex, Cursor** or another AI that works with files on your computer:
   1. Unzip this download.
-  2. Open the AI in the unzipped folder `mudmode-starter-kit-v1.3.0`.
+  2. Open the AI in the unzipped folder `mudmode-starter-kit-v1.3.1`.
   3. Type: **Read README.md and set me up.** Answer its questions and say yes when it asks to run the setup.
 - **Claude on claude.ai, Grok on grok.com**, or another chat app with Projects:
   1. Unzip this download.
@@ -65,6 +65,7 @@ templates/OK-LEDGER.md   record of the owner's OKs (one action, one time)
 templates/PROJECT-ADDON.md  extra rules for one project (+ fictional example)
 addons/LOCAL-HARDWARE.md optional: use a strong PC or GPU if you have one (skip otherwise)
 setup/                   the setup your AI runs (AI-SETUP.md, setup.sh, setup.ps1, templates/)
+tools/instant-wake/      optional, Windows: wake your bot when a note file grows (asks first; default No; see its README.md)
 FOR-CHAT-APPS/           mudmode-chat-lite.md (lite) or mudmode-chat-setup.md (full mode, all 25 rules): the one file for Claude, Grok and other chat-app Projects
 ```
 
@@ -83,6 +84,13 @@ Works on any ordinary computer, even a laptop with no GPU, using cloud AIs only.
 6. A connected AI reads the rules by itself. Otherwise start each chat with: "Read ~/mudmode/CORE.md, ~/mudmode/CORE-LOCAL.md and ~/mudmode/HANDOFF.md, check the handoff against the live state, then continue."
 7. End every chat with **"handoff"** (it means: rewrite `~/mudmode/HANDOFF.md` and add any real lesson to `~/mudmode/LESSONS.md`).
 8. Optional, later: tell your AI "check what hardware I have and tell me if `addons/LOCAL-HARDWARE.md` would help". It asks or detects first and only suggests; you decide. You never have to.
+
+## Optional: instant wake (Windows)
+If your bot has a webhook, your PC can wake it when a note file grows, instead of waiting for the bot's next timed check.
+1. Open `tools/instant-wake/` and run `install-instant-wake.ps1` in PowerShell (the exact line is in that folder's `README.md`).
+2. You paste your own webhook URL and key into the two files it makes (`webhook-url.txt`, `webhook-auth.txt`). Do it yourself: don't paste them into any chat, and no AI needs to see them.
+3. Run it again and answer its question. The default is No; type y to add one sign-in task for your account (no admin).
+4. Keep your bot's timed check (for example the 30-minute one) on as a backup. To undo, follow `tools/instant-wake/ROLLBACK.txt`.
 
 ## Grow it later
 - Week 1: add a guard (hook or permission setting) for your top 3 "always ask" actions.

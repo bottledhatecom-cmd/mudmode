@@ -1,5 +1,5 @@
 #!/bin/bash
-# mudmode one-click installer for Mac (kit v1.3.0).
+# mudmode one-click installer for Mac (kit v1.3.1).
 # Double-click this file in the UNZIPPED kit folder. It asks the setup questions in small
 # pop-up windows, then runs the kit's own setup script (setup/setup.sh) with your answers.
 # It changes nothing that setup.sh would not change: your ~/mudmode folder, plus the
@@ -89,7 +89,7 @@ ask_ok "Welcome! This sets up mudmode on this Mac.
 It makes one folder for you: $TARGET_TXT
 Nothing else on this Mac changes unless you say yes in the next questions. Nothing is downloaded or sent anywhere.
 
-You'll answer a few short questions (about 1 minute)." || stopped
+You'll answer a few short questions." || stopped
 
 guess_tz() {
   t=""
@@ -110,7 +110,7 @@ fi
 CONNECT=none
 if ask_yn "3 of 6. Do you use Claude Code (or the Code tab in the Claude desktop app)?
 
-Yes = every new Claude Code chat follows mudmode automatically. (Recommended.)" y; then CONNECT=claude; fi
+Yes = every new Claude Code chat follows mudmode automatically. Not sure? Choose No." n; then CONNECT=claude; fi
 if ask_yn "4 of 6. Do you use Grok Build (the grok command-line tool)?
 
 Not sure? Choose No." n; then

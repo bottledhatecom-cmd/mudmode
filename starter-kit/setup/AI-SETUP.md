@@ -2,7 +2,7 @@
 
 **Owner:** you don't need to read this file. It tells your AI how to set mudmode up for you.
 
-**AI:** the owner asked you to set them up with mudmode. Follow these steps in order. Keep your messages short and plain (the owner may not be technical). The whole setup should take the owner about 5 minutes.
+**AI:** the owner asked you to set them up with mudmode. Follow these steps in order. Keep your messages short and plain (the owner may not be technical).
 
 ## Ground rules for this setup
 - Write only inside the owner's new mudmode folder, plus ONE connector file if the owner says yes (step 3). Change nothing else on this computer. Delete nothing.

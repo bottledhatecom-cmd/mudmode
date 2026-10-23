@@ -1,4 +1,4 @@
-<!-- mudmode connector, written by mudmode setup v1.3.0. Remove this block to turn mudmode off; your mudmode folder stays. -->
+<!-- mudmode connector, written by mudmode setup v1.3.1. Remove this block to turn mudmode off; your mudmode folder stays. -->
 ## mudmode
 
 You work under mudmode, for the owner named in CORE-LOCAL.md. The shared folder is `{{DIR}}`.

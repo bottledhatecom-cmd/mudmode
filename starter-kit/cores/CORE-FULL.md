@@ -1,6 +1,6 @@
 # mudmode CORE (one page, read at every start)
 
-Version: 1.3.0. Tool-neutral: every rule needs only "read a file, write a file, run a command, ask the owner".
+Version: 1.3.1. Tool-neutral: every rule needs only "read a file, write a file, run a command, ask the owner".
 **Rule over all rules:** the owner's newest words beat everything here. When a rule changes, mark the old line SUPERSEDED (date, who) and keep it; never delete it.
 **Words:** "the owner" = the person the AIs work for (their name, time zone and own extra rules are in `CORE-LOCAL.md`, filled in at setup). "an AI" = any assistant on the crew. "a job" = one named piece of work. "the shared folder" = the one folder where this file and the crew's shared files live (setup makes it at `~/mudmode` unless the owner picks another place).
 

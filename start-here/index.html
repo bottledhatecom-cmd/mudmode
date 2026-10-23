@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noai, noimageai">
+<title>Start here: your first mudmode chat, step by step</title>
+<meta name="description" content="Never used an AI? Perfect. A step-by-step start for mudmode: pick an AI app, get the kit, set it up, send your first message.">
+<meta name="theme-color" content="#121110">
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/mudmode-icon-32.png">
+<link rel="stylesheet" href="css/glow.css">
+<link rel="stylesheet" href="css/wizard.css">
+</head>
+<body class="wiz-page">
+<a class="skip" href="#wiz-main">Skip to the steps</a>
+<nav aria-label="Site"><div class="wrap"><a class="brand" href="../index.html" aria-label="mudmode home"><img src="assets/mudmode-icon-32.png" srcset="assets/mudmode-icon-32.png 1x, assets/mudmode-icon-64.png 2x" width="32" height="32" alt=""><b>mudmode</b></a><span class="nav-right"><a class="nav-guide" href="#step-4" data-go="4">Click-by-click setup</a><a href="#nerd" class="nav-nerd" data-go="nerd">hard nerd mode</a></span></div></nav>
+
+<svg width="0" height="0" class="sr-svg" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="g-gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe09a"/><stop offset=".55" stop-color="#f3c969"/><stop offset="1" stop-color="#d8902a"/></linearGradient>
+    <linearGradient id="g-panel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2c2516"/><stop offset="1" stop-color="#161412"/></linearGradient>
+    <radialGradient id="g-halo"><stop offset="0" stop-color="#f3c969" stop-opacity=".35"/><stop offset="1" stop-color="#f3c969" stop-opacity="0"/></radialGradient>
+    <symbol id="bot" viewBox="0 0 200 200">
+      <circle cx="100" cy="104" r="96" fill="url(#g-halo)"/>
+      <line x1="100" y1="22" x2="100" y2="44" stroke="#f3c969" stroke-width="5" stroke-linecap="round"/>
+      <circle class="bot-bulb" cx="100" cy="18" r="8" fill="url(#g-gold)"/>
+      <path d="M100 40 L160 72 V136 L100 168 L40 136 V72 Z" fill="url(#g-panel)" stroke="url(#g-gold)" stroke-width="6" stroke-linejoin="round"/>
+      <rect x="62" y="82" width="76" height="46" rx="20" fill="#0c0b0a" stroke="#f3c969" stroke-opacity=".45" stroke-width="2"/>
+      <g class="bot-eyes"><ellipse cx="85" cy="104" rx="7" ry="9" fill="#f3c969"/><ellipse cx="115" cy="104" rx="7" ry="9" fill="#f3c969"/></g>
+      <path d="M88 142 Q100 151 112 142" fill="none" stroke="#f3c969" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="64" cy="140" r="5" fill="#e6a638" opacity=".55"/><circle cx="136" cy="140" r="5" fill="#e6a638" opacity=".55"/>
+    </symbol>
+    <symbol id="hexi" viewBox="0 0 24 28"><path d="M12 1 L23 7.5 V20.5 L12 27 L1 20.5 V7.5 Z"/></symbol>
+  </defs>
+</svg>
+
+<main id="wiz-main" class="wiz">
+  <div class="wrap wiz-wrap">
+
+    <!-- PROGRESS: numbered gold hexes, like the home page's "How it goes" -->
+    <nav class="hexbar" aria-label="Steps" id="hexbar">
+      <ol>
+        <li><button type="button" data-step="1"><span class="hx" aria-hidden="true">1</span><span class="hx-l">Welcome</span></button></li>
+        <li><button type="button" data-step="2"><span class="hx" aria-hidden="true">2</span><span class="hx-l">Your AI</span></button></li>
+        <li><button type="button" data-step="3"><span class="hx" aria-hidden="true">3</span><span class="hx-l">Get mudmode</span></button></li>
+        <li><button type="button" data-step="4"><span class="hx" aria-hidden="true">4</span><span class="hx-l">Set it up</span></button></li>
+        <li><button type="button" data-step="5"><span class="hx" aria-hidden="true">5</span><span class="hx-l">First idea</span></button></li>
+      </ol>
+      <div class="hexbar-track" aria-hidden="true"><span id="hexbar-fill"></span></div>
+    </nav>
+    <p class="sr-only" aria-live="polite" id="wiz-live"></p>
+    <noscript><p class="tip noscript-note"><b>JavaScript is off.</b> Steps 2 to 5 and hard nerd mode need it. Use the plain <a href="../index.html#steps">step list</a> instead (on the home page, under <b>Prefer the step list?</b>).</p></noscript>
+
+    <!-- STEP 1 -->
+    <section class="step" id="wstep-1" aria-labelledby="h-1" data-step="1">
+      <div class="welcome">
+        <div class="welcome-art" aria-hidden="true">
+          <svg class="float-hex fh1" viewBox="0 0 24 28"><use href="#hexi"/></svg>
+          <svg class="float-hex fh2" viewBox="0 0 24 28"><use href="#hexi"/></svg>
+          <svg class="float-hex fh3" viewBox="0 0 24 28"><use href="#hexi"/></svg>
+          <svg class="bot bot-wave" viewBox="0 0 200 200"><use href="#bot"/></svg>
+        </div>
+        <div class="welcome-text">
+          <p class="eyebrow-pill">Start here</p>
+          <h1 id="h-1" tabindex="-1">Never used an AI? <span>Perfect.</span></h1>
+          <p class="lead">We'll go one small step at a time, from "I don't have an AI" to your first message in your own mudmode'd AI.</p>
+          <ul class="facts">
+            <li><svg viewBox="0 0 24 28" aria-hidden="true"><use href="#hexi"/></svg>One step at a time, at your pace</li>
+            <li><svg viewBox="0 0 24 28" aria-hidden="true"><use href="#hexi"/></svg>Free to start</li>
+            <li><svg viewBox="0 0 24 28" aria-hidden="true"><use href="#hexi"/></svg>No experience needed</li>
+          </ul>
+          <div class="welcome-cta">
+            <button type="button" class="btn p big" data-next>Let's go <span aria-hidden="true">→</span></button>
+            <button type="button" class="btn nerd-link" data-go="nerd"><span class="mono" aria-hidden="true">&gt;_</span> I know what I'm doing — skip the hand-holding</button>
+          </div>
+          <p class="tip"><b>Tip:</b> a computer is much easier than a phone for the setup part. You can read along here on your phone, though.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 2 -->
+    <section class="step" id="wstep-2" aria-labelledby="h-2" data-step="2" hidden>
+      <h2 id="h-2" tabindex="-1">Do you have an AI yet?</h2>
+      <p class="sub">mudmode works inside an AI chat app you already know (or are about to). Pick one. They all work, and you can switch later; the setup file is the same.</p>
+      <fieldset class="picks">
+        <legend class="sr-only">Pick your AI app</legend>
+        <div class="pick-grid">
+          <label class="pick big-pick" data-ai="chatgpt">
+            <input type="radio" name="ai" value="chatgpt">
+            <span class="pick-face">
+              <span class="pick-badge" aria-hidden="true">Ch</span>
+              <span class="pick-name">ChatGPT</span>
+              <span class="pick-by">from OpenAI</span>
+              <span class="pick-line">Projects are on the free plan, and mudmode needs just 1 file in one.</span>
+              <span class="pick-check" aria-hidden="true">✓ Picked</span>
+            </span>
+          </label>
+          <label class="pick big-pick" data-ai="claude">
+            <input type="radio" name="ai" value="claude">
+            <span class="pick-face">
+              <span class="pick-badge" aria-hidden="true">Cl</span>
+              <span class="pick-name">Claude</span>
+              <span class="pick-by">from Anthropic</span>
+              <span class="pick-line">Projects are on the free plan (up to 5 projects).</span>
+              <span class="pick-check" aria-hidden="true">✓ Picked</span>
+            </span>
+          </label>
+          <label class="pick big-pick" data-ai="grok">
+            <input type="radio" name="ai" value="grok">
+            <span class="pick-face">
+              <span class="pick-badge" aria-hidden="true">Gr</span>
+              <span class="pick-name">Grok</span>
+              <span class="pick-by">from xAI</span>
+              <span class="pick-line">Use the grok.com website. Projects: check your plan.</span>
+              <span class="pick-check" aria-hidden="true">✓ Picked</span>
+            </span>
+          </label>
+        </div>
+        <div class="pick-row">
+          <label class="pick slim-pick">
+            <input type="radio" name="ai" value="have">
+            <span class="pick-face"><span class="pick-name">I already have one</span><span class="pick-line">Great, you're ahead. Tell us which.</span></span>
+          </label>
+          <label class="pick slim-pick">
+            <input type="radio" name="ai" value="help">
+            <span class="pick-face"><span class="pick-name">Not sure — help me pick</span><span class="pick-line">No wrong answer here. Two honest tips.</span></span>
+          </label>
+        </div>
+      </fieldset>
+
+      <div class="ai-note" id="ai-note" aria-live="polite">
+        <div data-for="chatgpt" hidden><p><b>ChatGPT it is.</b> No account yet? Make a free one, then come back to this tab.</p><a class="btn s" href="https://chatgpt.com" target="_blank" rel="noopener">Open chatgpt.com <span aria-hidden="true">↗</span><span class="sr-only">(opens in a new tab)</span></a></div>
+        <div data-for="claude" hidden><p><b>Claude it is.</b> No account yet? Make a free one, then come back to this tab.</p><a class="btn s" href="https://claude.ai" target="_blank" rel="noopener">Open claude.ai <span aria-hidden="true">↗</span><span class="sr-only">(opens in a new tab)</span></a></div>
+        <div data-for="grok" hidden><p><b>Grok it is.</b> No account yet? Make one on the grok.com website, then come back to this tab.</p><a class="btn s" href="https://grok.com" target="_blank" rel="noopener">Open grok.com <span aria-hidden="true">↗</span><span class="sr-only">(opens in a new tab)</span></a></div>
+        <div data-for="have" hidden><p><b>Which one do you use?</b> Tap it above (ChatGPT, Claude or Grok). Using a different chat app that has Projects? The same setup file works there too; step 4 shows the idea.</p></div>
+        <div data-for="help" hidden>
+          <p><b>Two honest tips:</b></p>
+          <ul class="tight">
+            <li>Already have an account somewhere, or a friend who uses one? Pick that one, so you have someone to ask.</li>
+            <li>Still stuck? Just tap any of the three. mudmode sets up the same way in each, and you can switch later.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 3 -->
+    <section class="step" id="wstep-3" aria-labelledby="h-3" data-step="3" hidden>
+      <h2 id="h-3" tabindex="-1">Get mudmode</h2>
+      <p class="sub">Start free and keep it as long as you like. Upgrade when you want the full kit and the newest lessons as they land. No subscriptions.</p>
+      <div class="tiers">
+        <div class="tier">
+          <h3>mudmode Crew</h3>
+          <p class="price">Free</p>
+          <p class="tier-note">Free to download and keep.</p>
+          <ul class="tier-list"><li>Crew kit that works on its own</li><li>Core safety rules</li><li>Safety fixes as soon as they're ready</li></ul>
+          <a class="btn s" href="https://bottledhate.gumroad.com/l/lwmsr" target="_blank" rel="noopener">Get the free Crew kit<span class="sr-only"> (opens in a new tab)</span></a>
+        </div>
+        <div class="tier featured">
+          <p class="ribbon">First 100 buyers</p>
+          <h3>Founding 100</h3>
+          <p class="price">$19 <span class="per">one time</span></p>
+          <p class="tier-note">For the first 100 buyers only.</p>
+          <ul class="tier-list"><li>Everything in the Full Kit</li><li><b>Live hive updates for the life of the Full Kit*</b></li><li>Founder badge in members chat</li></ul>
+          <p class="tier-note small">*For as long as we publish Full Kit updates, including for a renamed or successor kit, with at least 90 days' notice before they stop for good. It's tied to the life of the kit, not yours.</p>
+          <a class="btn p" href="https://bottledhate.gumroad.com/l/ijfhue" target="_blank" rel="noopener">Get Founding 100: $19<span class="sr-only"> (opens in a new tab)</span></a>
+        </div>
+        <div class="tier">
+          <h3>Full Kit</h3>
+          <p class="price">$29 <span class="per">one time</span></p>
+          <p class="tier-note">Includes 12 months of live hive updates. Keep updating for $15 for 12 more months, one time, never automatic, only if you want to.</p>
+          <ul class="tier-list"><li>Everything in Crew</li><li>The full mudmode kit and setup guide</li><li>Ready-made setups for popular AI assistants</li></ul>
+          <a class="btn p" href="https://bottledhate.gumroad.com/l/attal" target="_blank" rel="noopener">Get the Full Kit: $29<span class="sr-only"> (opens in a new tab)</span></a>
+        </div>
+      </div>
+      <p class="guard"><b>Buy once, keep it.</b> 14-day money-back promise. Payments are handled by our checkout partner; see the <a href="../privacy.html">privacy note</a>. Results vary.</p>
+      <p class="hint-row"><svg viewBox="0 0 24 28" aria-hidden="true"><use href="#hexi"/></svg> Not sure? Grab the free Crew kit. Every kit sets up the same way, so nothing you learn here is wasted. Once it's downloaded, tap <b>Next</b>.</p>
+    </section>
+
+    <!-- STEP 4 -->
+    <section class="step" id="wstep-4" aria-labelledby="h-4" data-step="4" hidden>
+      <h2 id="h-4" tabindex="-1">Unzip it and set it up</h2>
+      <p class="sub">Two short parts: open the download, then add one setup file to your AI app.</p>
+
+      <div class="part">
+        <h3 class="part-h"><span class="part-n" aria-hidden="true">A</span>Find and unzip the download</h3>
+        <p class="small">Your receipt email has a <b>View content</b> button (search your inbox for <b>mudmode</b>). Click it, then <b>Download</b>. The file lands in <b>Downloads</b>, ends in <b>.zip</b>.</p>
+        <div class="os-grid">
+          <div class="os-card"><h4>Windows</h4><ol><li>Open <b>File Explorer</b>, click <b>Downloads</b>.</li><li><b>Right-click</b> the mudmode file, click <b>Extract All...</b></li><li>Click <b>Extract</b>. A normal folder opens.</li></ol></div>
+          <div class="os-card"><h4>Mac</h4><ol><li>Open <b>Finder</b>, click <b>Downloads</b>.</li><li><b>Double-click</b> the mudmode .zip file.</li><li>A normal folder appears right next to it.</li></ol></div>
+        </div>
+        <p class="file-callout"><svg viewBox="0 0 24 28" aria-hidden="true"><use href="#hexi"/></svg><span>Inside: a folder called <b>FOR-CHAT-APPS</b> with two files. Use <b class="mono-b">mudmode-chat-lite.md</b>; that's the only file your AI app needs to start. It's lite mode, the default: one short page of safety rules. The other file, <b class="mono-b">mudmode-chat-setup.md</b>, is full mode (all 25 rules). You can switch any time by saying <b>"mudmode full"</b> (see <b>Ready for more? Go full mode</b> in step 5). You don't have to open either file.</span></p>
+      </div>
+
+      <div class="part">
+        <h3 class="part-h"><span class="part-n" aria-hidden="true">B</span>Add it to your AI app</h3>
+        <div class="tabs" role="tablist" aria-label="Your AI app">
+          <button type="button" role="tab" id="tab-chatgpt" aria-controls="panel-chatgpt" data-ai="chatgpt">ChatGPT</button>
+          <button type="button" role="tab" id="tab-claude" aria-controls="panel-claude" data-ai="claude">Claude</button>
+          <button type="button" role="tab" id="tab-grok" aria-controls="panel-grok" data-ai="grok">Grok</button>
+        </div>
+
+        <div class="copy-strip">
+          <span class="copy-label">The sentence you'll type (same in every app):</span>
+          <div class="copy-box"><code id="setup-line">Read mudmode-chat-lite.md and set me up.</code><button type="button" class="copy-btn" data-copy="#setup-line">Copy</button></div>
+        </div>
+
+        <!-- ChatGPT: real chatgpt.com screens, free test account, captured 2026-10-23 ~01:35 CT (14, 15, 17 retaken for lite ~02:34 CT; full-mode copies in assets/shots/full-mode/); account name and other chats blurred -->
+        <div class="tabpanel" role="tabpanel" id="panel-chatgpt" aria-labelledby="tab-chatgpt" tabindex="0" hidden>
+          <div class="walk" data-walk>
+            <ol class="walk-list">
+              <li><button type="button" data-shot="assets/shots/10-chatgpt-new-project.png" data-alt="ChatGPT sidebar with the + next to Projects circled">Go to <b>chatgpt.com</b> and sign in (a free account works). In the sidebar on the left, point at <b>Projects</b>. Click the small <b>+</b> that shows up next to it.</button></li>
+              <li><button type="button" data-shot="assets/shots/11-chatgpt-name-project.png" data-alt="ChatGPT Create project window with mudmode typed and Create project circled">A <b>Create project</b> window opens. In <b>Project name</b>, type <b>mudmode</b>. Click <b>Create project</b>.</button></li>
+              <li><button type="button" data-shot="assets/shots/12-chatgpt-add-sources.png" data-alt="ChatGPT project page on the Sources tab with Add sources circled">In your project, click the <b>Sources</b> tab, then <b>Add sources</b>.</button></li>
+              <li><button type="button" data-shot="assets/shots/12b-chatgpt-upload.png" data-alt="ChatGPT Add sources window with Upload circled">In the <b>Add sources</b> window, click <b>Upload</b>. Open <b>FOR-CHAT-APPS</b>, click <b>mudmode-chat-lite.md</b>, then <b>Open</b>. Wait until it shows under <b>Sources</b>.</button></li>
+              <li><button type="button" data-shot="assets/shots/14-chatgpt-type-sentence.png" data-alt="ChatGPT project message box with the setup sentence typed, circled">Click the message box at the top (<b>New chat in mudmode</b>). Type the sentence above. Press <b>Enter</b>. Answer its short questions, or just type <b>defaults</b>.</button></li>
+              <li><button type="button" data-shot="assets/shots/15-chatgpt-copy-block.png" data-alt="ChatGPT reply with the block to paste and its Copy icon circled">Under <b>One thing to do now</b> it gives you a short block for your project's instructions. It starts with <b>Follow mudmode-chat-lite.md in every chat in this project.</b> Click the <b>Copy</b> icon at the top right of the block.</button></li>
+              <li><button type="button" data-shot="assets/shots/16-chatgpt-project-settings.png" data-alt="ChatGPT project ••• menu open with Project settings circled">Go back to the project page (click <b>mudmode</b> on the left). Click <b>•••</b> (next to <b>Share</b>), then <b>Project settings</b>.</button></li>
+              <li><button type="button" data-shot="assets/shots/17-chatgpt-instructions-save.png" data-alt="ChatGPT Project settings window with the block pasted in Instructions and Save circled">Click in <b>Instructions</b>, delete anything there, and paste. Click <b>Save</b> (it shows up after you paste). Leave the red button alone.</button></li>
+            </ol>
+            <figure class="shot-stage"><a class="shot-link" href="assets/shots/10-chatgpt-new-project.png" target="_blank" rel="noopener"><img class="shot-img" src="assets/shots/10-chatgpt-new-project.png" width="1280" height="742" alt="ChatGPT sidebar with the + next to Projects circled"></a><figcaption><span class="shot-count">Picture 1 of 8</span> · Real screen on a free account; account details blurred. Yours may look a bit different.</figcaption></figure>
+          </div>
+        </div>
+
+        <div class="tabpanel" role="tabpanel" id="panel-claude" aria-labelledby="tab-claude" tabindex="0" hidden>
+          <div class="walk" data-walk>
+            <ol class="walk-list">
+              <li><button type="button" data-shot="assets/shots/18-claude-projects.png" data-alt="Claude's left sidebar with Projects circled">Go to <b>claude.ai</b> and sign in (a free account works). In the sidebar on the left, click <b>Projects</b>.</button></li>
+              <li><button type="button" data-shot="assets/shots/19-claude-new-project.png" data-alt="Claude Projects page with New project circled and the Create a project window open">Click <b>New project</b> (top right). A <b>Create a project</b> window opens.</button></li>
+              <li><button type="button" data-shot="assets/shots/20-claude-name-project.png" data-alt="Claude Create a project window with mudmode typed and Create project circled">In <b>What are you working on?</b>, type <b>mudmode</b>. Leave the second box empty. Click <b>Create project</b>.</button></li>
+              <li><button type="button" data-shot="assets/shots/21-claude-knowledge-plus.png" data-alt="Claude project page with the Context + and Upload from device circled">On the right, next to <b>Context</b>, click <b>+</b>, then <b>Upload from device</b>. Pick <b>FOR-CHAT-APPS</b> &gt; <b>mudmode-chat-lite.md</b> &gt; <b>Open</b>.</button></li>
+              <li><button type="button" data-shot="assets/shots/22-claude-file-added.png" data-alt="Claude Context panel showing the uploaded file">Wait until the file shows under <b>Context</b>.</button></li>
+              <li><button type="button" data-shot="assets/shots/23-claude-type-sentence.png" data-alt="Claude project chat box with the setup sentence typed">Click the chat box (<b>How can I help you today?</b>), type the sentence above, press <b>Enter</b>. Answer its questions, or type <b>defaults</b>. It says <b>Here's your setup block</b>. Click <b>Copy</b> on the block (it starts with <b>Follow mudmode-chat-lite.md in every chat in this project.</b>).</button></li>
+              <li><button type="button" data-shot="assets/shots/24-claude-set-instructions.png" data-alt="Claude project page with the + next to Instructions circled">Go back to the project page (<b>Projects</b>, then <b>mudmode</b>). Next to <b>Instructions</b>, click the small <b>+</b> (<b>Edit instructions</b>).</button></li>
+              <li><button type="button" data-shot="assets/shots/25-claude-save-instructions.png" data-alt="Claude Set project instructions window with text in the box and Save instructions circled">In <b>Set project instructions</b>, delete anything there, paste the block, and click <b>Save instructions</b>.</button></li>
+            </ol>
+            <figure class="shot-stage"><a class="shot-link" href="assets/shots/18-claude-projects.png" target="_blank" rel="noopener"><img class="shot-img" src="assets/shots/18-claude-projects.png" width="1280" height="800" alt="Claude's left sidebar with Projects circled"></a><figcaption><span class="shot-count">Picture 1 of 8</span> · Real screen on a free account; IDs blurred. Yours may look a bit different.</figcaption></figure>
+          </div>
+          <p class="small">Free Claude plans can have up to 5 projects. On a paid plan the project screen may look a bit different; the idea is the same: add the file, then paste the block into the project's instructions.</p>
+        </div>
+
+        <div class="tabpanel" role="tabpanel" id="panel-grok" aria-labelledby="tab-grok" tabindex="0" hidden>
+          <div class="walk" data-walk>
+            <ol class="walk-list">
+              <li><button type="button" data-shot="assets/shots/26-grok-projects.png" data-alt="Grok sidebar with Projects circled">Go to <b>grok.com</b> and sign in. In the sidebar, find <b>Projects</b>.</button></li>
+              <li><button type="button" data-shot="assets/shots/27-grok-new-project.png" data-alt="Grok Create Project window with mudmode typed and Create circled">Point at <b>Projects</b>, click <b>Add project</b>. In <b>Project name</b>, type <b>mudmode</b>. Click <b>Create</b>.</button></li>
+              <li><button type="button" data-shot="assets/shots/28-grok-add-file.png" data-alt="Grok project settings panel with Files Add and the uploaded file circled">In <b>mudmode's settings</b> on the right, next to <b>Files</b>, click <b>Add</b>, then <b>File</b>. Pick <b>FOR-CHAT-APPS</b> &gt; <b>mudmode-chat-lite.md</b> &gt; <b>Open</b>.</button></li>
+              <li><button type="button" data-shot="assets/shots/29-grok-type-sentence.png" data-alt="Grok project chat box with the setup sentence typed">Click <b>Ask anything</b>, type the sentence above, press <b>Enter</b>. Answer its questions, or type <b>defaults</b>. It says <b>Paste this into your project instructions</b>. Click <b>Copy</b> on the block (it starts with <b>Follow mudmode-chat-lite.md in every chat in this project.</b>).</button></li>
+              <li><button type="button" data-shot="assets/shots/30-grok-instructions.png" data-alt="Grok Set project instructions window with Save circled">Next to <b>Instructions</b>, click <b>Edit</b>. In <b>Set project instructions</b>, delete anything there, paste, and click <b>Save</b>.</button></li>
+            </ol>
+            <figure class="shot-stage"><a class="shot-link" href="assets/shots/26-grok-projects.png" target="_blank" rel="noopener"><img class="shot-img" src="assets/shots/26-grok-projects.png" width="1280" height="742" alt="Grok sidebar with Projects circled"></a><figcaption><span class="shot-count">Picture 1 of 5</span> · Real screen; account details blurred. Yours may look a bit different.</figcaption></figure>
+          </div>
+        </div>
+
+        <p class="tip"><b>On a computer and like apps over websites?</b> The kit also has an installer: on a Mac, double-click the file <b>Install mudmode (double-click me)</b>; on Windows or Linux, run one command. The first time, macOS may block the Mac file because it came from the internet: right-click (or Control-click) it and choose <b>Open</b>. On macOS 15 or later, if there's no Open button, click <b>Done</b>, then go to <b>System Settings &gt; Privacy &amp; Security</b> and click <b>Open Anyway</b>. The exact commands are in <a href="#nerd" data-go="nerd">hard nerd mode</a>.</p>
+      </div>
+    </section>
+
+    <!-- STEP 5 -->
+    <section class="step" id="wstep-5" aria-labelledby="h-5" data-step="5" hidden>
+      <div class="finish-head">
+        <svg viewBox="0 0 200 200" class="bot bot-small" aria-hidden="true"><use href="#bot"/></svg>
+        <div>
+          <h2 id="h-5" tabindex="-1">Your first idea</h2>
+          <p class="sub">Setup done? Start a new chat inside your <b>mudmode</b> project and give it a first job. Tap an idea to copy it, then paste it in.</p>
+        </div>
+      </div>
+      <div class="ideas" role="list">
+        <div role="listitem"><button type="button" class="idea" data-copy-text="Help me plan my week. Ask me a few quick questions about what's coming up, then give me a simple day-by-day plan I can actually stick to."><svg class="idea-ico" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 3 L43 14 V34 L24 45 L5 34 V14 Z" class="ii-hex"/><rect x="14" y="16" width="20" height="17" rx="3" class="ii-line"/><path d="M14 21h20M19 13v5M29 13v5" class="ii-line"/><circle cx="20" cy="27" r="1.8" class="ii-dot"/><circle cx="26" cy="27" r="1.8" class="ii-dot"/></svg><span class="idea-t">Plan my week</span><span class="idea-s">Tap to copy</span></button></div>
+        <div role="listitem"><button type="button" class="idea" data-copy-text="I want to start a small side project. Ask me what I'm into, suggest three ideas that fit, and help me pick one first step I can do today."><svg class="idea-ico" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 3 L43 14 V34 L24 45 L5 34 V14 Z" class="ii-hex"/><path d="M24 12c5 4 6 10 4 17h-8c-2-7-1-13 4-17z" class="ii-line"/><path d="M20 29l-4 4 1-6M28 29l4 4-1-6M22 33h4" class="ii-line"/><circle cx="24" cy="21" r="2.2" class="ii-dot"/></svg><span class="idea-t">Start a side project</span><span class="idea-s">Tap to copy</span></button></div>
+        <div role="listitem"><button type="button" class="idea" data-copy-text="Help me tidy up my resume. I'll paste it in with my address and phone number taken out. Suggest clear, honest improvements and ask before rewriting anything big."><svg class="idea-ico" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 3 L43 14 V34 L24 45 L5 34 V14 Z" class="ii-hex"/><path d="M16 12h11l5 5v19H16z" class="ii-line"/><path d="M20 22h8M20 27h8M20 32h5" class="ii-line"/><path d="M30 30l4-4 2 2-4 4h-2z" class="ii-dot"/></svg><span class="idea-t">Tidy up my resume</span><span class="idea-s">Tap to copy</span></button></div>
+      </div>
+      <div class="own">
+        <label for="own-idea">…or type your own cool idea</label>
+        <div class="own-row"><textarea id="own-idea" rows="2" placeholder="e.g. Help me plan a birthday dinner for six people"></textarea><button type="button" class="btn s" data-copy="#own-idea">Copy</button></div>
+      </div>
+      <div class="part" id="go-full">
+        <h3 class="part-h">Ready for more? Go full mode</h3>
+        <p class="small">Lite is the start. When you want to keep learning, move up to full mode: all 25 rules in one rule book. Switching never deletes anything, and the safety rules (asking first before money, posting, sending, deploying or deleting) are on in every mode.</p>
+        <ol class="small">
+          <li>In a chat in your <b>mudmode</b> project, type <b>mudmode full</b>. Your AI tells you to put <b>mudmode-chat-setup.md</b> in the project's files instead of mudmode-chat-lite.md.</li>
+          <li>Add <b>mudmode-chat-setup.md</b> from <b>FOR-CHAT-APPS</b> to the project, the same way you added the lite file in step 4. Then take <b>mudmode-chat-lite.md</b> out of the project's files, so only one of the two is there (it stays in your folder).</li>
+          <li>Start a new chat in the project and type <b>Read mudmode-chat-setup.md and set me up.</b> Press <b>Enter</b>.</li>
+          <li>Answer its short questions (or type <b>defaults</b>). Paste the new block it gives you (it starts with <b>Follow mudmode-chat-setup.md in every chat in this project.</b>) into your project's instructions, replacing the old block, and save.</li>
+        </ol>
+        <div class="go-full-shot"><figure class="shot-stage"><a class="shot-link" href="assets/shots/full-mode/14-chatgpt-type-sentence.png" target="_blank" rel="noopener"><img class="shot-img" src="assets/shots/full-mode/14-chatgpt-type-sentence.png" width="1280" height="742" loading="lazy" alt="ChatGPT project message box with Read mudmode-chat-setup.md and set me up. typed, mudmode-chat-setup.md listed under Sources"></a><figcaption>Full mode in ChatGPT: <b>mudmode-chat-setup.md</b> added and the full-mode sentence typed. Real screen on a free account; account details blurred.</figcaption></figure></div>
+        <p class="small">Want to go back? Type <b>mudmode lite</b> and do the same steps with <b>mudmode-chat-lite.md</b>.</p>
+      </div>
+      <p class="small"><b>Results vary.</b> mudmode's rules ask your AI to ask first before money, posting, sending, deploying or deleting. AI tools can still make mistakes, so keep checking their work. Before you stop, type <b>handoff</b>; next time, paste the block it gives you as your first message.</p>
+      <div class="center"><button type="button" class="btn p big" id="sent-btn">I sent my first message!</button></div>
+      <div class="celebrate" id="celebrate" hidden tabindex="-1">
+        <div class="confetti" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <svg viewBox="0 0 200 200" class="bot bot-party" aria-hidden="true"><use href="#bot"/></svg>
+        <h3>You did it. Welcome to the crew.</h3>
+        <p>You went from "I don't have an AI" to your own mudmode'd AI. Every day from now on: open your project, work like normal, say <b>handoff</b> before you stop.</p>
+        <div class="btns center"><a class="btn s" href="#step-4" data-go="4">Stuck? Back to the setup steps</a><a class="btn s" href="https://github.com/bottledhatecom-cmd/mudmode/discussions" target="_blank" rel="noopener">Say hi in the community<span class="sr-only"> (opens in a new tab)</span></a></div>
+      </div>
+    </section>
+
+    <!-- step buttons -->
+    <div class="wiz-nav" id="wiz-nav">
+      <button type="button" class="btn s big" id="back-btn"><span aria-hidden="true">←</span> Back</button>
+      <span class="wiz-count" id="wiz-count" aria-hidden="true">Step 1 of 5</span>
+      <button type="button" class="btn p big" id="next-btn">Next <span aria-hidden="true">→</span></button>
+    </div>
+
+    <!-- HARD NERD MODE -->
+    <section class="nerd" id="nerd-view" aria-labelledby="h-nerd" hidden>
+      <div class="nerd-head">
+        <svg viewBox="0 0 200 200" class="bot bot-nerd" aria-hidden="true"><use href="#bot"/><g fill="none" stroke="#f3c969" stroke-width="4"><rect x="70" y="92" width="26" height="22" rx="6"/><rect x="104" y="92" width="26" height="22" rx="6"/><path d="M96 101h8"/></g></svg>
+        <div>
+          <p class="term-tag mono" aria-hidden="true">&gt;_ hard nerd mode</p>
+          <h1 id="h-nerd" tabindex="-1">hard nerd mode</h1>
+          <p class="sub">Everything on one screen. Kit v1.3.1 installer. <button type="button" class="linkish" data-go="1">← Back to the guided path</button></p>
+        </div>
+      </div>
+
+      <div class="term-grid">
+        <div class="term term-wide">
+          <div class="term-bar"><i></i><i></i><i></i><span>01 · download</span></div>
+          <div class="term-body">
+            <div class="dl-row">
+              <a class="btn s" href="https://bottledhate.gumroad.com/l/lwmsr" target="_blank" rel="noopener">Free Crew kit<span class="sr-only"> (opens in a new tab)</span></a>
+              <a class="btn p" href="https://bottledhate.gumroad.com/l/ijfhue" target="_blank" rel="noopener">Founding 100: $19<span class="sr-only"> (opens in a new tab)</span></a>
+              <a class="btn p" href="https://bottledhate.gumroad.com/l/attal" target="_blank" rel="noopener">Full Kit: $29<span class="sr-only"> (opens in a new tab)</span></a>
+            </div>
+            <p class="c-dim"># unzip, then run everything below from the unzipped kit folder</p>
+          </div>
+        </div>
+
+        <div class="term term-wide">
+          <div class="term-bar"><i></i><i></i><i></i><span>02 · install</span></div>
+          <div class="term-body">
+            <p class="c-dim"># macOS: in the kit folder, double-click this file in Finder (pop-up questions, then runs setup.sh)</p>
+            <p class="c-dim"># blocked by macOS? right-click &gt; Open; macOS 15+: System Settings &gt; Privacy &amp; Security &gt; Open Anyway</p>
+            <div class="code"><pre tabindex="0"><code id="c-mac" class="file">Install mudmode (double-click me).command</code></pre><button type="button" class="copy-btn" data-copy="#c-mac" aria-label="Copy the Mac installer file name">Copy</button></div>
+            <p class="c-dim"># Windows (PowerShell 5.1+)</p>
+            <div class="code"><pre tabindex="0"><code id="c-win">powershell -ExecutionPolicy Bypass -File setup\setup.ps1</code></pre><button type="button" class="copy-btn" data-copy="#c-win" aria-label="Copy the Windows command">Copy</button></div>
+            <p class="c-dim"># macOS / Linux / Git Bash</p>
+            <div class="code"><pre tabindex="0"><code id="c-sh">sh setup/setup.sh</code></pre><button type="button" class="copy-btn" data-copy="#c-sh" aria-label="Copy the macOS and Linux command">Copy</button></div>
+            <p class="c-dim"># preview first, write nothing</p>
+            <div class="code"><pre tabindex="0"><code id="c-dry">sh setup/setup.sh --dry-run</code></pre><button type="button" class="copy-btn" data-copy="#c-dry" aria-label="Copy the dry-run command">Copy</button></div>
+            <p class="c-dim"># non-interactive example (keeps your kit's default mode; add --mode lite or --mode full to choose)</p>
+            <div class="code"><pre tabindex="0"><code id="c-ex">sh setup/setup.sh --yes --connect claude --name "YOUR NAME" --tz "Your/TimeZone"</code></pre><button type="button" class="copy-btn" data-copy="#c-ex" aria-label="Copy the example command">Copy</button></div>
+          </div>
+        </div>
+
+        <div class="term term-wide">
+          <div class="term-bar"><i></i><i></i><i></i><span>03 · flags</span></div>
+          <div class="term-body">
+            <table class="flags">
+              <caption class="sr-only">Installer flags, PowerShell and sh</caption>
+              <thead><tr><th scope="col">setup.ps1</th><th scope="col">setup.sh</th><th scope="col">does</th></tr></thead>
+              <tbody>
+                <tr><td><code>-Connect claude|grok|both|none</code></td><td><code>--connect …</code></td><td>Write the connector for Claude Code, Grok Build, both, or none</td></tr>
+                <tr><td><code>-Name NAME</code></td><td><code>--name</code></td><td>What your crew calls you</td></tr>
+                <tr><td><code>-Tz ZONE</code></td><td><code>--tz</code></td><td>Your time zone</td></tr>
+                <tr><td><code>-Mode lite|full</code></td><td><code>--mode</code></td><td>Free Crew kit defaults to lite, Full Kit to full; a rerun keeps your current mode</td></tr>
+                <tr><td><code>-Target DIR</code></td><td><code>--target</code></td><td>Install folder (default <code>~/mudmode</code>)</td></tr>
+                <tr><td><code>-AskFirst TEXT</code></td><td><code>--ask-first</code></td><td>Extra things your AIs must always ask about first</td></tr>
+                <tr><td><code>-Words TEXT</code></td><td><code>--words</code></td><td>Words to always or never use</td></tr>
+                <tr><td><code>-AllowDir yes|no</code></td><td><code>--allow-dir</code></td><td>Opt-in: add the folder to Claude Code's <code>permissions.additionalDirectories</code> (dated backup first)</td></tr>
+                <tr><td><code>-DryRun</code></td><td><code>--dry-run</code></td><td>Show what it would do, write nothing</td></tr>
+                <tr><td><code>-Yes</code></td><td><code>--yes</code> / <code>-y</code></td><td>No prompts; keeps any existing file and tells you</td></tr>
+                <tr><td>—</td><td><code>--help</code> / <code>-h</code></td><td>Usage</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="term term-wide">
+          <div class="term-bar"><i></i><i></i><i></i><span>04 · what it writes</span></div>
+          <div class="term-body">
+<pre class="tree"><code><span class="c-gold">~/mudmode/</span>                   <span class="c-dim"># your folder (or --target)</span>
+<span class="c-gold">~/.claude/rules/mudmode.md</span>   <span class="c-dim"># only if you connect claude or both</span>
+<span class="c-gold">~/.grok/AGENTS.md</span>            <span class="c-dim"># only if you connect grok or both</span>
+<span class="c-gold">~/.claude/settings.json</span>      <span class="c-dim"># only with --allow-dir yes, backed up first</span></code></pre>
+            <p class="c-dim"># never deletes anything; backs up first, then updates mudmode's own files (cores/modules, CORE.md on a mode switch); doesn't touch your other files</p>
+            <p class="c-dim"># undo: delete ~/.claude/rules/mudmode.md (or ~/.grok/AGENTS.md if setup made it)</p>
+          </div>
+        </div>
+
+        <div class="term term-wide">
+          <div class="term-bar"><i></i><i></i><i></i><span>05 · chat apps &amp; agents</span></div>
+          <div class="term-body">
+            <p class="c-dim"># chat app (ChatGPT / Claude / Grok): new Project, upload FOR-CHAT-APPS/mudmode-chat-lite.md (lite, the default), then:</p>
+            <div class="code"><pre tabindex="0"><code id="c-chat">Read mudmode-chat-lite.md and set me up.</code></pre><button type="button" class="copy-btn" data-copy="#c-chat" aria-label="Copy the chat-app sentence">Copy</button></div>
+            <p class="c-dim"># paste the block it returns into the project's instructions. full mode (all 25 rules): say "mudmode full", swap in mudmode-chat-setup.md, type: Read mudmode-chat-setup.md and set me up.</p>
+            <p class="c-dim"># file-capable agent (Claude Code, Grok Build, Codex, Cursor…), opened in the kit folder:</p>
+            <div class="code"><pre tabindex="0"><code id="c-agent">Read README.md and set me up.</code></pre><button type="button" class="copy-btn" data-copy="#c-agent" aria-label="Copy the agent sentence">Copy</button></div>
+            <p class="c-dim"># Full Kit: Read README-START-HERE.md and set me up.</p>
+          </div>
+        </div>
+
+        <div class="term term-wide">
+          <div class="term-bar"><i></i><i></i><i></i><span>06 · say these</span></div>
+          <div class="term-body words">
+            <span><code>mudmode lite</code> one-page core</span>
+            <span><code>mudmode full</code> all 25 rules</span>
+            <span><code>turn on the &lt;name&gt; module</code></span>
+            <span><code>mudmode status</code></span>
+            <span><code>mudmode report</code></span>
+            <span><code>handoff</code> before you stop</span>
+            <span><code>mudmode quiet</code> no side notes</span>
+            <p class="c-dim"># switching never deletes anything; safety rules are on in every mode</p>
+          </div>
+        </div>
+      </div>
+      <p class="center"><button type="button" class="btn s big" data-go="1">← Back to the guided path</button></p>
+    </section>
+
+    <footer class="wiz-foot">
+      <p class="privacy-note"><svg viewBox="0 0 24 28" aria-hidden="true"><use href="#hexi"/></svg> <span>Privacy: this page remembers your step and your AI pick in your browser's local storage only. Nothing is sent anywhere. No trackers. <button type="button" class="linkish" id="forget-btn">Forget my choices</button></span></p>
+      <p>ChatGPT, Claude and Grok are trademarks of their owners. mudmode isn't affiliated with or endorsed by OpenAI, Anthropic or xAI.</p>
+      <p>mudmode gives guidance, not guarantees. Results vary. <a href="../privacy.html">Privacy note</a> · <a href="../terms.html">Terms</a></p>
+    </footer>
+  </div>
+</main>
+<script src="wizard.js"></script>
+</body>
+</html>

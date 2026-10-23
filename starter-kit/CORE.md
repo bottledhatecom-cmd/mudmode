@@ -1,6 +1,6 @@
 # mudmode CORE (one page, read at every start)
 
-Version: 1.3.0. Tool-neutral: every rule needs only "read a file, write a file, run a command, ask the owner".
+Version: 1.3.1. Tool-neutral: every rule needs only "read a file, write a file, run a command, ask the owner".
 **Rule over all rules:** the owner's newest words beat everything here. When a rule changes, mark the old line SUPERSEDED (date, who) and keep it; never delete it.
 **Words:** "the owner" = the person named in `CORE-LOCAL.md`; "the shared folder" = the folder this file is in (default `~/mudmode`). Full wording: module `manual-keeper`.
 **Modes:** the safety rules on this page are on in every mode. **Full** (`Mode: full` in `CORE-LOCAL.md`, or no `Mode:` line) = `CORE.md` is the combined core (`cores/CORE-FULL.md`): the 25 rules of mudmode 1.2.3, word for word, and no module file loads. **Lite** = this page + the modules on the `Modules:` line. `MODULES-ON.md` lists what loads; rule numbers never change (`RULE-MAP.md`). A *lite* line below applies only while its module is off.

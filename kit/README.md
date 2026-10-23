@@ -1,6 +1,6 @@
 # mudmode kit: out now
 
-The full mudmode kit is **out now**: see [pricing on mudmodecrew.com](https://mudmodecrew.com/#pricing). The free starter kit is in [starter-kit/](../starter-kit/).
+The full mudmode kit is **out now**: see [pricing on mudmodecrew.com](https://mudmodecrew.com/#pricing). The free Crew kit is in [starter-kit/](../starter-kit/).
 
 ## What it gets you
 - A crew of AI assistants that works like one, even across different AI makers
