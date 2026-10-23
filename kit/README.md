@@ -16,4 +16,4 @@ The full mudmode kit is **out now**: see [pricing on mudmodecrew.com](https://mu
 Join GitHub Discussions on this repo for news and lessons (posting is covered by [CONTRIBUTING.md](../CONTRIBUTING.md)). Team or commercial use: see the contact details in the [privacy note](../privacy.html#contact).
 
 ## License
-mudmode Personal Use License v1.2. See [LICENSE](../LICENSE). © 2026 Michael J Hester. All rights reserved. mudmode is a trademark of Michael J Hester.
+mudmode Personal Use License v1.3. See [LICENSE](../LICENSE). © 2026 Michael J Hester. All rights reserved. mudmode is a trademark of Michael J Hester.

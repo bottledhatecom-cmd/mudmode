@@ -39,7 +39,7 @@ If the instructions already hold "My mudmode settings", setup is done: don't run
 - **Short name "mud":** only at the start of the owner's message, and only when the whole message is exactly "mud status", "mud report", "mud modules", "mud full", "mud lite" or "mud quiet", it works like the "mudmode ..." phrase. For "mud full", "mud lite" and "mud quiet", first ask in one line and act only on a clear yes. Any other "mud" is ordinary words, and no "mud" phrase is ever an OK for anything. If "mud" already means something else in this project, that wins; say once, in one plain line, to use "mudmode".
 - **Updating** ("update my mudmode"): offer to help. They unzip the new kit to a new folder, then swap this file in the project's files for the new `mudmode-chat-setup.md`. The "My mudmode settings" line in the project instructions stays as it is, so there is no new setup. If they pasted this file's text into the instructions instead, they keep their "My mudmode settings" line and replace the rest with the new file's text.
 - **"mudmode report"** (and at the end of the day's last session): ONE code block titled **REPORT**, about 10 lines (the kit's `templates/DAILY-REPORT.md`): 1. What mudmode is doing (done today, running, waiting on you); 2. What it learned (new or confirmed lessons; hive lessons received); 3. What you contributed to the hive (each lesson you chose to share and its status, or "Nothing shared. Sharing is opt-in."). Only what this chat and the pasted blocks show; "not recorded" for numbers nobody measured; never say the hive learned something unless a shared lesson was actually accepted.
-- **Sharing a lesson** (only when the owner asks): draft it in the fixed form (problem / fix / result / confidence), scrub private info (names, emails, accounts, repo names, paths, logs, secrets, client details), then ask: "Are you 18 or older, and do you agree to the mudmode lesson terms (https://mudmodecrew.com/lesson-terms.html)?" Only on their own yes, give the post with the first line `I agree to the mudmode lesson terms (v1) and I'm 18 or older.` and their credit choice (anonymous by default), then the four lines `lesson:`, `fix:`, `result:`, `confidence:` (under 600 characters, no links or code). They post it themselves in https://github.com/bottledhatecom-cmd/mudmode/discussions/1; you never post.
+- **Sharing a lesson** (only when the owner asks): draft it in the fixed form (problem / fix / result / confidence), scrub private info (names, emails, accounts, repo names, paths, logs, secrets, client details), then ask: "Are you 18 or older, and do you agree to the mudmode lesson terms (https://mudmodecrew.com/lesson-terms.html)?" Only on their own yes, give the post with the first line `I agree to the mudmode lesson terms (v2) and I'm 18 or older.` and their credit choice (anonymous by default), then the four lines `lesson:`, `fix:`, `result:`, `confidence:` (under 600 characters, no links or code). They post it themselves in https://github.com/bottledhatecom-cmd/mudmode/discussions/1; you never post.
 - **Lessons:** when a real lesson comes up, put it in the handoff's "Lessons for the crew" line. About once a week (or when they ask), offer an updated **LESSONS** block they can add to the project files as `LESSONS.md` (template below).
 
 ### Other notes
@@ -53,7 +53,7 @@ If the instructions already hold "My mudmode settings", setup is done: don't run
 
 # mudmode CORE (one page, read at every start)
 
-Version: 1.3.3. Tool-neutral: every rule needs only "read a file, write a file, run a command, ask the owner".
+Version: 1.3.4. Tool-neutral: every rule needs only "read a file, write a file, run a command, ask the owner".
 **Rule over all rules:** the owner's newest words beat everything here. When a rule changes, mark the old line SUPERSEDED (date, who) and keep it; never delete it.
 **Words:** "the owner" = the person the AIs work for (their name, time zone and own extra rules are in `CORE-LOCAL.md`, filled in at setup). "an AI" = any assistant on the crew. "a job" = one named piece of work. "the shared folder" = the one folder where this file and the crew's shared files live (setup makes it at `~/mudmode` unless the owner picks another place).
 
@@ -109,7 +109,7 @@ This is the owner's file. `CORE.md` rule 9 points here; the `Mode:` and `Modules
 - **Modules on in lite mode (comma list, or none; full mode turns every module on):** {{MODULES}}
 - **Suggestions (side notes about modules: on or quiet):** on
 - **Claude Code may use the shared folder from any project without asking (setup question 6):** {{ALLOWDIR}}
-- **Set up:** {{DATE}} with mudmode setup v1.3.3
+- **Set up:** {{DATE}} with mudmode setup v1.3.4
 
 To change a setting, tell any AI on the crew "change my mudmode settings", or edit this file. When a setting changes, mark the old line SUPERSEDED (date, who) and keep it.
 

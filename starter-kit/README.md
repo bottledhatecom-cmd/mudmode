@@ -1,4 +1,4 @@
-# mudmode free Crew kit, v1.3.3
+# mudmode free Crew kit, v1.3.4
 
 **Free.** This folder is the whole free mudmode Crew kit. Set it up with the steps just below.
 
@@ -7,7 +7,7 @@ Your crew, your call. mudmode gives you the starting rules. What your crew learn
 - **Updates:** if you downloaded this kit from Gumroad, safety fixes and the monthly hive digest come to the email you used there.
 - **Want more?** The paid mudmode Full Kit adds the full manual, ready-made setups for popular AI assistants, the crew toolset and new lessons as they land: https://mudmodecrew.com.
 - **Members chat:** GitHub Discussions in the mudmode repo, https://github.com/bottledhatecom-cmd/mudmode/discussions (free GitHub account; 13+). Posting is covered by the repo's CONTRIBUTING.md: https://github.com/bottledhatecom-cmd/mudmode/blob/main/CONTRIBUTING.md.
-- **License:** free for one person's personal, non-commercial use under the mudmode Personal Use License v1.2 (the `LICENSE` file in this folder). Don't resell or repost the kit, don't make competing kits from it, and don't use it to train AI. Loading it into your own AI assistants is fine.
+- **License:** free for one person's personal, non-commercial use under the mudmode Personal Use License v1.3 (the `LICENSE` file in this folder). Don't resell or repost the kit, don't make competing kits from it, and don't use it to train AI. Loading it into your own AI assistants is fine.
 
 mudmode is a way of organizing AI assistants. It is not legal, financial, security or professional advice. AI tools make mistakes, so keep checking their work. Not affiliated with or endorsed by any AI provider.
 
@@ -17,7 +17,7 @@ Your AI does the setup. You answer a few short questions. Pick the AI you use:
 
 - **Claude Code** (the Code tab in the Claude desktop app, or `claude` in a terminal), **Grok Build, Codex, Cursor** or another AI that works with files on your computer:
   1. Unzip this download.
-  2. Open the AI in the unzipped folder `mudmode-starter-kit-v1.3.3`.
+  2. Open the AI in the unzipped folder `mudmode-starter-kit-v1.3.4`.
   3. Type: **Read README.md and set me up.** Answer its questions and say yes when it asks to run the setup.
 - **Claude on claude.ai, Grok on grok.com**, or another chat app with Projects:
   1. Unzip this download.
@@ -114,9 +114,9 @@ If your bot has a webhook, your PC can wake it when a note file grows, instead o
 ## Sharing back (optional, opt-in, 18 or older)
 If you want to help improve mudmode, you can send a lesson in this fixed form: problem (one line) / fix / result (which AI and version) / confidence. Your AI drafts it; you read it and send it yourself. Never include names, paths, repo names, logs or secrets.
 1. **Scrub private info first.** Read the draft line by line and take out names (yours and anyone else's), emails, phone numbers, addresses, account, project or repo names, file paths, logs, keys, passwords, tokens, and anything about a client or employer. When unsure, leave it out.
-2. **Agree to the terms.** You must be 18 or older to send a lesson. Sending one means you agree to the mudmode lesson terms: https://mudmodecrew.com/lesson-terms.html. Start your post with: `I agree to the mudmode lesson terms (v1) and I'm 18 or older.` and add `Credit me as <handle>` or `Keep me anonymous` (anonymous is the default).
+2. **Agree to the terms.** You must be 18 or older to send a lesson. Sending one means you agree to the mudmode lesson terms: https://mudmodecrew.com/lesson-terms.html. Start your post with: `I agree to the mudmode lesson terms (v2) and I'm 18 or older.` and add `Credit me as <handle>` or `Keep me anonymous` (anonymous is the default).
 3. **Post it** as a comment in the mudmode Lessons thread: https://github.com/bottledhatecom-cmd/mudmode/discussions/1 (needs a free GitHub account). Write the lesson as four lines starting `lesson:`, `fix:`, `result:` and `confidence:` (low, medium or high), under 600 characters, with no links or code. Your AI never posts it for you.
 Steps and a log of what you shared: `templates/SHARED-LESSONS.md`.
 
 ## License and warranty
-License: mudmode Personal Use License v1.2, © 2026 Michael J Hester, licensed by Hestertainment LLC (full text: `LICENSE` in this folder). Provided as is, no warranty; you decide what your AI tools do and review their work. Not legal, tax or financial advice.
+License: mudmode Personal Use License v1.3, © 2026 Michael J Hester, licensed by Hestertainment LLC (full text: `LICENSE` in this folder). Provided as is, no warranty; you decide what your AI tools do and review their work. Not legal, tax or financial advice.

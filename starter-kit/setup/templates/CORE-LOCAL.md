@@ -13,6 +13,6 @@ This is the owner's file. `CORE.md` rule 9 points here; the `Mode:` and `Modules
 - **Claude Code may use the shared folder from any project without asking (setup question 6):** {{ALLOWDIR}}
 - **Update check (on or off; when on, "mudmode status" also runs `tools/check-update.sh`, or `tools/check-update.ps1` on Windows, which only reads mudmodecrew.com/version.json and says if a newer kit is out; it never installs anything):** {{UPDATECHECK}}
 - **Short name "mud" (on or off; on: "mud status" works like "mudmode status"):** {{MUDSHORT}}
-- **Set up:** {{DATE}} with mudmode setup v1.3.3
+- **Set up:** {{DATE}} with mudmode setup v1.3.4
 
 To change a setting, tell any AI on the crew "change my mudmode settings", or edit this file. When a setting changes, mark the old line SUPERSEDED (date, who) and keep it.
