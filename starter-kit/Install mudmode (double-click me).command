@@ -1,5 +1,5 @@
 #!/bin/bash
-# mudmode one-click installer for Mac (kit v1.3.1).
+# mudmode one-click installer for Mac (kit v1.3.3).
 # Double-click this file in the UNZIPPED kit folder. It asks the setup questions in small
 # pop-up windows, then runs the kit's own setup script (setup/setup.sh) with your answers.
 # It changes nothing that setup.sh would not change: your ~/mudmode folder, plus the
@@ -101,7 +101,7 @@ guess_tz() {
 }
 
 if [ -f "$TARGET_ABS/CORE-LOCAL.md" ]; then
-  info "You already have mudmode settings in $TARGET_TXT/CORE-LOCAL.md. They stay exactly as they are; only missing kit files will be added."
+  info "You already have mudmode settings in $TARGET_TXT/CORE-LOCAL.md. They stay as they are, and so do your own files. Setup updates the rule files in cores/ and modules/ (with a backup of each), and CORE.md and the connector files if you never edited them."
   NAME=kept; TZONE=kept; ASK=kept; WORDS=kept
 else
   NAME=$(ask_text "1 of 6. What name should your AI crew call you?" "the owner") || stopped
@@ -145,6 +145,7 @@ fi
 KEPT=$(sed -n 's/.*kept yours \([0-9]*\)).*/\1/p' "$LOG" | head -1)
 DRYRUN=0; grep -q 'dry run' "$LOG" && DRYRUN=1
 LITE=0; grep -q "^You're in lite mode" "$LOG" && LITE=1
+MUDTXT=""; grep -q '"mud status" works too' "$LOG" && MUDTXT=' ("mud status" works too)'
 rm -f "$LOG"
 [ "$DRYRUN" -eq 1 ] && { info "Dry run finished: nothing was written. See the Terminal window for what setup would do."; finish 0; }
 
@@ -159,13 +160,13 @@ case "$CONNECT" in
   claude|both)
     NEXT="$NEXT
 
-Next: open Claude Code (the Code tab in the Claude desktop app, or type claude in Terminal) and start a NEW chat, in any folder. It follows mudmode by itself. Say \"mudmode status\" any time and \"handoff\" before you stop."
+Next: open Claude Code (the Code tab in the Claude desktop app, or type claude in Terminal) and start a NEW chat, in any folder. It follows mudmode by itself. Say \"mudmode status\" any time$MUDTXT and \"handoff\" before you stop."
     if [ "$HAVE_CLAUDE" -eq 0 ]; then NEXT="$NEXT
 
 Note: the claude command was not found on this Mac. If you use the Claude desktop app's Code tab, you're fine. Otherwise install Claude Code yourself from the official page: https://code.claude.com/docs/en/quickstart (this installer does not install it for you)."; fi ;;
   grok) NEXT="$NEXT
 
-Next: start a NEW chat in Grok Build. It follows mudmode by itself. Say \"mudmode status\" any time and \"handoff\" before you stop." ;;
+Next: start a NEW chat in Grok Build. It follows mudmode by itself. Say \"mudmode status\" any time$MUDTXT and \"handoff\" before you stop." ;;
   *) NEXT="$NEXT
 
 Next: you didn't connect an AI app on this computer. Using a chat app (claude.ai, Grok, ChatGPT)? Make a new Project, add the file FOR-CHAT-APPS/$CHATF from this download, and type: Read $CHATF and set me up." ;;

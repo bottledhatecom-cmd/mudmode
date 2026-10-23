@@ -1,6 +1,8 @@
-# mudmode free Crew kit, v1.3.1
+# mudmode free Crew kit, v1.3.3
 
 **Free.** This folder is the whole free mudmode Crew kit. Set it up with the steps just below.
+
+Your crew, your call. mudmode gives you the starting rules. What your crew learns from there (which lessons stay, which rules you add, what you say yes to) is up to you. Read what your AIs suggest before you keep it, and keep checking their work.
 
 - **Updates:** if you downloaded this kit from Gumroad, safety fixes and the monthly hive digest come to the email you used there.
 - **Want more?** The paid mudmode Full Kit adds the full manual, ready-made setups for popular AI assistants, the crew toolset and new lessons as they land: https://mudmodecrew.com.
@@ -15,22 +17,33 @@ Your AI does the setup. You answer a few short questions. Pick the AI you use:
 
 - **Claude Code** (the Code tab in the Claude desktop app, or `claude` in a terminal), **Grok Build, Codex, Cursor** or another AI that works with files on your computer:
   1. Unzip this download.
-  2. Open the AI in the unzipped folder `mudmode-starter-kit-v1.3.1`.
+  2. Open the AI in the unzipped folder `mudmode-starter-kit-v1.3.3`.
   3. Type: **Read README.md and set me up.** Answer its questions and say yes when it asks to run the setup.
 - **Claude on claude.ai, Grok on grok.com**, or another chat app with Projects:
   1. Unzip this download.
   2. Make a new Project and add the file `FOR-CHAT-APPS/mudmode-chat-lite.md` to its files (lite mode; for full mode, all 25 rules, use `FOR-CHAT-APPS/mudmode-chat-setup.md` instead).
   3. Start a chat in that project and type: **Read mudmode-chat-lite.md and set me up.** Answer its questions, then paste the short block it gives you into the project's instructions.
 
-Every day after that: say **"mudmode report"** for the daily report (what mudmode is doing, what it learned, what you shared with the hive), say **"handoff"** before you stop (in chat apps, paste the block it gives you as the first message of your next chat), and **"mudmode status"** any time.
+Every day after that: say **"mudmode report"** for the daily report (what mudmode is doing, what it learned, what you shared with the hive), say **"handoff"** before you stop (in chat apps, paste the block it gives you as the first message of your next chat), and **"mudmode status"** any time. Short name: **"mud status"**, **"mud report"** and the rest work too; `mudmode` always works.
+
+**Not sure what to type?** `WHAT-TO-SAY.md` lists the plain words that make mudmode do things.
 
 **Lite mode (the default).** The free kit starts in lite mode: your AI loads the one-page safety core (`CORE.md`) and nothing else it doesn't need yet. Every module is still in the kit (`modules/`): say **"turn on the lessons module"** (or any module name), or **"mudmode full"** for all of them (one combined core: the same 25 rules as mudmode 1.2.3); **"mudmode lite"** goes back. Switching never deletes anything, and the safety rules (asking first before money, posting, sending, deploying or deleting; no secrets; no signing in for you) are on in every mode. Now and then the crew may add one short side note suggesting a module when it sees a reason (at most once per module; a Full Kit module at most once, labelled "(Full Kit)"). Say **"mudmode quiet"** to stop side notes. Nothing leaves your computer or chat.
 
 **AI:** if the owner asked you to set them up, follow `setup/AI-SETUP.md` in this folder now. If you can't read or write files on this computer, follow `FOR-CHAT-APPS/mudmode-chat-lite.md` instead.
 
-Prefer one command? macOS/Linux: `sh setup/setup.sh` in the unzipped folder. Windows: `powershell -ExecutionPolicy Bypass -File setup\setup.ps1`. It writes only your new `mudmode` folder (plus one connector file if you say yes, and, for Claude Code, your folder added to its allowed folders if you also say yes; your settings file is backed up first), never deletes anything, and never replaces your files without asking. The by-hand steps further down are the other way.
+Prefer one command? macOS/Linux: `sh setup/setup.sh` in the unzipped folder. Windows: `powershell -ExecutionPolicy Bypass -File setup\setup.ps1`. It writes only your new `mudmode` folder (plus one connector file if you say yes, and, for Claude Code, your folder added to its allowed folders if you also say yes; your settings file is backed up first), and never deletes anything. On a rerun it keeps your own files and updates the kit's rule files, with a backup of each (see "Updating to a new version" below). The by-hand steps further down are the other way.
 
 **Mac, without Terminal:** double-click `Install mudmode (double-click me).command` in the unzipped folder and answer the pop-ups; it runs the same setup. The first time, macOS may say it can't open it (it comes from the internet): right-click (or Control-click) the file and choose **Open**. On macOS 15 or later, if there's no Open button: click Done, then System Settings > Privacy & Security > **Open Anyway**.
+
+## Updating to a new version
+
+1. Download the new kit and unzip it to a **new** folder. Don't unzip it over your old download or over your `mudmode` folder.
+2. Open your AI in the new unzipped folder and type: **Read README.md and set me up.** (or run the one-command setup above again). When it says your `mudmode` folder already exists, say yes to go on.
+3. What happens to your folder: your settings (`CORE-LOCAL.md`), `HANDOFF.md`, `LESSONS.md`, `JOBS.md`, `OK-LEDGER.md`, the `jobs` folder, any file you added yourself, and your lite or full mode all stay as they are. Nothing is deleted. The rule files in `cores/` and `modules/` are updated, and each old copy is kept beside it with `.bak-` and the date in its name. If you edited a file inside `modules/`, the update replaces it; your edited copy is kept in its `.bak-` backup. `CORE.md` and the connector files in your `mudmode` folder are updated the same way when you never edited them; if you did edit one, setup keeps yours and says so. The connector file outside the folder (for Claude Code: `~/.claude/rules/mudmode.md`) is only updated when you say yes to connecting again on the rerun. Other changed kit files are kept as they are: the setup lists them as "kept your ..." (it only offers to replace them when you run it yourself in a terminal, and it backs up your copy first). To take one of those, ask your AI to compare it with the new kit and copy it over (backup first).
+4. Optional update check (off unless you turn it on): answer yes to setup question 7 (the update check; the setup script in a terminal numbers it 8), run setup with `--update-check on` (PowerShell: `-UpdateCheck on`), or ask your AI to set the "Update check" line in `CORE-LOCAL.md` to on. When it's on, "mudmode status" also runs `tools/check-update.sh` (Windows: `tools/check-update.ps1`) in your `mudmode` folder. It reads one small public file on mudmodecrew.com and only tells you if a newer kit is out and how to update (the steps above). It never downloads or installs anything, and it sends no personal info, just a normal web request. If you're offline, it says it couldn't check and changes nothing.
+
+Chat apps: see "Updating" in your chat file (`FOR-CHAT-APPS/`).
 
 ---
 
