@@ -11,6 +11,6 @@ This is the owner's file. `CORE.md` rule 9 points here; the `Mode:` and `Modules
 - **Modules on in lite mode (comma list, or none; full mode turns every module on):** {{MODULES}}
 - **Suggestions (side notes about modules: on or quiet):** on
 - **Claude Code may use the shared folder from any project without asking (setup question 6):** {{ALLOWDIR}}
-- **Set up:** {{DATE}} with mudmode setup v1.3.0
+- **Set up:** {{DATE}} with mudmode setup v1.3.1
 
 To change a setting, tell any AI on the crew "change my mudmode settings", or edit this file. When a setting changes, mark the old line SUPERSEDED (date, who) and keep it.

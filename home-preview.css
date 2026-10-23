@@ -1,0 +1,63 @@
+/* home-preview.css: new-homepage styles layered on glow.css (glow.css untouched). Ships with index.html. */
+/* Hero: big gold-filled Start here button + small nerd link */
+.hero .hero-start{align-items:baseline;gap:14px 20px;margin-bottom:12px}
+.hero .btn.btn-start{font-size:21px;min-height:58px;padding:14px 34px;border-radius:14px;letter-spacing:.01em;box-shadow:0 0 0 1px rgba(243,201,105,.7),0 8px 30px rgba(230,166,56,.38)}
+.hero .btn.btn-start span{transition:transform .2s}
+.hero .btn.btn-start:hover span{transform:translateX(3px)}
+.hero .nerd-link{font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;font-size:14px;color:var(--dim);text-decoration:none;border-bottom:1px dashed rgba(243,201,105,.35);padding:2px 0}
+.hero .nerd-link:hover{color:var(--gold);border-bottom-color:var(--gold)}
+/* Join the community: gold outline */
+.btn.btn-gold-outline{border:1.5px solid var(--gold);color:var(--gold);background:transparent;box-shadow:none}
+.btn.btn-gold-outline:hover{background:rgba(243,201,105,.08);box-shadow:var(--glow);color:#ffe09a}
+@media (max-width:640px){.hero .hero-start .btn-start{flex:1 1 100%}.hero .hero-start .nerd-link{margin:0 auto}}
+/* Prefer the step list? toggle */
+.steps-toggle{padding-top:0}
+.step-list{border:1px solid var(--line2);border-radius:14px;background:var(--panel);padding:0 20px}
+.step-list summary{cursor:pointer;list-style:none;padding:16px 0;font-weight:700;color:var(--gold);font-size:18px}
+.step-list summary::-webkit-details-marker{display:none}
+.step-list summary::before{content:"▸";display:inline-block;margin-right:10px;transition:transform .2s}
+.step-list[open] summary::before{transform:rotate(90deg)}
+.step-list[open]{padding-bottom:18px}
+.step-list .sub-h{margin-top:4px}
+/* Hero (4:58 AM CT draft): one main button, Start here link, price + not-affiliated lines, kit file-list card */
+.hero .hero-eyebrow{margin:0 0 12px;color:var(--gold);font-weight:700;letter-spacing:.03em;font-size:16px}
+.hero .hero-link{color:var(--gold);font-weight:700;font-size:18px;text-decoration:none;border-bottom:1px solid rgba(243,201,105,.45);padding:2px 0}
+.hero .hero-link:hover{color:#ffe09a;border-bottom-color:#ffe09a}
+.hero .hero-price{margin:4px 0 6px;color:#efe3cf;font-size:16px;font-weight:600}
+.hero .hero-fine{margin:0;color:var(--dim);font-size:13.5px}
+/* Hero card (hero v3, from Blueprint's mockup): Two ways in, from the free Crew kit */
+.ways{margin:0;width:380px;background:rgba(18,17,16,.88);border:1px solid var(--line2);border-radius:16px;padding:18px 20px 16px;box-shadow:0 0 28px rgba(243,201,105,.18)}
+.ways figcaption{font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;color:var(--gold);font-weight:700;font-size:14px;margin:0 0 4px}
+.ways .way{padding:12px 0;border-top:1px solid rgba(243,201,105,.14)}
+.ways .way:first-of-type{border-top:0}
+.ways .way h2{margin:0 0 6px;font-size:15px;line-height:1.4;font-weight:700;letter-spacing:0;color:#efe3cf}
+.ways .way p{margin:0;color:var(--muted);font-size:14px}
+.ways .way code{font-size:13.5px;color:#fff7ea;background:rgba(243,201,105,.08);word-break:break-word}
+.ways .say{display:block;margin:6px 0;padding:8px 10px;border-left:3px solid var(--gold);background:rgba(0,0,0,.35);border-radius:0 8px 8px 0;font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;font-size:14px;color:#fff7ea}
+.ways .daily{margin:4px 0 0;padding-top:12px;border-top:1px solid rgba(243,201,105,.14);color:var(--muted);font-size:14px}
+.ways .daily b{font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;font-weight:500;color:#fff7ea}
+.ways .note{margin:10px 0 0;color:var(--dim);font-size:13px}
+.hero-more{padding:28px 0 8px}
+.hero-more .hero-more-row{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;margin-bottom:14px}
+.hero-more .hero-pill{margin:0}
+.hero-more .nerd-link{font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;font-size:14px;color:var(--dim);text-decoration:none;border-bottom:1px dashed rgba(243,201,105,.35);padding:2px 0}
+.hero-more .nerd-link:hover{color:var(--gold);border-bottom-color:var(--gold)}
+.hero-more .hero-prices{color:var(--muted);margin:0 0 16px}
+@media (max-width:860px){.ways{width:auto}}
+@media (max-width:640px){.ways{padding:16px 16px 14px}}
+@media (max-width:640px){header.hero{padding:22px 0 36px}.hero h1{font-size:34px;margin-bottom:12px}.hero p.lead{font-size:17px;margin-bottom:18px}.hero .hero-start{gap:10px 16px;margin-bottom:8px}.hero .hero-start .hero-link{margin:0 auto}}
+@media (min-width:861px){body.home header.hero{min-height:min(calc(100vh - 60px),840px);display:flex;align-items:center}body.home header.hero>.wrap{width:100%}}
+/* Extra phone fix (hero v3, needs Michael's OK): eyebrow 15px (14px under 390px) with no extra letter spacing so it takes 2 lines at 390 and 360, and narrower button padding so "kit" stays on the button's line at 320 */
+@media (max-width:640px){.hero .hero-eyebrow{font-size:15px;letter-spacing:0;margin-bottom:10px}.hero .hero-start .btn.btn-start{padding:14px 16px}}
+@media (max-width:389px){.hero .hero-eyebrow{font-size:14px;letter-spacing:-.01em}}
+/* Top nav trimmed to 5 links (5:06 AM CT draft) + footer More group */
+nav.nav-short .nav-links{display:contents}
+/* Phones (hero v3): Members is a gold outline, so the first screen has one gold button; the 4 section links stay on one row (it scrolls sideways if a screen is too narrow) */
+@media (max-width:640px){nav.nav-short .wrap{flex-wrap:wrap;height:auto;padding:6px 14px 6px;gap:2px 16px;overflow:visible}nav.nav-short .brand{flex:1 0 calc(100% - 120px);margin-right:0}nav.nav-short a.nav-members{order:1;margin-left:auto;background:transparent;color:var(--gold);border:1.5px solid var(--gold);box-shadow:none;padding:4px 12px}nav.nav-short a.nav-members:hover{background:rgba(243,201,105,.08);color:#ffe09a}nav.nav-short .nav-links{order:2;flex:1 0 100%;display:flex;gap:16px;overflow-x:auto;white-space:nowrap;scrollbar-width:none;padding-bottom:2px}nav.nav-short .nav-links::-webkit-scrollbar{display:none}nav.nav-short .nav-links a{font-size:14px;padding:4px 0}}
+@media (max-width:640px){html:has(nav.nav-short){scroll-padding-top:104px}}
+@media (max-width:389px){nav.nav-short .nav-links{gap:12px}nav.nav-short .nav-links a{font-size:13px}}
+@media (max-width:339px){nav.nav-short .wrap{padding-left:12px;padding-right:12px}nav.nav-short .nav-links{gap:9px}nav.nav-short .nav-links a{font-size:12.5px}}
+.footer-more{margin:0 0 26px;padding:0 0 22px;border-bottom:1px solid rgba(243,201,105,.14)}
+.footer-more-h{margin:0 0 10px;color:#efe3cf;font-weight:700;font-size:14px;letter-spacing:.06em;text-transform:uppercase}
+.footer-more ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px 22px}
+.footer-more a{text-decoration:none}.footer-more a:hover{text-decoration:underline}

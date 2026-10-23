@@ -15,7 +15,7 @@ You are an AI assistant in a chat app (for example a Claude Project or a Grok Pr
 - Where CORE says "write it in `OK-LEDGER.md`", "`PROGRESS.md`", "`JOBS.md`" or "an inbox file", keep it in the chat and put it in the next handoff block instead. Where CORE talks about commands, branches, deploys or other AIs' files, it applies only if the owner actually works that way.
 
 ### First chat: setup (when the owner says "set me up", or when the project instructions hold no "My mudmode settings" yet)
-1. In 2 lines, say what mudmode does for them and that setup takes about 3 minutes.
+1. In 2 lines, say what mudmode does for them and that setup is a few short questions.
 2. Ask in ONE numbered message, each with your suggested default, and say "or just say **defaults**":
    1. What name should the crew call you? (default: "the owner")
    2. Your time zone? (default: guess from what you know; say it's a guess)
@@ -51,7 +51,7 @@ If the instructions already hold "My mudmode settings", setup is done: don't run
 
 # mudmode CORE (one page, read at every start)
 
-Version: 1.3.0. Tool-neutral: every rule needs only "read a file, write a file, run a command, ask the owner".
+Version: 1.3.1. Tool-neutral: every rule needs only "read a file, write a file, run a command, ask the owner".
 **Rule over all rules:** the owner's newest words beat everything here. When a rule changes, mark the old line SUPERSEDED (date, who) and keep it; never delete it.
 **Words:** "the owner" = the person the AIs work for (their name, time zone and own extra rules are in `CORE-LOCAL.md`, filled in at setup). "an AI" = any assistant on the crew. "a job" = one named piece of work. "the shared folder" = the one folder where this file and the crew's shared files live (setup makes it at `~/mudmode` unless the owner picks another place).
 
@@ -107,7 +107,7 @@ This is the owner's file. `CORE.md` rule 9 points here; the `Mode:` and `Modules
 - **Modules on in lite mode (comma list, or none; full mode turns every module on):** {{MODULES}}
 - **Suggestions (side notes about modules: on or quiet):** on
 - **Claude Code may use the shared folder from any project without asking (setup question 6):** {{ALLOWDIR}}
-- **Set up:** {{DATE}} with mudmode setup v1.3.0
+- **Set up:** {{DATE}} with mudmode setup v1.3.1
 
 To change a setting, tell any AI on the crew "change my mudmode settings", or edit this file. When a setting changes, mark the old line SUPERSEDED (date, who) and keep it.
 

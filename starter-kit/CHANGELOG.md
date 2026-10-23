@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.3.1 (2026-10-23)
+- Setup no longer connects Claude Code unless you say yes: question 3 now shows [y/N], and pressing Enter means no (`setup/setup.ps1`, `setup/setup.sh`, and the Mac installer).
+- The PowerShell setup now writes times with a UTC offset (for example `UTC-05:00`) instead of the Windows zone name, which said "Central Standard Time" during daylight time.
+- Wording: no setup-time estimates; the kit calls itself the free Crew kit; the Full Kit `watchdog` module is described as hooks that help you keep the ask-first list (you decide).
+- New, optional (Windows): `tools/instant-wake/` wakes your bot through its own webhook when a note file grows. You paste your own URL and key; the installer asks first (default No) and adds one sign-in task for your account, no admin. Your timed check stays as a backup. Undo: `tools/instant-wake/ROLLBACK.txt`.
+- Instant wake: `wake.ps1` only sends to an `https://` webhook URL; any other URL is refused, nothing is sent, and `wake.log` says why. It also turns on TLS 1.2 for the request.
+- The rules are unchanged; only the Version lines moved to 1.3.1.
+
 ## v1.3.0 (2026-10-22)
 - **Lite mode and modules.** `CORE.md` is now the one-page safety core, always on. The rest of the rules live in `modules/` (handoff-plus, jobs, lessons, reviewer, crew, ship, adapters, local-hardware, manual-keeper; Full Kit also watchdog and usage). **Full mode** = ONE combined `CORE.md` (`cores/CORE-FULL.md`) = the v1.2.3 `CORE.md` word for word, so the startup size is the same as v1.2.3 and no module file loads (they stay on disk as descriptions; lite `CORE.md` + every module holds the same words). **Lite mode** = `CORE.md` + the modules you pick. Nothing was removed: every rule, module, template and file of v1.2.3 is still in the kit.
 - Defaults: the free kit starts in lite mode, the Full Kit in full mode. Say "mudmode full" or "mudmode lite" any time; setup takes `--mode lite|full` (PowerShell `-Mode`), and a rerun keeps your mode. Switching never deletes anything.

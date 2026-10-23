@@ -1,0 +1,13 @@
+ROLLBACK for mudmode instant wake (Windows). Run these in PowerShell as yourself (no admin needed):
+
+1. Stop and remove the sign-in task that starts the watcher (inbox-watch.ps1 installs nothing itself; this task is
+   the one thing our installer adds to start it):
+   Stop-ScheduledTask -TaskName "mudmode instant wake"
+   Unregister-ScheduledTask -TaskName "mudmode instant wake" -Confirm:$false
+2. If the watcher is still running, stop it:
+   Stop-Process -Id (Get-Content "$HOME\mudmode\tools\instant-wake\inbox-watch.pid")
+3. Delete the folder (it holds your webhook URL and key files too):
+   Remove-Item -Recurse "$HOME\mudmode\tools\instant-wake"
+
+The installer adds only that one task and that folder (it may also have made the empty mudmode\tools folder above it).
+Your timed check was never touched, so it keeps running as before.

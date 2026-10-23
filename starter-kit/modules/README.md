@@ -14,7 +14,7 @@ Not read at start. `../CORE.md` is always on. **Full mode** loads none of these 
 | `reviewer` | a read-only reviewer with a PASS / WARN / FAIL verdict for ALL finished work, not only work that goes outside. | a first thing is about to go out and there is no reviewer | free + Full Kit |
 | `ship` | the full order of work for sites, repos and apps, and real devices last. | git pushes, deploys, app builds or real devices come up | free + Full Kit |
 
-The Full Kit also has `watchdog` (Claude Code hooks that enforce the ask-first list) and `usage` (the usage meter and weekly review). The crew may mention one of them once, labelled "(Full Kit)"; say "mudmode quiet" to stop all side notes.
+The Full Kit also has `watchdog` (Claude Code hooks that help you keep the ask-first list; you decide) and `usage` (the usage meter and weekly review). The crew may mention one of them once, labelled "(Full Kit)"; say "mudmode quiet" to stop all side notes.
 
 
 ## Switching (the owner says it; you do it, then say in one line what changed)

@@ -1,5 +1,5 @@
 #!/bin/sh
-# mudmode setup v1.3.0 (macOS, Linux, Windows Git Bash).
+# mudmode setup v1.3.1 (macOS, Linux, Windows Git Bash).
 # Copies the kit into ONE folder you own (default: ~/mudmode). Outside that folder it only
 # READS, except one optional connector file you say yes to (~/.claude/rules/mudmode.md for
 # Claude Code, ~/.grok/AGENTS.md for Grok Build). It never deletes anything and never
@@ -100,7 +100,7 @@ if [ "$INTERACTIVE" -eq 1 ]; then
   [ -n "$TZONE" ] || TZONE=$(ask_text "2. Your time zone?" "$(guess_tz)")
   if [ -z "$CONNECT" ]; then
     c=none
-    if ask_yn "3. Connect mudmode to Claude Code (every new Claude Code chat follows it)?" y; then c=claude; fi
+    if ask_yn "3. Connect mudmode to Claude Code (every new Claude Code chat follows it)?" n; then c=claude; fi
     if ask_yn "4. Connect mudmode to Grok Build (the grok command-line tool)?" n; then
       if [ "$c" = claude ]; then c=both; else c=grok; fi; fi
     CONNECT=$c
@@ -227,7 +227,7 @@ cat > "$TMP/HANDOFF.md" <<HOF
 
 **Next single action:** ask the owner what the first job is.
 
-- **Written:** $NOW, by mudmode setup v1.3.0
+- **Written:** $NOW, by mudmode setup v1.3.1
 - **Goal:** first session with mudmode
 - **Stage:** switched on
 - **Live state to re-check before editing:** none yet
@@ -245,7 +245,7 @@ cat > "$TMP/HANDOFF.md" <<HOF
 
 **Next single action:** ask the owner what the first job is.
 
-- **Written:** $NOW, by mudmode setup v1.3.0
+- **Written:** $NOW, by mudmode setup v1.3.1
 - **What changed:** mudmode folder set up at $DIRTXT (lite mode)
 - **Unused OKs (exact scope):** none
 - **Still running:** none
@@ -373,7 +373,7 @@ console.log("ADDED " + b);' "$spn" "$adir" "$STAMP")
 
 # --- 3. log + result ------------------------------------------------------------
 if [ "$DRY" -eq 0 ] && [ -d "$TARGET" ]; then
-  { printf '\n## %s setup v1.3.0 from %s\n' "$NOW" "$(basename "$KIT_DIR")"
+  { printf '\n## %s setup v1.3.1 from %s\n' "$NOW" "$(basename "$KIT_DIR")"
     printf -- '- copied %s, already the same %s, kept yours %s; connected:%s; allowed folder: %s; mode: %s\n' "$COPIED" "$SAME" "$KEPT" "${CONNECTED:- none}" "${ALLOWED:-no}" "$MODE"; } >> "$TARGET/SETUP-LOG.md"
 fi
 say ""

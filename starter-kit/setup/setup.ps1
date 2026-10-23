@@ -1,4 +1,4 @@
-# mudmode setup v1.3.0 (Windows PowerShell 5.1+, PowerShell 7 on any system).
+# mudmode setup v1.3.1 (Windows PowerShell 5.1+, PowerShell 7 on any system).
 # Copies the kit into ONE folder you own (default: %USERPROFILE%\mudmode). Outside that folder it
 # only READS, except one optional connector file you say yes to (~\.claude\rules\mudmode.md for
 # Claude Code, ~\.grok\AGENTS.md for Grok Build). It never deletes anything and never replaces an
@@ -26,7 +26,7 @@ $HomeDir = [Environment]::GetFolderPath("UserProfile")
 if (-not $HomeDir) { $HomeDir = $HOME }
 if (-not $Target) { $Target = Join-Path $HomeDir "mudmode" }
 $Stamp = Get-Date -Format "yyyyMMdd-HHmm"
-$Now = (Get-Date -Format "yyyy-MM-dd HH:mm") + " " + [System.TimeZoneInfo]::Local.Id
+$Now = (Get-Date -Format "yyyy-MM-dd HH:mm") + " UTC" + (Get-Date -Format "zzz")
 $script:Failed = $false; $script:Copied = 0; $script:Same = 0; $script:Kept = 0; $script:Connected = @()
 $Utf8 = New-Object System.Text.UTF8Encoding $false
 $Interactive = (-not $Yes) -and (-not [Console]::IsInputRedirected)
@@ -91,7 +91,7 @@ if ($Interactive) {
   if (-not $Tz) { $Tz = AskText "2. Your time zone?" $TzGuess }
   if (-not $Connect) {
     $c = "none"
-    if (AskYN "3. Connect mudmode to Claude Code (every new Claude Code chat follows it)?" "y") { $c = "claude" }
+    if (AskYN "3. Connect mudmode to Claude Code (every new Claude Code chat follows it)?" "n") { $c = "claude" }
     if (AskYN "4. Connect mudmode to Grok Build (the grok command-line tool)?" "n") { if ($c -eq "claude") { $c = "both" } else { $c = "grok" } }
     $Connect = $c
   }
@@ -223,7 +223,7 @@ try {
 
 **Next single action:** ask the owner what the first job is.
 
-- **Written:** $Now, by mudmode setup v1.3.0
+- **Written:** $Now, by mudmode setup v1.3.1
 - **Goal:** first session with mudmode
 - **Stage:** switched on
 - **Live state to re-check before editing:** none yet
@@ -240,7 +240,7 @@ try {
 
 **Next single action:** ask the owner what the first job is.
 
-- **Written:** $Now, by mudmode setup v1.3.0
+- **Written:** $Now, by mudmode setup v1.3.1
 - **What changed:** mudmode folder set up at $DirTxt (lite mode)
 - **Unused OKs (exact scope):** none
 - **Still running:** none
@@ -342,7 +342,7 @@ finally { Remove-Item -Recurse -Force $Tmp -ErrorAction SilentlyContinue }
 # --- 3. log + result ------------------------------------------------------------
 $conn = if ($script:Connected.Count) { " " + ($script:Connected -join " ") } else { "" }
 if (-not $DryRun -and (Test-Path $Target)) {
-  $log = "`n## $Now setup v1.3.0 from $(Split-Path -Leaf $KitDir)`n- copied $($script:Copied), already the same $($script:Same), kept yours $($script:Kept); connected:$(if ($conn) { $conn } else { ' none' }); allowed folder: $(if ($script:Allowed) { $script:Allowed } else { 'no' }); mode: $Mode`n"
+  $log = "`n## $Now setup v1.3.1 from $(Split-Path -Leaf $KitDir)`n- copied $($script:Copied), already the same $($script:Same), kept yours $($script:Kept); connected:$(if ($conn) { $conn } else { ' none' }); allowed folder: $(if ($script:Allowed) { $script:Allowed } else { 'no' }); mode: $Mode`n"
   [IO.File]::AppendAllText((Join-Path $Target "SETUP-LOG.md"), $log, $Utf8)
 }
 Say ""
