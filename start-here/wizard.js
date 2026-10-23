@@ -166,12 +166,13 @@
     if (e.key === "ArrowLeft" && state.step > 1) { e.preventDefault(); show(state.step - 1); }
   });
 
-  // Start: hash wins (#step-3, #step-4/claude, #nerd, #celebrate), else saved step
+  // Start: hash wins (#step-3, #step-4/claude, #nerd, #celebrate), else saved step; #what-to-say opens step 5 at the What to say card
   function route(initial) {
     var h = location.hash.replace("#", "");
     var m = /^step-(\d)(?:\/(chatgpt|claude|grok))?$/.exec(h);
     if (h === "nerd") return show("nerd", { quiet: initial });
     if (h === "done") { show(5, { quiet: true }); $("#celebrate").hidden = false; return; }
+    if (h === "what-to-say") { show(5, { quiet: true }); setHash("#what-to-say"); var w = $("#what-to-say"); if (w) { w.scrollIntoView(); w.focus({ preventScroll: true }); } return; }
     if (m) { if (m[2]) { setAi(m[2]); } show(Math.min(TOTAL, Math.max(1, Number(m[1]))), { quiet: initial }); return; }
     show(state.step, { quiet: initial });
   }

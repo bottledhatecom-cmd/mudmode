@@ -61,3 +61,26 @@ nav.nav-short .nav-links{display:contents}
 .footer-more-h{margin:0 0 10px;color:#efe3cf;font-weight:700;font-size:14px;letter-spacing:.06em;text-transform:uppercase}
 .footer-more ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px 22px}
 .footer-more a{text-decoration:none}.footer-more a:hover{text-decoration:underline}
+
+/* Full Kit contents toggle (draft v3g) */
+.tier-list li.kit-more::marker{color:var(--gold)}
+.kit-det summary{cursor:pointer;list-style:none;color:var(--gold);font-weight:700;text-decoration:underline;text-decoration-color:rgba(243,201,105,.45);text-underline-offset:3px;padding:2px 0;min-height:24px}
+.kit-det summary::-webkit-details-marker{display:none}
+.kit-det summary::after{content:" \25B8";display:inline-block;margin-left:4px;transition:transform .2s}
+.kit-det[open] summary::after{transform:rotate(90deg)}
+.kit-det summary:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:4px}
+.kit-det .kit-inside{margin:8px 0 4px;padding-left:18px;font-size:15px;line-height:1.45}
+.kit-det .kit-inside li{margin:4px 0}
+
+/* Free column: two small cards under the free Crew card (draft v3g) */
+#pricing .price-col{display:flex;flex-direction:column;gap:16px}
+#pricing .mini-card{padding-top:16px;padding-bottom:16px}
+#pricing .mini-card h3{font-size:16px;margin-bottom:8px}
+#pricing .say-list,#pricing .never-list{margin:0;padding-left:0;list-style:none;font-size:14.5px;line-height:1.4}
+#pricing .say-list li{margin:0 0 8px}
+#pricing .say-list code{display:block;color:var(--gold);font-size:13.5px;word-break:break-word}
+#pricing .say-list span{display:block;color:var(--ink);opacity:.85}
+#pricing .never-list li{margin:4px 0;padding-left:20px;position:relative}
+#pricing .never-list li::before{content:"\2715";position:absolute;left:0;color:var(--gold);font-size:12px;top:3px}
+#pricing .mini-link{color:var(--gold);font-weight:700;font-size:14.5px;text-decoration:none;border-bottom:1px solid rgba(243,201,105,.45)}
+#pricing .mini-link:hover{color:#ffe09a}
