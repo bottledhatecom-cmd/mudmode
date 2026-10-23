@@ -2,6 +2,13 @@
 
 **How to update:** download the new kit, unzip it to a NEW folder (never over your old download or your `mudmode` folder), then say **Read README.md and set me up.** again or run the setup again. Your settings, handoff, lessons, jobs and OK ledger stay as they are; see "Updating to a new version" in `README.md`. Chat apps: see "Updating" in your `FOR-CHAT-APPS/` file.
 
+## v1.3.4 (2026-10-23)
+- License update: `LICENSE` is now the mudmode Personal Use License v1.3, effective October 23, 2026 (it replaces v1.2). Please read the new text.
+- Sharing a lesson: the agreement line is now `I agree to the mudmode lesson terms (v2) and I'm 18 or older.`, for the mudmode lesson terms v2 (https://mudmodecrew.com/lesson-terms.html). `README.md`, `templates/SHARED-LESSONS.md` and the `FOR-CHAT-APPS/` files use the new line.
+- If you set up mudmode before 1.3.4: setup keeps your own `templates/SHARED-LESSONS.md` as it is, so its agreement line still says `(v1)`. Change it to `(v2)`, or copy the line above.
+- Setup now also counts an unedited 1.3.3 `CORE.md` and connector file as stock, so updating from 1.3.3 refreshes them the same way as before (backup first).
+- The safety rules are unchanged; only the Version lines moved to 1.3.4.
+
 ## v1.3.3 (2026-10-23)
 - New: the short name **"mud"**. In your AI chats, "mud status", "mud report", "mud full", "mud lite", "mud modules" and "mud quiet" work like the same words with "mudmode". "mudmode" stays the main name and still works everywhere. Only an exact whole message counts ("mud" plus one word from that list), "mud full", "mud lite" and "mud quiet" are confirmed before anything switches, and no "mud" message is ever an OK for anything.
 - It is a word your AI understands, not a terminal command: setup adds no `mud` command and changes no shell profile.

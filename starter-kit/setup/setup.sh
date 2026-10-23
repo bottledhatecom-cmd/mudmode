@@ -1,5 +1,5 @@
 #!/bin/sh
-# mudmode setup v1.3.3 (macOS, Linux, Windows Git Bash).
+# mudmode setup v1.3.4 (macOS, Linux, Windows Git Bash).
 # Copies the kit into ONE folder you own (default: ~/mudmode). Outside that folder it only
 # READS, except one optional connector file you say yes to (~/.claude/rules/mudmode.md for
 # Claude Code, ~/.grok/AGENTS.md for Grok Build). It never deletes anything. On a rerun it updates,
@@ -212,12 +212,12 @@ refresh() { # $1 source, $2 kit-owned destination (cores/, modules/): if it diff
     RB=$(newbak "$2"); cp -p "$2" "$RB" && cp "$1" "$2" && COPIED=$((COPIED+1)) && REFRESHED=$((REFRESHED+1)) && say "updated $2 (backup: ${RB##*/})" || fail "could not update $2"
   else place "$1" "$2"; fi
 }
-# --- known stock files (v1.3.3): sha256 of the CORE.md cores and connector templates in the released
-# v1.3.0, v1.3.1 and v1.3.2 kits. A file that matches one byte for byte (Windows line endings count as
+# --- known stock files (v1.3.4): sha256 of the CORE.md cores and connector templates in the released
+# v1.3.0, v1.3.1, v1.3.2 and v1.3.3 kits. A file that matches one byte for byte (Windows line endings count as
 # the same) was written by setup and never edited.
-STOCK_CORE_LITE="8df2ce0d545cc0a53b4517e6cba9f7908c0eb42724c699cc0cb1b9c671d2ad63 02158beeac2d7222fba9e401fc7549228818aa48d98d83d7a5ce3c5e0fe9e56b f4f1e69151ac5801120bb919a5a06ffd38c723ca1376a1a2330d0cc2e185916d"
-STOCK_CORE_FULL="a779f75c31520275342c1b274afb561c51c340e100e244fe35fafab4be91cabd 2fdb403ef64ecd84856a90f5c5d90355d9eae335c03f85c748200bb6e6d2dee7 b461794b86be0e8acac8a55ffc203257b3b14c4cc8b93e9c9ea30c9957448d18"
-STOCK_CONN="999fc995023857871a8c345bf6544b380cce2cfae22c66e2920a059a47305259 669af4c6f16c9c8b7c7dd8cfb15009c77bcffe5259ed2e38fd2194d5fe060c52 8fcfaaa9c9084b8d2120f55f3ae2c32afd5616193caeadc7f259695d00205780 b85fc69197fa843c927c286258bd80990f63ec1af0c7d8886ae3c61230af87ac a7a46d2be9c464bdbd5bec37889299753db3bac746cb6932c5a7914e3350315c 0bbb4202af065919fa0e701cc2bf756682d07d43e0c259ad3b0d46e9d6889e1f f2082caa065c3d164016baf53e6ad6c2cae11287d975d09e7e96c7d5803252fd 2006e87384ab657dae27a9c98d908b57ea983f21ff3e2f7a6578e6cd1e4834d8 46b6957686bd44516246645e36070e5f3aa9d28ccf543e4abdd384fb66caa870 8c7116b7496cbb7b9d5135d3fb4b9865ed9e0589b78ea7364b8c4f5e60745152"
+STOCK_CORE_LITE="8df2ce0d545cc0a53b4517e6cba9f7908c0eb42724c699cc0cb1b9c671d2ad63 02158beeac2d7222fba9e401fc7549228818aa48d98d83d7a5ce3c5e0fe9e56b f4f1e69151ac5801120bb919a5a06ffd38c723ca1376a1a2330d0cc2e185916d e512ab0beb8df0baf4769ccf8b465bb7c35f9e17d286fd17eab8815e88d6ce0e"
+STOCK_CORE_FULL="a779f75c31520275342c1b274afb561c51c340e100e244fe35fafab4be91cabd 2fdb403ef64ecd84856a90f5c5d90355d9eae335c03f85c748200bb6e6d2dee7 b461794b86be0e8acac8a55ffc203257b3b14c4cc8b93e9c9ea30c9957448d18 b641b751a7ca34761f48dd6d9c78617039057f4e4b4dbfa8b4645641d8bd1654"
+STOCK_CONN="999fc995023857871a8c345bf6544b380cce2cfae22c66e2920a059a47305259 669af4c6f16c9c8b7c7dd8cfb15009c77bcffe5259ed2e38fd2194d5fe060c52 8fcfaaa9c9084b8d2120f55f3ae2c32afd5616193caeadc7f259695d00205780 b85fc69197fa843c927c286258bd80990f63ec1af0c7d8886ae3c61230af87ac a7a46d2be9c464bdbd5bec37889299753db3bac746cb6932c5a7914e3350315c 0bbb4202af065919fa0e701cc2bf756682d07d43e0c259ad3b0d46e9d6889e1f f2082caa065c3d164016baf53e6ad6c2cae11287d975d09e7e96c7d5803252fd 2006e87384ab657dae27a9c98d908b57ea983f21ff3e2f7a6578e6cd1e4834d8 46b6957686bd44516246645e36070e5f3aa9d28ccf543e4abdd384fb66caa870 8c7116b7496cbb7b9d5135d3fb4b9865ed9e0589b78ea7364b8c4f5e60745152 27ca4ad739f7155191adf1089a096c34d3466f172d0c4fbd7fc3672d48c534ed b9b2d70c62bd38aaf8abbf12707c4ddc4e233bca86c6ffa4fcbe65d9a681bd7e 6890bf3799ac7442865f8b29ed022bf2ad8e83e0cfe337cf0e006e1e56bd6485 31fb3548c5f604f689ae2df5b35d73ecc1d91850cd3b2f10ebf6ccf5c326ca04"
 sha_of() { # sha256 of $1, or nothing if this computer has no tool for it (then nothing counts as stock)
   if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" 2>/dev/null | cut -d' ' -f1
   elif command -v shasum >/dev/null 2>&1; then shasum -a 256 "$1" 2>/dev/null | cut -d' ' -f1
@@ -351,7 +351,7 @@ cat > "$TMP/HANDOFF.md" <<HOF
 
 **Next single action:** ask the owner what the first job is.
 
-- **Written:** $NOW, by mudmode setup v1.3.3
+- **Written:** $NOW, by mudmode setup v1.3.4
 - **Goal:** first session with mudmode
 - **Stage:** switched on
 - **Live state to re-check before editing:** none yet
@@ -369,7 +369,7 @@ cat > "$TMP/HANDOFF.md" <<HOF
 
 **Next single action:** ask the owner what the first job is.
 
-- **Written:** $NOW, by mudmode setup v1.3.3
+- **Written:** $NOW, by mudmode setup v1.3.4
 - **What changed:** mudmode folder set up at $DIRTXT (lite mode)
 - **Unused OKs (exact scope):** none
 - **Still running:** none
@@ -498,7 +498,7 @@ console.log("ADDED " + b);' "$spn" "$adir" "$STAMP")
 
 # --- 3. log + result ------------------------------------------------------------
 if [ "$DRY" -eq 0 ] && [ -d "$TARGET" ]; then
-  { printf '\n## %s setup v1.3.3 from %s\n' "$NOW" "$(basename "$KIT_DIR")"
+  { printf '\n## %s setup v1.3.4 from %s\n' "$NOW" "$(basename "$KIT_DIR")"
     printf -- '- copied %s, already the same %s, kept yours %s; connected:%s; allowed folder: %s; mode: %s\n' "$COPIED" "$SAME" "$KEPT" "${CONNECTED:- none}" "${ALLOWED:-no}" "$MODE"; } >> "$TARGET/SETUP-LOG.md"
 fi
 say ""

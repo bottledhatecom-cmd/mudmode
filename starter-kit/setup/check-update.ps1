@@ -1,4 +1,4 @@
-# mudmode update check (v1.3.3). OFF unless you turn it on: CORE-LOCAL.md line "Update check ...: on".
+# mudmode update check (v1.3.4). OFF unless you turn it on: CORE-LOCAL.md line "Update check ...: on".
 # When on, it reads one small public file (https://mudmodecrew.com/version.json) and tells you if a
 # newer mudmode kit is out, and how to update. It never downloads or installs anything, and it sends
 # no personal info, just a normal web request: no ID, no cookies, no settings (like any web visit,
