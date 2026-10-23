@@ -301,3 +301,18 @@ button.btn.s{border:1.5px solid var(--line2)}
 .term-wide .dl-row .btn{flex:0 1 auto;min-width:180px}
 @media (max-width:560px){.term-wide .dl-row .btn{flex:1 1 100%}}
 @media (max-width:560px){nav .nav-guide{display:none}.tree{font-size:12px}}
+/* What to say card (step 5, v3h draft) */
+.say-card{margin-top:26px;padding:18px 20px 6px;border-radius:16px;border:1px solid var(--line2);background:rgba(12,11,10,.5)}
+.say-card .small{margin:0 0 10px}
+.say-h{margin:16px 0 8px;color:var(--gold);font-size:16px}
+.say-list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.say-list li{display:grid;grid-template-columns:minmax(0,15em) minmax(0,1fr);gap:4px 16px;align-items:start;padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:linear-gradient(180deg,var(--panel2),var(--panel));color:var(--muted);font-size:15.5px;line-height:1.5}
+.say-list li code,.say-list .say-ok{grid-column:1;justify-self:start;font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;font-size:14.5px;color:#ffe09a;background:#0c0b0a;border:1px solid var(--line2);border-radius:8px;padding:2px 8px;overflow-wrap:anywhere}
+.say-list .say-ok{font-family:inherit;font-weight:750;color:var(--ink)}
+.say-list li span{grid-column:2;grid-row:1/span 3}
+.say-list li span b{color:var(--ink)}
+@media (max-width:760px){
+  .say-list li{grid-template-columns:1fr}
+  .say-list li span{grid-column:1;grid-row:auto}
+  .say-card{padding:16px 14px 4px}
+}
