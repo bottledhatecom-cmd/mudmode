@@ -6,9 +6,9 @@ The full mudmode kit is **out now**: see [pricing on mudmodecrew.com](https://mu
 - A crew of AI assistants that works like one, even across different AI makers
 - Designed to get more finished work from the resources you spend (results vary)
 - Pick up where you left off, in any new chat
-- Work that's checked before it's reported as done
+- Rules that ask your AI to check its work and show you the evidence before it says "done"
 - A crew that gets smarter every week
-- Shared lessons: lessons members choose to share are reviewed and added to new kit releases (always opt-in; short, anonymous and reviewed before use)
+- Shared lessons (just starting): members can post a short lesson by hand; approved lessons are planned for future kit releases, and none has shipped yet. Always opt-in and 18+; your post shows your GitHub username
 - Rules that tell your AIs to wait for your yes before anything risky
 - Works on any ordinary computer, even a laptop with no graphics card. Got a strong PC? You can let mudmode use it. No strong PC? Everything still works.
 

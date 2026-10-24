@@ -110,7 +110,7 @@ button.btn.s{border:1.5px solid var(--line2)}
 .tight li{margin:4px 0}
 
 /* STEP 3 tiers */
-.tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:stretch}
+.tiers{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;align-items:stretch}
 .tier{position:relative;display:flex;flex-direction:column;padding:24px 22px;border-radius:20px;border:1px solid var(--line);background:linear-gradient(180deg,var(--panel2),var(--panel))}
 .tier h3{margin:0 0 4px;font-size:19px;color:var(--gold)}
 .tier h3::before{content:"";display:inline-block;width:11px;height:12px;margin-right:9px;background:var(--gold);clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
