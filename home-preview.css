@@ -86,3 +86,27 @@ nav.nav-short .nav-links{display:contents}
 #pricing .never-list li::before{content:"\2715";position:absolute;left:0;color:var(--gold);font-size:12px;top:3px}
 #pricing .mini-link{color:var(--gold);font-weight:700;font-size:14.5px;text-decoration:none;border-bottom:1px solid rgba(243,201,105,.45)}
 #pricing .mini-link:hover{color:#ffe09a}
+/* your-crew section (v3o) */
+#your-crew{background:radial-gradient(900px 360px at 50% 0%,rgba(243,201,105,.09),transparent 70%)}
+#your-crew .crew-eyebrow{margin:0 0 10px;color:var(--gold);font-weight:700;font-size:15px;letter-spacing:.06em;text-transform:uppercase}
+#your-crew h2 span{color:var(--gold);text-shadow:var(--glow)}
+#your-crew .crew-grid{list-style:none;margin:0;padding:0}
+#your-crew .crew-grid .card{display:flex;flex-direction:column}
+#your-crew .crew-grid .card h3{font-size:20px;line-height:1.3}
+#your-crew .crew-grid .card p{font-size:16.5px;line-height:1.5}
+#your-crew .crew-more{margin:18px 0 0;color:var(--muted);font-size:17px;max-width:780px}
+#your-crew .crew-trio{list-style:none;margin:34px 0 0;padding:0;display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+#your-crew .crew-trio li{padding:16px 0 0;border-top:3px solid var(--gold);box-shadow:0 -6px 18px -14px rgba(243,201,105,.8)}
+#your-crew .crew-trio b{display:block;color:#fff7ea;font-size:21px;line-height:1.3;margin-bottom:6px}
+#your-crew .crew-trio span{display:block;color:var(--muted);font-size:16px;line-height:1.5}
+#your-crew .crew-kits{margin:18px 0 0;color:var(--ink);font-size:17px;max-width:860px}
+#your-crew .crew-kits b{color:var(--gold)}
+#your-crew .crew-cta{margin-top:24px}
+#your-crew .crew-fine{margin:14px 0 0;color:var(--dim);font-size:14.5px;max-width:860px}
+#your-crew a:not(.btn){color:var(--gold)}
+@media (max-width:640px){
+  #your-crew .crew-eyebrow{font-size:14px}
+  #your-crew .crew-grid .card h3{font-size:19px}
+  #your-crew .crew-trio b{font-size:19px}
+  #your-crew .crew-cta .btn{flex:1 1 100%}
+}
