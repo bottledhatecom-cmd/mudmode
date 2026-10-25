@@ -30,3 +30,10 @@
  .sbox h2{font-size:24px}
 }
 .sbox .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.sbox-help{margin:-6px 0 6px;font-size:16px}
+.sbox-help summary{min-height:44px;display:flex;align-items:center;color:var(--gold);cursor:pointer}
+.sbox-help p{margin:6px 0 4px;font-size:16px}
+.sbox-open{margin:4px 0 14px}
+.sbox-open .btn{margin-bottom:8px}
+.sbox-small{display:block;font-size:15px;color:var(--dim)}
+.sbox-gap{margin-top:14px!important}
