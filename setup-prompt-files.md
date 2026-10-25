@@ -1,6 +1,6 @@
 # mudmode quiet setup (for an AI that works with files, like Claude Code)
 
-**You (the person):** you pasted this into your AI. It tells your AI to set up the free mudmode Crew kit for you and ask you one question. Everything it does is written below, in plain words. Your AI app may ask your permission before each command: allow each one once, and don't pick "always allow". The kit is free under the mudmode Personal Use License (https://github.com/bottledhatecom-cmd/mudmode/blob/main/LICENSE, also in the zip as LICENSE); by having your AI download it, you agree to it.
+**You (the person):** you pasted this into your AI. It tells your AI to set up the free mudmode Crew kit for you and ask you one question. Everything it does is written below, in plain words. Your AI app may ask your permission before each command: allow each one once, and don't pick "always allow". The kit is free under the mudmode Personal Use License (https://mudmodecrew.com/license.txt, also in the zip as LICENSE); by having your AI download it, you agree to it.
 
 **AI:** the person wants the free mudmode Crew kit set up on this computer with as few questions as possible. Follow these steps in order. Where the kit's README.md or setup/AI-SETUP.md say something different, this page wins (it asks fewer questions, and step 2 is the one download); still follow their ground rules. Keep every message short and plain; the person may not be technical. If anything fails or looks different from what this says, stop and tell them in one line.
 
