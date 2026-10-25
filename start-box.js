@@ -97,7 +97,7 @@
       btn.textContent='Copied';showOpen();
       done.textContent=kind==='files'
        ?'Copied. Now paste it into your AI and send it. It tells your AI to ask you one question, then set you up.'
-       :'Copied. Now open '+aiName+', start a new chat, paste it in and send it. Your AI takes it from there.';
+       :'Copied. Open '+aiName+', paste it into a new chat and send it. (mudhelp lists the other words.)';
       into();
      },selectText);
     }
