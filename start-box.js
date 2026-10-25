@@ -7,7 +7,7 @@
  if(!box||typeof box.showModal!=='function')return; // old browser: the links keep working as plain links
  // Each prompt is pinned: if its file changes, its hash here must change too, so a text change is always a visible code change.
  var PROMPTS={
-  chat:{url:'first-prompt.md',sha:'sha256-/QvAdZi2FUbzXt8ZqjpzHQZxiNp+YvgmOpQHIApZbM0=',last:''},
+  chat:{url:'first-prompt.md',sha:'sha256-Ivi6+hXU77pJrpuaBnv30PXfjdxMIPeUq42RCchwiuU=',last:''},
   files:{url:'setup-prompt-files.md',sha:'sha256-OJEfzOXsY/Jvb8bwhhFHRR/uO9tnI54TEuAEGWUnK1I=',last:''}
  };
  // Fixed links only; the page can't add others.
