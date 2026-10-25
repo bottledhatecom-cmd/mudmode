@@ -1,4 +1,4 @@
-# mudmode setup v1.3.4 (Windows PowerShell 5.1+, PowerShell 7 on any system).
+# mudmode setup v1.3.5 (Windows PowerShell 5.1+, PowerShell 7 on any system).
 # Copies the kit into ONE folder you own (default: %USERPROFILE%\mudmode). Outside that folder it
 # only READS, except one optional connector file you say yes to (~\.claude\rules\mudmode.md for
 # Claude Code, ~\.grok\AGENTS.md for Grok Build). It never deletes anything. On a rerun it updates,
@@ -64,6 +64,7 @@ $Target = [IO.Path]::GetFullPath($Target).TrimEnd('/','\')
 $HomeFull = [IO.Path]::GetFullPath($HomeDir).TrimEnd('/','\')
 $KitFull = [IO.Path]::GetFullPath($KitDir).TrimEnd('/','\')
 if ($Target -eq $HomeFull -or $Target -eq [IO.Path]::GetPathRoot($Target).TrimEnd('/','\') -or $Target -eq "") { Stop-Setup "the target must be its own folder (for example ~\mudmode), not '$Target'." 1 }
+if (($HomeFull + [IO.Path]::DirectorySeparatorChar).StartsWith($Target + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) { Stop-Setup "the target must be its own new folder (for example ~\mudmode), not your home folder or a folder above it ('$Target')." 1 }   # v1.3.5: a folder above home is refused too, as in setup.sh
 if (($Target + [IO.Path]::DirectorySeparatorChar).StartsWith($KitFull + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) { Stop-Setup "don't install inside the download folder; pick another place (default ~\mudmode)." 1 }
 if ($Target.StartsWith($HomeFull + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
   $DirTxt = "~/" + $Target.Substring($HomeFull.Length + 1).Replace('\','/')
@@ -209,12 +210,12 @@ function Refresh($src, $dst) {
     try { $rb = NewBak $dst; Copy-Item $dst $rb; Copy-Item $src $dst -Force; $script:Copied++; $script:Refreshed++; Say "updated $dst (backup: $(Split-Path $rb -Leaf))" } catch { Fail "could not update ${dst}: $($_.Exception.Message)" }
   } else { Place $src $dst $false }
 }
-# --- known stock files (v1.3.4): sha256 of the CORE.md cores and connector templates in the released
-# v1.3.0, v1.3.1, v1.3.2 and v1.3.3 kits. A file that matches one byte for byte (Windows line endings count as
+# --- known stock files (v1.3.5): sha256 of the CORE.md cores and connector templates in the released
+# v1.3.0, v1.3.1, v1.3.2, v1.3.3 and v1.3.4 kits. A file that matches one byte for byte (Windows line endings count as
 # the same) was written by setup and never edited.
-$StockCoreLite = @("8df2ce0d545cc0a53b4517e6cba9f7908c0eb42724c699cc0cb1b9c671d2ad63","02158beeac2d7222fba9e401fc7549228818aa48d98d83d7a5ce3c5e0fe9e56b","f4f1e69151ac5801120bb919a5a06ffd38c723ca1376a1a2330d0cc2e185916d","e512ab0beb8df0baf4769ccf8b465bb7c35f9e17d286fd17eab8815e88d6ce0e")
-$StockCoreFull = @("a779f75c31520275342c1b274afb561c51c340e100e244fe35fafab4be91cabd","2fdb403ef64ecd84856a90f5c5d90355d9eae335c03f85c748200bb6e6d2dee7","b461794b86be0e8acac8a55ffc203257b3b14c4cc8b93e9c9ea30c9957448d18","b641b751a7ca34761f48dd6d9c78617039057f4e4b4dbfa8b4645641d8bd1654")
-$StockConnList = @("999fc995023857871a8c345bf6544b380cce2cfae22c66e2920a059a47305259","669af4c6f16c9c8b7c7dd8cfb15009c77bcffe5259ed2e38fd2194d5fe060c52","8fcfaaa9c9084b8d2120f55f3ae2c32afd5616193caeadc7f259695d00205780","b85fc69197fa843c927c286258bd80990f63ec1af0c7d8886ae3c61230af87ac","a7a46d2be9c464bdbd5bec37889299753db3bac746cb6932c5a7914e3350315c","0bbb4202af065919fa0e701cc2bf756682d07d43e0c259ad3b0d46e9d6889e1f","f2082caa065c3d164016baf53e6ad6c2cae11287d975d09e7e96c7d5803252fd","2006e87384ab657dae27a9c98d908b57ea983f21ff3e2f7a6578e6cd1e4834d8","46b6957686bd44516246645e36070e5f3aa9d28ccf543e4abdd384fb66caa870","8c7116b7496cbb7b9d5135d3fb4b9865ed9e0589b78ea7364b8c4f5e60745152","27ca4ad739f7155191adf1089a096c34d3466f172d0c4fbd7fc3672d48c534ed","b9b2d70c62bd38aaf8abbf12707c4ddc4e233bca86c6ffa4fcbe65d9a681bd7e","6890bf3799ac7442865f8b29ed022bf2ad8e83e0cfe337cf0e006e1e56bd6485","31fb3548c5f604f689ae2df5b35d73ecc1d91850cd3b2f10ebf6ccf5c326ca04")
+$StockCoreLite = @("8df2ce0d545cc0a53b4517e6cba9f7908c0eb42724c699cc0cb1b9c671d2ad63","02158beeac2d7222fba9e401fc7549228818aa48d98d83d7a5ce3c5e0fe9e56b","f4f1e69151ac5801120bb919a5a06ffd38c723ca1376a1a2330d0cc2e185916d","e512ab0beb8df0baf4769ccf8b465bb7c35f9e17d286fd17eab8815e88d6ce0e","070fc2265abbe210afad844a66144956361d294a681f6352e389380b34fd5012")
+$StockCoreFull = @("a779f75c31520275342c1b274afb561c51c340e100e244fe35fafab4be91cabd","2fdb403ef64ecd84856a90f5c5d90355d9eae335c03f85c748200bb6e6d2dee7","b461794b86be0e8acac8a55ffc203257b3b14c4cc8b93e9c9ea30c9957448d18","b641b751a7ca34761f48dd6d9c78617039057f4e4b4dbfa8b4645641d8bd1654","b388742850064a75763066d4b211b844ccc0cabf8c96e6cf5416f04a0fea6fba")
+$StockConnList = @("999fc995023857871a8c345bf6544b380cce2cfae22c66e2920a059a47305259","669af4c6f16c9c8b7c7dd8cfb15009c77bcffe5259ed2e38fd2194d5fe060c52","8fcfaaa9c9084b8d2120f55f3ae2c32afd5616193caeadc7f259695d00205780","b85fc69197fa843c927c286258bd80990f63ec1af0c7d8886ae3c61230af87ac","a7a46d2be9c464bdbd5bec37889299753db3bac746cb6932c5a7914e3350315c","0bbb4202af065919fa0e701cc2bf756682d07d43e0c259ad3b0d46e9d6889e1f","f2082caa065c3d164016baf53e6ad6c2cae11287d975d09e7e96c7d5803252fd","2006e87384ab657dae27a9c98d908b57ea983f21ff3e2f7a6578e6cd1e4834d8","46b6957686bd44516246645e36070e5f3aa9d28ccf543e4abdd384fb66caa870","8c7116b7496cbb7b9d5135d3fb4b9865ed9e0589b78ea7364b8c4f5e60745152","27ca4ad739f7155191adf1089a096c34d3466f172d0c4fbd7fc3672d48c534ed","b9b2d70c62bd38aaf8abbf12707c4ddc4e233bca86c6ffa4fcbe65d9a681bd7e","6890bf3799ac7442865f8b29ed022bf2ad8e83e0cfe337cf0e006e1e56bd6485","31fb3548c5f604f689ae2df5b35d73ecc1d91850cd3b2f10ebf6ccf5c326ca04","255fa832309b9a007c1cf590e72ec9ac1cebe79f03a3283f5d76710abb3c8de1","a091d0e3c7f80f18e152dd9bef997cfea71dca03e47f6cdf0e95d396580254cd","4893d0de9e84fffbf4144fe0ff1e151cc3ea95da8acf47dd9f2fbef600af0b45","b381301f11282abb42acff519a31f94eca363ddc1c4a1dcc1b4e6b7464475560")
 function ShaBytes($b) { $h = [Security.Cryptography.SHA256]::Create(); try { return (($h.ComputeHash($b) | ForEach-Object { $_.ToString("x2") }) -join "") } finally { $h.Dispose() } }
 function ShaOf($p) { return (ShaBytes ([IO.File]::ReadAllBytes($p))) }
 function ShaLf($p) { return (ShaBytes ($Utf8.GetBytes([IO.File]::ReadAllText($p, $Utf8).Replace("`r`n", "`n")))) }   # the same hash with Windows line endings
@@ -281,6 +282,7 @@ try {
   Place (Join-Path $Starter "RULE-MAP.md") (Join-Path $Target "RULE-MAP.md") $false
   foreach ($f in "check-update.sh","check-update.ps1") { if (Test-Path (Join-Path $SetupDir $f)) { Refresh (Join-Path $SetupDir $f) (Join-Path $Target "tools/$f") } }   # the opt-in update check (off unless CORE-LOCAL.md says on)
   if ($KitRefresh -and (Test-Path (Join-Path $KitDir "VERSION"))) { Refresh (Join-Path $KitDir "VERSION") (Join-Path $Target "VERSION") }
+  if ($KitRefresh -and (Test-Path (Join-Path $KitDir "WHAT-TO-SAY.md"))) { Refresh (Join-Path $KitDir "WHAT-TO-SAY.md") (Join-Path $Target "WHAT-TO-SAY.md") }   # v1.3.5: the list "mudhelp" shows
   Place (Join-Path $SetupDir "templates/CORE-LOCAL.md") (Join-Path $Target "templates/CORE-LOCAL.md") $false
   $liveF = @("OK-LEDGER.md"); if ($Mode -eq "full") { $liveF = @("LESSONS.md","JOBS.md","OK-LEDGER.md") }
   foreach ($f in $liveF) { Place (Join-Path $Starter "templates/$f") (Join-Path $Target $f) $true }
@@ -363,7 +365,7 @@ try {
 
 **Next single action:** ask the owner what the first job is.
 
-- **Written:** $Now, by mudmode setup v1.3.4
+- **Written:** $Now, by mudmode setup v1.3.5
 - **Goal:** first session with mudmode
 - **Stage:** switched on
 - **Live state to re-check before editing:** none yet
@@ -380,7 +382,7 @@ try {
 
 **Next single action:** ask the owner what the first job is.
 
-- **Written:** $Now, by mudmode setup v1.3.4
+- **Written:** $Now, by mudmode setup v1.3.5
 - **What changed:** mudmode folder set up at $DirTxt (lite mode)
 - **Unused OKs (exact scope):** none
 - **Still running:** none
@@ -485,7 +487,7 @@ finally { Remove-Item -Recurse -Force $Tmp -ErrorAction SilentlyContinue }
 # --- 3. log + result ------------------------------------------------------------
 $conn = if ($script:Connected.Count) { " " + ($script:Connected -join " ") } else { "" }
 if (-not $DryRun -and (Test-Path $Target)) {
-  $log = "`n## $Now setup v1.3.4 from $(Split-Path -Leaf $KitDir)`n- copied $($script:Copied), already the same $($script:Same), kept yours $($script:Kept); connected:$(if ($conn) { $conn } else { ' none' }); allowed folder: $(if ($script:Allowed) { $script:Allowed } else { 'no' }); mode: $Mode`n"
+  $log = "`n## $Now setup v1.3.5 from $(Split-Path -Leaf $KitDir)`n- copied $($script:Copied), already the same $($script:Same), kept yours $($script:Kept); connected:$(if ($conn) { $conn } else { ' none' }); allowed folder: $(if ($script:Allowed) { $script:Allowed } else { 'no' }); mode: $Mode`n"
   [IO.File]::AppendAllText((Join-Path $Target "SETUP-LOG.md"), $log, $Utf8)
 }
 Say ""
@@ -503,6 +505,13 @@ Say "RESULT: OK"
 if ($Mode -eq "lite") { Say 'You''re in lite mode; say "mudmode full" for every module.' }
 Say 'Daily report: say "mudmode report" any time; if your AI can run scheduled tasks, it will offer to write one nightly in reports/ (only with your OK).'
 $mudTxt = ""; if ($script:MudOn) { $mudTxt = ' ("mud status" works too)' }
-Say ('Next: start a NEW chat in your AI. Say "handoff" before you stop, and "mudmode status" any time' + $mudTxt + '.')
-Say "Undo: delete ~\.claude\rules\mudmode.md (or ~\.grok\AGENTS.md if setup made it); that also ends the short name ""mud"". Your folder stays yours."
+function NamesDir($p) { try { return ((Test-Path -LiteralPath $p) -and ([IO.File]::ReadAllText($p).Contains('The shared folder is `' + $DirTxt + '`.'))) } catch { return $false } }   # a connector for THIS folder (made now or before)
+if ($script:Connected.Count -or (NamesDir (Join-Path $HomeDir ".claude/rules/mudmode.md")) -or (NamesDir (Join-Path $HomeDir ".grok/AGENTS.md"))) {
+  Say ('Next: start a NEW chat in your AI. Say "handoff" before you stop, "mudmode status" any time' + $mudTxt + ', and "mudhelp" for the list of things to say.')
+  Say "Undo: delete ~\.claude\rules\mudmode.md (or ~\.grok\AGENTS.md if setup made it); that also ends the short name ""mud"". Your folder stays yours."
+} else {
+  Say ('Next: nothing is connected, so a new chat won''t load mudmode by itself. To use it, start a chat with: Read ' + $DirTxt + '/CORE.md, ' + $DirTxt + '/CORE-LOCAL.md and ' + $DirTxt + '/HANDOFF.md, then continue. Say "handoff" before you stop.')
+  if ($script:Allowed) { Say ('Undo: no connector was made, so there is nothing to turn off. To remove mudmode, delete the ' + $DirTxt + ' folder (only if setup made it new).') }
+  else { Say ('Undo: nothing outside ' + $DirTxt + ' was changed, so there is nothing to turn off. To remove mudmode, delete the ' + $DirTxt + ' folder (only if setup made it new).') }
+}
 if ($script:Allowed) { Say "Undo the allowed folder: remove it from additionalDirectories in ~\.claude\settings.json (backup beside it)." }

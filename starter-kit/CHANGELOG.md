@@ -2,6 +2,17 @@
 
 **How to update:** download the new kit, unzip it to a NEW folder (never over your old download or your `mudmode` folder), then say **Read README.md and set me up.** again or run the setup again. Your settings, handoff, lessons, jobs and OK ledger stay as they are; see "Updating to a new version" in `README.md`. Chat apps: see "Updating" in your `FOR-CHAT-APPS/` file.
 
+## v1.3.5 (2026-10-25)
+- New: say **mudhelp** (or "mudmode help") as the whole message, and your AI lists the things you can say, one short line each. Setup now also copies `WHAT-TO-SAY.md` into your `mudmode` folder, so Claude Code and other AIs that work with files can show it.
+- New: say just **mudmode**, and your AI answers "Woot! mudmode is on." and asks what you need.
+- Chat apps: the first-chat setup is shorter and calmer: one short line and one easy question at a time (your name, then your time zone), and no list of rules at the end. A time zone your AI only guessed is saved as "(guessed)". In a plain chat without a Project, or when you pasted the file instead of adding it, your AI now says what is really set up and how to keep it.
+- Setup: when nothing is connected (`--connect none`, or a connector that was left alone), the last lines no longer say "start a NEW chat" or "delete the connector". They say how to start a chat with mudmode, and that there is nothing to turn off.
+- Setup (macOS, Linux, Git Bash): the home-folder check now compares real paths, so other spellings of your home folder (for example `C:\Users\you` or `~/.`), any folder above it and a whole drive are refused. The PowerShell setup now also refuses a folder above your home folder.
+- Update check (`tools/check-update.sh`): a `VERSION` file saved as UTF-16 or with a byte-order mark (Notepad, PowerShell 5.1) is now read the same way the PowerShell check reads it, so both report the same version.
+- `setup/AI-SETUP.md`: downloading the kit itself (when you asked your AI to, with the hash to check) is the one exception to "don't go online".
+- Setup now also counts an unedited 1.3.4 `CORE.md` and connector file as stock, so updating from 1.3.4 refreshes them the same way as before (backup first).
+- The safety rules are unchanged; only the Version lines moved to 1.3.5. The connector files gain one line for "mudmode" and "mudhelp".
+
 ## v1.3.4 (2026-10-23)
 - License update: `LICENSE` is now the mudmode Personal Use License v1.3, effective October 23, 2026 (it replaces v1.2). Please read the new text.
 - Sharing a lesson: the agreement line is now `I agree to the mudmode lesson terms (v2) and I'm 18 or older.`, for the mudmode lesson terms v2 (https://mudmodecrew.com/lesson-terms.html). `README.md`, `templates/SHARED-LESSONS.md` and the `FOR-CHAT-APPS/` files use the new line.
