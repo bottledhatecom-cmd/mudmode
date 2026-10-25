@@ -7,9 +7,8 @@
  if(!box||typeof box.showModal!=='function')return; // old browser: the links keep working as plain links
  // Each prompt is pinned: if its file changes, its hash here must change too, so a text change is always a visible code change.
  var PROMPTS={
-  chat:{url:'starter-kit/FOR-CHAT-APPS/mudmode-chat-lite.md',sha:'sha256-PBroaBvu7z5LfZ9KcwmCn2VvttVnCIFSVb4GcczPzhU=',
-   last:'\n\n---\nRead the mudmode text above and set me up.'},
-  files:{url:'setup-prompt-files.md',sha:'sha256-98MPWC3gxqgpzltmd+f5qo/TP56A/iQ/jyXqXj1HHsQ=',last:''}
+  chat:{url:'first-prompt.md',sha:'sha256-kS9OC/Tobp9i2QocLVkNxZzQ07rTfZ6JtPpFhWDiCgU=',last:''},
+  files:{url:'setup-prompt-files.md',sha:'sha256-8SnG8efAQIBl6sdAo4jHFCkA+eSc+79C0WvhOd9sEsc=',last:''}
  };
  // Fixed links only; the page can't add others.
  var AI_LINKS={ChatGPT:'https://chatgpt.com',Claude:'https://claude.ai',Grok:'https://grok.com'};
@@ -85,6 +84,7 @@
    function showOpen(){if(o)o.hidden=!aiUrl;}
    function into(){done.scrollIntoView({block:'nearest'});}
    function selectText(){
+    var peek=ta.closest('details');if(peek)peek.open=true;
     ta.focus();ta.select();showOpen();
     done.textContent='Your prompt is selected in the box below. Press Ctrl+C (Cmd+C on a Mac) to copy it. On a phone: press and hold in the box, choose Select all, then Copy.';
     ta.scrollIntoView({block:'center'});
