@@ -1,4 +1,4 @@
-# mudmode: a crew of AIs that works like one
+# mudmode: one rulebook for your AI crew
 
 mudmode gives a group of AI assistants one rulebook you own: handoffs so the next chat picks up where the last one stopped, a lessons book you can turn on, and rules that tell them to ask you before anything risky.
 
