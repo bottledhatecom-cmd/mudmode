@@ -1,5 +1,8 @@
 /* The door: the hero's "Which AI do you use?" start buttons and the 4 lines beside them (no pop-up).
    Builds on glow.css (same colors and buttons). Sizes are in rem so the browser's own text-size setting makes them bigger too. */
+/* No scroll anchoring on the home page (this file loads only there): opening the setup fold after a copy must not make the
+   browser shift the page (Wrecker SB3-1). The page is static; the only late content is the members chat, opened by a click. */
+html{overflow-anchor:none}
 body.home header.hero{min-height:0;display:block;padding:44px 0 52px}
 body.home .hero .wrap.hero-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:22px;align-items:start}
 @media (min-width:900px){body.home .hero .wrap.hero-grid{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:36px}}
