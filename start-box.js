@@ -86,8 +86,8 @@
    function into(){done.scrollIntoView({block:'nearest'});}
    function selectText(){
     ta.focus();ta.select();showOpen();
-    done.textContent='Your prompt is selected in the box below. Press Ctrl+C (Cmd+C on a Mac) to copy it. On a phone: tap in the box, choose Select all, then Copy.';
-    into();
+    done.textContent='Your prompt is selected in the box below. Press Ctrl+C (Cmd+C on a Mac) to copy it. On a phone: press and hold in the box, choose Select all, then Copy.';
+    ta.scrollIntoView({block:'center'});
    }
    btn.setAttribute('aria-busy','true');btn.textContent='Getting it ready…';
    load(kind).then(function(t){
@@ -112,6 +112,8 @@
   var r=box.getBoundingClientRect();
   return e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom;
  }
+ // The guard covers links too: a double tap must not open a link that sits where the last button was.
+ box.addEventListener('click',function(e){if(guarded()&&e.target.closest('a,summary')){e.preventDefault();e.stopPropagation();}},true);
  box.addEventListener('pointerdown',function(e){pressOnBackdrop=e.target===box&&outside(e);});
  box.addEventListener('click',function(e){
   if(e.target===box&&pressOnBackdrop&&outside(e)&&!guarded())box.close();
