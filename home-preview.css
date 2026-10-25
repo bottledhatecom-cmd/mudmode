@@ -179,6 +179,12 @@ ol.crew-log .say b{color:var(--gold);font-weight:700}
 ol.crew-log li.you .say{font-size:19px}
 ol.crew-log li.you .hat{color:var(--on-gold);background:var(--gold);box-shadow:var(--glow)}
 ol.crew-log li.you b{color:#ffe09a}
+ol.crew-log picture{display:block;width:56px;height:46px}
+ol.crew-log img.hat{display:block;object-fit:cover;box-sizing:border-box}
+ol.crew-log li.you img.hat{padding:3px}
+.crew-faces-h{margin:14px 0 0;color:var(--dim);font-size:14px}
+ul.crew-more picture{display:block;flex:none;width:34px;height:28px}
+ul.crew-more img.face{display:block;width:34px;height:28px;border-radius:7px;object-fit:cover}
 .v{display:inline-block;padding:0 7px;border:1px solid var(--line2);border-radius:7px;background:var(--bg);font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;font-size:.9em;font-weight:700}
 .v.fail{color:#ff9d8a;border-color:rgba(255,157,138,.5)}
 .v.pass{color:var(--gold)}
