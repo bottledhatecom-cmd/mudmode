@@ -1,33 +1,36 @@
-// Start box: the one-step "get started" wizard on the home page (owner, OK-LEDGER 2026-10-24 9:12-9:14 PM).
-// No network calls except reading this site's own two prompt files when the box opens (the Start button opens the AI you
-// picked in a new tab; for ChatGPT and Claude its link carries the 4-line prompt); no trackers; nothing stored
-// (no cookies, no localStorage). Kept in its own file so the Content-Security-Policy can block all inline scripts.
+// Start buttons (the door): the "Which AI do you use?" buttons at the top of the home page
+// (owner, OK-LEDGER 2026-10-24 9:12-9:14 PM; the redesign, OK-LEDGER 2026-10-25 7:13 AM). No pop-up.
+// No network calls except reading this site's own two prompt files when the page loads (both, always, so the host never
+// learns which button you tap). A chat button opens that AI in a new tab at its plain address: no prompt in the link,
+// no referrer, no tracking codes. No trackers; nothing stored (no cookies, no localStorage).
+// Kept in its own file so the Content-Security-Policy can block all inline scripts.
 // Builds on Grok's start-here wizard (start-here/wizard.js and start-here/index.html): its AI picks and open-your-AI links.
 (function(){
- var box=document.getElementById('start-box');
- if(!box||typeof box.showModal!=='function')return; // old browser: the links keep working as plain links
+ var door=document.getElementById('start');
+ if(!door||!window.fetch||!window.Promise)return; // old browser: the buttons stay hidden; the 4 lines and the guide still work
  // Each prompt is pinned: if its file changes, its hash here must change too, so a text change is always a visible code change.
  var PROMPTS={
-  chat:{url:'first-prompt.md',sha:'sha256-Ku1Mz2eikkC/Dmb8+mkMAnWzcKU1W15+ZAmASIaP8G4=',last:''},
-  files:{url:'setup-prompt-files.md',sha:'sha256-gXvg1egeOZRXWJ8oY6M5WgoT08CLr0qeQd9/JWeg4Bw=',last:''}
+  chat:{url:'first-prompt.md',sha:'sha256-Ku1Mz2eikkC/Dmb8+mkMAnWzcKU1W15+ZAmASIaP8G4='},
+  files:{url:'setup-prompt-files.md',sha:'sha256-gXvg1egeOZRXWJ8oY6M5WgoT08CLr0qeQd9/JWeg4Bw='}
  };
- // Fixed links only; the page can't add others.
+ // Fixed links only, plain addresses (no ?q= prefill: not verified for any of them); the page can't add others.
  var AI_LINKS={ChatGPT:'https://chatgpt.com',Claude:'https://claude.ai',Grok:'https://grok.com'};
- // Where the site supports it, the link also fills the chat box (community-documented, not promised): the copy is the backup.
- var AI_PREFILL={ChatGPT:'https://chatgpt.com/?q=',Claude:'https://claude.ai/new?q='};
- var ready={}; // prompt text once loaded, so the click can open the AI right away
- var GUARD_MS=450; // a double tap must not answer the next question
- var cache={},opener=null,aiName='your AI',aiUrl='',guardUntil=0,pressOnBackdrop=false;
+ var AGAIN_MS=3000; // a second tap on the same AI within 3 s opens no second tab (I-10)
+ var FAIL='That didn’t load. Check your connection and try again, or use the step-by-step guide.';
+ var HOLD='On a phone: press and hold in the message box, then tap Paste.';
+ var KEYS='Press Ctrl+C (or Cmd+C on a Mac) to copy it.';
+ var touch=!!(window.matchMedia&&window.matchMedia('(pointer:coarse)').matches);
+ var ready={},cache={},openedAi='',openedAt=0;
+ function q(sel){return door.querySelector(sel);}
+ var st={chat:q('[data-door-status="chat"]'),files:q('[data-door-status="files"]')};
+ var box={chat:q('[data-door-text="chat"]'),files:q('[data-door-text="files"]')};
+ var openRow=q('[data-door-open]'),openLink=q('[data-door-open-link]'),openName=q('[data-door-open-name]');
+ var chatWrap=q('[data-door-chatbox]'),fold=q('[data-door-fold]'),first=q('[data-door-first]');
 
- function guard(){guardUntil=Date.now()+GUARD_MS;}
- function guarded(){return Date.now()<guardUntil;}
- function show(step){
-  var steps=box.querySelectorAll('[data-sbox-step]');
-  for(var i=0;i<steps.length;i++)steps[i].hidden=steps[i].getAttribute('data-sbox-step')!==step;
-  var h=box.querySelector('[data-sbox-step="'+step+'"] h2');
-  if(h){box.setAttribute('aria-labelledby',h.id);h.focus();}
-  box.querySelector('.sbox-in').scrollTop=0;
-  guard();
+ // The copy and the Ctrl+C fallback only ever use the fetched, verified text (never the lines shown in the page's HTML).
+ function fill(kind,t){
+  box[kind].value=t;
+  if(kind==='files'&&first)first.textContent=t.split('\n')[0];
  }
  function load(kind){
   if(cache[kind])return cache[kind];
@@ -35,101 +38,70 @@
   cache[kind]=fetch(p.url,{credentials:'omit',cache:'no-cache',integrity:p.sha}).then(function(r){
    if(!r.ok)throw new Error('load');
    return r.text();
-  }).then(function(t){t=t.replace(/\s+$/,'')+p.last;ready[kind]=t;return t;});
-  cache[kind].catch(function(){delete cache[kind];}); // a failed load can be tried again
+  }).then(function(t){t=t.replace(/\s+$/,'');ready[kind]=t;fill(kind,t);return t;});
+  cache[kind].catch(function(){delete cache[kind];delete ready[kind];box[kind].value='';}); // a failed load can be tried again
   return cache[kind];
  }
- function stepEl(kind){return box.querySelector('[data-sbox-prompt="'+kind+'"]');}
- function failMsg(el){
-  el.querySelector('[data-sbox-done]').textContent='That didn’t load. Check your connection and try again, or use the step-by-step guide below.';
+ function clear(){
+  st.chat.textContent='';st.files.textContent='';
+  openRow.hidden=true;chatWrap.hidden=true;
  }
- function label(btn){btn.textContent=btn.hasAttribute('data-sbox-go')?(aiUrl?'Start mudmode in '+aiName:'Copy my first prompt'):btn.getAttribute('data-label');}
- function reset(){
-  var steps=box.querySelectorAll('[data-sbox-prompt]');
-  for(var i=0;i<steps.length;i++){
-   var s=steps[i],btn=s.querySelector('[data-sbox-copy]'),o=s.querySelector('[data-sbox-open]');
-   s.querySelector('[data-sbox-done]').textContent='';
-   if(o)o.hidden=true;
-   btn.removeAttribute('aria-busy');label(btn);
+ function copy(t){
+  if(navigator.clipboard&&navigator.clipboard.writeText&&window.isSecureContext)return navigator.clipboard.writeText(t);
+  return Promise.reject(new Error('no clipboard'));
+ }
+ // Copy refused by the browser: select the verified text and say how to copy it. Nothing scrolls.
+ function select(kind){
+  if(!ready[kind]){fail(kind);return;}
+  if(kind==='chat')chatWrap.hidden=false;else if(fold)fold.open=true;
+  var ta=box[kind];
+  try{ta.focus({preventScroll:true});}catch(e){ta.focus();}
+  ta.select();
+  st[kind].textContent=KEYS;
+ }
+ function fail(kind){
+  clear();box[kind].value='';
+  st[kind].textContent=FAIL;
+ }
+
+ function chatGo(ai,url,t){
+  clear();
+  var copied=copy(t); // the clipboard is written before the tab opens
+  if(url){
+   window.open(url,'_blank','noopener,noreferrer');openedAi=ai;openedAt=Date.now();
+   openLink.setAttribute('href',url);openName.textContent=ai;openRow.hidden=false; // in case a pop-up blocker stopped it
   }
+  copied.then(function(){
+   st.chat.textContent=(url?'Copied. '+ai+' is opening in a new tab: paste the 4 lines there, read them, then send.'
+    :'Copied. Open your chat app, paste the 4 lines, read them, then send.')+(touch?' '+HOLD:'');
+  },function(){select('chat');});
  }
- function openBox(e){
-  e.preventDefault();
-  opener=e.currentTarget;reset();box.showModal();show('1');
-  load('chat').catch(function(){});load('files').catch(function(){}); // both at open, so the host never learns which path you pick
+ function chatPick(){
+  var ai=this.getAttribute('data-door-ai');
+  var url=Object.prototype.hasOwnProperty.call(AI_LINKS,ai)?AI_LINKS[ai]:'';
+  if(url&&openedAi===ai&&Date.now()-openedAt<AGAIN_MS)return; // same AI again within 3 s: no second tab, the message stays
+  if(ready.chat){chatGo(ai,url,ready.chat);return;}
+  load('chat').then(function(t){chatGo(ai,url,t);},function(){fail('chat');});
  }
- var triggers=document.querySelectorAll('[data-start-box]');
- for(var i=0;i<triggers.length;i++)triggers[i].addEventListener('click',openBox);
+ function filesGo(t){
+  clear();
+  copy(t).then(function(){st.files.textContent='Copied. Paste it into your AI. It will ask you one question first.';},
+   function(){select('files');});
+ }
+ function filesPick(){
+  if(ready.files){filesGo(ready.files);return;}
+  load('files').then(filesGo,function(){fail('files');});
+ }
+ // A held Enter repeats: only the first press counts (I-4).
+ function noRepeat(e){if(e.repeat&&(e.key==='Enter'||e.key===' '||e.key==='Spacebar'))e.preventDefault();}
 
- var picks=box.querySelectorAll('[data-sbox-ai]');
- for(var j=0;j<picks.length;j++)picks[j].addEventListener('click',function(){
-  if(guarded())return;
-  var kind=this.getAttribute('data-sbox-kind')==='files'?'files':'chat';
-  aiName=this.getAttribute('data-sbox-ai');
-  aiUrl=Object.prototype.hasOwnProperty.call(AI_LINKS,aiName)?AI_LINKS[aiName]:'';
-  var link=box.querySelector('[data-sbox-open-link]');
-  if(aiUrl&&link)link.setAttribute('href',aiUrl);
-  var names=box.querySelectorAll('[data-sbox-name]');
-  for(var k=0;k<names.length;k++)names[k].textContent=aiName;
-  reset();show(kind);
-  var el=stepEl(kind),ta=el.querySelector('[data-sbox-text]');
-  load(kind).then(function(t){ta.value=t;},function(){ta.value='';failMsg(el);});
- });
- var backs=box.querySelectorAll('[data-sbox-back]');
- for(var b=0;b<backs.length;b++)backs[b].addEventListener('click',function(){if(!guarded())show('1');});
+ var picks=door.querySelectorAll('[data-door-ai]');
+ for(var i=0;i<picks.length;i++){picks[i].addEventListener('click',chatPick);picks[i].addEventListener('keydown',noRepeat);}
+ var fb=q('[data-door-files]');
+ if(fb){fb.addEventListener('click',filesPick);fb.addEventListener('keydown',noRepeat);}
+ var hid=door.querySelectorAll('[data-door-js]');
+ for(var h=0;h<hid.length;h++)hid[h].hidden=false;
 
- var copies=box.querySelectorAll('[data-sbox-copy]');
- for(var c=0;c<copies.length;c++){
-  copies[c].setAttribute('data-label',copies[c].textContent);
-  copies[c].addEventListener('click',function(){
-   if(guarded())return;
-   var btn=this,el=btn.closest('[data-sbox-prompt]'),kind=el.getAttribute('data-sbox-prompt');
-   if(btn.getAttribute('aria-busy')==='true')return; // not disabled, so focus stays on the button
-   var ta=el.querySelector('[data-sbox-text]'),done=el.querySelector('[data-sbox-done]'),o=el.querySelector('[data-sbox-open]');
-   function showOpen(){if(o)o.hidden=!aiUrl;}
-   function into(){done.scrollIntoView({block:'nearest'});}
-   function selectText(){
-    var peek=ta.closest('details');if(peek)peek.open=true;
-    ta.focus();ta.select();showOpen();
-    done.textContent='Your prompt is selected in the box below. Press Ctrl+C (Cmd+C on a Mac) to copy it. On a phone: press and hold in the box, choose Select all, then Copy.';
-    ta.scrollIntoView({block:'center'});
-   }
-   var opened=false;
-   var early=(ready[kind]&&navigator.clipboard&&window.isSecureContext)?navigator.clipboard.writeText(ready[kind]):null;
-   if(btn.hasAttribute('data-sbox-go')&&aiUrl&&!(window.__sboxOpenedAt&&Date.now()-window.__sboxOpenedAt<3000)){ // open the AI in the same click, at most once in 3 s (a held Enter repeats)
-    var pre=AI_PREFILL[aiName]&&ready[kind]?AI_PREFILL[aiName]+encodeURIComponent(ready[kind]):aiUrl;
-    window.open(pre,'_blank','noopener,noreferrer');opened=true;window.__sboxOpenedAt=Date.now();
-   }
-   btn.setAttribute('aria-busy','true');btn.textContent='Getting it ready…';
-   load(kind).then(function(t){
-    ta.value=t;label(btn);
-    if(navigator.clipboard&&window.isSecureContext){
-     return (early||navigator.clipboard.writeText(t)).then(function(){
-      btn.textContent=opened?'Started':'Copied';showOpen();
-      if(kind==='files'){var pk=ta.closest('details');if(pk)pk.open=true;}
-      done.textContent=opened?aiName+' should open in a new tab, and your prompt is copied. If you don\'t see it in the chat there, paste it (Ctrl+V, or press and hold, then Paste) and send it. If nothing opened, use the button below.':kind==='files'
-       ?'Copied. Now paste it into your AI and send it. It tells your AI to ask you one question, then set you up.'
-       :'Copied. Open '+aiName+', paste it into a new chat and send it. (mudhelp lists the other words.)';
-      into();
-     },selectText);
-    }
-    selectText();
-   }).catch(function(){label(btn);failMsg(el);}).then(function(){btn.removeAttribute('aria-busy');guard();});
-  });
- }
-
- // A tap or click closes the box only if it started and ended outside the panel (not on a phone's full-screen box,
- // and not a text drag that ends outside).
- function outside(e){
-  var r=box.getBoundingClientRect();
-  return e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom;
- }
- // The guard covers links too: a double tap must not open a link that sits where the last button was.
- box.addEventListener('click',function(e){if(guarded()&&e.target.closest('a,summary')){e.preventDefault();e.stopPropagation();}},true);
- box.addEventListener('pointerdown',function(e){pressOnBackdrop=e.target===box&&outside(e);});
- box.addEventListener('click',function(e){
-  if(e.target===box&&pressOnBackdrop&&outside(e)&&!guarded())box.close();
-  pressOnBackdrop=false;
- });
- box.addEventListener('close',function(){if(opener&&opener.focus)opener.focus();});
+ function start(){load('chat').catch(function(){});load('files').catch(function(){});}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();

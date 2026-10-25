@@ -1,52 +1,60 @@
-/* Start box: the one-step "get started" wizard on the home page. Builds on glow.css (same colors and buttons).
-   Sizes are in rem so the browser's own text-size setting makes the box bigger too. */
-.sbox:not([open]){display:none}
-.sbox{width:min(35rem,calc(100vw - 32px));max-height:calc(100dvh - 32px);margin:auto;padding:0;border:1px solid var(--line2);border-radius:18px;background:var(--panel);color:var(--ink);box-shadow:0 24px 70px rgba(0,0,0,.6),var(--glow)}
-.sbox::backdrop{background:rgba(10,9,8,.78)}
-.sbox-in{position:relative;padding:28px 26px 24px;overflow-y:auto;max-height:calc(100dvh - 34px);scrollbar-color:var(--line2) transparent}
-.sbox-x{position:sticky;top:0;float:right;margin:-14px -12px 0 8px;z-index:1}
-.sbox-x button{width:48px;height:48px;border:0;border-radius:12px;background:var(--panel);color:var(--muted);font-size:1.75rem;line-height:1;cursor:pointer}
-.sbox-x button:hover,.sbox-x button:focus-visible{color:var(--gold);background:var(--panel2)}
-.sbox p.sbox-guide{margin:0 0 6px;color:var(--gold);font-weight:700;font-size:1.0625rem}
-.sbox p.sbox-count{margin:0 0 4px;color:var(--dim);font-size:1rem}
-.sbox h2{clear:none;margin:0 0 10px;font-size:1.625rem;line-height:1.25;outline:none}
-.sbox p{font-size:1.0625rem;line-height:1.55;margin:0 0 14px;color:var(--muted)}
-.sbox-picks{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0 18px}
-.sbox-picks button{min-height:56px;padding:12px 14px;border:1.5px solid var(--line2);border-radius:12px;background:rgba(243,201,105,.05);color:var(--ink);font:inherit;font-size:1.0625rem;font-weight:700;text-align:left;cursor:pointer}
-.sbox-picks button:hover,.sbox-picks button:focus-visible{border-color:var(--gold);box-shadow:var(--glow);color:#ffe09a}
-.sbox-picks .wide{grid-column:1/-1}
-.sbox-picks small{display:block;font-weight:400;font-size:1rem;color:var(--dim);margin-top:2px}
-.sbox .btn{width:100%;min-height:56px;font-size:1.125rem;border:0;cursor:pointer;font-family:inherit}
-.sbox .btn.s{border:1.5px solid var(--line2)}
-.sbox p.sbox-done{min-height:1.5em;margin:12px 0 6px;color:var(--ink);font-weight:700}
-.sbox p.sbox-small,.sbox .sbox-small{display:block;font-size:1rem;color:var(--dim)}
-.sbox p.sbox-lic{margin-top:18px}
-.sbox p.sbox-what{font-size:1rem;margin-top:4px}
-.sbox textarea{width:100%;height:7.5em;margin:0 0 12px;padding:10px;border:1px solid var(--line2);border-radius:10px;background:var(--bg2);color:var(--ink);font:1rem/1.45 ui-monospace,monospace;scrollbar-color:var(--line2) transparent}
-.sbox p.sbox-safe{margin-top:18px;padding-top:14px;border-top:1px solid var(--line);font-size:1rem;color:var(--dim)}
-.sbox-safe b{color:var(--muted)}
-.sbox-foot{display:flex;flex-wrap:wrap;gap:8px 18px;justify-content:space-between;align-items:center;margin-top:6px;font-size:1rem}
-.sbox-foot a,.sbox-back,.sbox-lic a,.sbox-help summary{color:var(--gold)}
-.sbox-foot a,.sbox-back{display:inline-flex;align-items:center;min-height:44px;min-width:44px;padding:0 4px}
-.sbox-back{border:0;background:none;font:inherit;font-size:1rem;text-decoration:underline;cursor:pointer}
-.sbox-lic a{display:inline-block;padding:10px 0;margin:-10px 0}
-.sbox-help{margin:-6px 0 6px;font-size:1rem}
-.sbox-help summary{display:list-item;padding:10px 0;cursor:pointer}
-.sbox-help summary:focus-visible,.sbox-back:focus-visible,.sbox-foot a:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:6px}
-.sbox-help p{margin:6px 0 4px;font-size:1rem}
-.sbox-open{margin:4px 0 14px}
-.sbox-open .btn{margin-bottom:8px}
-.sbox p.sbox-gap{margin-top:14px}
-.sbox .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-.sbox-tyler{display:block;width:96px;height:96px;margin:0 auto 10px}
-.sbox-tyler img{display:block;width:96px;height:96px;border-radius:18px}
-@media (max-width:520px){
- .sbox-tyler,.sbox-tyler img{width:80px;height:80px}
- .sbox{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;border-radius:0;border:0}
- .sbox-in{max-height:100dvh;padding:22px 18px 28px}
- .sbox-picks{grid-template-columns:1fr}
- .sbox h2{font-size:1.5rem}
-}
-.sbox-peek textarea{height:9em;margin-top:8px}
-.sbox p.sbox-type{margin:18px 0 14px;font-size:1.25rem;line-height:1.4;color:var(--ink);text-align:center}
-.sbox-word{display:inline-block;padding:2px 12px;border:1.5px solid var(--line2);border-radius:10px;color:var(--gold);font:700 1.375rem/1.4 ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;background:rgba(243,201,105,.06)}
+/* The door: the hero's "Which AI do you use?" start buttons and the 4 lines beside them (no pop-up).
+   Builds on glow.css (same colors and buttons). Sizes are in rem so the browser's own text-size setting makes them bigger too. */
+body.home header.hero{min-height:0;display:block;padding:44px 0 52px}
+body.home .hero .wrap.hero-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:22px;align-items:start}
+@media (min-width:900px){body.home .hero .wrap.hero-grid{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:36px}}
+.hero .hero-eyebrow{margin:0 0 10px;color:var(--gold);font-weight:700;letter-spacing:.02em;font-size:1rem}
+.hero .hero-grid h1{font-size:clamp(2.125rem,5vw,3.25rem);line-height:1.08;margin:0 0 14px}
+.hero .hero-grid p.lead{font-size:1.125rem;line-height:1.55;max-width:44em;margin:0}
+.door{margin-top:20px;background:var(--panel);border:1px solid var(--line2);border-radius:16px;padding:16px;box-shadow:var(--glow)}
+.door-guide{display:flex;gap:12px;align-items:center}
+.door-guide picture,.door-guide img{display:block;flex:none;width:56px;height:56px;border-radius:12px;background:#1d1a17}
+.door-guide b{display:block;font-size:1.125rem;line-height:1.3;color:var(--ink)}
+.door-guide small{display:block;color:var(--dim);font-size:.875rem;line-height:1.4}
+.door-grp{margin:16px 0 8px;font-size:.8125rem;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.06em}
+.door-picks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.door-picks[hidden]{display:none}
+@media (min-width:600px){.door-picks{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.door-pick{min-height:3.25rem;padding:.5rem .625rem;border:1.5px solid var(--line2);border-radius:12px;background:var(--panel2);color:var(--ink);font:inherit;font-size:1rem;font-weight:700;line-height:1.25;cursor:pointer;overflow-wrap:anywhere}
+.door-pick:hover,.door-pick:focus-visible{border-color:var(--gold);box-shadow:var(--glow);color:#ffe09a}
+.door p{margin:0}
+.door p.door-how{margin:10px 0 0;font-size:1rem;line-height:1.5;color:var(--muted)}
+.door p.door-lic{margin:6px 0 0;font-size:.875rem;line-height:1.5;color:var(--dim)}
+.door-after{min-height:5.5em}
+@media (min-width:600px){.door-after{min-height:3.5em}}
+.door p.door-status{margin:10px 0 0;font-size:1rem;line-height:1.45;font-weight:700;color:var(--gold)}
+.door p.door-status[data-door-status="files"]{min-height:2.9em}
+@media (min-width:600px){.door p.door-status[data-door-status="files"]{min-height:1.45em}}
+.door p.door-open{margin:6px 0 0;font-size:.9375rem;line-height:1.45}
+.door p.door-open[hidden]{display:none}
+.door-small{display:block;color:var(--dim);font-size:.875rem}
+.door-box{margin:8px 0 0}
+.door-box[hidden]{display:none}
+.door textarea{display:block;width:100%;height:8em;margin:6px 0 0;padding:10px;border:1px solid var(--line2);border-radius:10px;background:var(--bg2);color:var(--ink);font:.9375rem/1.45 ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;scrollbar-color:var(--line2) transparent}
+.door-label{display:block;font-size:.875rem;color:var(--dim)}
+.door-files{display:grid;gap:10px}
+@media (min-width:600px){.door-files{grid-template-columns:minmax(0,1fr) auto;align-items:center}}
+.door-files p{font-size:.9375rem;line-height:1.5;color:var(--muted)}
+.door-files p b{color:var(--ink)}
+.door-first{display:block;margin-top:6px;padding:6px 8px;border-left:3px solid var(--gold);background:rgba(0,0,0,.3);border-radius:0 8px 8px 0;font:.8125rem/1.45 ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere}
+.door-files .door-pick[hidden]{display:none}
+.door-fold{margin-top:10px}
+.door-fold summary{display:flex;align-items:center;min-height:2.75rem;cursor:pointer;color:var(--gold);font-weight:700}
+.door-fold summary:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:6px}
+.door-fold p{margin:8px 0 0;font-size:.9375rem;color:var(--muted)}
+.door-fold .btn{min-height:3rem}
+.door-fold .say{display:block;margin:6px 0 0;padding:8px 10px;border-left:3px solid var(--gold);background:rgba(0,0,0,.35);border-radius:0 8px 8px 0;font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;font-size:.875rem;color:#fff7ea}
+.door p.door-trust{margin:14px 0 0;padding-top:10px;border-top:1px solid var(--line);font-size:.875rem;line-height:1.5;color:var(--muted)}
+.door p.door-nojs{margin:10px 0 0;font-size:.9375rem;color:var(--muted)}
+.door a{overflow-wrap:anywhere}
+.hero .hero-price{margin:14px 0 4px;color:#efe3cf;font-size:1rem;font-weight:600}
+.hero .hero-fine{margin:0;color:var(--dim);font-size:.875rem}
+.lines{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:16px}
+.lines h2{margin:0;font-size:1rem;line-height:1.35;letter-spacing:0;color:var(--gold)}
+.lines h2::after{content:none}
+.lines ol{margin:10px 0 0;padding-left:1.4em}
+.lines li{margin:0 0 8px;font-size:.9375rem;line-height:1.5;color:var(--ink);overflow-wrap:anywhere}
+.lines li::marker{color:var(--gold)}
+.lines p.dare{margin:12px 0 0;padding:10px 12px;border-left:3px solid var(--gold);background:var(--panel);border-radius:0 10px 10px 0;font-size:.9375rem;line-height:1.5;color:var(--muted)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media (max-width:640px){body.home header.hero{padding:24px 0 36px}.hero .hero-grid h1{font-size:2.125rem}.hero .hero-grid p.lead{font-size:1.0625rem}.door{padding:14px}}
