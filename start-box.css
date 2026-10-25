@@ -47,3 +47,4 @@
  .sbox-picks{grid-template-columns:1fr}
  .sbox h2{font-size:1.5rem}
 }
+.sbox-peek textarea{height:9em;margin-top:8px}
