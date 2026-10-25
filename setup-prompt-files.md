@@ -11,7 +11,7 @@ AI: please set up the free mudmode Crew kit for me, quietly. Keep your own messa
 4. When the script prints `RESULT: OK`, delete only the temp folder from step 2: one command, its full path in quotes, no variables or wildcards. If you're not sure of the path, or you stopped early, leave it and tell me where it is.
 5. Tell me I'm done in 4 short lines. First line: "Woot! mudmode is set up." Then:
    - where the folder is;
-   - if connected: "Start a new chat and it follows mudmode. Say handoff before you stop, and mudmode status any time." If not connected: "To use it, start a chat with: Read the CORE.md, CORE-LOCAL.md and HANDOFF.md files in my mudmode folder, then continue. Say handoff before you stop."
+   - if connected: "Start a new chat and it follows mudmode. Say handoff before you stop, and mudmode status any time." If not connected: "To use it, start a chat with: Read the CORE.md, CORE-LOCAL.md and HANDOFF.md files in my mudmode folder, then continue. Say handoff before you stop." (and say where that folder is)
    - "Say change my mudmode settings to change your name or time zone (I guessed <zone>), or to turn on update notices."
    If I ask how to undo it, tell me, and don't delete anything unless I say so: to turn it off, delete the connector file; to remove it all, delete the mudmode folder (only ones setup made new).
 
