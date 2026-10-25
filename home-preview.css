@@ -237,7 +237,7 @@ details.more>summary:focus-visible{outline:3px solid var(--gold);outline-offset:
 .handoff-line{margin:14px 0 0;font-size:1.0625rem}
 .price-short .card .tier-note{min-height:0}
 .foot-fold{margin-top:6px;border-top:0}
-.foot-fold>summary{font-size:.9375rem;min-height:44px}
+.foot-fold>summary{font-size:.9375rem}
 .foot-fold p{font-size:.875rem}
 @media (max-width:759.98px){ol.grow{grid-template-columns:repeat(2,minmax(0,1fr))}
 .path-strip{grid-template-columns:repeat(3,minmax(0,1fr))}.path-strip li.x{display:none}.path-strip li{padding:10px}.path-strip .n{display:grid;margin:0 0 6px}}
