@@ -1,4 +1,4 @@
-# RULE-MAP: where each mudmode rule lives (v1.3.4)
+# RULE-MAP: where each mudmode rule lives (v1.3.5)
 
 Not read at start. The rule numbers 1-25 are the same as in mudmode 1.2, so lessons, OK lines and notes that say "rule 3" still mean the same rule. **Full mode: `CORE.md` is the combined core (`cores/CORE-FULL.md`) = all 25 rules of mudmode 1.2.3, word for word; no module file loads.** The module files hold the same words, so lite `CORE.md` + every module = the same 25 rules. Lite mode keeps every rule marked "word for word" in `CORE.md`, and a short *lite form* of the rest; the safety rules (1-4, 7, 8, 11, 19-21, 24) are never shortened.
 

@@ -1,5 +1,5 @@
 #!/bin/sh
-# mudmode update check (v1.3.4). OFF unless you turn it on: CORE-LOCAL.md line "Update check ...: on".
+# mudmode update check (v1.3.5). OFF unless you turn it on: CORE-LOCAL.md line "Update check ...: on".
 # When on, it reads one small public file (https://mudmodecrew.com/version.json) and tells you if a
 # newer mudmode kit is out, and how to update. It never downloads or installs anything, and it sends
 # no personal info, just a normal web request: no ID, no cookies, no settings (like any web visit,
@@ -24,7 +24,19 @@ if [ ${#URL} -gt 300 ] || [ "$(printf '%s' "$URL" | wc -l | tr -d ' ')" != 0 ] |
   exit 0
 fi
 KIT=crew; NAME="free Crew kit"; [ -d "$DIR/full-kit" ] && KIT=full && NAME="Full Kit"
-HAVE=$(head -n 1 "$DIR/VERSION" 2>/dev/null | tr -d ' \r')
+# v1.3.5: read VERSION the way the PowerShell check does: a UTF-8 byte-order mark, or a UTF-16 / UTF-32 one (Notepad,
+# PowerShell 5.1 ">"), is decoded; UTF-16 without a mark counts as unreadable (then CORE.md's Version line is used).
+read_ver() {
+  [ -f "$1" ] || return 0
+  bom=$(od -An -tx1 -N4 "$1" 2>/dev/null | tr -d ' \n')
+  case "$bom" in
+    efbbbf*) tail -c +4 "$1" ;;
+    0000feff*) tail -c +5 "$1" | tr -d '\000' ;;
+    fffe*|feff*) tail -c +3 "$1" | tr -d '\000' ;;
+    *) [ "$(head -c 64 "$1" | tr -cd '\000' | wc -c | tr -d ' ')" = 0 ] && cat "$1" ;;
+  esac | head -n 1 | tr -d ' \t\r'
+}
+HAVE=$(read_ver "$DIR/VERSION")
 isver "$HAVE" || HAVE=$(sed -n 's/^Version: \([0-9][0-9.]*[0-9]\).*/\1/p' "$DIR/CORE.md" 2>/dev/null | head -n 1)
 isver "$HAVE" || HAVE=""
 if command -v curl >/dev/null 2>&1; then
