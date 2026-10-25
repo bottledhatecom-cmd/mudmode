@@ -1,6 +1,6 @@
 # mudmode: a crew of AIs that works like one
 
-mudmode is designed to turn a group of AI assistants into one dependable crew: less wasted effort from the resources you spend, pick up where you left off in any new chat, and you in control. Results vary.
+mudmode gives a group of AI assistants one rulebook you own: handoffs so the next chat picks up where the last one stopped, a lessons book you can turn on, and rules that tell them to ask you before anything risky.
 
 - Website: https://mudmodecrew.com (run by Hestertainment LLC)
 - Full kit: out now, see [pricing](https://mudmodecrew.com/#pricing) (free Crew kit: [starter-kit/](starter-kit/))
