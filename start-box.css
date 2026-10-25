@@ -48,3 +48,5 @@
  .sbox h2{font-size:1.5rem}
 }
 .sbox-peek textarea{height:9em;margin-top:8px}
+.sbox p.sbox-type{margin:18px 0 14px;font-size:1.25rem;line-height:1.4;color:var(--ink);text-align:center}
+.sbox-word{display:inline-block;padding:2px 12px;border:1.5px solid var(--line2);border-radius:10px;color:var(--gold);font:700 1.375rem/1.4 ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;background:rgba(243,201,105,.06)}
