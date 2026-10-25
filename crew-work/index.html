@@ -34,16 +34,6 @@
 <li><b>The reviews:</b> after a first round that found one safety fix, the legal check said <span class="cw-chip">Verdict: <b>WARN</b></span> (fine with changes, nothing must-fix, three should-fixes, each with exact words); the inspection found no high notes, one medium and six low, none stopping it going live.</li>
 <li><b>Still open, said plainly:</b> The 4-line prompt&rsquo;s first reply hasn&rsquo;t been tried in a real ChatGPT, Claude or Grok yet, only in stand-ins.</li>
 </ol>
-<h3 class="sub-h">The lesson it left</h3>
-<div class="lesson-cards cw-one">
-<article class="card lesson">
-<p class="lesson-top"><span class="ltag ltag-people"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="5" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M2.5 14c.8-3 3-4.5 5.5-4.5s4.7 1.5 5.5 4.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Held by people, for now</span><span class="ldate">Oct 24, 2026</span></p>
-<h3>Our own Start box was too much</h3>
-<p class="lrow"><b>What happened:</b> it passed its reviews, but they checked the words, not how it felt. The first real try poured about 14,000 characters into a chat.</p>
-<p class="lrow"><b>What changed:</b> the first prompt is now 4 short lines, and our rule now is a feel test (a real try by a person or a real AI) for anything a new user touches, before it ships.</p>
-<p class="lhonest">No automatic check holds this one yet. In our records, lessons held only by people are the kind that came back, so we watch this one.</p>
-</article>
-</div>
 </div></section>
 
 <section id="build" class="build band"><div class="wrap">
@@ -91,6 +81,7 @@
 <h2>Using Grok? <span>Here's what our Grok crew learned.</span></h2>
 <p class="sub">mudmode was built by a crew running on Claude, which can check its own usage meter. Our second crew runs on Grok, which can't see its own usage meter in our setup, so it learned mudmode's habits instead. Here's what it picked up.</p>
 <p class="sub"><b>From our Oct 20 week review:</b> One of Grok's main chats ran about 18 hours (988 turns).</p>
+<details class="more"><summary>The six habits it picked up</summary>
 <div class="grid">
 <div class="card"><h3>A check-up at the halfway mark</h3><p>Partway through a week, the crew stopped and reviewed where its usage went. The likely big costs: one main chat left running far too long, and too many jobs at once.</p></div>
 <div class="card"><h3>A rule needs a check that runs</h3><p><b>From our Oct 20 week review:</b> its cost rules were written down in 8 files, yet too many jobs still ran at once and effort was set on only about 8 of the 158 job dispatches we could read. The lesson: a rule that costs money needs a check that actually runs. More copies of the text didn't do it.</p></div>
@@ -99,6 +90,7 @@
 <div class="card"><h3>Hand off before the chat gets heavy</h3><p>It can't see how full its chat is, so it watches the signs: big jobs piling up, repeated large reads, a full day of turns. We try to hand off before the chat gets compressed: when the signs show up, it offers a fresh chat with a short handoff note. Sometimes it forgets anyway. That's why we're building a shared hive, where approved member lessons go into kit releases. The screening step for member lessons is still being built, and no member lesson has gone into a kit yet, so for now the habit is the catch.</p></div>
 <div class="card"><h3>Handing off scheduled jobs</h3><p>At every handoff, the old chat is asked to delete its scheduled jobs once the new chat has them, so the same job doesn't keep running twice on your plan. It's a habit, not a lock, so glance at your scheduled tasks now and then; you decide what keeps running.</p></div>
 </div>
+</details>
 <p class="guard"><b>Honest note:</b> our crew couldn't measure what these habits changed, because usage per job wasn't recorded. What we can show is the habits, and they never cut a check. Results vary.</p>
 <p class="fine">ChatGPT, Grok and Claude are trademarks of their respective owners, named here only to describe the AIs our crews ran on. Not affiliated with or endorsed by any AI provider.</p>
 </div></section>
