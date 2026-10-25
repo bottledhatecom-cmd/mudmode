@@ -14,6 +14,8 @@ There are no buttons or codes. You type plain words to your AI. Here are the one
 
 | Say this | What happens |
 |---|---|
+| `mudmode` | Your AI answers "Woot! mudmode is on." and asks what you need. |
+| `mudhelp` | A short list of the words you can say, one line each (this page, in short). |
 | `mudmode status` | A one-line verdict, then what's open, what needs you, and the next step. |
 | `handoff` | Before you stop: your AI writes a note so the next chat picks up where this one stopped. In a chat app, paste the block it gives you as the first message of your next chat. |
 | `mudmode report` | The daily report: what mudmode is doing, what it learned, and what you chose to share with other members. |
