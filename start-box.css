@@ -38,7 +38,10 @@
 .sbox-open .btn{margin-bottom:8px}
 .sbox p.sbox-gap{margin-top:14px}
 .sbox .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.sbox-tyler{display:block;width:96px;height:96px;margin:0 auto 10px}
+.sbox-tyler img{display:block;width:96px;height:96px;border-radius:18px}
 @media (max-width:520px){
+ .sbox-tyler,.sbox-tyler img{width:80px;height:80px}
  .sbox{width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;border-radius:0;border:0}
  .sbox-in{max-height:100dvh;padding:22px 18px 28px}
  .sbox-picks{grid-template-columns:1fr}
