@@ -8,10 +8,13 @@
  // Each prompt is pinned: if its file changes, its hash here must change too, so a text change is always a visible code change.
  var PROMPTS={
   chat:{url:'first-prompt.md',sha:'sha256-Ivi6+hXU77pJrpuaBnv30PXfjdxMIPeUq42RCchwiuU=',last:''},
-  files:{url:'setup-prompt-files.md',sha:'sha256-OJEfzOXsY/Jvb8bwhhFHRR/uO9tnI54TEuAEGWUnK1I=',last:''}
+  files:{url:'setup-prompt-files.md',sha:'sha256-dBQLC0FjMlZSfzs1Xxl3foBAyx+Ib5ODHexEDuOnqK8=',last:''}
  };
  // Fixed links only; the page can't add others.
  var AI_LINKS={ChatGPT:'https://chatgpt.com',Claude:'https://claude.ai',Grok:'https://grok.com'};
+ // Where the site supports it, the link also fills the chat box (community-documented, not promised): the copy is the backup.
+ var AI_PREFILL={ChatGPT:'https://chatgpt.com/?q=',Claude:'https://claude.ai/new?q='};
+ var ready={}; // prompt text once loaded, so the click can open the AI right away
  var GUARD_MS=450; // a double tap must not answer the next question
  var cache={},opener=null,aiName='your AI',aiUrl='',guardUntil=0,pressOnBackdrop=false;
 
@@ -31,7 +34,7 @@
   cache[kind]=fetch(p.url,{credentials:'omit',cache:'no-cache',integrity:p.sha}).then(function(r){
    if(!r.ok)throw new Error('load');
    return r.text();
-  }).then(function(t){return t.replace(/\s+$/,'')+p.last;});
+  }).then(function(t){t=t.replace(/\s+$/,'')+p.last;ready[kind]=t;return t;});
   cache[kind].catch(function(){delete cache[kind];}); // a failed load can be tried again
   return cache[kind];
  }
@@ -45,7 +48,7 @@
    var s=steps[i],btn=s.querySelector('[data-sbox-copy]'),o=s.querySelector('[data-sbox-open]');
    s.querySelector('[data-sbox-done]').textContent='';
    if(o)o.hidden=true;
-   btn.removeAttribute('aria-busy');btn.textContent=btn.getAttribute('data-label');
+   btn.removeAttribute('aria-busy');btn.innerHTML=btn.getAttribute('data-label');
   }
  }
  function openBox(e){
@@ -75,7 +78,7 @@
 
  var copies=box.querySelectorAll('[data-sbox-copy]');
  for(var c=0;c<copies.length;c++){
-  copies[c].setAttribute('data-label',copies[c].textContent);
+  copies[c].setAttribute('data-label',copies[c].innerHTML);
   copies[c].addEventListener('click',function(){
    if(guarded())return;
    var btn=this,el=btn.closest('[data-sbox-prompt]'),kind=el.getAttribute('data-sbox-prompt');
@@ -89,20 +92,26 @@
     done.textContent='Your prompt is selected in the box below. Press Ctrl+C (Cmd+C on a Mac) to copy it. On a phone: press and hold in the box, choose Select all, then Copy.';
     ta.scrollIntoView({block:'center'});
    }
+   var opened=false;
+   if(btn.hasAttribute('data-sbox-go')&&aiUrl){ // open the AI in the same click, before anything async
+    var pre=AI_PREFILL[aiName]&&ready[kind]?AI_PREFILL[aiName]+encodeURIComponent(ready[kind]):aiUrl;
+    window.open(pre,'_blank','noopener,noreferrer');opened=true;
+   }
    btn.setAttribute('aria-busy','true');btn.textContent='Getting it ready…';
    load(kind).then(function(t){
-    ta.value=t;btn.textContent=btn.getAttribute('data-label');
+    ta.value=t;btn.innerHTML=btn.getAttribute('data-label');
     if(navigator.clipboard&&window.isSecureContext){
      return navigator.clipboard.writeText(t).then(function(){
-      btn.textContent='Copied';showOpen();
-      done.textContent=kind==='files'
+      btn.textContent=opened?'Started':'Copied';showOpen();
+      if(kind==='files'){var pk=ta.closest('details');if(pk)pk.open=true;}
+      done.textContent=opened?aiName+' is opening in a new tab, and your prompt is copied. If its chat box is empty, paste it (Ctrl+V, or press and hold, then Paste) and send it.':kind==='files'
        ?'Copied. Now paste it into your AI and send it. It tells your AI to ask you one question, then set you up.'
        :'Copied. Open '+aiName+', paste it into a new chat and send it. (mudhelp lists the other words.)';
       into();
      },selectText);
     }
     selectText();
-   }).catch(function(){btn.textContent=btn.getAttribute('data-label');failMsg(el);}).then(function(){btn.removeAttribute('aria-busy');guard();});
+   }).catch(function(){btn.innerHTML=btn.getAttribute('data-label');failMsg(el);}).then(function(){btn.removeAttribute('aria-busy');guard();});
   });
  }
 
