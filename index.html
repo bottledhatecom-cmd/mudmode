@@ -333,6 +333,7 @@ confidence: low, medium or high</code></pre>
 <div class="sl-head"><span class="sl-round" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5h16v11H8l-4 4z"/></svg></span><div class="sl-title"><b>Members chat</b><span>Open thread · GitHub Discussions</span></div></div>
 <div class="sl-body" id="chat"><p class="sl-grant" id="chat-grant"><b>Before you post:</b> by posting in the members chat or Discussions, you agree to the <a href="https://github.com/bottledhatecom-cmd/mudmode/blob/main/CONTRIBUTING.md">mudmode contributor terms</a>. You keep ownership of your post, and you give Michael J Hester and Hestertainment LLC a permanent, worldwide, non-exclusive, royalty-free license to use, edit, publish and sell it in free and paid mudmode materials, with or without credit. Posts are public on GitHub and subject to GitHub's Terms. Never post secrets or private details.</p><p id="chat-note">The members chat is not loaded yet. Only when you click the button does your browser load giscus (giscus.app) and GitHub; to post, you sign in with GitHub, and giscus keeps a sign-in token in your browser. See the <a href="privacy.html">privacy note</a>.</p><button class="sl-open" id="chat-load" type="button">Open the members chat here</button></div>
 </div>
+<!-- Start box: builds on Grok's start-here wizard (start-here/index.html): the AI picks, the open-your-AI links and the help-me-pick tips. -->
 <dialog id="start-box" class="sbox" aria-labelledby="sbox-h1">
 <div class="sbox-in">
 <form method="dialog" class="sbox-x"><button type="submit" aria-label="Close">&times;</button></form>
@@ -342,12 +343,13 @@ confidence: low, medium or high</code></pre>
 <h2 id="sbox-h1" tabindex="-1">Which AI do you use?</h2>
 <p>Pick one. You can change your mind any time.</p>
 <div class="sbox-picks">
-<button type="button" data-sbox-ai="ChatGPT" data-sbox-kind="chat">ChatGPT</button>
-<button type="button" data-sbox-ai="Claude" data-sbox-kind="chat">Claude</button>
-<button type="button" data-sbox-ai="Grok" data-sbox-kind="chat">Grok</button>
+<button type="button" data-sbox-ai="ChatGPT" data-sbox-kind="chat" data-sbox-url="https://chatgpt.com">ChatGPT</button>
+<button type="button" data-sbox-ai="Claude" data-sbox-kind="chat" data-sbox-url="https://claude.ai">Claude</button>
+<button type="button" data-sbox-ai="Grok" data-sbox-kind="chat" data-sbox-url="https://grok.com">Grok</button>
 <button type="button" data-sbox-ai="your AI chat app" data-sbox-kind="chat">Another chat app</button>
 <button type="button" class="wide" data-sbox-ai="your AI" data-sbox-kind="files">Claude Code, or another AI that works with files<small>On a computer</small></button>
 </div>
+<details class="sbox-help"><summary>Not sure? Help me pick</summary><p>Already have an account somewhere, or a friend who uses one? Pick that one, so you have someone to ask. Still stuck? Tap any of the chat apps. mudmode sets up the same way in each, and you can switch later.</p></details>
 </div>
 <div data-sbox-step="chat" hidden>
 <p class="sbox-guide">Tyler: this is the easy part.</p>
@@ -356,6 +358,7 @@ confidence: low, medium or high</code></pre>
 <p>It&rsquo;s mudmode&rsquo;s rules for chat apps, plus one line that asks <span data-sbox-name>your AI</span> to set you up. Nothing to download.</p>
 <button type="button" class="btn p" id="sbox-copy">Copy my first prompt</button>
 <p class="sbox-done" id="sbox-done" role="status" aria-live="polite"></p>
+<p class="sbox-open" id="sbox-open" hidden><a class="btn s" id="sbox-open-link" href="#" target="_blank" rel="noopener noreferrer">Open <span data-sbox-name>your AI</span> <span aria-hidden="true">&#8599;</span><span class="sr-only"> (opens in a new tab)</span></a><span class="sbox-small">No account yet? Make one there first, then paste.</span></p>
 <div id="sbox-manual" hidden><label class="sr-only" for="sbox-text">Your first prompt</label><textarea id="sbox-text" readonly></textarea></div>
 <p>Want it in every chat? Paste it into a Project&rsquo;s instructions or files. <span data-sbox-name>your AI</span> can show you how.</p>
 <div class="sbox-foot"><button type="button" class="sbox-back" data-sbox-back>Back</button><a href="start-here/index.html">Step-by-step guide with pictures</a></div>
@@ -365,7 +368,7 @@ confidence: low, medium or high</code></pre>
 <p class="sbox-count">Step 2 of 2</p>
 <h2 tabindex="-1">Get the files</h2>
 <a class="btn p" href="starter-kit/mudmode-starter-kit.zip" download>Download the free Crew kit (zip, 106 KB)</a>
-<p style="margin-top:14px">Unzip it, open your AI in that folder, and type:</p>
+<p class="sbox-gap">Unzip it, open your AI in that folder, and type:</p>
 <p><span class="say">Read README.md and set me up.</span></p>
 <p>Your AI asks a few short questions and asks before it runs anything.</p>
 <div class="sbox-foot"><button type="button" class="sbox-back" data-sbox-back>Back</button><a href="start-here/index.html">Step-by-step guide with pictures</a></div>

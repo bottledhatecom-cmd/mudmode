@@ -1,12 +1,15 @@
 // Start box: the one-step "get started" wizard on the home page (owner, OK-LEDGER 2026-10-24 9:12-9:14 PM).
 // No network calls except reading this site's own chat file, no trackers, nothing stored: no cookies, no localStorage.
 // Kept in its own file so the Content-Security-Policy can block all inline scripts.
+// Builds on Grok's start-here wizard (start-here/wizard.js and start-here/index.html): its AI picks and open-your-AI links.
 (function(){
  var box=document.getElementById('start-box');
  if(!box||typeof box.showModal!=='function')return; // old browser: the links keep working as plain links
  var PROMPT_URL='starter-kit/FOR-CHAT-APPS/mudmode-chat-lite.md';
  var LAST_LINE='\n\n---\nRead the mudmode text above and set me up.';
- var promptText=null,opener=null,aiName='your AI';
+ var promptText=null,opener=null,aiName='your AI',aiUrl='';
+ var openRow=document.getElementById('sbox-open');
+ var openLink=document.getElementById('sbox-open-link');
  var copyBtn=document.getElementById('sbox-copy');
  var done=document.getElementById('sbox-done');
  var manual=document.getElementById('sbox-manual');
@@ -26,7 +29,7 @@
   }).then(function(t){promptText=t.replace(/\s+$/,'')+LAST_LINE;return promptText;});
  }
  function reset(){
-  done.textContent='';manual.hidden=true;manualText.value='';
+  done.textContent='';manual.hidden=true;manualText.value='';openRow.hidden=true;
   copyBtn.disabled=false;copyBtn.textContent='Copy my first prompt';
  }
  function openBox(e){
@@ -40,6 +43,8 @@
  for(var j=0;j<picks.length;j++)picks[j].addEventListener('click',function(){
   var kind=this.getAttribute('data-sbox-kind');
   aiName=this.getAttribute('data-sbox-ai');
+  aiUrl=this.getAttribute('data-sbox-url')||'';
+  if(aiUrl)openLink.setAttribute('href',aiUrl);
   var names=box.querySelectorAll('[data-sbox-name]');
   for(var k=0;k<names.length;k++)names[k].textContent=aiName;
   reset();show(kind==='files'?'files':'chat');
@@ -47,8 +52,9 @@
  var backs=box.querySelectorAll('[data-sbox-back]');
  for(var b=0;b<backs.length;b++)backs[b].addEventListener('click',function(){show('1');});
 
+ function showOpen(){openRow.hidden=!aiUrl;}
  function showManual(text){
-  manual.hidden=false;manualText.value=text;
+  manual.hidden=false;manualText.value=text;showOpen();
   manualText.focus();manualText.select();
   done.textContent='Your prompt is selected below. Press Ctrl+C (Cmd+C on a Mac) to copy it, or tap and hold it on a phone.';
  }
@@ -57,7 +63,7 @@
   load().then(function(text){
    if(navigator.clipboard&&window.isSecureContext){
     return navigator.clipboard.writeText(text).then(function(){
-     copyBtn.textContent='Copied';
+     copyBtn.textContent='Copied';showOpen();
      done.textContent='Copied. Now open '+aiName+', start a new chat, paste it in and send it. Your AI takes it from there.';
     },function(){showManual(text);});
    }
