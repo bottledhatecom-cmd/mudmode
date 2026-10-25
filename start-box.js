@@ -68,11 +68,12 @@
   clear();
   var copied=copy(t); // the clipboard is written before the tab opens
   if(url){
-   window.open(url,'_blank','noopener,noreferrer');openedAi=ai;openedAt=Date.now();
+   window.open(url,'_blank','noopener,noreferrer');
    openLink.setAttribute('href',url);openName.textContent=ai;openRow.hidden=false; // in case a pop-up blocker stopped it
   }
+  // With noopener the page can't tell whether a pop-up blocker stopped the tab, so it says "should open" (SB2-1).
   copied.then(function(){
-   st.chat.textContent=(url?'Copied. '+ai+' is opening in a new tab: paste the 4 lines there, read them, then send.'
+   st.chat.textContent=(url?'Copied. '+ai+' should open in a new tab: paste the 4 lines there, read them, then send.'
     :'Copied. Open your chat app, paste the 4 lines, read them, then send.')+(touch?' '+HOLD:'');
   },function(){select('chat');});
  }
@@ -80,12 +81,13 @@
   var ai=this.getAttribute('data-door-ai');
   var url=Object.prototype.hasOwnProperty.call(AI_LINKS,ai)?AI_LINKS[ai]:'';
   if(url&&openedAi===ai&&Date.now()-openedAt<AGAIN_MS)return; // same AI again within 3 s: no second tab, the message stays
+  if(url){openedAi=ai;openedAt=Date.now();} // set before the load path too, so two taps while loading can't both open (WS-2)
   if(ready.chat){chatGo(ai,url,ready.chat);return;}
-  load('chat').then(function(t){chatGo(ai,url,t);},function(){fail('chat');});
+  load('chat').then(function(t){chatGo(ai,url,t);},function(){openedAi='';fail('chat');}); // a failed load can be tried again at once
  }
  function filesGo(t){
   clear();
-  copy(t).then(function(){st.files.textContent='Copied. Paste it into your AI. It will ask you one question first.';},
+  copy(t).then(function(){st.files.textContent='Copied. Paste it into your AI. It will ask you one question first.';if(fold)fold.open=true;}, // show what was copied (SB-1)
    function(){select('files');});
  }
  function filesPick(){
