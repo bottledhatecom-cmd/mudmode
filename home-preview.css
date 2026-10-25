@@ -175,7 +175,7 @@ ul.hats{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:re
 @media (min-width:900px){ul.hats{grid-template-columns:repeat(7,minmax(0,1fr))}}
 ul.hats li{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center;font-size:14.5px;line-height:1.35;color:var(--muted);overflow-wrap:anywhere}
 ul.hats b{display:block;color:var(--gold);font-size:16px;margin:2px 0}
-ul.hats svg{width:40px;height:26px;color:var(--gold)}
+ul.hats svg{width:56px;height:36px;color:var(--gold)}
 #your-crew .crew-cta{margin-top:24px}
 #your-crew .crew-fine{margin:14px 0 0;color:var(--dim);font-size:14.5px;max-width:860px}
 #your-crew a:not(.btn){color:var(--gold)}
