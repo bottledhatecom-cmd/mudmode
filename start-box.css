@@ -27,7 +27,7 @@
 .sbox-safe b{color:var(--muted)}
 .sbox-foot{display:flex;flex-wrap:wrap;gap:8px 18px;justify-content:space-between;align-items:center;margin-top:6px;font-size:1rem}
 .sbox-foot a,.sbox-back,.sbox-lic a,.sbox-help summary{color:var(--gold)}
-.sbox-foot a,.sbox-back{display:inline-flex;align-items:center;min-height:44px;padding:0 4px}
+.sbox-foot a,.sbox-back{display:inline-flex;align-items:center;min-height:44px;min-width:44px;padding:0 4px}
 .sbox-back{border:0;background:none;font:inherit;font-size:1rem;text-decoration:underline;cursor:pointer}
 .sbox-lic a{display:inline-block;padding:10px 0;margin:-10px 0}
 .sbox-help{margin:-6px 0 6px;font-size:1rem}
