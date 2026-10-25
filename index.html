@@ -86,7 +86,7 @@
 <div class="card"><h3>Handing off scheduled jobs</h3><p>At every handoff, the old chat is asked to delete its scheduled jobs once the new chat has them, so the same job doesn't keep running twice on your plan. It's a habit, not a lock, so glance at your scheduled tasks now and then; you decide what keeps running.</p></div>
 </div>
 <p class="guard"><b>Honest note:</b> our crew couldn't measure what these habits changed, because usage per job wasn't recorded. What we can show is the habits, and they never cut a check. Results vary.</p>
-<p class="fine">Grok and Claude are trademarks of their respective owners, named here only to describe the AIs our crews ran on. Not affiliated with or endorsed by any AI provider.</p>
+<p class="fine">ChatGPT, Grok and Claude are trademarks of their respective owners, named here only to describe the AIs our crews ran on, the apps the start box can open, and the tool that made the pictures. Not affiliated with or endorsed by any AI provider.</p>
 </div></section>
 
 <section id="save" class="save band"><div class="wrap">
@@ -213,10 +213,10 @@
 <ul class="tier-list">
 <li>Crew kit that works on its own</li>
 <li>Core safety rules</li>
-<li>Safety fixes as soon as they're ready</li>
+<li>Safety fixes as soon as they're ready (the download here is always the newest; the kit's optional update check tells you)</li>
 <li>Members chat</li>
 <li>Share lessons with the hive</li>
-<li>Monthly lesson digest (starts once the first member lessons are approved)</li>
+<li>Monthly lesson digest in the members chat (starts once the first member lessons are approved)</li>
 </ul>
 <a class="btn s" href="starter-kit/mudmode-starter-kit.zip" download data-start-box>Get the free Crew kit</a>
 </div>
@@ -259,14 +259,14 @@
 </ul>
 </details></li>
 <li>Ready-made setups for popular AI assistants</li>
-<li>New lessons as they land once the hive starts (the free kit gets a monthly digest)</li>
+<li>New lessons as they land once the hive starts (the free kit gets a monthly digest in the members chat)</li>
 </ul>
 <a class="btn p" href="https://bottledhate.gumroad.com/l/attal" target="_blank" rel="noopener">Get the Full Kit: $29</a>
 <div class="filler-art" aria-hidden="true"><picture><source srcset="img/filler/mascot-lifelike-patient-480.webp" type="image/webp"><img src="img/filler/mascot-lifelike-patient-480.jpg" width="480" height="640" alt="" loading="lazy" decoding="async"></picture></div>
 </div>
 
 </div>
-<p class="guard"><b>Buy once, keep it.</b> Your kit keeps working after your update year ends. Safety fixes go to every member, free or paid, as soon as they're ready.</p>
+<p class="guard"><b>Buy once, keep it.</b> Your kit keeps working after your update year ends. Safety fixes are free for everyone as soon as they're ready: the free download here is always the newest, and Full Kit owners get them in their Gumroad library.</p>
 <p class="guard"><b>Your crew, your call.</b> mudmode gives you the starting rules. What your crew learns from there (which lessons stay, which rules you add, what you say yes to) is up to you. Read what your AIs suggest before you keep it, and keep checking their work.</p>
 <p class="price-foot">Works on most ordinary computers; no graphics card needed. 14-day money-back promise. Free Crew kit: <a href="https://github.com/bottledhatecom-cmd/mudmode/blob/main/LICENSE">Personal Use License</a>. Paid kits: <a href="full-kit-license.html">Full Kit License</a>. See also the <a href="terms.html">terms</a>. Payments are handled by our checkout partner; see the <a href="privacy.html">privacy note</a>. Results vary. Team, client or organization use: see our <a href="privacy.html#contact">contact details</a>. Questions before you buy? See the <a href="#faq">FAQ</a>.</p>
 </div></section>
@@ -339,41 +339,51 @@ confidence: low, medium or high</code></pre>
 <form method="dialog" class="sbox-x"><button type="submit" aria-label="Close">&times;</button></form>
 <div data-sbox-step="1">
 <p class="sbox-guide">Hi, I&rsquo;m Tyler, your mudmode guide.</p>
+<p class="sbox-count">Tyler is our guide character. These are set steps: no person or AI sees what you pick.</p>
 <p class="sbox-count">Step 1 of 2</p>
 <h2 id="sbox-h1" tabindex="-1">Which AI do you use?</h2>
 <p>Pick one. You can change your mind any time.</p>
 <div class="sbox-picks">
-<button type="button" data-sbox-ai="ChatGPT" data-sbox-kind="chat" data-sbox-url="https://chatgpt.com">ChatGPT</button>
-<button type="button" data-sbox-ai="Claude" data-sbox-kind="chat" data-sbox-url="https://claude.ai">Claude</button>
-<button type="button" data-sbox-ai="Grok" data-sbox-kind="chat" data-sbox-url="https://grok.com">Grok</button>
+<button type="button" data-sbox-ai="ChatGPT" data-sbox-kind="chat">ChatGPT</button>
+<button type="button" data-sbox-ai="Claude" data-sbox-kind="chat">Claude</button>
+<button type="button" data-sbox-ai="Grok" data-sbox-kind="chat">Grok</button>
 <button type="button" data-sbox-ai="your AI chat app" data-sbox-kind="chat">Another chat app</button>
 <button type="button" class="wide" data-sbox-ai="your AI" data-sbox-kind="files">Claude Code, or another AI that works with files<small>On a computer</small></button>
 </div>
 <details class="sbox-help"><summary>Not sure? Help me pick</summary><p>Already have an account somewhere, or a friend who uses one? Pick that one, so you have someone to ask. Still stuck? Tap any of the chat apps. mudmode sets up the same way in each, and you can switch later.</p></details>
 </div>
-<div data-sbox-step="chat" hidden>
+<div data-sbox-step="chat" data-sbox-prompt="chat" hidden>
 <p class="sbox-guide">Tyler: this is the easy part.</p>
 <p class="sbox-count">Step 2 of 2</p>
 <h2 tabindex="-1">Copy your first prompt</h2>
 <p>It&rsquo;s mudmode&rsquo;s rules for chat apps, plus one line that asks <span data-sbox-name>your AI</span> to set you up. Nothing to download.</p>
-<button type="button" class="btn p" id="sbox-copy">Copy my first prompt</button>
-<p class="sbox-done" id="sbox-done" role="status" aria-live="polite"></p>
-<p class="sbox-open" id="sbox-open" hidden><a class="btn s" id="sbox-open-link" href="#" target="_blank" rel="noopener noreferrer">Open <span data-sbox-name>your AI</span> <span aria-hidden="true">&#8599;</span><span class="sr-only"> (opens in a new tab)</span></a><span class="sbox-small">No account yet? Make one there first, then paste.</span></p>
-<div id="sbox-manual" hidden><label class="sr-only" for="sbox-text">Your first prompt</label><textarea id="sbox-text" readonly></textarea></div>
+<button type="button" class="btn p" data-sbox-copy>Copy my first prompt</button>
+<p class="sbox-small">Free under the <a href="https://github.com/bottledhatecom-cmd/mudmode/blob/main/LICENSE" target="_blank" rel="noopener">mudmode Personal Use License</a> (also in the zip as LICENSE). By copying it, you agree to it.</p>
+<p class="sbox-done" data-sbox-done role="status" aria-live="polite"></p>
+<p class="sbox-open" data-sbox-open hidden><a class="btn s" data-sbox-open-link href="#" target="_blank" rel="noopener noreferrer">Open <span data-sbox-name>your AI</span> <span aria-hidden="true">&#8599;</span><span class="sr-only"> (opens in a new tab)</span></a><span class="sbox-small">No account yet? Make one there first (their own terms and age rules apply), then paste.</span></p>
+<p class="sbox-what">What you&rsquo;re copying, all plain words you can read below: mudmode&rsquo;s rules for chat apps. They ask your AI to follow them, ask you a few setup questions, and ask you first before anything risky. It starts with &ldquo;# mudmode for chat apps&rdquo; and ends with &ldquo;set me up.&rdquo;</p>
+<label class="sr-only" for="sbox-text-chat">Your first prompt</label><textarea id="sbox-text-chat" data-sbox-text readonly></textarea>
 <p>Want it in every chat? Paste it into a Project&rsquo;s instructions or files. <span data-sbox-name>your AI</span> can show you how.</p>
 <div class="sbox-foot"><button type="button" class="sbox-back" data-sbox-back>Back</button><a href="start-here/index.html">Step-by-step guide with pictures</a></div>
 </div>
-<div data-sbox-step="files" hidden>
-<p class="sbox-guide">Tyler: two small things and you&rsquo;re in.</p>
+<div data-sbox-step="files" data-sbox-prompt="files" hidden>
+<p class="sbox-guide">Tyler: one paste and one answer.</p>
 <p class="sbox-count">Step 2 of 2</p>
-<h2 tabindex="-1">Get the files</h2>
-<a class="btn p" href="starter-kit/mudmode-starter-kit.zip" download>Download the free Crew kit (zip, 106 KB)</a>
-<p class="sbox-gap">Unzip it, open your AI in that folder, and type:</p>
-<p><span class="say">Read README.md and set me up.</span></p>
-<p>Your AI asks a few short questions and asks before it runs anything.</p>
+<h2 tabindex="-1">Copy your setup prompt</h2>
+<p>Paste it into your AI. It asks you one question, then sets mudmode up for you. You don&rsquo;t download anything yourself.</p>
+<button type="button" class="btn p" data-sbox-copy>Copy my setup prompt</button>
+<p class="sbox-small">Free under the <a href="https://github.com/bottledhatecom-cmd/mudmode/blob/main/LICENSE" target="_blank" rel="noopener">mudmode Personal Use License</a> (also in the zip as LICENSE). By copying it, you agree to it.</p>
+<p class="sbox-done" data-sbox-done role="status" aria-live="polite"></p>
+<p class="sbox-what">What you&rsquo;re copying, all plain words you can read below: it asks your AI to ask you one question, download the free kit from this site and check its fingerprint, then run the kit&rsquo;s own setup with quiet defaults. Your AI app still asks your permission before it runs anything, if it&rsquo;s set to. It starts with &ldquo;# mudmode quiet setup&rdquo;.</p>
+<label class="sr-only" for="sbox-text-files">Your setup prompt</label><textarea id="sbox-text-files" data-sbox-text readonly></textarea>
+<details class="sbox-help"><summary>Rather download it yourself?</summary>
+<p><a class="btn s" href="starter-kit/mudmode-starter-kit.zip" download>Download the free Crew kit (zip, 106 KB)</a></p>
+<p class="sbox-small">Free under the <a href="https://github.com/bottledhatecom-cmd/mudmode/blob/main/LICENSE" target="_blank" rel="noopener">mudmode Personal Use License</a> (also in the zip as LICENSE). By downloading it, you agree to it.</p>
+<p>Unzip it, open your AI in that folder, and type: <span class="say">Read README.md and set me up.</span> Your AI asks you a few short questions before it sets anything up.</p>
+</details>
 <div class="sbox-foot"><button type="button" class="sbox-back" data-sbox-back>Back</button><a href="start-here/index.html">Step-by-step guide with pictures</a></div>
 </div>
-<p class="sbox-safe"><b>Nothing to install.</b> The copy button gives you text to paste into your AI. The download is plain text files and a few short scripts you can open and read: no programs, no admin rights. Setup copies the kit into one folder you pick and never deletes anything, and every extra asks you first. No email, no sign-up. Read every line before you use it.</p>
+<p class="sbox-safe"><b>Plain files you can read.</b> The copy button gives you text to paste into your AI. The download is text files and a few setup scripts you can open and read first: no app, no .exe, no admin rights. Setup puts the kit in one mudmode folder in your home folder (you can pick another) and changes nothing else on your computer unless you say yes. It never deletes your files, and it backs up any file before it replaces it. The kit's scripts send nothing online unless you turn that on. No email or sign-up for mudmode. Read every line before you use it.</p>
 </div>
 </dialog>
 <script src="chat.js"></script>
