@@ -9,7 +9,7 @@
  // Each prompt is pinned: if its file changes, its hash here must change too, so a text change is always a visible code change.
  var PROMPTS={
   chat:{url:'first-prompt.md',sha:'sha256-9I4ZZKE0SLUERVUGq6iMTviEREDRJ5tsp1MvGWlzb3o=',last:''},
-  files:{url:'setup-prompt-files.md',sha:'sha256-IiFS0tuLPVc87Tfp9PARlXY9LUzWvAic0gsjjdET4ew=',last:''}
+  files:{url:'setup-prompt-files.md',sha:'sha256-gXvg1egeOZRXWJ8oY6M5WgoT08CLr0qeQd9/JWeg4Bw=',last:''}
  };
  // Fixed links only; the page can't add others.
  var AI_LINKS={ChatGPT:'https://chatgpt.com',Claude:'https://claude.ai',Grok:'https://grok.com'};

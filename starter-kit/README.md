@@ -1,4 +1,4 @@
-# mudmode free Crew kit, v1.3.4
+# mudmode free Crew kit, v1.3.5
 
 **Free.** This folder is the whole free mudmode Crew kit. Set it up with the steps just below.
 
@@ -17,7 +17,7 @@ Your AI does the setup. You answer a few short questions. Pick the AI you use:
 
 - **Claude Code** (the Code tab in the Claude desktop app, or `claude` in a terminal), **Grok Build, Codex, Cursor** or another AI that works with files on your computer:
   1. Unzip this download.
-  2. Open the AI in the unzipped folder `mudmode-starter-kit-v1.3.4`.
+  2. Open the AI in the unzipped folder `mudmode-starter-kit-v1.3.5`.
   3. Type: **Read README.md and set me up.** Answer its questions and say yes when it asks to run the setup.
 - **Claude on claude.ai, Grok on grok.com**, or another chat app with Projects:
   1. Unzip this download.
@@ -26,7 +26,7 @@ Your AI does the setup. You answer a few short questions. Pick the AI you use:
 
 Every day after that: say **"mudmode report"** for the daily report (what mudmode is doing, what it learned, what you shared with the hive), say **"handoff"** before you stop (in chat apps, paste the block it gives you as the first message of your next chat), and **"mudmode status"** any time. Short name: **"mud status"**, **"mud report"** and the rest work too; `mudmode` always works.
 
-**Not sure what to type?** `WHAT-TO-SAY.md` lists the plain words that make mudmode do things.
+**Not sure what to type?** Say **mudhelp** to your AI, or open `WHAT-TO-SAY.md`: the plain words that make mudmode do things.
 
 **Lite mode (the default).** The free kit starts in lite mode: your AI loads the one-page safety core (`CORE.md`) and nothing else it doesn't need yet. Every module is still in the kit (`modules/`): say **"turn on the lessons module"** (or any module name), or **"mudmode full"** for all of them (one combined core: the same 25 rules as mudmode 1.2.3); **"mudmode lite"** goes back. Switching never deletes anything, and the safety rules (asking first before money, posting, sending, deploying or deleting; no secrets; no signing in for you) are on in every mode. Now and then the crew may add one short side note suggesting a module when it sees a reason (at most once per module; a Full Kit module at most once, labelled "(Full Kit)"). Say **"mudmode quiet"** to stop side notes. Nothing leaves your computer or chat.
 
