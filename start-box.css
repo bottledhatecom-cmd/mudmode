@@ -18,10 +18,10 @@ body.home .hero .wrap.hero-grid{display:grid;grid-template-columns:minmax(0,1fr)
 .door-pick{min-height:3.25rem;padding:.5rem .625rem;border:1.5px solid var(--line2);border-radius:12px;background:var(--panel2);color:var(--ink);font:inherit;font-size:1rem;font-weight:700;line-height:1.25;cursor:pointer;overflow-wrap:anywhere}
 .door-pick:hover,.door-pick:focus-visible{border-color:var(--gold);box-shadow:var(--glow);color:#ffe09a}
 .door p{margin:0}
-.door p.door-how{margin:10px 0 0;font-size:1rem;line-height:1.5;color:var(--muted)}
-.door p.door-lic{margin:6px 0 0;font-size:.875rem;line-height:1.5;color:var(--dim)}
-.door-after{min-height:5.5em}
-@media (min-width:600px){.door-after{min-height:3.5em}}
+.door p.door-how{margin:6px 0 0;font-size:1rem;line-height:1.5;color:var(--muted)}
+.door p.door-lic{margin:8px 0 0;font-size:.875rem;line-height:1.5;color:var(--dim)}
+.door-after{min-height:7.5em}
+@media (min-width:600px){.door-after{min-height:3.4em}}
 .door p.door-status{margin:10px 0 0;font-size:1rem;line-height:1.45;font-weight:700;color:var(--gold)}
 .door p.door-status[data-door-status="files"]{min-height:2.9em}
 @media (min-width:600px){.door p.door-status[data-door-status="files"]{min-height:1.45em}}
@@ -57,4 +57,4 @@ body.home .hero .wrap.hero-grid{display:grid;grid-template-columns:minmax(0,1fr)
 .lines li::marker{color:var(--gold)}
 .lines p.dare{margin:12px 0 0;padding:10px 12px;border-left:3px solid var(--gold);background:var(--panel);border-radius:0 10px 10px 0;font-size:.9375rem;line-height:1.5;color:var(--muted)}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-@media (max-width:640px){body.home header.hero{padding:24px 0 36px}.hero .hero-grid h1{font-size:2.125rem}.hero .hero-grid p.lead{font-size:1.0625rem}.door{padding:14px}}
+@media (max-width:640px){body.home header.hero{padding:16px 0 36px}.hero .hero-grid h1{font-size:2.125rem}.hero .hero-grid p.lead{font-size:1.0625rem}.door{padding:14px}}

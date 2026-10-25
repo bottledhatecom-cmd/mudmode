@@ -13,7 +13,7 @@
   chat:{url:'first-prompt.md',sha:'sha256-Ku1Mz2eikkC/Dmb8+mkMAnWzcKU1W15+ZAmASIaP8G4='},
   files:{url:'setup-prompt-files.md',sha:'sha256-gXvg1egeOZRXWJ8oY6M5WgoT08CLr0qeQd9/JWeg4Bw='}
  };
- // Fixed links only, plain addresses (no ?q= prefill: not verified for any of them); the page can't add others.
+ // Fixed links only, plain addresses (no prefill query: not verified for any of them); the page can't add others.
  var AI_LINKS={ChatGPT:'https://chatgpt.com',Claude:'https://claude.ai',Grok:'https://grok.com'};
  var AGAIN_MS=3000; // a second tap on the same AI within 3 s opens no second tab (I-10)
  var FAIL='That didn’t load. Check your connection and try again, or use the step-by-step guide.';
