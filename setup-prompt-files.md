@@ -1,0 +1,14 @@
+# mudmode quiet setup (for an AI that works with files, like Claude Code)
+
+**You (the person):** you pasted this into your AI. It sets up the free mudmode Crew kit for you and asks you one question. Everything it does is written below, in plain words.
+
+**AI:** the person wants the free mudmode Crew kit set up on this computer with as few questions as possible. Follow these steps in order. Keep every message short and plain; the person may not be technical. If anything fails or looks different from what this says, stop and tell them in one line.
+
+1. **Ask one question, then wait.** Say, in one short message: "I'll set up mudmode, a free set of plain text rule files, in a `mudmode` folder in your home folder, and connect it so every new chat here follows it. Nothing else on your computer changes, and you can undo it by deleting one file. OK? (yes / yes, but don't connect it / use another folder)". Wait for the answer. If they say no, stop.
+2. **Download the kit, the only time you go online.** Make a new empty temporary folder. Download `https://mudmodecrew.com/starter-kit/mudmode-starter-kit.zip` into it. Check that the file's SHA-256 is exactly `ac8833cac27b3baa084e89fde2831a6934d4777e46b8f54a3b6ccca7887f65b8`. If it isn't, delete that file, tell the person "the download didn't match, so I stopped", and stop.
+3. **Unzip it there and read before you run.** Unzip it in the temporary folder. Read `README.md`, `setup/AI-SETUP.md` and the setup script you'll run, and follow AI-SETUP.md's ground rules (write only in the new mudmode folder, plus the one connector file if they said yes; delete nothing of theirs; no hooks; nothing else online).
+4. **Run setup with the quiet defaults, without asking the other questions.** Use AI-SETUP.md step 2's command for this computer, from the unzipped kit folder, with: `--yes`; `--connect claude` if you are Claude Code and they said yes (`--connect grok` for Grok Build, `--connect none` if they said "don't connect it" or you're another AI); their time zone guessed from this computer's clock; their folder if they named another one (`--target`). Leave every other option at its default: name "the owner", nothing extra on the ask-first list, no word rules, no change to Claude Code's settings file, no online update check.
+5. **Check it worked** as AI-SETUP.md step 3 says (the script ends with `RESULT: OK`). Then delete only the temporary folder you made in step 2.
+6. **Tell them they're done, in 4 lines or fewer:** where the folder is; "Start a new chat and it follows mudmode. Say **handoff** before you stop and **mudmode status** any time."; the time zone you guessed and that they can say "change my mudmode settings" to change it or their name; and how to undo it (AI-SETUP.md step 4).
+
+Never put secrets, passwords or home addresses in any mudmode file. Never change anything this page didn't say, without asking first.
