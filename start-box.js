@@ -9,7 +9,7 @@
  var PROMPTS={
   chat:{url:'starter-kit/FOR-CHAT-APPS/mudmode-chat-lite.md',sha:'sha256-PBroaBvu7z5LfZ9KcwmCn2VvttVnCIFSVb4GcczPzhU=',
    last:'\n\n---\nRead the mudmode text above and set me up.'},
-  files:{url:'setup-prompt-files.md',sha:'sha256-tWSrRovosfZKYX3l8rub+lPX6JSs5/IAJfz+gesfSec=',last:''}
+  files:{url:'setup-prompt-files.md',sha:'sha256-98MPWC3gxqgpzltmd+f5qo/TP56A/iQ/jyXqXj1HHsQ=',last:''}
  };
  // Fixed links only; the page can't add others.
  var AI_LINKS={ChatGPT:'https://chatgpt.com',Claude:'https://claude.ai',Grok:'https://grok.com'};
