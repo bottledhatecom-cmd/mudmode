@@ -8,8 +8,8 @@
  if(!box||typeof box.showModal!=='function')return; // old browser: the links keep working as plain links
  // Each prompt is pinned: if its file changes, its hash here must change too, so a text change is always a visible code change.
  var PROMPTS={
-  chat:{url:'first-prompt.md',sha:'sha256-Ivi6+hXU77pJrpuaBnv30PXfjdxMIPeUq42RCchwiuU=',last:''},
-  files:{url:'setup-prompt-files.md',sha:'sha256-dBQLC0FjMlZSfzs1Xxl3foBAyx+Ib5ODHexEDuOnqK8=',last:''}
+  chat:{url:'first-prompt.md',sha:'sha256-9I4ZZKE0SLUERVUGq6iMTviEREDRJ5tsp1MvGWlzb3o=',last:''},
+  files:{url:'setup-prompt-files.md',sha:'sha256-IiFS0tuLPVc87Tfp9PARlXY9LUzWvAic0gsjjdET4ew=',last:''}
  };
  // Fixed links only; the page can't add others.
  var AI_LINKS={ChatGPT:'https://chatgpt.com',Claude:'https://claude.ai',Grok:'https://grok.com'};
@@ -96,9 +96,9 @@
    }
    var opened=false;
    var early=(ready[kind]&&navigator.clipboard&&window.isSecureContext)?navigator.clipboard.writeText(ready[kind]):null;
-   if(btn.hasAttribute('data-sbox-go')&&aiUrl){ // open the AI in the same click, before anything async
+   if(btn.hasAttribute('data-sbox-go')&&aiUrl&&!(window.__sboxOpenedAt&&Date.now()-window.__sboxOpenedAt<3000)){ // open the AI in the same click, at most once in 3 s (a held Enter repeats)
     var pre=AI_PREFILL[aiName]&&ready[kind]?AI_PREFILL[aiName]+encodeURIComponent(ready[kind]):aiUrl;
-    window.open(pre,'_blank','noopener,noreferrer');opened=true;
+    window.open(pre,'_blank','noopener,noreferrer');opened=true;window.__sboxOpenedAt=Date.now();
    }
    btn.setAttribute('aria-busy','true');btn.textContent='Getting it ready…';
    load(kind).then(function(t){
