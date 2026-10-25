@@ -110,3 +110,8 @@ nav.nav-short .nav-links{display:contents}
   #your-crew .crew-trio b{font-size:19px}
   #your-crew .crew-cta .btn{flex:1 1 100%}
 }
+/* FEED THE CREW: the site's one optional tip link, index footer only. Quiet on purpose: secondary outline, footer-sized, no glow at rest. */
+footer .feed-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:18px 0 0;padding:16px 0 0;border-top:1px solid rgba(243,201,105,.10)}
+footer .btn.s.feed-btn{min-height:44px;padding:8px 16px;font-size:15px;font-weight:600;color:var(--gold);background:transparent;border-color:var(--line2);text-decoration:none}
+footer .btn.s.feed-btn:hover{border-color:var(--gold);box-shadow:var(--glow);color:#ffe09a}
+footer .feed-note{color:var(--dim);font-size:14px;line-height:1.45;flex:1 1 240px;min-width:0}
