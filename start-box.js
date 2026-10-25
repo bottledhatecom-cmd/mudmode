@@ -1,5 +1,6 @@
 // Start box: the one-step "get started" wizard on the home page (owner, OK-LEDGER 2026-10-24 9:12-9:14 PM).
-// No network calls except reading this site's own two prompt files when the box opens; no trackers; nothing stored
+// No network calls except reading this site's own two prompt files when the box opens (the Start button opens the AI you
+// picked in a new tab; for ChatGPT and Claude its link carries the 4-line prompt); no trackers; nothing stored
 // (no cookies, no localStorage). Kept in its own file so the Content-Security-Policy can block all inline scripts.
 // Builds on Grok's start-here wizard (start-here/wizard.js and start-here/index.html): its AI picks and open-your-AI links.
 (function(){
@@ -42,13 +43,14 @@
  function failMsg(el){
   el.querySelector('[data-sbox-done]').textContent='That didn’t load. Check your connection and try again, or use the step-by-step guide below.';
  }
+ function label(btn){btn.textContent=btn.hasAttribute('data-sbox-go')?(aiUrl?'Start mudmode in '+aiName:'Copy my first prompt'):btn.getAttribute('data-label');}
  function reset(){
   var steps=box.querySelectorAll('[data-sbox-prompt]');
   for(var i=0;i<steps.length;i++){
    var s=steps[i],btn=s.querySelector('[data-sbox-copy]'),o=s.querySelector('[data-sbox-open]');
    s.querySelector('[data-sbox-done]').textContent='';
    if(o)o.hidden=true;
-   btn.removeAttribute('aria-busy');btn.innerHTML=btn.getAttribute('data-label');
+   btn.removeAttribute('aria-busy');label(btn);
   }
  }
  function openBox(e){
@@ -78,7 +80,7 @@
 
  var copies=box.querySelectorAll('[data-sbox-copy]');
  for(var c=0;c<copies.length;c++){
-  copies[c].setAttribute('data-label',copies[c].innerHTML);
+  copies[c].setAttribute('data-label',copies[c].textContent);
   copies[c].addEventListener('click',function(){
    if(guarded())return;
    var btn=this,el=btn.closest('[data-sbox-prompt]'),kind=el.getAttribute('data-sbox-prompt');
@@ -93,25 +95,26 @@
     ta.scrollIntoView({block:'center'});
    }
    var opened=false;
+   var early=(ready[kind]&&navigator.clipboard&&window.isSecureContext)?navigator.clipboard.writeText(ready[kind]):null;
    if(btn.hasAttribute('data-sbox-go')&&aiUrl){ // open the AI in the same click, before anything async
     var pre=AI_PREFILL[aiName]&&ready[kind]?AI_PREFILL[aiName]+encodeURIComponent(ready[kind]):aiUrl;
     window.open(pre,'_blank','noopener,noreferrer');opened=true;
    }
    btn.setAttribute('aria-busy','true');btn.textContent='Getting it ready…';
    load(kind).then(function(t){
-    ta.value=t;btn.innerHTML=btn.getAttribute('data-label');
+    ta.value=t;label(btn);
     if(navigator.clipboard&&window.isSecureContext){
-     return navigator.clipboard.writeText(t).then(function(){
+     return (early||navigator.clipboard.writeText(t)).then(function(){
       btn.textContent=opened?'Started':'Copied';showOpen();
       if(kind==='files'){var pk=ta.closest('details');if(pk)pk.open=true;}
-      done.textContent=opened?aiName+' is opening in a new tab, and your prompt is copied. If its chat box is empty, paste it (Ctrl+V, or press and hold, then Paste) and send it.':kind==='files'
+      done.textContent=opened?aiName+' should open in a new tab, and your prompt is copied. If you don\'t see it in the chat there, paste it (Ctrl+V, or press and hold, then Paste) and send it. If nothing opened, use the button below.':kind==='files'
        ?'Copied. Now paste it into your AI and send it. It tells your AI to ask you one question, then set you up.'
        :'Copied. Open '+aiName+', paste it into a new chat and send it. (mudhelp lists the other words.)';
       into();
      },selectText);
     }
     selectText();
-   }).catch(function(){btn.innerHTML=btn.getAttribute('data-label');failMsg(el);}).then(function(){btn.removeAttribute('aria-busy');guard();});
+   }).catch(function(){label(btn);failMsg(el);}).then(function(){btn.removeAttribute('aria-busy');guard();});
   });
  }
 
