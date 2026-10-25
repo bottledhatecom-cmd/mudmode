@@ -7,8 +7,8 @@
  if(!box||typeof box.showModal!=='function')return; // old browser: the links keep working as plain links
  // Each prompt is pinned: if its file changes, its hash here must change too, so a text change is always a visible code change.
  var PROMPTS={
-  chat:{url:'first-prompt.md',sha:'sha256-kS9OC/Tobp9i2QocLVkNxZzQ07rTfZ6JtPpFhWDiCgU=',last:''},
-  files:{url:'setup-prompt-files.md',sha:'sha256-8SnG8efAQIBl6sdAo4jHFCkA+eSc+79C0WvhOd9sEsc=',last:''}
+  chat:{url:'first-prompt.md',sha:'sha256-R6uEGU1279Z8wWMMh5dBvMb9IU8QPGY3VelmIHhA1RY=',last:''},
+  files:{url:'setup-prompt-files.md',sha:'sha256-FTYllaO7Z1R6aVk9HfV7aZZd7Q+f6DJQxjyUROU9hgU=',last:''}
  };
  // Fixed links only; the page can't add others.
  var AI_LINKS={ChatGPT:'https://chatgpt.com',Claude:'https://claude.ai',Grok:'https://grok.com'};

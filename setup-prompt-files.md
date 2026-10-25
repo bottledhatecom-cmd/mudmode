@@ -9,7 +9,7 @@ AI: please set up the free mudmode Crew kit for me, quietly. Show me only short 
    If it fails, delete that one file, tell me "The download didn't match, so I stopped. Copy a fresh prompt from mudmodecrew.com and try again.", and stop.
 3. Unzip it there, read README.md, setup/AI-SETUP.md and the setup script, then run AI-SETUP.md step 2's command (bash or PowerShell, whichever works here) with: `--yes`; `--connect claude` only if you are Claude Code and I said yes (`--connect grok` for Grok Build; otherwise `--connect none`); my time zone as a name like `America/Chicago`, from this computer's settings; my folder if I named one (`--target`). PowerShell uses -Yes, -Connect, -Tz, -Target. Everything else stays at its default. Write only in the new mudmode folder, plus the one connector file I said yes to; delete nothing of mine; nothing else online.
 4. When the script ends with `RESULT: OK`, delete only the temp folder from step 2: one command, its full path in quotes, no variables or wildcards. If you're not sure of the path, leave it and tell me where it is.
-5. Tell me I'm done in 3 short lines:
+5. Tell me I'm done in 3 short lines, starting with "Tada! mudmode is set up.":
    - where the folder is;
    - if connected: "Start a new chat and it follows mudmode. Say handoff before you stop, and mudmode status any time." If not connected: "Start a chat with: Read ~/mudmode/CORE.md, ~/mudmode/CORE-LOCAL.md and ~/mudmode/HANDOFF.md, then continue." (with my folder if I picked one);
    - "Say change my mudmode settings to change your name or time zone (I guessed <zone>), or to turn on update notices."
