@@ -29,17 +29,17 @@
 <div class="hero-text">
 <p class="hero-eyebrow">One rulebook for all your AIs.</p>
 <h1>Four lines that tell your AI to ask first.</h1>
-<p class="lead">Paste them into the AI you already use. They ask it to check with you before anything risky (one yes for one thing), to be honest and never claim it did something it didn&rsquo;t, and to write a short note when you say &ldquo;handoff&rdquo;, so your next chat picks up where this one stopped.</p>
+<p class="lead">Paste them into the AI you already use. They ask it to check with you before anything risky.</p>
 
 <div class="door" id="start" role="group" aria-labelledby="door-h">
 <div class="door-guide"><picture><source type="image/webp" srcset="img/tyler/tyler-wrestler-120.webp 2x, img/tyler/tyler-wrestler-240.webp 4x"><img src="img/tyler/tyler-wrestler-120.jpg" srcset="img/tyler/tyler-wrestler-120.jpg 2x, img/tyler/tyler-wrestler-240.jpg 4x" width="56" height="56" alt=""></picture><div><b id="door-h">Hi, I&rsquo;m Tyler. Which AI do you use?</b><small>Tyler is a guide character: nobody sees what you pick.</small></div></div>
 <p class="door-grp" id="door-chat-h">In a chat app</p>
-<div class="door-picks" role="group" aria-labelledby="door-chat-h" data-door-js hidden>
+<div class="door-picks picks-3" role="group" aria-labelledby="door-chat-h" data-door-js hidden>
 <button type="button" class="door-pick" data-door-ai="ChatGPT">ChatGPT</button>
 <button type="button" class="door-pick" data-door-ai="Claude">Claude</button>
 <button type="button" class="door-pick" data-door-ai="Grok">Grok</button>
-<button type="button" class="door-pick" data-door-ai="">Another chat app</button>
 </div>
+<button type="button" class="door-pick door-copy" data-door-ai="" data-door-js hidden>Copy the 4 lines</button>
 <noscript><p class="door-nojs">JavaScript is off, so the copy buttons are hidden. The 4 lines are below on this page and in <a href="first-prompt.md">first-prompt.md</a>, or use the <a href="start-here/index.html">step-by-step guide</a>.</p></noscript>
 <p class="door-lic">Free under the <a href="license.txt" target="_blank" rel="noopener">mudmode Personal Use License</a>. By copying the 4 lines or the setup prompt, you agree to it.</p>
 <p class="door-how">One tap copies the 4 lines and opens your AI. Paste them, read them, then send.</p>
@@ -48,41 +48,62 @@
 <p class="door-open" data-door-open hidden><a data-door-open-link href="#start" target="_blank" rel="noopener noreferrer">Didn&rsquo;t open? Open <span data-door-open-name>your AI</span><span class="sr-only"> (opens in a new tab)</span></a><span class="door-small">No account yet? Make one there first (their own terms and age rules apply).</span></p>
 </div>
 <div class="door-box" data-door-chatbox hidden><label class="door-label" for="door-text-chat">Your first prompt</label><textarea id="door-text-chat" data-door-text="chat" readonly></textarea></div>
-<p class="door-grp">On your computer</p>
-<div class="door-files">
+<details class="door-fold more" data-door-fold><summary>On your computer? Claude Code and similar</summary>
 <p><b>Claude Code, or another AI that works with your files.</b> Your AI asks you one question, downloads the free kit from this site, checks it&rsquo;s the real file and runs the kit&rsquo;s own setup. If it asks to run something, allow just that once.<code class="door-first" data-door-first># mudmode quick setup (for Claude Code or another AI that works with files)</code></p>
 <button type="button" class="door-pick" data-door-files data-door-js hidden>Copy my setup prompt</button>
-</div>
 <p class="door-status" role="status" aria-live="polite" data-door-status="files"></p>
-<details class="door-fold" data-door-fold><summary>See every word, or download the kit yourself</summary>
 <label class="door-label" for="door-text-files">Your setup prompt</label><textarea id="door-text-files" data-door-text="files" readonly></textarea>
 <p><a class="btn s" href="starter-kit/mudmode-starter-kit.zip" download>Download the free Crew kit (zip, 110 KB)</a></p>
 <p class="door-lic">Free under the <a href="license.txt" target="_blank" rel="noopener">mudmode Personal Use License</a> (also in the zip as LICENSE). By downloading it, you agree to it.</p>
 <p>Unzip it, open your AI in that folder, and type: <span class="say">Read README.md and set me up.</span></p>
 </details>
-<p class="door-trust">No email and no sign-up for mudmode. Plain text you can read. The buttons won&rsquo;t copy the lines if their file has been changed.</p>
+<p class="door-trust">No email and no sign-up for mudmode. Plain text you can read.</p>
 </div>
 <p class="hero-price">Free to start &middot; Full Kit $29, one time, no subscription &middot; <a href="#pricing">Pricing</a></p>
 <p class="hero-fine">Not affiliated with or endorsed by any AI provider.</p>
 </div>
 
+<div class="lines-col">
+<div class="gist" role="region" aria-labelledby="gist-h">
+<h2 id="gist-h">In plain words, the 4 lines ask your AI to:</h2>
+<ul>
+<li>Ask you before anything risky. One yes covers one thing.</li>
+<li>Be honest. Never claim it saved or did something it didn&rsquo;t.</li>
+<li>Keep answers short.</li>
+<li>Know 4 things you can say: <b>handoff</b>, <b>mudmode</b>, <b>mudmode status</b>, <b>mudhelp</b>.</li>
+<li>Answer first with one short line and one easy question.</li>
+</ul>
+</div>
 <div class="lines" role="region" aria-labelledby="lines-h">
 <h2 id="lines-h">The 4 lines you paste (every word)</h2>
 <ol data-door-lines>
 <li>Please work the mudmode way: ask me before anything risky like sending, buying or deleting (one yes = one thing), be honest, never claim you saved or did something you didn't, and keep answers short.</li>
-<li>"handoff" = a short note for my next chat that starts with these four lines, and remind me to copy it. Just "mudmode" = reply "Woot! mudmode is on for this chat." and ask what I need. "mudmode status" = one line: where this chat stands and what's next.</li>
-<li>"mudhelp" = list these words, one short line each, then: "Want more (daily report, settings)? Sign in, get the free Crew kit from mudmodecrew.com, add its mudmode-chat-lite.md to a Project (if your app has them), then say: Read mudmode-chat-lite.md and set me up. Without signing in, it may not be kept for next time."</li>
+<li><b class="cmd">"handoff"</b> = a short note for my next chat that starts with these four lines, and remind me to copy it. <span class="nl"></span>Just <b class="cmd">"mudmode"</b> = reply "Woot! mudmode is on for this chat." and ask what I need. <span class="nl"></span><b class="cmd">"mudmode status"</b> = one line: where this chat stands and what's next.</li>
+<li><b class="cmd">"mudhelp"</b> = list these words, one short line each, then: "Want more (daily report, settings)? Sign in, get the free Crew kit from mudmodecrew.com, add its mudmode-chat-lite.md to a Project (if your app has them), then say: Read mudmode-chat-lite.md and set me up. Without signing in, it may not be kept for next time."</li>
 <li>Reply now with only "Woot! mudmode is on for this chat." and one easy question.</li>
 </ol>
-<p class="dare">Not sure? Paste them into the AI you already trust and ask it what they&rsquo;ll make it do. Don&rsquo;t like the answer? Close the chat: nothing was installed. (If your app keeps a memory of chats, you can delete it there.)</p>
+<p class="dare">Not sure? Paste them into the AI you already trust and ask what it would do with them. Don&rsquo;t like the answer? Close the chat: nothing was installed. (If your app keeps a memory of chats, you can delete it there.)</p>
+</div>
 </div>
 </div></header>
 
 <main>
 <section id="learns"><div class="wrap">
 <span id="what"></span><span id="grok"></span><span id="build"></span><span id="save"></span><span id="results"></span><span id="crew"></span>
-<p class="eyebrow learns-eyebrow">A real verdict, and a crew that learns</p>
 <h2>When something goes wrong, the crew writes it down, and fixes what holds it.</h2>
+<ol class="grow" aria-label="How a lesson grows up">
+<li><span aria-hidden="true">1</span>Something goes wrong</li>
+<li><span aria-hidden="true">2</span>One line in the book</li>
+<li><span aria-hidden="true">3</span>It comes back?</li>
+<li><span aria-hidden="true">4</span>It gets a check</li>
+</ol>
+<div class="record">
+<h3>What our own records show</h3>
+<p class="lrow">On one app we build (Sep 29 &ndash; Oct 21, 2026): every mistake that came back after its lesson was written, 10 of 10 in our records, came from a lesson with no automatic check. We found no recorded repeat of a lesson once it had one.</p>
+<p class="record-small">One app, one owner, about three weeks, small numbers, and the crew wrote its own records. A check that catches a repeat often isn&rsquo;t written down as a mistake, so this isn&rsquo;t proof that checks prevent mistakes, or proof for anyone else.</p>
+<p class="verdict-chip"><span>Verdict: <b>WARN</b></span> <small>the study&rsquo;s own verdict: supported in this one project, not proven in general</small></p>
+</div>
+<details class="more"><summary>Two real lessons, and what holds each promise</summary>
 <p class="sub">One short line: the rule, what happened, the date, and what holds it now. Each card comes from a real line in our own crew&rsquo;s books, retold in plain words with private details taken out. Not every trick is here.</p>
 <div class="lesson-cards">
 <article class="card lesson">
@@ -99,18 +120,6 @@
 <p class="lhonest">No automatic check holds this one yet. In our records, lessons held only by people are the kind that came back, so we watch this one.</p>
 </article>
 </div>
-<div class="record">
-<h3>What our own records show</h3>
-<p class="lrow">On one app we build (Sep 29 &ndash; Oct 21, 2026): every mistake that came back after its lesson was written, 10 of 10 in our records, came from a lesson with no automatic check. We found no recorded repeat of a lesson once it had one.</p>
-<p class="record-small">One app, one owner, about three weeks, small numbers, and the crew wrote its own records. A check that catches a repeat often isn&rsquo;t written down as a mistake, so this isn&rsquo;t proof that checks prevent mistakes, or proof for anyone else.</p>
-<p class="verdict-chip"><span>Verdict: <b>WARN</b></span> <small>the study&rsquo;s own verdict: supported in this one project, not proven in general</small></p>
-</div>
-<ol class="grow" aria-label="How a lesson grows up">
-<li><span aria-hidden="true">1</span>Something goes wrong</li>
-<li><span aria-hidden="true">2</span>One line in the book</li>
-<li><span aria-hidden="true">3</span>It comes back?</li>
-<li><span aria-hidden="true">4</span>It gets a check</li>
-</ol>
 <p class="learns-fine">We keep the book short: when it passes about 80 lines, similar lessons are merged and settled ones move to a decisions file. Lines that leave are moved to an archive, never deleted.</p>
 <div class="holds">
 <div class="card hold"><h3 class="hold-h"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2"/></svg>A check holds it</h3><ul>
@@ -127,41 +136,38 @@
 </div>
 <p class="legend-line">In full mode (the Full Kit starts in it; in the free kit, say &ldquo;mudmode full&rdquo;), every finished job gets a verdict from a separate, read-only reviewer: <b>PASS</b> &middot; <b>WARN</b>, a pass with every note listed &middot; <b>FAIL</b>, which stops it until you decide, in your own words. In lite mode, the review is for anything that goes out.</p>
 <p class="learns-fine">Free Crew kit: the lessons book and the all-work reviewer are modules you can turn on (or say &ldquo;mudmode full&rdquo;). The Full Kit starts with both on.</p>
+</details>
 <p class="learns-more"><a href="crew-work/index.html">See the crew work: one real job, start to finish <span aria-hidden="true">&rarr;</span></a></p>
 </div></section>
 
-<section id="ask" class="band"><div class="wrap">
+<section id="ask" class="band"><div class="wrap ask-grid">
 <span id="safety"></span>
 <h2>Will it act without asking?</h2>
 <p class="sub">One yes covers one thing. The next risky step asks again.</p>
-<ol class="flow">
-<li class="flow-step"><span class="flow-cap"><i aria-hidden="true">1</i><b>It wants to</b></span>
-<span class="risky" aria-hidden="true"><svg viewBox="0 0 30 30"><rect x="3" y="8" width="24" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="15" cy="15.5" r="3.6" fill="none" stroke="currentColor" stroke-width="2.2"/></svg><svg viewBox="0 0 30 30"><path d="M4 12l18-7v20L4 18z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M8 18l2 7h4l-1.5-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg><svg viewBox="0 0 30 30"><path d="M3 14L27 4l-6 22-6-9z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M15 17l12-13" stroke="currentColor" stroke-width="2.2"/></svg><svg viewBox="0 0 30 30"><path d="M9 22H8a5 5 0 0 1-.6-10A7 7 0 0 1 21 10.5 5.5 5.5 0 0 1 22 22h-1" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 27V15M10.5 19.5L15 15l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><svg viewBox="0 0 30 30"><path d="M6 8h18M12 8V5h6v3M8 8l1.5 18h11L22 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/></svg></span>
-<span class="flow-t">spend, post, send, deploy or delete</span></li>
-<li class="flow-step flow-stop"><span class="flow-cap"><i aria-hidden="true">2</i><b>It stops and asks</b></span>
-<span class="flow-sign" aria-hidden="true"><svg viewBox="0 0 56 64"><rect x="4" y="4" width="48" height="34" rx="4" fill="currentColor"/><path d="M28 38v24" stroke="currentColor" stroke-width="4"/><path d="M23 16a5 5 0 1 1 7 4.6c-1.4.6-2 1.6-2 3v1.2" fill="none" stroke="#121110" stroke-width="3.2" stroke-linecap="round"/><circle cx="28" cy="31" r="2.2" fill="#121110"/></svg></span>
-<span class="flow-t">names the one thing</span></li>
-<li class="flow-step"><span class="flow-cap"><i aria-hidden="true">3</i><b>You name it</b></span>
-<span class="flow-t">&ldquo;Yes, send that one.&rdquo;</span></li>
-<li class="flow-step"><span class="flow-cap"><i aria-hidden="true">4</i><b>That one thing</b></span>
-<span class="flow-sign" aria-hidden="true"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="none" stroke="currentColor" stroke-width="3"/><path d="M12 20.5l5.5 5.5L29 14.5" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-<span class="flow-t">then it asks again next time</span></li>
-</ol>
-<p class="mock-label">Mock-up, not a real AI reply. A made-up task, with an AI that can send email for you.</p>
+<div class="ask-chat">
+<p class="mock-label">Mock-up, not a real AI reply. Imagine your AI can send email.</p>
 <div class="chat-mock">
-<p class="bub you"><span class="who">You</span>Tidy up my cover letter and email it to Sam.</p>
-<p class="bub ai"><span class="who">AI</span>Done: it&rsquo;s one page now (below). Sending is on the ask-first list, so I&rsquo;ll stop here. OK to send this one email to Sam?</p>
+<p class="bub ai"><span class="who">AI</span>Ready to email the letter to Sam. Send it?</p>
+<div class="yes-pair">
 <p class="bub you"><span class="who">You</span>Yes, send that one.</p>
-<p class="bub ai"><span class="who">AI</span>Sent. That yes covered this email only.</p>
-<p class="bub you"><span class="who">You</span>Great. Do whatever else it needs.</p>
-<p class="bub ai"><span class="who">AI</span>Will do. If that means sending or posting it anywhere, I&rsquo;ll ask you about each one first.</p>
+<p class="bub ai"><span class="who">AI</span><b class="done">Sent.</b> I&rsquo;ll ask again before the next one.</p>
 </div>
-<p class="ask-fine">In the free Crew kit and the Full Kit, &ldquo;do it all&rdquo; never covers sending, buying, deploying or deleting, and posting is on the ask-first list. The 4 lines ask for one yes per risky thing, like sending, buying or deleting. These are rules your AI follows, not locks: keep checking its work.</p>
+</div>
+</div>
+<p class="ask-fine">Rules your AI follows, not locks: keep checking its work.</p>
 </div></section>
 
 <section id="path"><div class="wrap">
 <h2>Where do I start?</h2>
 <p class="sub">Try it here, then cross over.</p>
+<ol class="path-strip" aria-label="Three stops: try it, keep it, then cross over to your computer">
+<li><span class="n" aria-hidden="true">1</span><b>Try it</b><span class="w">Any chat &middot; paste once</span></li>
+<li><span class="n" aria-hidden="true">2</span><b>Keep it</b><span class="w">One kit file &middot; in a Project</span></li>
+<li class="x" aria-hidden="true">Cross over &rarr;</li>
+<li class="goal"><span class="n" aria-hidden="true">3</span><b>On your computer</b><span class="w">An AI that works with files</span></li>
+</ol>
+<p class="handoff-line"><span id="pickup"></span>Say &ldquo;handoff&rdquo; before you stop: your AI writes a short note so your next chat can pick up where this one stopped (in a chat app, you paste it in).</p>
+<details class="more"><summary>Compare the three, row by row</summary>
 <figure class="m-chart" aria-label="Where do I start: three stops, try it, keep it, then cross over to your computer">
 <ol class="xpath">
 <li class="stop">
@@ -225,7 +231,7 @@
 </details>
 <p class="chart-fine">Rules your AI is asked to follow. AI tools can still make mistakes, so keep checking their work. The AI app you use may have its own costs.</p>
 
-<figure class="m-chart pickup" id="pickup" aria-labelledby="c3-title">
+<figure class="m-chart pickup" aria-labelledby="c3-title">
 <h3 id="c3-title">Will I lose my place?</h3>
 <p class="c3-sub">Say &ldquo;handoff&rdquo; before you stop.</p>
 <div class="c3-flow">
@@ -254,38 +260,75 @@
 </details>
 <p class="chart-fine">Example note. Free Crew kit and Full Kit. The first prompt makes a shorter note you copy yourself.</p>
 </figure>
+</details>
 </div></section>
 
-<section id="your-crew" class="crew-roles"><div class="wrap">
+<section id="your-crew" class="crew-roles" aria-labelledby="crew-h"><div class="wrap">
+<svg class="svg-defs" width="0" height="0" aria-hidden="true" focusable="false">
+<defs>
+<g id="hat-head"><path d="M19 47c-3-4-4-8-4-12 0-8 6-13 14-13s14 5 14 12c0 2 0 3 1 4l3 4c.6.8 0 1.6-.8 1.6H44c0 3-2 5-5 5h-3" fill="none" stroke="currentColor" stroke-opacity=".55" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></g>
+<symbol id="h-full" viewBox="0 0 64 56"><use href="#hat-head"/><path d="M13 27c0-11 7-18 17-18s17 7 17 18z" fill="#5b3f1f" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M5 28.5c8 2.5 42 2.5 52 0" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><rect x="24" y="15" width="9" height="6" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="17" cy="24.5" r="1.3" fill="currentColor"/><circle cx="21" cy="25" r="1.3" fill="currentColor"/></symbol>
+<symbol id="h-rib" viewBox="0 0 64 56"><use href="#hat-head"/><path d="M13 27c0-11 7-18 17-18s17 7 17 18z" fill="#5b3f1f" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M5 28.5c8 2.5 42 2.5 52 0" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><path d="M24 10.5c-3 4-4 10-4 16M30 9v18M36 10.5c3 4 4 10 4 16" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="16" cy="24.5" r="1.3" fill="currentColor"/><circle cx="44" cy="24.5" r="1.3" fill="currentColor"/></symbol>
+<symbol id="h-fwd" viewBox="0 0 64 56"><use href="#hat-head"/><path d="M14 27c0-11 7-18 16-18s16 7 16 18z" fill="#5b3f1f" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M45 26.5c5 0 9 1 12 3" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><path d="M14 27h32" stroke="currentColor" stroke-width="2"/><rect x="24" y="15" width="9" height="6" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="18" cy="24.5" r="1.3" fill="currentColor"/><circle cx="22" cy="25" r="1.3" fill="currentColor"/></symbol>
+<symbol id="h-back" viewBox="0 0 64 56"><use href="#hat-head"/><path d="M14 27c0-11 7-18 16-18s16 7 16 18z" fill="#5b3f1f" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M15 26.5c-5 0-9 1-12 3" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><path d="M14 27h32" stroke="currentColor" stroke-width="2"/><rect x="27" y="15" width="9" height="6" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="38" cy="24.5" r="1.3" fill="currentColor"/><circle cx="42" cy="25" r="1.3" fill="currentColor"/></symbol>
+</defs></svg>
 <p class="crew-eyebrow">In the mudmode Full Kit</p>
-<h2>One AI, many hard hats.</h2>
-<p class="sub">The crew needs the Full Kit in an AI that works with your files, like Claude Code. Your AI plays each role one at a time, each in its own pass, and the role that builds the work never signs it off. In a chat app, you get one AI following mudmode rules.</p>
-<ul class="hats" aria-label="Crew roles in the Full Kit">
-<li><svg viewBox="0 0 40 26" aria-hidden="true"><path d="M9 19c0-8 5-13 11-13s11 5 11 13" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M2 19.5h36" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M20 6v5" stroke="currentColor" stroke-width="2"/></svg><b>Foreman</b>Runs the day</li>
-<li><svg viewBox="0 0 40 26" aria-hidden="true"><path d="M12 19c0-8 4-13 10-13s10 5 10 13z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M12 19H4" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M22 6v5" stroke="currentColor" stroke-width="2"/></svg><b>Inspector</b>Reads every change</li>
-<li><svg viewBox="0 0 40 26" aria-hidden="true"><path d="M9 19c0-8 5-13 11-13s11 5 11 13" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M2 19.5h36" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M20 6v5" stroke="currentColor" stroke-width="2"/></svg><b>Super</b>Watches the whole job</li>
-<li><svg viewBox="0 0 40 26" aria-hidden="true"><path d="M12 19c0-8 4-13 10-13s10 5 10 13z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M12 19H4" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M22 6v5" stroke="currentColor" stroke-width="2"/></svg><b>Apprentice</b>Reruns the checks</li>
-<li><svg viewBox="0 0 40 26" aria-hidden="true"><path d="M12 19c0-8 4-13 10-13s10 5 10 13z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M12 19H4" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M22 6v5" stroke="currentColor" stroke-width="2"/></svg><b>Attack tester</b>Plays the bad user</li>
-<li><svg viewBox="0 0 40 26" aria-hidden="true"><path d="M12 19c0-8 4-13 10-13s10 5 10 13z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M12 19H4" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M22 6v5" stroke="currentColor" stroke-width="2"/></svg><b>Legal</b>Looks up the rules</li>
-<li><svg viewBox="0 0 40 26" aria-hidden="true"><path d="M12 19c0-8 4-13 10-13s10 5 10 13z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M12 19H4" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M22 6v5" stroke="currentColor" stroke-width="2"/></svg><b>Laborer</b>Odd jobs</li>
+<h2 id="crew-h">Done isn&rsquo;t done till it&rsquo;s checked.</h2>
+<div class="crew-log-wrap">
+<div>
+<p class="crew-log-h" id="crew-log-h">Made-up example:</p>
+<ol class="crew-log" aria-labelledby="crew-log-h">
+<li><svg class="hat" aria-hidden="true" focusable="false"><use href="#h-back"/></svg><span class="say"><b>Builder:</b> &ldquo;Done. Tests pass.&rdquo;</span></li>
+<li><svg class="hat" aria-hidden="true" focusable="false"><use href="#h-rib"/></svg><span class="say"><b>Apprentice:</b> &ldquo;Reran them. Two fail.&rdquo;</span></li>
+<li><svg class="hat" aria-hidden="true" focusable="false"><use href="#h-rib"/></svg><span class="say"><b>Inspector:</b> <span class="v fail">FAIL</span> &ldquo;Blocked.&rdquo;</span></li>
+<li><svg class="hat" aria-hidden="true" focusable="false"><use href="#h-back"/></svg><span class="say"><b>Builder:</b> &ldquo;Fixed.&rdquo;</span></li>
+<li><svg class="hat" aria-hidden="true" focusable="false"><use href="#h-rib"/></svg><span class="say"><b>Inspector:</b> <span class="v pass">PASS</span></span></li>
+<li><svg class="hat" aria-hidden="true" focusable="false"><use href="#h-full"/></svg><span class="say"><b>Foreman:</b> &ldquo;OK to put it live?&rdquo;</span></li>
+<li class="you"><svg class="hat" aria-hidden="true" focusable="false"><use href="#h-full"/></svg><span class="say"><b>You:</b> &ldquo;Yes.&rdquo;</span></li>
+</ol>
+</div>
+<div>
+<p class="crew-why">Your AI plays every part, each in its own pass. The builder never signs off its own work.</p>
+<p class="crew-fine"><a href="#pricing">See pricing</a>. Roles are jobs your AI does by following the kit&rsquo;s rules; AI tools can still make mistakes, so keep checking their work. Results vary.</p>
+<p class="crew-fit">The crew needs an AI that works with your files, like Claude Code. In a chat app, you get one AI following mudmode rules.</p>
+<details class="more"><summary>The rest of the crew, and where its lessons live</summary>
+<ul class="crew-more" aria-label="More crew roles in the Full Kit">
+<li><svg role="img" aria-label="full-brim hard hat"><use href="#h-full"/></svg>Super: watches the whole job</li>
+<li><svg role="img" aria-label="full-brim hard hat"><use href="#h-full"/></svg>Attack tester: plays the bad user</li>
+<li><svg role="img" aria-label="hard hat, brim forward"><use href="#h-fwd"/></svg>Legal: looks up the rules</li>
+<li><svg role="img" aria-label="full-brim hard hat"><use href="#h-full"/></svg>Laborer: odd jobs</li>
 </ul>
 <p class="guard"><b>Your crew goes with you.</b> It learns from your lessons, kept in your own folder. It learns from ours only when you install a mudmode kit update. Sharing a lesson back is always opt-in and 18+; your post shows your GitHub username, and the kit credits you only if you ask (<a href="lesson-terms.html">mudmode lesson terms</a>).</p>
-<div class="btns crew-cta"><a class="btn p" href="https://bottledhate.gumroad.com/l/attal" target="_blank" rel="noopener noreferrer">Get the Full Kit: $29, one time</a><a class="btn s" href="#start">Start free</a></div>
-<p class="crew-fine"><a href="#pricing">See pricing</a>. Roles are jobs your AI does by following the kit&rsquo;s rules; AI tools can still make mistakes, so keep checking their work. Results vary. Not affiliated with or endorsed by any AI provider.</p>
+</details>
+</div>
+</div>
 </div></section>
 
-<section id="pricing"><div class="wrap">
+<section id="pricing" class="price-short"><div class="wrap">
 <span id="kit"></span><span id="modules"></span><span id="steps"></span>
 <h2>Pick your crew</h2>
-<p class="sub">Start free and keep it as long as you like. Upgrade when you want the full book, every crew role, and kit updates in your Gumroad library. No subscriptions. Checkout is through Gumroad.</p>
-<p class="price-modes">The free Crew kit starts lite: one short page of rules, more when you want it (say &ldquo;mudmode full&rdquo;). The Full Kit starts in full mode. The safety rules are on in every mode.</p>
+<p class="sub">Start free and keep it as long as you like. No subscriptions. Checkout is through Gumroad.</p>
 <div class="grid">
-
-<div class="price-col">
 <div class="card">
 <h3>mudmode Crew</h3>
 <p class="price">Free</p>
 <p class="tier-note">Free to download and keep.</p>
+<a class="btn s" href="#start">Start free</a>
+</div>
+<div class="card">
+<h3>Full Kit</h3>
+<p class="price">$29 <span class="per">one time</span></p>
+<p class="tier-note">Yours to keep, with 12 months of kit updates in your Gumroad library. Nothing ever renews by itself.</p>
+<a class="btn p" href="https://bottledhate.gumroad.com/l/attal" target="_blank" rel="noopener">Get the Full Kit: $29</a>
+</div>
+</div>
+<p class="price-foot">14-day money-back promise. Free Crew kit: <a href="license.txt">Personal Use License</a>. Paid kits: <a href="full-kit-license.html">Full Kit License</a> (your own use, including your own job). See also the <a href="terms.html">terms</a>. Payments are handled by our checkout partner; see the <a href="privacy.html">privacy note</a>. Results vary.</p>
+<details class="more"><summary>What&rsquo;s in each kit</summary>
+<p class="sub">Upgrade when you want the full book, every crew role, and kit updates in your Gumroad library.</p>
+<p class="price-modes">The free Crew kit starts lite: one short page of rules, more when you want it (say &ldquo;mudmode full&rdquo;). The Full Kit starts in full mode. The safety rules are on in every mode.</p>
+<div class="grid">
+<div class="price-col">
+<div class="card"><h3>mudmode Crew</h3>
 <ul class="tier-list">
 <li>Crew kit that works on its own</li>
 <li>Core safety rules</li>
@@ -294,7 +337,6 @@
 <li>Share lessons with the hive</li>
 <li>Monthly lesson digest in the members chat (starts once the first member lessons are approved)</li>
 </ul>
-<a class="btn s" href="#start">Start free</a>
 </div>
 <div class="card mini-card">
 <h3>What to say</h3>
@@ -316,10 +358,7 @@
 </ul>
 </div>
 </div>
-
-<div class="card">
-<h3>Full Kit</h3>
-<p class="price">$29 <span class="per">one time</span></p>
+<div class="card"><h3>Full Kit</h3>
 <p class="tier-note">mudmode keeps learning from our own crews' real work. For 12 months, you get the kit updates we make from what it learns: dated packs in your Gumroad library, and we tell you by email when one lands. We may offer an optional renewal for more update time later. Nothing ever renews by itself.</p>
 <ul class="tier-list">
 <li>Everything in Crew</li>
@@ -338,31 +377,21 @@
 <li>Ready-made setups for popular AI assistants</li>
 <li>New lessons as they land once the hive starts (the free kit gets a monthly digest in the members chat)</li>
 </ul>
-<a class="btn p" href="https://bottledhate.gumroad.com/l/attal" target="_blank" rel="noopener">Get the Full Kit: $29</a>
 <div class="filler-art" aria-hidden="true"><picture><source srcset="img/filler/mascot-lifelike-patient-480.webp" type="image/webp"><img src="img/filler/mascot-lifelike-patient-480.jpg" width="480" height="640" alt="" loading="lazy" decoding="async"></picture></div>
 </div>
-
 </div>
 <p class="guard"><b>Buy once, keep it.</b> Your kit keeps working after your update year ends. Safety fixes are free for everyone as soon as they're ready: the free download here is always the newest, and Full Kit owners get them in their Gumroad library.</p>
 <p class="guard"><b>Your crew, your call.</b> mudmode gives you the starting rules. What your crew learns from there (which lessons stay, which rules you add, what you say yes to) is up to you. Read what your AIs suggest before you keep it, and keep checking their work.</p>
-<p class="price-foot">Works on most ordinary computers; no graphics card needed. 14-day money-back promise. Free Crew kit: <a href="license.txt">Personal Use License</a>. Paid kits: <a href="full-kit-license.html">Full Kit License</a>. See also the <a href="terms.html">terms</a>. Payments are handled by our checkout partner; see the <a href="privacy.html">privacy note</a>. Results vary. Team, client or organization use: see our <a href="privacy.html#contact">contact details</a>. Questions before you buy? See the <a href="#faq">FAQ</a>.</p>
+<p class="price-foot">Works on most ordinary computers; no graphics card needed. Team, client or organization use: see our <a href="privacy.html#contact">contact details</a>. Questions before you buy? See the <a href="#faq">FAQ</a>.</p>
+</details>
 </div></section>
 
 <section id="community"><div class="wrap">
 <span id="lessons"></span>
 <h2>Community and members chat</h2>
 <p class="sub">Talk with the owner and other members, share lessons and ideas. Everything runs on GitHub Discussions: sign in with a free GitHub account to post.</p>
-<div class="grid">
-<div class="card"><h3>Members chat</h3><p>One open thread right on this page. Say hi, ask a question, share how your crew runs.</p></div>
-<div class="card"><h3>Share a win</h3><p>Tell others what your crew got done. Please never post private details or secrets.</p></div>
-<div class="card"><h3>Ideas and Q&amp;A</h3><p>Ask questions, suggest ideas and show what your crew has done.</p></div>
-</div>
-<div class="btns mt"><a class="btn p" href="https://github.com/bottledhatecom-cmd/mudmode/discussions">Join the community on GitHub</a><a class="btn s" href="members.html">Members page</a></div>
-<div class="sl-chat" id="chat-frame">
-<div class="sl-head"><span class="sl-round" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5h16v11H8l-4 4z"/></svg></span><div class="sl-title"><b>Members chat</b><span>Open thread · GitHub Discussions</span></div></div>
-<div class="sl-body" id="chat"><p class="sl-grant" id="chat-grant"><b>Before you post:</b> by posting in the members chat or Discussions, you agree to the <a href="https://github.com/bottledhatecom-cmd/mudmode/blob/main/CONTRIBUTING.md">mudmode contributor terms</a>. You keep ownership of your post, and you give Michael J Hester and Hestertainment LLC a permanent, worldwide, non-exclusive, royalty-free license to use, edit, publish and sell it in free and paid mudmode materials, with or without credit. Posts are public on GitHub and subject to GitHub's Terms. Never post secrets or private details.</p><p id="chat-note">The members chat is not loaded yet. Only when you click the button does your browser load giscus (giscus.app) and GitHub; to post, you sign in with GitHub, and giscus keeps a sign-in token in your browser. See the <a href="privacy.html">privacy note</a>.</p><button class="sl-open" id="chat-load" type="button">Open the members chat here</button></div>
-</div>
-<details class="step-list share-fold"><summary>Share a lesson</summary>
+<div class="btns mt"><a class="btn p" href="members.html#chat-title">Open the members chat</a><a class="btn s" href="https://github.com/bottledhatecom-cmd/mudmode/discussions">Join the community on GitHub</a></div>
+<details class="more share-fold"><summary>Share a lesson</summary>
 <p class="sub">Found a fix your AI should never forget? You can send it to mudmode so other members can benefit. Optional, and only if you're 18 or older.</p>
 <ol class="steps">
 <li><b>Scrub it.</b> Say "draft a lesson to share" to your AI, then check it yourself: no passwords, keys, names, emails, account names or anything private. Your AI never sends it for you.</li>
@@ -396,14 +425,16 @@ confidence: low, medium or high</code></pre>
 <div class="footer-more" role="navigation" aria-label="More"><p class="footer-more-h">More</p><ul><li><a href="#learns">How it learns</a></li><li><a href="#ask">Asks first</a></li><li><a href="#path">Where to start</a></li><li><a href="#your-crew">Your crew</a></li><li><a href="#pricing">Pricing</a></li><li><a href="#community">Community</a></li><li><a href="#faq">FAQ</a></li><li><a href="crew-work/index.html">See the crew work</a></li></ul></div>
 <p><b class="brandword">mudmode</b>: One rulebook for all your AIs. Free Crew kit: <a href="license.txt">mudmode Personal Use License v1.3</a> (personal use). Full Kit: <a href="full-kit-license.html">Full Kit License</a> (your own use, including your own job). Provided as is, no warranty.</p>
 <p>No analytics, no trackers, no cookies, no external fonts. Like every website, our host (GitHub Pages, run by GitHub, Inc.) receives standard request data such as your IP address and browser type. Downloading the free kit is an ordinary request to our host. The members chat (giscus, GitHub Discussions) loads giscus and GitHub only when you open it. <a href="privacy.html">Privacy note</a> · <a href="terms.html">Terms of use</a> · <a href="full-kit-license.html">Full Kit License</a> · <a href="https://github.com/bottledhatecom-cmd/mudmode">Source on GitHub</a> · <a href="#top">Back to top</a></p>
-<p>Results vary. Not affiliated with or endorsed by any AI provider. Not legal, financial, security or professional advice. The hard-hat mascot picture (the &ldquo;waiting for your OK&rdquo; sign) was made with an AI image tool (Created with Grok). Tyler, the robot guide beside the start buttons, was drawn on our own computer, mudai, with an AI image tool.</p>
+<p>Results vary. Not affiliated with or endorsed by any AI provider. Not legal, financial, security or professional advice.</p>
+<p class="feed-row"><a class="btn s feed-btn" href="https://bottledhate.gumroad.com/l/wfyemw" target="_blank" rel="noopener" aria-label="Feed the crew (opens Gumroad in a new tab)">Feed the crew</a><span class="feed-note">Optional, for anyone who likes the idea and wants to help more. It's a tip to the business that makes mudmode; nothing comes with it.</span></p>
+<details class="more foot-fold"><summary>Credits, trademarks and contact</summary>
+<p>The hard-hat mascot picture (the &ldquo;waiting for your OK&rdquo; sign) was made with an AI image tool (Created with Grok). Tyler, the robot guide beside the start buttons, was drawn on our own computer, mudai, with an AI image tool.</p>
 <p>ChatGPT, Grok and Claude are trademarks of their respective owners, named here only to describe the AIs our crews ran on, the apps the start buttons can open, and the tool that made the pictures.</p>
 <p>Website © 2026 Hestertainment LLC, which runs mudmodecrew.com. mudmode © 2026 Michael J Hester. All rights reserved. mudmode is a trademark of Michael J Hester, used under license by Hestertainment LLC.</p>
 <p>Contact for rights, permission, licensing and privacy questions: see our <a href="privacy.html#contact">contact details</a>. Questions about mudmode: <a href="https://github.com/bottledhatecom-cmd/mudmode/discussions">GitHub Discussions</a>.</p>
 <p>Follow mudmode: <a href="https://x.com/mudmodecrew">X</a> · <a href="https://bsky.app/profile/mudmodecrew.bsky.social">Bluesky</a> · <a href="https://www.threads.com/@mudmodecrew">Threads</a></p>
-<p class="feed-row"><a class="btn s feed-btn" href="https://bottledhate.gumroad.com/l/wfyemw" target="_blank" rel="noopener" aria-label="Feed the crew (opens Gumroad in a new tab)">Feed the crew</a><span class="feed-note">Optional, for anyone who likes the idea and wants to help more. It's a tip to the business that makes mudmode; nothing comes with it.</span></p>
+</details>
 </div></footer>
-<script src="chat.js"></script>
 <script src="start-box.js"></script>
 </body>
 </html>

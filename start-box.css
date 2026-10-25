@@ -47,6 +47,15 @@ body.home .hero .wrap.hero-grid{display:grid;grid-template-columns:minmax(0,1fr)
 .door-fold p{margin:8px 0 0;font-size:.9375rem;color:var(--muted)}
 .door-fold .btn{min-height:3rem}
 .door-fold .say{display:block;margin:6px 0 0;padding:8px 10px;border-left:3px solid var(--gold);background:rgba(0,0,0,.35);border-radius:0 8px 8px 0;font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;font-size:.875rem;color:#fff7ea}
+/* Short pass: three AI buttons + "Copy the 4 lines" (same action as the old "Another chat app"); the one hero fold */
+.door-picks.picks-3{grid-template-columns:repeat(auto-fit,minmax(5.25rem,1fr))}
+.door-copy{display:block;width:100%;margin-top:8px;background:var(--gold);color:#121110;border-color:var(--gold)}
+.door-copy:hover,.door-copy:focus-visible{color:#121110;background:#ffe09a}
+.door-copy[hidden]{display:none}
+.door .door-fold.more{margin-top:12px}
+.door .door-fold.more>summary{font-size:1rem}
+.door .door-fold.more p{margin:8px 0 0}
+.door-fold .door-pick{margin-top:10px}
 .door p.door-trust{margin:14px 0 0;padding-top:10px;border-top:1px solid var(--line);font-size:.875rem;line-height:1.5;color:var(--muted)}
 .door p.door-nojs{margin:10px 0 0;font-size:.9375rem;color:var(--muted)}
 .door a{overflow-wrap:anywhere}
@@ -55,9 +64,21 @@ body.home .hero .wrap.hero-grid{display:grid;grid-template-columns:minmax(0,1fr)
 .lines{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:16px}
 .lines h2{margin:0;font-size:1rem;line-height:1.35;letter-spacing:0;color:var(--gold)}
 .lines h2::after{content:none}
-.lines ol{margin:10px 0 0;padding-left:1.4em}
-.lines li{margin:0 0 8px;font-size:.9375rem;line-height:1.5;color:var(--ink);overflow-wrap:anywhere}
-.lines li::marker{color:var(--gold)}
-.lines p.dare{margin:12px 0 0;padding:10px 12px;border-left:3px solid var(--gold);background:var(--panel);border-radius:0 10px 10px 0;font-size:.9375rem;line-height:1.5;color:var(--muted)}
+/* 4-lines box (FOUR-LINES-SPEC.md option A, display only: first-prompt.md unchanged). The line breaks are CSS generated
+   content (span.nl::before), which is never selected or copied, so a hand copy equals the file byte for byte. */
+.gist{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:16px;margin:0 0 12px}
+.gist h2{margin:0;font-size:1rem;line-height:1.35;letter-spacing:0;color:var(--gold)}
+.gist h2::after{content:none}
+.gist ul{margin:10px 0 0;padding-left:1.2em}
+.gist li{margin:0 0 6px;font-size:1rem;line-height:1.5;color:var(--ink)}
+.gist li::marker{color:var(--gold)}
+.gist b{color:var(--ink);font-weight:700;white-space:nowrap}
+.lines ol{margin:12px 0 0;padding-left:1.5em}
+.lines li{margin:0 0 16px;font-size:1rem;line-height:1.6;color:var(--ink);overflow-wrap:anywhere}
+.lines li:last-child{margin-bottom:0}
+.lines li::marker{color:var(--gold);font-weight:700}
+.lines b.cmd{color:var(--gold);font-weight:700;white-space:nowrap}
+.lines .nl::before{content:"\A";white-space:pre}
+.lines p.dare{margin:16px 0 0;padding:10px 12px;border-left:3px solid var(--gold);background:var(--panel);border-radius:0 10px 10px 0;font-size:.9375rem;line-height:1.5;color:var(--muted)}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 @media (max-width:640px){body.home header.hero{padding:16px 0 36px}.hero .hero-grid h1{font-size:2.125rem}.hero .hero-grid p.lead{font-size:1.0625rem}.door{padding:14px}}
