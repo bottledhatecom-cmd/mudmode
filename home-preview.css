@@ -16,6 +16,8 @@ nav.nav-short .nav-links{display:contents}
 /* Phones: 44px tap targets; the padding keeps the focus ring from being clipped by the scrolling link row */
 @media (max-width:640px){nav.nav-short .brand,nav.nav-short a.nav-members,nav.nav-short .nav-links a{min-height:44px;display:inline-flex;align-items:center;box-sizing:border-box}nav.nav-short .nav-links a{padding:0;min-width:44px;justify-content:center}nav.nav-short .nav-links{padding:5px;margin:0 -5px}}
 nav.nav-short a:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:6px}
+/* R4-3: trim the two-row phone nav (113px -> about 103px): less top/bottom padding, no gap between rows; tap targets stay 44px */
+@media (max-width:640px){nav.nav-short .wrap{padding-top:2px;padding-bottom:2px;row-gap:0}}
 @media (max-width:640px){html:has(nav.nav-short){scroll-padding-top:130px}}
 /* 641-679px: the one-row nav ran 6px past the right edge (Members pill clipped); tighten the gap just in that range */
 @media (min-width:640.02px) and (max-width:679.98px){nav.nav-short .wrap{gap:10px}}
