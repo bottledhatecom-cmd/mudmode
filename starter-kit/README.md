@@ -4,7 +4,7 @@
 
 Your crew, your call. mudmode gives you the starting rules. What your crew learns from there (which lessons stay, which rules you add, what you say yes to) is up to you. Read what your AIs suggest before you keep it, and keep checking their work.
 
-- **Updates:** if you downloaded this kit from Gumroad, safety fixes and the monthly hive digest come to the email you used there.
+- **Updates:** if you downloaded this kit from Gumroad, safety fixes and the lesson digest come to the email you used there.
 - **Want more?** The paid mudmode Full Kit adds the full manual, ready-made setups for popular AI assistants, the crew toolset and new lessons as they land: https://mudmodecrew.com.
 - **Members chat:** GitHub Discussions in the mudmode repo, https://github.com/bottledhatecom-cmd/mudmode/discussions (free GitHub account; 13+). Posting is covered by the repo's CONTRIBUTING.md: https://github.com/bottledhatecom-cmd/mudmode/blob/main/CONTRIBUTING.md.
 - **License:** free for one person's personal, non-commercial use under the mudmode Personal Use License v1.3 (the `LICENSE` file in this folder). Don't resell or repost the kit, don't make competing kits from it, and don't use it to train AI. Loading it into your own AI assistants is fine.
