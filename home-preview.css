@@ -1,17 +1,6 @@
-/* home-preview.css: new-homepage styles layered on glow.css (glow.css untouched). Ships with index.html. */
-/* Hero: big gold-filled Start here button + small nerd link */
-.hero .hero-start{align-items:baseline;gap:14px 20px;margin-bottom:12px}
-.hero .btn.btn-start{font-size:21px;min-height:58px;padding:14px 34px;border-radius:14px;letter-spacing:.01em;box-shadow:0 0 0 1px rgba(243,201,105,.7),0 8px 30px rgba(230,166,56,.38)}
-.hero .btn.btn-start span{transition:transform .2s}
-.hero .btn.btn-start:hover span{transform:translateX(3px)}
-.hero .nerd-link{font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;font-size:14px;color:var(--dim);text-decoration:none;border-bottom:1px dashed rgba(243,201,105,.35);padding:2px 0}
-.hero .nerd-link:hover{color:var(--gold);border-bottom-color:var(--gold)}
-/* Join the community: gold outline */
-.btn.btn-gold-outline{border:1.5px solid var(--gold);color:var(--gold);background:transparent;box-shadow:none}
-.btn.btn-gold-outline:hover{background:rgba(243,201,105,.08);box-shadow:var(--glow);color:#ffe09a}
-@media (max-width:640px){.hero .hero-start .btn-start{flex:1 1 100%}.hero .hero-start .nerd-link{margin:0 auto}}
-/* Prefer the step list? toggle */
-.steps-toggle{padding-top:0}
+/* home-preview.css: home page styles layered on glow.css (glow.css untouched). Ships with index.html.
+   The hero and its start buttons (the door) are styled in start-box.css. */
+/* Folds (FAQ, Share a lesson) */
 .step-list{border:1px solid var(--line2);border-radius:14px;background:var(--panel);padding:0 20px}
 .step-list summary{cursor:pointer;list-style:none;padding:16px 0;font-weight:700;color:var(--gold);font-size:18px}
 .step-list summary::-webkit-details-marker{display:none}
@@ -19,40 +8,10 @@
 .step-list[open] summary::before{transform:rotate(90deg)}
 .step-list[open]{padding-bottom:18px}
 .step-list .sub-h{margin-top:4px}
-/* Hero (4:58 AM CT draft): one main button, Start here link, price + not-affiliated lines, kit file-list card */
-.hero .hero-eyebrow{margin:0 0 12px;color:var(--gold);font-weight:700;letter-spacing:.03em;font-size:16px}
-.hero .hero-link{color:var(--gold);font-weight:700;font-size:18px;text-decoration:none;border-bottom:1px solid rgba(243,201,105,.45);padding:2px 0}
-.hero .hero-link:hover{color:#ffe09a;border-bottom-color:#ffe09a}
-.hero .hero-price{margin:4px 0 6px;color:#efe3cf;font-size:16px;font-weight:600}
-.hero .hero-fine{margin:0;color:var(--dim);font-size:13.5px}
-/* Hero card (hero v3, from Blueprint's mockup): Two ways in, from the free Crew kit */
-.ways{margin:0;width:380px;background:rgba(18,17,16,.88);border:1px solid var(--line2);border-radius:16px;padding:18px 20px 16px;box-shadow:0 0 28px rgba(243,201,105,.18)}
-.ways figcaption{font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;color:var(--gold);font-weight:700;font-size:14px;margin:0 0 4px}
-.ways .way{padding:12px 0;border-top:1px solid rgba(243,201,105,.14)}
-.ways .way:first-of-type{border-top:0}
-.ways .way h2{margin:0 0 6px;font-size:15px;line-height:1.4;font-weight:700;letter-spacing:0;color:#efe3cf}
-.ways .way p{margin:0;color:var(--muted);font-size:14px}
-.ways .way code{font-size:13.5px;color:#fff7ea;background:rgba(243,201,105,.08);word-break:break-word}
-.ways .say{display:block;margin:6px 0;padding:8px 10px;border-left:3px solid var(--gold);background:rgba(0,0,0,.35);border-radius:0 8px 8px 0;font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;font-size:14px;color:#fff7ea}
-.ways .daily{margin:4px 0 0;padding-top:12px;border-top:1px solid rgba(243,201,105,.14);color:var(--muted);font-size:14px}
-.ways .daily b{font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;font-weight:500;color:#fff7ea}
-.ways .note{margin:10px 0 0;color:var(--dim);font-size:13px}
-.hero-more{padding:28px 0 8px}
-.hero-more .hero-more-row{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;margin-bottom:14px}
-.hero-more .hero-pill{margin:0}
-.hero-more .nerd-link{font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;font-size:14px;color:var(--dim);text-decoration:none;border-bottom:1px dashed rgba(243,201,105,.35);padding:2px 0}
-.hero-more .nerd-link:hover{color:var(--gold);border-bottom-color:var(--gold)}
-.hero-more .hero-prices{color:var(--muted);margin:0 0 16px}
-@media (max-width:860px){.ways{width:auto}}
-@media (max-width:640px){.ways{padding:16px 16px 14px}}
-@media (max-width:640px){header.hero{padding:22px 0 36px}.hero h1{font-size:34px;margin-bottom:12px}.hero p.lead{font-size:17px;margin-bottom:18px}.hero .hero-start{gap:10px 16px;margin-bottom:8px}.hero .hero-start .hero-link{margin:0 auto}}
-@media (min-width:861px){body.home header.hero{min-height:min(calc(100vh - 60px),840px);display:flex;align-items:center}body.home header.hero>.wrap{width:100%}}
-/* Extra phone fix (hero v3, needs Michael's OK): eyebrow 15px (14px under 390px) with no extra letter spacing so it takes 2 lines at 390 and 360, and narrower button padding so "kit" stays on the button's line at 320 */
-@media (max-width:640px){.hero .hero-eyebrow{font-size:15px;letter-spacing:0;margin-bottom:10px}.hero .hero-start .btn.btn-start{padding:14px 16px}}
-@media (max-width:389px){.hero .hero-eyebrow{font-size:14px;letter-spacing:-.01em}}
-/* Top nav trimmed to 5 links (5:06 AM CT draft) + footer More group */
+.step-list summary:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:6px}
+/* Top nav: 5 links + footer More group */
 nav.nav-short .nav-links{display:contents}
-/* Phones (hero v3): Members is a gold outline, so the first screen has one gold button; the 4 section links stay on one row (it scrolls sideways if a screen is too narrow) */
+/* Phones: Members is a gold outline, so the first screen has one gold button; the section links stay on one row (it scrolls sideways if a screen is too narrow) */
 @media (max-width:640px){nav.nav-short .wrap{flex-wrap:wrap;height:auto;padding:6px 14px 6px;gap:2px 16px;overflow:visible}nav.nav-short .brand{flex:1 0 calc(100% - 120px);margin-right:0}nav.nav-short a.nav-members{order:1;margin-left:auto;background:transparent;color:var(--gold);border:1.5px solid var(--gold);box-shadow:none;padding:4px 12px}nav.nav-short a.nav-members:hover{background:rgba(243,201,105,.08);color:#ffe09a}nav.nav-short .nav-links{order:2;flex:1 0 100%;display:flex;gap:16px;overflow-x:auto;white-space:nowrap;scrollbar-width:none;padding-bottom:2px}nav.nav-short .nav-links::-webkit-scrollbar{display:none}nav.nav-short .nav-links a{font-size:14px;padding:4px 0}}
 @media (max-width:640px){html:has(nav.nav-short){scroll-padding-top:104px}}
 /* 641-679px: the one-row nav ran 6px past the right edge (Members pill clipped); tighten the gap just in that range */
@@ -64,7 +23,7 @@ nav.nav-short .nav-links{display:contents}
 .footer-more ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px 22px}
 .footer-more a{text-decoration:none}.footer-more a:hover{text-decoration:underline}
 
-/* Full Kit contents toggle (draft v3g) */
+/* Full Kit contents toggle */
 .tier-list li.kit-more::marker{color:var(--gold)}
 .kit-det summary{cursor:pointer;list-style:none;color:var(--gold);font-weight:700;text-decoration:underline;text-decoration-color:rgba(243,201,105,.45);text-underline-offset:3px;padding:2px 0;min-height:24px}
 .kit-det summary::-webkit-details-marker{display:none}
@@ -74,7 +33,7 @@ nav.nav-short .nav-links{display:contents}
 .kit-det .kit-inside{margin:8px 0 4px;padding-left:18px;font-size:15px;line-height:1.45}
 .kit-det .kit-inside li{margin:4px 0}
 
-/* Free column: two small cards under the free Crew card (draft v3g) */
+/* Pricing: free column with two small cards under the free Crew card */
 #pricing .price-col{display:flex;flex-direction:column;gap:16px}
 #pricing .mini-card{padding-top:16px;padding-bottom:16px}
 #pricing .mini-card h3{font-size:16px;margin-bottom:8px}
@@ -86,32 +45,205 @@ nav.nav-short .nav-links{display:contents}
 #pricing .never-list li::before{content:"\2715";position:absolute;left:0;color:var(--gold);font-size:12px;top:3px}
 #pricing .mini-link{color:var(--gold);font-weight:700;font-size:14.5px;text-decoration:none;border-bottom:1px solid rgba(243,201,105,.45)}
 #pricing .mini-link:hover{color:#ffe09a}
-/* your-crew section (v3o) */
+#pricing p.price-modes{margin:-14px 0 22px;max-width:780px;color:var(--ink);font-size:17px}
+
+/* A crew that learns (#learns) */
+#learns .learns-eyebrow{margin:0 0 10px;color:var(--gold);font-weight:700;font-size:15px;letter-spacing:.06em;text-transform:uppercase}
+.lesson-cards{display:grid;gap:16px}
+@media (min-width:760px){.lesson-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.card.lesson h3{margin:8px 0 8px;font-size:19px;color:#fff7ea}
+.card.lesson h3::before{content:none}
+.card p.lesson-top{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin:0}
+.ltag{display:inline-flex;gap:6px;align-items:center;font-size:13.5px;font-weight:700;border-radius:99px;padding:3px 10px;border:1px solid var(--line2);line-height:1.3}
+.ltag svg{width:14px;height:14px;flex:none}
+.ltag-check{color:#9fd39a;border-color:rgba(159,211,154,.45)}
+.ltag-people{color:var(--gold)}
+.ldate{color:var(--dim);font-size:13.5px}
+.card p.lrow,.record p.lrow{margin:8px 0 0;font-size:16px;color:var(--muted)}
+.lrow b{color:var(--gold);font-weight:650}
+.card p.lhonest{margin:10px 0 0;font-size:15px;color:var(--dim)}
+.record{margin-top:16px;background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line2);border-radius:16px;padding:20px 22px}
+.record h3{margin:0;font-size:19px;color:#fff7ea}
+.record p.record-small{margin:10px 0 0;font-size:16px;color:var(--muted)}
+.record p.verdict-chip{display:inline-flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;margin:12px 0 0;padding:6px 12px;background:var(--bg);border:1px solid var(--line2);border-radius:8px;font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;font-size:14.5px;color:var(--ink)}
+.verdict-chip b{color:var(--gold)}
+.verdict-chip small{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:14px;color:var(--dim)}
+ol.grow{list-style:none;padding:0;margin:22px 0 0;display:grid;gap:8px;grid-template-columns:1fr}
+@media (min-width:760px){ol.grow{grid-template-columns:repeat(4,minmax(0,1fr))}}
+ol.grow li{display:flex;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-weight:650;color:var(--ink);font-size:16px}
+ol.grow li span{display:inline-grid;place-items:center;flex:none;width:28px;height:28px;border-radius:50%;background:var(--gold);color:var(--on-gold);font-size:14px;font-weight:800}
+#learns p.learns-fine{margin:12px 0 0;font-size:15px;color:var(--dim);max-width:820px}
+.holds{display:grid;gap:16px;margin-top:20px}
+@media (min-width:760px){.holds{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.card.hold h3.hold-h{display:flex;gap:8px;align-items:flex-start;font-size:17px;line-height:1.35;color:var(--gold)}
+.card.hold h3.hold-h::before{content:none}
+.hold-h svg{width:16px;height:16px;flex:none;margin-top:3px}
+.card.hold ul{margin:10px 0 0;padding-left:1.2em;color:var(--muted);font-size:15.5px}
+.card.hold li{margin:0 0 6px}
+#learns p.legend-line{margin:18px 0 0;font-size:16px;color:var(--muted);max-width:860px}
+.legend-line b{font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;color:var(--gold)}
+#learns p.learns-more{margin:18px 0 0;font-weight:700;font-size:17px}
+
+/* Will it act without asking? (#ask): one made-up chat (ASK-SECTION-SPEC.md, option A) */
+#ask p.mock-label{display:inline-block;margin:0 0 12px;padding:.2rem .65rem;border:1px dashed var(--line2);border-radius:8px;font-size:.875rem;line-height:1.45;color:var(--muted)}
+#ask .chat-mock{display:flex;flex-direction:column;gap:.6rem;max-width:620px;margin:0;padding:1rem;background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:18px}
+#ask .chat-mock p.bub{margin:0;border-radius:14px;padding:.55rem .85rem;font-size:1.0625rem;line-height:1.45;max-width:86%;color:var(--ink);overflow-wrap:anywhere}
+#ask .chat-mock p.bub.ai{background:#2e2920;border:1px solid rgba(255,255,255,.06);border-top-left-radius:4px;align-self:flex-start}
+#ask .chat-mock p.bub.you{background:#4a3c22;border-top-right-radius:4px;align-self:flex-end}
+#ask .chat-mock .who{display:block;font-size:.8125rem;font-weight:700;letter-spacing:.02em;color:var(--gold);margin-bottom:1px}
+#ask .chat-mock .bub.ai .who{color:#e3d6c1}
+#ask .yes-pair{display:flex;flex-direction:column;gap:.6rem;border:2px solid var(--gold);border-radius:16px;padding:.6rem;box-shadow:var(--glow);background:rgba(243,201,105,.05)}
+#ask .yes-pair p.bub.ai{background:#2e2920}
+#ask .chat-mock b.done{color:var(--gold)}
+#ask p.ask-fine{margin:16px 0 0;font-size:1rem;color:var(--muted);max-width:620px}
+@media (min-width:900px){#ask .ask-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,600px);column-gap:56px;align-items:start}#ask .ask-grid>#safety{grid-column:1;grid-row:1}#ask .ask-grid>h2{grid-column:1;grid-row:1}#ask .ask-grid>p.sub{grid-column:1;grid-row:2}#ask .ask-grid>p.ask-fine{grid-column:1;grid-row:3;margin-top:0}#ask .ask-chat{grid-column:2;grid-row:1/span 4}}
+@media (max-width:420px){#ask .chat-mock{padding:.7rem}#ask .chat-mock p.bub{max-width:92%}}
+
+/* Where do I start? (#path): chart 1 (the cross-over path) and chart 3 at #pickup */
+.m-chart{margin:0}
+.m-chart .xpath{display:grid;grid-template-columns:1fr;gap:12px;list-style:none;margin:0;padding:0}
+@media (min-width:900px){.m-chart .xpath{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 84px minmax(0,1fr);align-items:stretch}}
+.m-chart .stop{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;color:var(--ink)}
+.m-chart .stop.goal{border:2px solid var(--gold);box-shadow:0 0 18px rgba(243,201,105,.12)}
+.m-chart .head{display:flex;gap:12px;align-items:center;margin-bottom:10px;color:var(--gold)}
+.m-chart .head svg{flex:none;width:44px;height:44px}
+.m-chart .num{font-size:13px;color:var(--muted);display:block}
+.m-chart .name{font-weight:700;font-size:19px;display:block;color:var(--ink)}
+.m-chart .where{font-size:15px;color:var(--muted);display:block}
+.m-chart .kicker{display:inline-block;font-size:13.5px;font-weight:700;color:var(--gold);margin-bottom:6px}
+.m-chart .rows{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.m-chart .rows li{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}
+.m-chart .rows svg{width:22px;height:22px;color:var(--gold)}
+.m-chart .what{font-size:15.5px}
+.m-chart .val{display:flex;gap:6px;align-items:center;justify-content:flex-end;font-size:14.5px;color:var(--muted);text-align:right}
+.m-chart .dot,.m-chart .legend .dot{flex:none;display:inline-block;width:14px;height:14px;border-radius:50%;border:2px solid var(--gold)}
+.m-chart .dot.full{background:var(--gold)}
+.m-chart .dot.half{background:linear-gradient(90deg,var(--gold) 50%,transparent 50%)}
+.m-chart .dot.none{background:transparent;opacity:.55}
+.m-chart .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.m-chart .tag{font-size:13.5px;border:1px solid var(--line);border-radius:999px;padding:2px 9px;background:var(--panel2);color:var(--ink)}
+.m-chart .tag.full{border-color:var(--gold);color:var(--gold);font-weight:700}
+.m-chart .cross{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center;padding:6px 0;color:var(--gold);font-weight:700}
+.m-chart .cross .beam{width:80px;height:30px}
+.m-chart .cross .arrow{width:26px;height:26px}
+.m-chart .cross .lbl{font-size:17px}
+.m-chart .rail{font-size:13px;font-weight:400;color:var(--muted);line-height:1.3}
+@media (max-width:899.98px){.m-chart .cross{flex-direction:row;flex-wrap:wrap;gap:6px 12px;border-top:2px dashed var(--line);border-bottom:2px dashed var(--line);padding:10px 0}.m-chart .cross .arrow{transform:rotate(90deg)}.m-chart .cross .rail{flex-basis:100%}}
+.m-chart .legend{display:flex;flex-wrap:wrap;gap:14px;margin:14px 0 0;font-size:14.5px;color:var(--muted)}
+.m-chart .legend span{display:flex;gap:6px;align-items:center}
+#path p.clar{margin:18px 0 0;padding:12px 16px;background:var(--panel2);border-radius:12px;font-size:16.5px;color:var(--ink);max-width:860px}
+details.twin{margin-top:14px;font-size:15.5px;color:var(--muted);max-width:860px}
+details.twin summary{display:flex;align-items:center;min-height:44px;cursor:pointer;color:var(--gold);font-weight:700}
+details.twin summary:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:6px}
+details.twin p{margin:6px 0 0}
+p.chart-fine{margin:10px 0 0;font-size:14px;color:var(--dim)}
+.m-chart.pickup{margin-top:34px;padding-top:22px;border-top:1px solid var(--line)}
+.m-chart.pickup h3{margin:0;font-size:22px;color:#fff7ea}
+.m-chart.pickup p.c3-sub{margin:4px 0 16px;color:var(--muted)}
+.c3-flow{display:grid;grid-template-columns:1fr;gap:10px}
+@media (min-width:900px){.c3-flow{grid-template-columns:minmax(0,1fr) 28px minmax(0,1.1fr) 28px minmax(0,1.3fr) 28px minmax(0,1fr);align-items:center}}
+.c3-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.c3-card .cap{font-weight:700;font-size:16.5px;display:flex;gap:10px;align-items:center;color:var(--ink)}
+.c3-card .cap svg{flex:none;width:34px;height:34px;color:var(--gold)}
+.c3-bubble{border-radius:14px;padding:6px 12px;font-size:15px;background:#3a3123;align-self:flex-end;border-top-right-radius:4px}
+.c3-note{background:var(--panel2);border:1px dashed var(--line2);border-radius:10px;padding:10px 12px;font-size:14px}
+.c3-note b{display:block;color:var(--gold)}
+.c3-note .faint{display:block;height:7px;border-radius:4px;background:var(--line);margin-top:6px}
+.c3-note .faint.s{width:70%}.c3-note .faint.m{width:85%}
+.c3-lanes{display:flex;flex-direction:column;gap:8px}
+.c3-lane{display:grid;grid-template-columns:36px minmax(0,1fr);gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.c3-lane.goal{border:2px solid var(--gold);box-shadow:0 0 18px rgba(243,201,105,.12)}
+.c3-lane svg{width:34px;height:34px;color:var(--gold)}
+.c3-lane .t{font-weight:700;display:block;font-size:15.5px}
+.c3-lane .d{font-size:14px;color:var(--muted);display:block}
+.c3-arrow{display:flex;align-items:center;justify-content:center;color:var(--gold)}
+.c3-arrow svg{width:24px;height:24px}
+@media (max-width:899.98px){.c3-arrow svg{transform:rotate(90deg)}}
+.c3-pickup{font-size:15px}
+.c3-pickup b{color:var(--gold)}
+
+/* #your-crew: "One caught mistake" (CREW-SECTION-SPEC.md pick D+; line-drawn hats by his hardhat rule) */
 #your-crew{background:radial-gradient(900px 360px at 50% 0%,rgba(243,201,105,.09),transparent 70%)}
 #your-crew .crew-eyebrow{margin:0 0 10px;color:var(--gold);font-weight:700;font-size:15px;letter-spacing:.06em;text-transform:uppercase}
-#your-crew h2 span{color:var(--gold);text-shadow:var(--glow)}
-#your-crew .crew-grid{list-style:none;margin:0;padding:0}
-#your-crew .crew-grid .card{display:flex;flex-direction:column}
-#your-crew .crew-grid .card h3{font-size:20px;line-height:1.3}
-#your-crew .crew-grid .card p{font-size:16.5px;line-height:1.5}
-#your-crew .crew-more{margin:18px 0 0;color:var(--muted);font-size:17px;max-width:780px}
-#your-crew .crew-trio{list-style:none;margin:34px 0 0;padding:0;display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
-#your-crew .crew-trio li{padding:16px 0 0;border-top:3px solid var(--gold);box-shadow:0 -6px 18px -14px rgba(243,201,105,.8)}
-#your-crew .crew-trio b{display:block;color:#fff7ea;font-size:21px;line-height:1.3;margin-bottom:6px}
-#your-crew .crew-trio span{display:block;color:var(--muted);font-size:16px;line-height:1.5}
-#your-crew .crew-kits{margin:18px 0 0;color:var(--ink);font-size:17px;max-width:860px}
-#your-crew .crew-kits b{color:var(--gold)}
+.svg-defs{position:absolute;width:0;height:0;overflow:hidden}
+#your-crew h2{margin:0 0 18px}
+.crew-log-wrap{display:grid;gap:22px}
+@media (min-width:900px){.crew-log-wrap{grid-template-columns:minmax(0,560px) minmax(0,1fr);gap:40px;align-items:start}}
+.crew-log-h{margin:0 0 8px;color:var(--dim);font-size:15px;letter-spacing:.04em;text-transform:uppercase;font-weight:700}
+ol.crew-log{list-style:none;margin:0;padding:0;position:relative}
+ol.crew-log::before{content:"";position:absolute;left:27px;top:20px;bottom:20px;width:2px;background:var(--line2)}
+ol.crew-log li{position:relative;display:grid;grid-template-columns:56px minmax(0,1fr);gap:12px;align-items:center;min-height:52px;padding:4px 0}
+ol.crew-log .hat{width:56px;height:46px;background:var(--bg);border-radius:12px;color:var(--gold)}
+ol.crew-log .say{font-size:17px;line-height:1.4;color:var(--ink)}
+ol.crew-log .say b{color:var(--gold);font-weight:700}
+ol.crew-log li.you .say{font-size:19px}
+ol.crew-log li.you .hat{color:var(--on-gold);background:var(--gold);box-shadow:var(--glow)}
+ol.crew-log li.you b{color:#ffe09a}
+ol.crew-log picture{display:block;width:56px;height:46px}
+ol.crew-log img.hat{display:block;object-fit:cover;box-sizing:border-box}
+ol.crew-log li.you img.hat{padding:3px}
+.crew-faces-h{margin:14px 0 0;color:var(--dim);font-size:14px}
+ul.crew-more picture{display:block;flex:none;width:34px;height:28px}
+ul.crew-more img.face{display:block;width:34px;height:28px;border-radius:7px;object-fit:cover}
+.v{display:inline-block;padding:0 7px;border:1px solid var(--line2);border-radius:7px;background:var(--bg);font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;font-size:.9em;font-weight:700}
+.v.fail{color:#ff9d8a;border-color:rgba(255,157,138,.5)}
+.v.pass{color:var(--gold)}
+.crew-why{margin:0;font-size:19px;line-height:1.5;color:var(--ink);font-weight:600}
+.crew-fit{margin:18px 0 0;color:var(--muted);font-size:16px}
+ul.crew-more{list-style:none;padding:0;margin:12px 0 0;display:flex;flex-wrap:wrap;gap:8px 14px}
+ul.crew-more li{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:15px}
+ul.crew-more svg{width:34px;height:28px;color:var(--gold);flex:none}
 #your-crew .crew-cta{margin-top:24px}
-#your-crew .crew-fine{margin:14px 0 0;color:var(--dim);font-size:14.5px;max-width:860px}
+#your-crew .crew-fine{margin:10px 0 0;color:var(--dim);font-size:14.5px;max-width:860px}
 #your-crew a:not(.btn){color:var(--gold)}
-@media (max-width:640px){
-  #your-crew .crew-eyebrow{font-size:14px}
-  #your-crew .crew-grid .card h3{font-size:19px}
-  #your-crew .crew-trio b{font-size:19px}
-  #your-crew .crew-cta .btn{flex:1 1 100%}
-}
+@media (max-width:640px){#your-crew .crew-eyebrow{font-size:14px}#your-crew .crew-cta .btn{flex:1 1 100%}}
+
+/* Community: Share a lesson fold */
+.share-fold{margin-top:22px}
+.share-fold .sub{margin:4px 0 16px}
+.share-fold pre{background:#0c0b0a;color:#efe3cf;border:1px solid var(--line);border-radius:12px;padding:14px 16px;font-size:14px;line-height:1.55}
+
+/* See the crew work page (crew-work/index.html), including chart 4 */
+.cw-hero .wrap.cw-head{display:block}
+.cw-hero h1{max-width:820px}
+.cw-chip{display:inline-block;padding:1px 8px;border:1px solid var(--line2);border-radius:8px;background:var(--bg);font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;font-size:.92em;color:var(--ink)}
+ol.steps .cw-chip b,.cw-chip b{display:inline;color:var(--gold);font-size:inherit;margin:0}
+.lesson-cards.cw-one{max-width:620px;grid-template-columns:minmax(0,1fr)}
+.c4-band-h{margin:0 0 10px;color:var(--gold);font-weight:700;font-size:15px;letter-spacing:.04em;text-transform:uppercase}
+.c4-full-h{margin-top:22px}
+ol.c4-steps{list-style:none;margin:0;padding:0;display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+ol.c4-steps li{display:flex;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-weight:650;color:var(--ink);font-size:16px;overflow-wrap:anywhere}
+ol.c4-steps li span{display:inline-grid;place-items:center;flex:none;width:26px;height:26px;border-radius:50%;background:var(--gold);color:var(--on-gold);font-size:13px;font-weight:800}
+.c4-full{border:1px dashed var(--line2);border-radius:14px;padding:12px}
+p.c4-back{display:flex;gap:10px;align-items:center;margin:10px 0 0;color:var(--gold);font-weight:700;font-size:15.5px}
+p.c4-back svg{width:96px;height:24px;flex:none}
+
 /* FEED THE CREW: the site's one optional tip link, index footer only. Quiet on purpose: secondary outline, footer-sized, no glow at rest. */
 footer .feed-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:18px 0 0;padding:16px 0 0;border-top:1px solid rgba(243,201,105,.10)}
 footer .btn.s.feed-btn{min-height:44px;padding:8px 16px;font-size:15px;font-weight:600;color:var(--gold);background:transparent;border-color:var(--line2);text-decoration:none}
 footer .btn.s.feed-btn:hover{border-color:var(--gold);box-shadow:var(--glow);color:#ffe09a}
 footer .feed-note{color:var(--dim);font-size:14px;line-height:1.45;flex:1 1 240px;min-width:0}
+
+/* Short pass (SHORT-PASS-SPEC.md 2.10): one fold per section, phone grids, #path strip, pricing and footer folds */
+details.more{margin-top:18px;border-top:1px solid var(--line);max-width:1080px}
+details.more>summary{display:flex;align-items:center;gap:10px;min-height:48px;cursor:pointer;list-style:none;color:var(--gold);font-weight:700;font-size:1.0625rem}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:"\25B8";display:inline-block;transition:transform .2s}
+details.more[open]>summary::before{transform:rotate(90deg)}
+details.more>summary:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:6px}
+@media (prefers-reduced-motion:reduce){details.more>summary::before{transition:none}}
+.path-strip{list-style:none;margin:16px 0 0;padding:0;display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:760px){.path-strip{grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto minmax(0,1fr);align-items:stretch}}
+.path-strip li{background:var(--panel);border:1px solid var(--line2);border-radius:14px;padding:12px 14px;overflow-wrap:break-word}
+.path-strip li.goal{border-color:var(--gold);box-shadow:var(--glow)}
+.path-strip .n{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--gold);color:#121110;font-weight:800;margin-right:8px}
+.path-strip b{font-size:1.0625rem}
+.path-strip span.w{display:block;color:var(--muted);font-size:.9375rem;margin-top:4px}
+.path-strip li.x{background:transparent;border:0;box-shadow:none;display:flex;align-items:center;justify-content:center;color:var(--gold);font-weight:700;padding:2px 6px}
+.handoff-line{margin:14px 0 0;font-size:1.0625rem}
+.price-short .card .tier-note{min-height:0}
+.foot-fold{margin-top:6px;border-top:0}
+.foot-fold>summary{font-size:.9375rem}
+.foot-fold p{font-size:.875rem}
+@media (max-width:759.98px){ol.grow{grid-template-columns:repeat(2,minmax(0,1fr))}
+.path-strip{grid-template-columns:repeat(auto-fit,minmax(6rem,1fr))}.path-strip li.x{display:none}.path-strip li{padding:10px}.path-strip .n{display:grid;margin:0 0 6px}}
