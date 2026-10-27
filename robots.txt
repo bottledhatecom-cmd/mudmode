@@ -1,9 +1,11 @@
-# mudmode: AI training and AI-agent scraping are not permitted (see LICENSE). Normal search engines are welcome.
+# mudmode robots.txt (advisory; well-behaved bots only).
+# AI training and AI-data crawlers are not permitted: they are blocked everywhere below.
+# Three assistants that fetch a page for a person (ChatGPT-User, Claude-User, Perplexity-User) may read the public pages only.
+# More AI training and AI-data crawlers are named and blocked in the list below.
+# Other AI assistant fetchers (MistralAI-User, DuckAssistBot, Meta-ExternalFetcher) and AI search indexers stay blocked.
+# Mainstream search engines (Googlebot, bingbot, DuckDuckBot, Applebot) are welcome; any bot not named here is allowed by this file (see ai.txt for the stricter AI rule).
 
 User-agent: GPTBot
-Disallow: /
-
-User-agent: ChatGPT-User
 Disallow: /
 
 User-agent: OAI-SearchBot
@@ -55,12 +57,6 @@ User-agent: FacebookBot
 Disallow: /
 
 User-agent: Claude-SearchBot
-Disallow: /
-
-User-agent: Claude-User
-Disallow: /
-
-User-agent: Perplexity-User
 Disallow: /
 
 User-agent: GoogleOther
@@ -118,6 +114,266 @@ User-agent: Webzio-Extended
 Disallow: /
 
 User-agent: Kangaroo Bot
+User-agent: Kangaroo-Bot
+Disallow: /
+
+# More AI training and AI-data crawlers, blocked by name.
+User-agent: ChatGLM-Spider
+Disallow: /
+
+User-agent: DeepSeekBot
+Disallow: /
+
+User-agent: DoubaoBot
+Disallow: /
+
+User-agent: ERNIEBot
+Disallow: /
+
+User-agent: QwenBot
+Disallow: /
+
+User-agent: Hunyuan
+Disallow: /
+
+User-agent: MoonshotBot
+Disallow: /
+
+User-agent: KimiBot
+Disallow: /
+
+User-agent: YiBot
+Disallow: /
+
+User-agent: SBIntuitionsBot
+Disallow: /
+
+User-agent: imageSpider
+Disallow: /
+
+User-agent: ICC-Crawler
+Disallow: /
+
+User-agent: Cotoyogi
+Disallow: /
+
+User-agent: laion-huggingface-processor
+Disallow: /
+
+User-agent: LCC
+Disallow: /
+
+User-agent: LAIONDownloader
+Disallow: /
+
+User-agent: FriendlyCrawler
+Disallow: /
+
+User-agent: MistralAI-Training
+Disallow: /
+
+User-agent: CloudVertexBot
+Disallow: /
+
+User-agent: AgentDataBot
+Disallow: /
+
+User-agent: ApifyBot
+Disallow: /
+
+User-agent: ApifyWebsiteContentCrawler
+Disallow: /
+
+User-agent: BixelBot
+Disallow: /
+
+User-agent: Brightbot
+Disallow: /
+
+User-agent: CragCrawler
+Disallow: /
+
+User-agent: Crawlspace
+Disallow: /
+
+User-agent: FirecrawlAgent
+Disallow: /
+
+User-agent: VelenPublicWebCrawler
+Disallow: /
+
+User-agent: ChatGPT-User
+Allow: /$
+Allow: /index.html
+Allow: /start.html
+Allow: /start-here/
+Allow: /crew-work/
+Allow: /members.html
+Allow: /privacy.html
+Allow: /terms.html
+Allow: /lesson-terms.html
+Allow: /license.txt
+Allow: /full-kit-license.html
+Allow: /ai.txt
+Allow: /.well-known/tdmrep.json
+Allow: /favicon.ico
+Allow: /img/
+Allow: /site.css$
+Allow: /site.js$
+Allow: /glow.css$
+Allow: /home-preview.css$
+Allow: /filler-art.css$
+Allow: /start-box.css$
+Allow: /start-box.js$
+Allow: /contact.js$
+Allow: /chat.js$
+Allow: /giscus-client.js$
+Allow: /giscus-theme.css$
+Disallow: /kit/
+Disallow: /starter-kit/
+Disallow: /full-kit/
+Disallow: /drafts/
+Disallow: /draft/
+Disallow: /staged/
+Disallow: /bak/
+Disallow: /notes/
+Disallow: /dist/
+Disallow: /shots/
+Disallow: /*.zip$
+Disallow: /*.md$
+Disallow: /*.key$
+Disallow: /*.sha256$
+Disallow: /*.patch$
+Disallow: /*.sh$
+Disallow: /*.ps1$
+Disallow: /*.cmd$
+Disallow: /*.command$
+Disallow: /*.exe$
+Disallow: /*.dmg$
+Disallow: /*.pkg$
+Disallow: /*.tgz$
+Disallow: /*.gz$
+Disallow: /*.7z$
+Disallow: /*.tar$
+Disallow: /*.json$
+Disallow: /LICENSE
+Disallow: /CNAME
+Disallow: /
+
+User-agent: Claude-User
+Allow: /$
+Allow: /index.html
+Allow: /start.html
+Allow: /start-here/
+Allow: /crew-work/
+Allow: /members.html
+Allow: /privacy.html
+Allow: /terms.html
+Allow: /lesson-terms.html
+Allow: /license.txt
+Allow: /full-kit-license.html
+Allow: /ai.txt
+Allow: /.well-known/tdmrep.json
+Allow: /favicon.ico
+Allow: /img/
+Allow: /site.css$
+Allow: /site.js$
+Allow: /glow.css$
+Allow: /home-preview.css$
+Allow: /filler-art.css$
+Allow: /start-box.css$
+Allow: /start-box.js$
+Allow: /contact.js$
+Allow: /chat.js$
+Allow: /giscus-client.js$
+Allow: /giscus-theme.css$
+Disallow: /kit/
+Disallow: /starter-kit/
+Disallow: /full-kit/
+Disallow: /drafts/
+Disallow: /draft/
+Disallow: /staged/
+Disallow: /bak/
+Disallow: /notes/
+Disallow: /dist/
+Disallow: /shots/
+Disallow: /*.zip$
+Disallow: /*.md$
+Disallow: /*.key$
+Disallow: /*.sha256$
+Disallow: /*.patch$
+Disallow: /*.sh$
+Disallow: /*.ps1$
+Disallow: /*.cmd$
+Disallow: /*.command$
+Disallow: /*.exe$
+Disallow: /*.dmg$
+Disallow: /*.pkg$
+Disallow: /*.tgz$
+Disallow: /*.gz$
+Disallow: /*.7z$
+Disallow: /*.tar$
+Disallow: /*.json$
+Disallow: /LICENSE
+Disallow: /CNAME
+Disallow: /
+
+User-agent: Perplexity-User
+Allow: /$
+Allow: /index.html
+Allow: /start.html
+Allow: /start-here/
+Allow: /crew-work/
+Allow: /members.html
+Allow: /privacy.html
+Allow: /terms.html
+Allow: /lesson-terms.html
+Allow: /license.txt
+Allow: /full-kit-license.html
+Allow: /ai.txt
+Allow: /.well-known/tdmrep.json
+Allow: /favicon.ico
+Allow: /img/
+Allow: /site.css$
+Allow: /site.js$
+Allow: /glow.css$
+Allow: /home-preview.css$
+Allow: /filler-art.css$
+Allow: /start-box.css$
+Allow: /start-box.js$
+Allow: /contact.js$
+Allow: /chat.js$
+Allow: /giscus-client.js$
+Allow: /giscus-theme.css$
+Disallow: /kit/
+Disallow: /starter-kit/
+Disallow: /full-kit/
+Disallow: /drafts/
+Disallow: /draft/
+Disallow: /staged/
+Disallow: /bak/
+Disallow: /notes/
+Disallow: /dist/
+Disallow: /shots/
+Disallow: /*.zip$
+Disallow: /*.md$
+Disallow: /*.key$
+Disallow: /*.sha256$
+Disallow: /*.patch$
+Disallow: /*.sh$
+Disallow: /*.ps1$
+Disallow: /*.cmd$
+Disallow: /*.command$
+Disallow: /*.exe$
+Disallow: /*.dmg$
+Disallow: /*.pkg$
+Disallow: /*.tgz$
+Disallow: /*.gz$
+Disallow: /*.7z$
+Disallow: /*.tar$
+Disallow: /*.json$
+Disallow: /LICENSE
+Disallow: /CNAME
 Disallow: /
 
 User-agent: *
