@@ -67,7 +67,7 @@ nav.nav-short .nav-links{display:contents}
 .record p.record-small{margin:10px 0 0;font-size:16px;color:var(--muted)}
 .record p.verdict-chip{display:inline-flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;margin:12px 0 0;padding:6px 12px;background:var(--bg);border:1px solid var(--line2);border-radius:8px;font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;font-size:14.5px;color:var(--ink)}
 .verdict-chip b{color:var(--gold)}
-.verdict-chip small{font-family:"Nunito",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:14px;color:var(--dim)}
+.verdict-chip small{font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:14px;color:var(--dim)}
 ol.grow{list-style:none;padding:0;margin:22px 0 0;display:grid;gap:8px;grid-template-columns:1fr}
 @media (min-width:760px){ol.grow{grid-template-columns:repeat(4,minmax(0,1fr))}}
 ol.grow li{display:flex;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-weight:650;color:var(--ink);font-size:16px}
