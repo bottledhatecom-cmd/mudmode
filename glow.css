@@ -1,6 +1,9 @@
 /* mudmode glow-up theme: dark charcoal + glowing gold, from the mudmode icon.
    One shared file for every page (CSP style-src 'self'). No fonts, images or scripts from other hosts.
    Reusable blocks for new sections: see "FEATURE SECTION" below (.feature). */
+/* r10c: fonts self-hosted (Nunito body, Fredoka headings; OFL-1.1; files and licences in fonts/). font-display:swap, system fallbacks, same-origin only. */
+@font-face{font-family:"Nunito";font-style:normal;font-weight:200 1000;font-display:swap;src:url("fonts/nunito-latin-wght-normal.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Fredoka";font-style:normal;font-weight:300 700;font-display:swap;src:url("fonts/fredoka-latin-wght-normal.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 :root{
   --bg:#121110;--bg2:#181614;--panel:#1d1a17;--panel2:#242019;--ink:#f4ede1;--muted:#cdbfa9;--dim:#a99b86;
   --gold:#f3c969;--amber:#e6a638;--honey:#d8902a;--on-gold:#1a1205;
@@ -11,7 +14,7 @@
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth;scroll-padding-top:72px;background:var(--bg)}
-body{margin:0;font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg) var(--hex) 0 0/56px 100px;-webkit-text-size-adjust:100%}
+body{margin:0;font:17px/1.6 var(--font-body);color:var(--ink);background:var(--bg) var(--hex) 0 0/56px 100px;-webkit-text-size-adjust:100%}
 a{color:var(--gold);text-underline-offset:2px}
 a:hover{color:#ffe09a}
 a:focus-visible,button:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:6px}
@@ -195,3 +198,6 @@ footer .brandword{color:var(--gold);text-shadow:var(--glow)}
   .doc-page main.wrap{margin:16px 10px 0;padding:4px 18px 24px;border-radius:16px}
 }
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;transition:none!important}}
+/* r10c fonts: headings and the brand word use Fredoka; everything else uses Nunito through body. Only the typeface changes (no colors, sizes or layout). More specific page rules (for example the mono .nerd h1) still win. */
+:root{--font-body:"Nunito",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;--font-head:"Fredoka","Nunito",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+h1,h2,h3,h4,nav .brand b,.card .price,legend{font-family:var(--font-head)}.btn{font-family:var(--font-head);flex-wrap:wrap;align-content:center;text-align:center}.hexbar li{align-items:flex-start}
