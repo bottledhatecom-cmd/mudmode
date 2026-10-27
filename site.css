@@ -1,7 +1,7 @@
 /* mudmode site. One page, no outside files. */
-@font-face{font-family:"Nunito";font-style:normal;font-weight:200 1000;font-display:swap;src:url("fonts/nunito-latin-wght-normal.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
-@font-face{font-family:"Fredoka";font-style:normal;font-weight:300 700;font-display:swap;src:url("fonts/fredoka-latin-wght-normal.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
-:root{--tk:52px;--bg:#121110;--win:#1d1b19;--win2:#24211e;--line:#3a3530;--ctl:#7a6f64;--text:#f1ece6;--soft:#bdb3a8;--mud:#c8874a;--mud2:#e3a768;--ok:#7fbf7f;--r:14px;--font-body:"Nunito",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;--font-head:"Fredoka","Nunito",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;--shadow:0 24px 60px rgba(0,0,0,.45),0 2px 8px rgba(0,0,0,.35)}
+@font-face{font-family:"Inter";font-style:normal;font-weight:100 900;font-display:swap;src:url("fonts/inter-latin-wght-normal.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Outfit";font-style:normal;font-weight:100 900;font-display:swap;src:url("fonts/outfit-latin-wght-normal.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+:root{--tk:52px;--bg:#121110;--win:#1d1b19;--win2:#24211e;--line:#3a3530;--ctl:#7a6f64;--text:#f1ece6;--soft:#bdb3a8;--mud:#c8874a;--mud2:#e3a768;--ok:#7fbf7f;--r:14px;--font-body:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;--font-head:"Outfit","Inter",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;--shadow:0 24px 60px rgba(0,0,0,.45),0 2px 8px rgba(0,0,0,.35)}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth;scroll-padding-top:calc(var(--tk) + 64px);scroll-padding-bottom:84px;-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 var(--font-body);min-height:100vh}
@@ -185,7 +185,7 @@ a.hl:focus-visible{outline:3px solid var(--mud2);outline-offset:2px;background:r
  .say .ln{animation:none!important;opacity:1;grid-area:auto}
 }
 
-/* RC10c-v3: a font with character (Fredoka headings, buttons and ticker labels; Nunito body), more depth, living background, headline shimmer, fade-up, link glow. CSS only except alive.js (optional fade-up). No new art. Reduced motion turns every moving part static. */
+/* RC10c-v3 (fonts since RC11: Outfit headings, buttons and ticker labels; Inter body): calmer type, more depth, living background, headline shimmer, fade-up, link glow. CSS only except alive.js (optional fade-up). No new art. Reduced motion turns every moving part static. */
 body{font-size:17px}
 h1,h2,h3,.bar .brand,.tier b,.tier .price,legend,.btn,.seg label,.tb,.off,.tag,.dock button,.tkbar,.every>summary,details.win>summary{font-family:var(--font-head)}
 h1{font-size:clamp(36px,6.4vw,62px);font-weight:700;line-height:1.06;letter-spacing:-.01em}
@@ -233,10 +233,12 @@ body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opac
 /* headline: slow warm gold shimmer, a soft glow that breathes with the 5s hexglow, a gentle rise-in. Solid colour is the fallback. */
 @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @keyframes shimmer{to{background-position:200% 0}}
+/* RC11 headline breathe: a soft-gold gradient whose width swells and eases back on a 5 s ease-in-out cycle, on the same clock as the hlglow drop-shadow (they peak together). Replaces the 7 s shimmer sweep on h1#h-main only; h2 and $29 shimmer unchanged. Reduced motion: static gradient. */
+@keyframes hlbreathe{0%,100%{background-size:115% 100%}50%{background-size:185% 100%}}
 @keyframes hlglow{0%,100%{filter:drop-shadow(0 0 6px rgba(243,201,105,.18))}50%{filter:drop-shadow(0 0 16px rgba(243,201,105,.45))}}
 h1#h-main{color:var(--text);filter:drop-shadow(0 0 6px rgba(243,201,105,.18));animation:rise .9s ease-out both,hlglow 5s ease-in-out infinite}
 @supports ((-webkit-background-clip:text) or (background-clip:text)){
- h1#h-main{background-image:linear-gradient(100deg,#e3a768 0%,#f1ece6 26%,#fff3da 45%,#ffd68f 50%,#fff3da 55%,#f1ece6 74%,#e3a768 100%);background-size:200% 100%;background-repeat:repeat-x;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:rise .9s ease-out both,shimmer 7s linear infinite,hlglow 5s ease-in-out infinite}
+ h1#h-main{background-image:linear-gradient(100deg,#e3a768 0%,#f3c969 20%,#ffe2b0 38%,#fff3da 50%,#ffe2b0 62%,#f3c969 80%,#e3a768 100%);background-size:115% 100%;background-position:50% 0;background-repeat:no-repeat;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:rise .9s ease-out both,hlbreathe 5s ease-in-out infinite,hlglow 5s ease-in-out infinite}
  h2{background-image:linear-gradient(100deg,currentColor 0%,currentColor 40%,#ffe2b0 50%,currentColor 60%,currentColor 100%);background-size:200% 100%;background-repeat:repeat-x;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 11s linear infinite}
  .btn .px{background-image:linear-gradient(100deg,#1a120b 0%,#1a120b 40%,#3a210a 50%,#1a120b 60%,#1a120b 100%);background-size:200% 100%;background-repeat:repeat-x;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;text-shadow:none;animation:shimmer 6s linear infinite}
 }
@@ -256,7 +258,8 @@ a:not(.btn):hover,a:not(.btn):focus-visible{text-shadow:0 0 10px rgba(243,201,10
 }
 @media (prefers-reduced-motion:reduce){
  body::before{animation:none!important;opacity:.8}
- h1#h-main{animation:none!important;background-image:none;-webkit-text-fill-color:currentColor;color:var(--text);filter:drop-shadow(0 0 12px rgba(243,201,105,.32))}
+ h1#h-main{animation:none!important;filter:drop-shadow(0 0 12px rgba(243,201,105,.32))}
+ @supports ((-webkit-background-clip:text) or (background-clip:text)){h1#h-main{background-image:linear-gradient(100deg,#e3a768 0%,#f3c969 20%,#ffe2b0 38%,#fff3da 50%,#ffe2b0 62%,#f3c969 80%,#e3a768 100%);background-size:150% 100%;background-position:50% 0;background-repeat:no-repeat;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}}
  h2{animation:none!important;background-image:none;-webkit-text-fill-color:currentColor}
  .btn .px{animation:none!important;background-image:none;-webkit-text-fill-color:currentColor}
  .fx-on .fx{opacity:1;transform:none;transition:none}
@@ -285,3 +288,16 @@ html:not(.tk-on) .tk-list li:nth-child(n+2){position:absolute;width:1px;height:1
 footer p{margin:0 0 8px}
 @media (forced-colors:active){.tk-pause{border-color:ButtonText}.tk-pause .ic{forced-color-adjust:none;color:ButtonText}}
 @media (max-width:480px){.tkbar .btn{padding:0 9px;font-size:13px}}
+
+/* RC11: mascot bubble out to the mascot's left. CSS only; mascot.js, bubble lines, 3 s line timing and the Copy cheer are unchanged. The hero window lets the bubble leave its edge (its title bar keeps the rounded top). Wide screens (>=1300px, room beside the window): bubble sits left of the mascot, vertically centred, tail pointing right at it. Narrower screens and phones: the mascot aligns to the top of the headline row and the bubble sits above it, over the window's top padding and title bar, so it never covers the headline or intro. */
+#start.win{overflow:visible}
+#start>.tb{border-radius:inherit;border-bottom-left-radius:0;border-bottom-right-radius:0}
+.hello{align-items:flex-start}
+.mascot .say,.mascot .say-cheer{min-width:0;width:max-content;max-width:min(280px,calc(100vw - 48px));left:0;bottom:calc(100% + 10px)}
+@media (min-width:1300px){
+ .hello{align-items:center}
+ .mascot .say,.mascot .say-cheer{left:auto;right:calc(100% + 16px);bottom:auto;top:50%;translate:0 -50%;max-width:min(280px,calc((100vw - 860px)/2 + 4px))}
+ .mascot .say::after,.mascot .say-cheer::after{left:100%;top:50%;margin-top:-7px;border-top-color:transparent;border-left-color:#f1ece6}
+}
+/* RC11b: reduced motion shows one static bubble line (the visit's first line), so the bubble stays short and on screen at every width; normal motion still cycles all 6 lines. */
+@media (prefers-reduced-motion:reduce){.say .ln:not(:first-child){display:none}}

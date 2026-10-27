@@ -230,12 +230,12 @@ button.btn.s{border:1.5px solid var(--line2)}
 .code code{background:none;padding:0;color:#ffe09a;font-size:14px;white-space:pre}
 .code code::before{content:"$ ";color:#8f846f}
 .code .copy-btn{min-height:34px;min-width:62px;font-size:13px;padding:4px 10px}
-.dl-row{display:flex;flex-wrap:wrap;gap:10px;font-family:"Nunito",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.dl-row{display:flex;flex-wrap:wrap;gap:10px;font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 .dl-row .btn{flex:1 1 140px;min-height:44px;font-size:15px}
 .flags{width:100%;border-collapse:collapse;font-size:13.5px}
 .flags th{text-align:left;color:var(--gold);font-weight:700;padding:6px 10px;border-bottom:1px solid var(--line2)}
 .flags td{padding:6px 10px;border-bottom:1px solid rgba(243,201,105,.08);vertical-align:top;color:#d8ccb8}
-.flags td:last-child{font-family:"Nunito",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:14px}
+.flags td:last-child{font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:14px}
 .flags code{background:none;padding:0;color:#ffe09a;white-space:nowrap}
 .tree{margin:0;white-space:pre;overflow-x:auto;font-size:13.5px;line-height:1.7}
 .tree code{background:none;padding:0;color:inherit}
