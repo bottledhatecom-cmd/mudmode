@@ -1,23 +1,24 @@
-/* mudmode 1.3.7 site, release candidate. One page, no outside files. */
-:root{--bg:#121110;--win:#1d1b19;--win2:#24211e;--line:#3a3530;--ctl:#7a6f64;--text:#f1ece6;--soft:#bdb3a8;--mud:#c8874a;--mud2:#e3a768;--ok:#7fbf7f;--r:14px;--shadow:0 24px 60px rgba(0,0,0,.45),0 2px 8px rgba(0,0,0,.35)}
+/* mudmode site. One page, no outside files. */
+@font-face{font-family:"Nunito";font-style:normal;font-weight:200 1000;font-display:swap;src:url("fonts/nunito-latin-wght-normal.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Fredoka";font-style:normal;font-weight:300 700;font-display:swap;src:url("fonts/fredoka-latin-wght-normal.woff2") format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+:root{--tk:52px;--bg:#121110;--win:#1d1b19;--win2:#24211e;--line:#3a3530;--ctl:#7a6f64;--text:#f1ece6;--soft:#bdb3a8;--mud:#c8874a;--mud2:#e3a768;--ok:#7fbf7f;--r:14px;--font-body:"Nunito",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;--font-head:"Fredoka","Nunito",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;--shadow:0 24px 60px rgba(0,0,0,.45),0 2px 8px rgba(0,0,0,.35)}
 *{box-sizing:border-box}
-html{scroll-behavior:smooth;scroll-padding-top:64px;scroll-padding-bottom:84px;-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;min-height:100vh}
+html{scroll-behavior:smooth;scroll-padding-top:calc(var(--tk) + 64px);scroll-padding-bottom:84px;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 var(--font-body);min-height:100vh}
 a{color:var(--mud2)}
 a:focus-visible,button:focus-visible,summary:focus-visible,pre:focus-visible{outline:3px solid var(--mud2);outline-offset:3px;border-radius:8px}
 .skip{position:absolute;left:-999px;top:0;display:inline-block}
 .skip:focus{left:12px;top:12px;background:#000;color:#fff;padding:12px 16px;min-height:44px;z-index:9;border-radius:8px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 /* desktop wallpaper */
-.desk{position:relative;min-height:100vh;padding:72px 20px 120px;background:
+.desk{position:relative;min-height:100vh;padding:calc(var(--tk) + 72px) 20px 120px;background:
  radial-gradient(1200px 600px at 15% -10%,rgba(200,135,74,.22),transparent 60%),
  radial-gradient(900px 500px at 100% 10%,rgba(120,90,60,.25),transparent 60%),
- radial-gradient(800px 600px at 50% 120%,rgba(200,135,74,.12),transparent 60%),var(--bg)}
+ radial-gradient(800px 600px at 50% 120%,rgba(200,135,74,.12),transparent 60%)}
 /* menu bar */
-.bar{position:fixed;top:0;left:0;right:0;height:52px;display:flex;align-items:center;gap:14px;padding:0 16px;background:rgba(18,17,16,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,.06);z-index:5;font-size:14px}
+.bar{position:fixed;top:var(--tk);left:0;right:0;height:52px;display:flex;align-items:center;gap:14px;padding:0 16px;background:rgba(18,17,16,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,.06);z-index:5;font-size:14px}
 .bar .brand{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 8px;font-weight:700;color:var(--text);text-decoration:none}
 .bar .brand img{width:20px;height:20px;border-radius:5px}
-.bar .note{margin-left:auto;color:var(--soft)}
 /* windows */
 .win{max-width:860px;margin:0 auto 22px;background:linear-gradient(180deg,var(--win2),var(--win));border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
 .tb{display:flex;align-items:center;gap:8px;min-height:38px;padding:0 14px;background:rgba(255,255,255,.03);border-bottom:1px solid var(--line);font-size:13px;color:var(--soft)}
@@ -98,8 +99,9 @@ footer a{color:var(--soft)}
 .dock img{width:22px;height:22px;border-radius:6px}
 /* phones: plain, fast, no desktop chrome */
 @media (max-width:700px){
- .desk{padding:64px 12px 40px;background:var(--bg)}
- .bar .note{display:none}
+ :root{--tk:48px}
+ .desk{padding:calc(var(--tk) + 64px) 12px 40px;background:none}
+ .bar{height:44px;padding:0 10px}
  .win{border-radius:12px;box-shadow:none}
  .tb .dots{display:none}
  .body{padding:20px 18px 22px}
@@ -113,3 +115,173 @@ footer a{color:var(--soft)}
 @media (prefers-reduced-transparency:reduce){.bar,.dock{backdrop-filter:none;-webkit-backdrop-filter:none;background:#1b1917}}
 @media (forced-colors:active){.seg input:checked+label{outline:2px solid Highlight}.btn{border:1px solid ButtonText}}
 @media print{.bar,.dock,.skip{display:none}.desk{padding-top:0;background:#fff}}
+
+/* RC10b: heading font, clickable header and footer price line */
+h1,h2,h3,.bar .brand,.tier b,.tier .price,legend{font-family:var(--font-head)}
+h1{font-weight:800;letter-spacing:-.03em;line-height:1.12}
+h2,h3{font-weight:700}
+details.win>summary h2{font-family:var(--font-head);font-weight:700}
+a.hl{color:var(--mud2);text-decoration:underline;text-decoration-color:rgba(227,167,104,.45);text-underline-offset:3px;border-radius:6px;padding:2px 3px;margin:0 -3px}
+a.hl:hover{color:#fff;text-decoration-color:currentColor;background:rgba(200,135,74,.22)}
+a.hl:focus-visible{outline:3px solid var(--mud2);outline-offset:2px;background:rgba(200,135,74,.22);color:#fff}
+@media (forced-colors:active){a.hl{text-decoration:underline}}
+/* RC10b: "breathing" glow on the hero mascot, copied exactly from the old site's glow.css (.hero-icon rule and @keyframes hexglow: 5s ease-in-out infinite, gold rgba(243,201,105) drop-shadow 22px/.35 to 38px/.6); the old reduced-motion off-switch is the rule at the end of this block. */
+.hello>img,.hello .mascot>img{filter:drop-shadow(0 0 28px rgba(243,201,105,.45));animation:hexglow 5s ease-in-out infinite}
+@keyframes hexglow{0%,100%{filter:drop-shadow(0 0 22px rgba(243,201,105,.35))}50%{filter:drop-shadow(0 0 38px rgba(243,201,105,.6))}}
+@media (prefers-reduced-motion:reduce){.hello>img,.hello .mascot>img{animation:none!important}}
+/* RC10c: stock-market style ticker bar across the very top (edge to edge, fixed), with the two buy buttons fixed on it. CSS only, no script. The brand row sits under it. Lines: notes/TICKER-APPROVED-LINES.txt; how to edit: notes/TICKER-HOWTO.md */
+.tkbar{position:fixed;top:0;left:0;right:0;height:var(--tk);display:flex;align-items:center;gap:12px;padding:0 16px;background:#0d0c0b;border-top:1px solid rgba(227,167,104,.45);border-bottom:1px solid rgba(227,167,104,.45);z-index:6;font-size:14px;font-variant-numeric:tabular-nums;box-sizing:border-box}
+.tkbar .ticker{flex:1 1 auto;min-width:0;overflow:hidden;color:var(--text);-webkit-mask-image:linear-gradient(90deg,transparent,#000 20px,#000 calc(100% - 20px),transparent);mask-image:linear-gradient(90deg,transparent,#000 20px,#000 calc(100% - 20px),transparent)}
+.tk-run{display:flex;width:max-content;animation:tk 62s linear infinite}
+.tk-list{display:flex;flex:none;margin:0;padding:0;list-style:none}
+.tk-list li{white-space:nowrap;padding:0 0 0 26px;font-size:14px;line-height:1.4;letter-spacing:.01em}
+.tk-list li::after{content:"";display:inline-block;width:8px;height:7px;margin-left:26px;background:var(--mud2);clip-path:polygon(50% 0,100% 100%,0 100%);vertical-align:middle}
+@keyframes tk{to{transform:translateX(-50%)}}
+.tkbar.tk-paused .tk-run{animation-play-state:paused}
+@media (hover:hover){.tkbar .ticker:hover .tk-run{animation-play-state:paused}}
+.tkbar .bar-btns{display:flex;flex:none;align-items:center;gap:8px}
+.tkbar .btn{padding:0 14px;font-size:14px;white-space:nowrap}
+@media (prefers-reduced-motion:reduce){
+ .tk-run{animation:none;transform:none;width:auto}
+ .tkbar .ticker{-webkit-mask-image:none;mask-image:none}
+ .tk-list[aria-hidden="true"]{display:none}
+ .tk-list li::after{display:none}
+ .tk-list li:first-child{white-space:normal;padding:0;line-height:1.2}
+ .tk-list li:nth-child(n+2){position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);padding:0}
+}
+@media (max-width:700px){.tkbar{padding:0 8px;gap:8px}.tkbar .bar-btns{gap:6px}.tkbar .btn{padding:0 8px}.bar .brand{padding:0 4px;font-size:14px}}
+@media (max-width:360px){.tkbar .btn{padding:0 6px;font-size:13px}.tk-list li:first-child{font-size:13px;line-height:1.1}}
+@media print{.tkbar{display:none}}
+@media (prefers-reduced-transparency:reduce){.tkbar{background:#0d0c0b}}
+@media (forced-colors:active){.tkbar{border-color:CanvasText}.tk-list li::after{background:CanvasText}}
+/* RC10c: the hero mascot. Existing image only. Everything below is CSS on that image; mascot.js (optional) only toggles classes and sets a few CSS variables. Works with JS off. */
+.mascot{appearance:none;-webkit-appearance:none;border:0;background:none;padding:0;margin:0;font:inherit;color:inherit;cursor:pointer;position:relative;flex:none;display:block;width:72px;height:72px;border-radius:16px;transform-origin:50% 80%;animation:tilt 9s ease-in-out infinite;-webkit-tap-highlight-color:transparent}
+.hello .mascot>img{display:block;translate:calc(var(--lx,0)*1px) calc(var(--ly,0)*1px);rotate:calc(var(--lr,0)*1deg);transition:translate .18s ease-out,rotate .18s ease-out;animation:hexglow 5s ease-in-out infinite,bob 5s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes tilt{0%,84%,100%{transform:rotate(0)}88%{transform:rotate(-8deg)}93%{transform:rotate(5deg)}97%{transform:rotate(-2deg)}}
+@keyframes hop{0%{transform:none}30%{transform:translateY(-9px) rotate(-6deg)}55%{transform:translateY(0) rotate(5deg)}75%{transform:translateY(-3px) rotate(-3deg)}100%{transform:none}}
+@keyframes wave{0%,100%{transform:rotate(0)}15%{transform:rotate(-14deg)}30%{transform:rotate(12deg)}45%{transform:rotate(-12deg)}60%{transform:rotate(9deg)}75%{transform:rotate(-5deg)}}
+@keyframes cheer{0%{transform:none}25%{transform:translateY(-14px) scale(1.08) rotate(-5deg)}50%{transform:translateY(0) scale(.97) rotate(4deg)}70%{transform:translateY(-6px) scale(1.04)}100%{transform:none}}
+@keyframes lean{0%,100%{transform:none}35%,70%{transform:translate(calc(var(--nx,0)*1px),calc(var(--ny,0)*1px)) rotate(calc(var(--nr,0)*1deg)) scale(1.05)}}
+@keyframes sway{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+.mascot:hover,.mascot:focus-visible,.mascot:active{animation:hop .6s ease-in-out 1}
+.mascot.wave{animation:wave 1.6s ease-in-out 1}
+.mascot.cheer{animation:cheer .9s ease-in-out 1}
+.mascot.lean{animation:lean 1.5s ease-in-out 1}
+.mascot.zz{animation:none}
+.mascot.zz>img{opacity:.55;animation:hexglow 9s ease-in-out infinite,sway 7s ease-in-out infinite;transform-origin:50% 90%}
+.mascot.zz::after{content:"z z";position:absolute;left:62px;top:-8px;font-size:14px;font-weight:700;color:var(--soft);letter-spacing:.2em;pointer-events:none}
+.mascot .say,.mascot .say-cheer{display:none;position:absolute;left:0;bottom:calc(100% + 10px);z-index:4;min-width:max-content;padding:8px 12px;border-radius:12px;background:#f1ece6;color:#1a120b;font-size:14px;line-height:1.35;font-weight:600;text-align:left;pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+.mascot .say::after,.mascot .say-cheer::after{content:"";position:absolute;left:26px;top:100%;border:7px solid transparent;border-top-color:#f1ece6}
+.mascot:hover .say,.mascot:focus .say,.mascot:focus-visible .say,.mascot:active .say{display:grid}
+.mascot.is-cheer .say-cheer{display:block}
+.mascot.is-cheer .say{display:none!important}
+.say .ln{grid-area:1/1;opacity:0;animation:sayln 18s linear infinite}
+.say .ln:nth-child(1){animation-delay:0s}.say .ln:nth-child(2){animation-delay:3s}.say .ln:nth-child(3){animation-delay:6s}.say .ln:nth-child(4){animation-delay:9s}.say .ln:nth-child(5){animation-delay:12s}.say .ln:nth-child(6){animation-delay:15s}
+@keyframes sayln{0%{opacity:0}2%,15%{opacity:1}17%,100%{opacity:0}}
+@media (max-width:700px){.mascot{width:56px;height:56px}.mascot.zz::after{left:48px}}
+@media (prefers-reduced-motion:reduce){
+ .mascot,.mascot>img,.mascot.wave,.mascot.cheer,.mascot.lean,.mascot.zz,.mascot.zz>img,.mascot:hover,.mascot:focus-visible,.mascot:active{animation:none!important;transition:none!important;translate:none!important;rotate:none!important}
+ .say .ln{animation:none!important;opacity:1;grid-area:auto}
+}
+
+/* RC10c-v3: a font with character (Fredoka headings, buttons and ticker labels; Nunito body), more depth, living background, headline shimmer, fade-up, link glow. CSS only except alive.js (optional fade-up). No new art. Reduced motion turns every moving part static. */
+body{font-size:17px}
+h1,h2,h3,.bar .brand,.tier b,.tier .price,legend,.btn,.seg label,.tb,.off,.tag,.dock button,.tkbar,.every>summary,details.win>summary{font-family:var(--font-head)}
+h1{font-size:clamp(36px,6.4vw,62px);font-weight:700;line-height:1.06;letter-spacing:-.01em}
+h2{font-size:26px;font-weight:700;line-height:1.2;letter-spacing:0}
+h3{font-size:20px;font-weight:600}
+details.win>summary{font-size:17px}
+details.win>summary h2{font-size:19px;font-weight:600}
+.tb{font-size:14px;font-weight:500}
+.lede{font-size:19px}
+.fine{font-size:15px}
+.three span{font-size:15px}
+.tier .price{font-size:32px;font-weight:700}
+.seg label small{font-size:15px}
+details.win>summary .what{font-size:14px;font-family:var(--font-body)}
+footer{font-size:14px}
+.tag{font-size:13px;font-weight:500}
+pre.say{font-size:15px}
+/* depth: warm gradients, soft layered shadows, a light inner edge */
+.win{background:linear-gradient(180deg,#2e2a25 0%,#221f1b 42%,#1b1917 100%);border-color:#4a423a;box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 1px 2px rgba(0,0,0,.5),0 8px 16px rgba(0,0,0,.28),0 26px 50px rgba(0,0,0,.34),0 0 70px rgba(200,135,74,.07)}
+.tb{background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02))}
+.three li,.tier,.step{background:linear-gradient(180deg,#201d1a,#161412);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 2px 0 rgba(0,0,0,.35),0 10px 18px rgba(0,0,0,.25)}
+.tier:hover,.three li:hover{box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 2px 0 rgba(0,0,0,.35),0 14px 24px rgba(0,0,0,.32),0 0 26px rgba(227,167,104,.1)}
+/* chunkier buttons: centred text, pressed and lift states */
+.btn{min-height:48px;padding:10px 22px;border-radius:14px;font-weight:600;font-size:17px;line-height:1.1;letter-spacing:.01em;text-align:center;background:linear-gradient(180deg,#eab57a 0%,#d9995a 48%,#c8874a 100%);color:#1a120b;text-shadow:0 1px 0 rgba(255,255,255,.28);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset 0 -2px 0 rgba(90,50,15,.22),0 3px 0 #7a4a22,0 9px 16px rgba(0,0,0,.38);transition:transform .12s ease,box-shadow .12s ease}
+.btn:hover{filter:none;transform:translateY(-2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -2px 0 rgba(90,50,15,.22),0 5px 0 #7a4a22,0 15px 24px rgba(0,0,0,.4),0 0 22px rgba(227,167,104,.4)}
+.btn:active{transform:translateY(2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 -1px 0 rgba(90,50,15,.22),0 1px 0 #7a4a22,0 3px 6px rgba(0,0,0,.4)}
+.btn.ghost{background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.02));color:var(--text);border:1px solid var(--ctl);text-shadow:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 3px 0 #0a0908,0 9px 16px rgba(0,0,0,.32)}
+.btn.ghost:hover{background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.04));box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 5px 0 #0a0908,0 15px 24px rgba(0,0,0,.38),0 0 20px rgba(227,167,104,.22)}
+.btn.ghost:active{box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 1px 0 #0a0908,0 3px 6px rgba(0,0,0,.4)}
+.tkbar .btn{min-height:44px;height:44px;padding:0 16px;border-radius:12px;font-size:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset 0 -2px 0 rgba(90,50,15,.22),0 2px 0 #7a4a22,0 4px 10px rgba(0,0,0,.5)}
+.tkbar .btn.ghost{box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 2px 0 #000,0 4px 10px rgba(0,0,0,.5)}
+.tkbar .btn:hover{transform:translateY(-1px)}
+.seg label{justify-content:center;text-align:center;font-size:16px;font-weight:500;line-height:1.2;background:linear-gradient(180deg,#26221e,#181614);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 2px 0 #0a0908,0 7px 12px rgba(0,0,0,.3);transition:transform .12s ease,box-shadow .12s ease,border-color .12s ease}
+.seg label:hover{transform:translateY(-2px);border-color:var(--mud2);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 4px 0 #0a0908,0 12px 20px rgba(0,0,0,.36),0 0 18px rgba(227,167,104,.2)}
+.seg label:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 1px 0 #0a0908}
+.seg input:checked+label{background:linear-gradient(180deg,#eab57a,#c8874a);font-weight:600;text-shadow:0 1px 0 rgba(255,255,255,.25)}
+.dock button{font-size:14px}
+.dock button:hover{transform:translateY(-2px)}
+/* living background: a fixed layer of warm glows that drifts and pulses (opacity and transform only, GPU-light), plus a faint CSS grain */
+body::before{content:"";position:fixed;inset:-20% -10%;z-index:0;pointer-events:none;background:radial-gradient(55% 45% at 18% 22%,rgba(200,135,74,.34),transparent 70%),radial-gradient(45% 40% at 82% 18%,rgba(243,201,105,.2),transparent 70%),radial-gradient(60% 50% at 60% 92%,rgba(176,112,58,.28),transparent 72%),radial-gradient(35% 35% at 6% 80%,rgba(120,90,60,.3),transparent 70%);will-change:opacity,transform;animation:bgpulse 10s ease-in-out infinite,bgdrift 14s ease-in-out infinite}
+body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.55;background:radial-gradient(rgba(255,255,255,.05) 1px,transparent 1.5px) 0 0/6px 6px,radial-gradient(rgba(0,0,0,.4) 1px,transparent 1.6px) 3px 2px/9px 9px,repeating-linear-gradient(115deg,rgba(255,255,255,.014) 0 2px,transparent 2px 5px)}
+.desk{position:relative;z-index:1}
+@keyframes bgpulse{0%,50%,100%{opacity:.55}25%,75%{opacity:1}}
+@keyframes bgdrift{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(-3%,2%,0) scale(1.08)}}
+/* headline: slow warm gold shimmer, a soft glow that breathes with the 5s hexglow, a gentle rise-in. Solid colour is the fallback. */
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes shimmer{to{background-position:200% 0}}
+@keyframes hlglow{0%,100%{filter:drop-shadow(0 0 6px rgba(243,201,105,.18))}50%{filter:drop-shadow(0 0 16px rgba(243,201,105,.45))}}
+h1#h-main{color:var(--text);filter:drop-shadow(0 0 6px rgba(243,201,105,.18));animation:rise .9s ease-out both,hlglow 5s ease-in-out infinite}
+@supports ((-webkit-background-clip:text) or (background-clip:text)){
+ h1#h-main{background-image:linear-gradient(100deg,#e3a768 0%,#f1ece6 26%,#fff3da 45%,#ffd68f 50%,#fff3da 55%,#f1ece6 74%,#e3a768 100%);background-size:200% 100%;background-repeat:repeat-x;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:rise .9s ease-out both,shimmer 7s linear infinite,hlglow 5s ease-in-out infinite}
+ h2{background-image:linear-gradient(100deg,currentColor 0%,currentColor 40%,#ffe2b0 50%,currentColor 60%,currentColor 100%);background-size:200% 100%;background-repeat:repeat-x;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 11s linear infinite}
+ .btn .px{background-image:linear-gradient(100deg,#1a120b 0%,#1a120b 40%,#3a210a 50%,#1a120b 60%,#1a120b 100%);background-size:200% 100%;background-repeat:repeat-x;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;text-shadow:none;animation:shimmer 6s linear infinite}
+}
+.btn .px{font-variant-numeric:tabular-nums}
+/* alive text: fade-up as sections enter view (alive.js adds the classes; with JS off everything stays visible), soft glow on link hover */
+.fx-on .fx{opacity:0;transform:translateY(18px)}
+.fx-on .fx.in{opacity:1;transform:none;transition:opacity .8s ease,transform .8s cubic-bezier(.2,.7,.2,1)}
+a:not(.btn){transition:color .15s ease,text-shadow .15s ease,background-color .15s ease}
+a:not(.btn):hover,a:not(.btn):focus-visible{text-shadow:0 0 10px rgba(243,201,105,.6),0 0 2px rgba(243,201,105,.35)}
+@media (max-width:700px){
+ .win{box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 10px 22px rgba(0,0,0,.35)}
+ body::before{inset:-10%;animation:bgpulse 10s ease-in-out infinite}
+ .btn{padding:10px 18px}
+ .tkbar .btn{padding:0 10px}
+ h2{font-size:24px}
+ details.win>summary h2{font-size:18px}
+}
+@media (prefers-reduced-motion:reduce){
+ body::before{animation:none!important;opacity:.8}
+ h1#h-main{animation:none!important;background-image:none;-webkit-text-fill-color:currentColor;color:var(--text);filter:drop-shadow(0 0 12px rgba(243,201,105,.32))}
+ h2{animation:none!important;background-image:none;-webkit-text-fill-color:currentColor}
+ .btn .px{animation:none!important;background-image:none;-webkit-text-fill-color:currentColor}
+ .fx-on .fx{opacity:1;transform:none;transition:none}
+ .btn:hover,.btn:active,.seg label:hover,.seg label:active,.tkbar .btn:hover,.dock button:hover{transform:none}
+}
+@media (forced-colors:active){body::before,body::after{display:none}h1#h-main,h2,.btn .px{background:none;-webkit-text-fill-color:currentColor;forced-color-adjust:auto}}
+@media print{body::before,body::after{display:none}.fx-on .fx{opacity:1;transform:none}h1#h-main,h2,.btn .px{background:none;-webkit-text-fill-color:#000;animation:none;filter:none}}
+
+/* RC10d: ticker pause/play button (WCAG 2.2.2), header note back, ticker static unless the pause button is live */
+.tk-pause{display:none;flex:none;align-items:center;justify-content:center;width:44px;min-width:44px;height:44px;margin:0;padding:0;border:1px solid var(--mud2);border-radius:12px;background:#1b1917;color:var(--text);cursor:pointer;touch-action:manipulation;font:inherit}
+html.tk-on .tk-pause{display:inline-flex}
+.tk-pause .ic{display:block;width:14px;height:16px;background:linear-gradient(90deg,currentColor 0 36%,transparent 36% 64%,currentColor 64% 100%)}
+.tk-pause[aria-pressed="true"] .ic{background:currentColor;clip-path:polygon(0 0,100% 50%,0 100%)}
+.tk-pause:hover{background:#2c2621}
+.tk-pause:focus-visible{outline:3px solid var(--mud2);outline-offset:2px}
+html:not(.tk-on) .tk-run{animation:none;transform:none;width:auto}
+html:not(.tk-on) .tkbar .ticker{-webkit-mask-image:none;mask-image:none}
+html:not(.tk-on) .tk-list[aria-hidden="true"]{display:none}
+html:not(.tk-on) .tk-list li::after{display:none}
+html:not(.tk-on) .tk-list li:first-child{white-space:normal;padding:0;line-height:1.2}
+html:not(.tk-on) .tk-list li:nth-child(n+2){position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);padding:0}
+@media (prefers-reduced-motion:reduce){html.tk-on .tk-pause{display:none}}
+.bar .note{margin-left:auto;color:var(--soft);white-space:nowrap}
+.bar .note a.hl{display:inline-block;padding:13px 4px;margin:0 -2px}
+@media (max-width:700px){.bar .note{font-size:13px}.bar .note .nm{display:none}}
+footer p{margin:0 0 8px}
+@media (forced-colors:active){.tk-pause{border-color:ButtonText}.tk-pause .ic{forced-color-adjust:none;color:ButtonText}}
+@media (max-width:480px){.tkbar .btn{padding:0 9px;font-size:13px}}
