@@ -3,13 +3,14 @@
 # No use of this site or repository to train, fine-tune or evaluate AI models,
 # no feeding it to AI agents to generate competing products, kits, prompts or services,
 # and no automated scraping. See LICENSE (mudmode Personal Use License v1.3) and
-# https://mudmodecrew.com/full-kit-license.html (mudmode Full Kit License v1.4).
+# https://mudmodecrew.com/full-kit-license.html (mudmode Full Kit License v1.5).
 # People may load mudmode files into their own AI assistants for their own use (free license section 4, Full Kit section 9).
-# Named AI crawlers and agents (same list as robots.txt):
+# Rule for bots: every bot is blocked by default, except the ones named below as allowed.
+# Allowed: ChatGPT-User, Claude-User and Perplexity-User (assistants fetching a page for a person) may read the public pages only.
+# Also allowed by name, with the same access robots.txt gives them: ExaBot, QueritBot, Querit-SearchBot, TavilyBot, ShapBot, TerraCotta, HenkBot and Factset_spyderbot (see the groups near the end).
+# Blocked by name: AI training crawlers, AI-data scrapers and agents (same list and same rules as robots.txt). Every bot not named in this file is blocked too (last group).
+# robots.txt is not the same for unnamed bots: it lets ordinary search engines in; this file is the AI rule.
 User-Agent: GPTBot
-Disallow: /
-
-User-Agent: ChatGPT-User
 Disallow: /
 
 User-Agent: OAI-SearchBot
@@ -61,12 +62,6 @@ User-Agent: FacebookBot
 Disallow: /
 
 User-Agent: Claude-SearchBot
-Disallow: /
-
-User-Agent: Claude-User
-Disallow: /
-
-User-Agent: Perplexity-User
 Disallow: /
 
 User-Agent: GoogleOther
@@ -124,8 +119,293 @@ User-Agent: Webzio-Extended
 Disallow: /
 
 User-Agent: Kangaroo Bot
+User-Agent: Kangaroo-Bot
 Disallow: /
 
-# Everyone else:
+# More AI training and AI-data crawlers, blocked by name.
+User-Agent: ChatGLM-Spider
+Disallow: /
+
+User-Agent: DeepSeekBot
+Disallow: /
+
+User-Agent: DoubaoBot
+Disallow: /
+
+User-Agent: ERNIEBot
+Disallow: /
+
+User-Agent: QwenBot
+Disallow: /
+
+User-Agent: Hunyuan
+Disallow: /
+
+User-Agent: MoonshotBot
+Disallow: /
+
+User-Agent: KimiBot
+Disallow: /
+
+User-Agent: YiBot
+Disallow: /
+
+User-Agent: SBIntuitionsBot
+Disallow: /
+
+User-Agent: imageSpider
+Disallow: /
+
+User-Agent: ICC-Crawler
+Disallow: /
+
+User-Agent: Cotoyogi
+Disallow: /
+
+User-Agent: laion-huggingface-processor
+Disallow: /
+
+User-Agent: LCC
+Disallow: /
+
+User-Agent: LAIONDownloader
+Disallow: /
+
+User-Agent: FriendlyCrawler
+Disallow: /
+
+User-Agent: MistralAI-Training
+Disallow: /
+
+User-Agent: CloudVertexBot
+Disallow: /
+
+User-Agent: AgentDataBot
+Disallow: /
+
+User-Agent: ApifyBot
+Disallow: /
+
+User-Agent: ApifyWebsiteContentCrawler
+Disallow: /
+
+User-Agent: BixelBot
+Disallow: /
+
+User-Agent: Brightbot
+Disallow: /
+
+User-Agent: CragCrawler
+Disallow: /
+
+User-Agent: Crawlspace
+Disallow: /
+
+User-Agent: FirecrawlAgent
+Disallow: /
+
+User-Agent: VelenPublicWebCrawler
+Disallow: /
+
+User-Agent: ChatGPT-User
+Allow: /$
+Allow: /index.html
+Allow: /start.html
+Allow: /start-here/
+Allow: /crew-work/
+Allow: /members.html
+Allow: /privacy.html
+Allow: /terms.html
+Allow: /lesson-terms.html
+Allow: /license.txt
+Allow: /full-kit-license.html
+Allow: /ai.txt
+Allow: /.well-known/tdmrep.json
+Allow: /favicon.ico
+Allow: /img/
+Allow: /site.css$
+Allow: /site.js$
+Allow: /glow.css$
+Allow: /home-preview.css$
+Allow: /filler-art.css$
+Allow: /start-box.css$
+Allow: /start-box.js$
+Allow: /contact.js$
+Allow: /chat.js$
+Allow: /giscus-client.js$
+Allow: /giscus-theme.css$
+Disallow: /kit/
+Disallow: /starter-kit/
+Disallow: /full-kit/
+Disallow: /drafts/
+Disallow: /draft/
+Disallow: /staged/
+Disallow: /bak/
+Disallow: /notes/
+Disallow: /dist/
+Disallow: /shots/
+Disallow: /*.zip$
+Disallow: /*.md$
+Disallow: /*.key$
+Disallow: /*.sha256$
+Disallow: /*.patch$
+Disallow: /*.sh$
+Disallow: /*.ps1$
+Disallow: /*.cmd$
+Disallow: /*.command$
+Disallow: /*.exe$
+Disallow: /*.dmg$
+Disallow: /*.pkg$
+Disallow: /*.tgz$
+Disallow: /*.gz$
+Disallow: /*.7z$
+Disallow: /*.tar$
+Disallow: /*.json$
+Disallow: /LICENSE
+Disallow: /CNAME
+Disallow: /
+
+User-Agent: Claude-User
+Allow: /$
+Allow: /index.html
+Allow: /start.html
+Allow: /start-here/
+Allow: /crew-work/
+Allow: /members.html
+Allow: /privacy.html
+Allow: /terms.html
+Allow: /lesson-terms.html
+Allow: /license.txt
+Allow: /full-kit-license.html
+Allow: /ai.txt
+Allow: /.well-known/tdmrep.json
+Allow: /favicon.ico
+Allow: /img/
+Allow: /site.css$
+Allow: /site.js$
+Allow: /glow.css$
+Allow: /home-preview.css$
+Allow: /filler-art.css$
+Allow: /start-box.css$
+Allow: /start-box.js$
+Allow: /contact.js$
+Allow: /chat.js$
+Allow: /giscus-client.js$
+Allow: /giscus-theme.css$
+Disallow: /kit/
+Disallow: /starter-kit/
+Disallow: /full-kit/
+Disallow: /drafts/
+Disallow: /draft/
+Disallow: /staged/
+Disallow: /bak/
+Disallow: /notes/
+Disallow: /dist/
+Disallow: /shots/
+Disallow: /*.zip$
+Disallow: /*.md$
+Disallow: /*.key$
+Disallow: /*.sha256$
+Disallow: /*.patch$
+Disallow: /*.sh$
+Disallow: /*.ps1$
+Disallow: /*.cmd$
+Disallow: /*.command$
+Disallow: /*.exe$
+Disallow: /*.dmg$
+Disallow: /*.pkg$
+Disallow: /*.tgz$
+Disallow: /*.gz$
+Disallow: /*.7z$
+Disallow: /*.tar$
+Disallow: /*.json$
+Disallow: /LICENSE
+Disallow: /CNAME
+Disallow: /
+
+User-Agent: Perplexity-User
+Allow: /$
+Allow: /index.html
+Allow: /start.html
+Allow: /start-here/
+Allow: /crew-work/
+Allow: /members.html
+Allow: /privacy.html
+Allow: /terms.html
+Allow: /lesson-terms.html
+Allow: /license.txt
+Allow: /full-kit-license.html
+Allow: /ai.txt
+Allow: /.well-known/tdmrep.json
+Allow: /favicon.ico
+Allow: /img/
+Allow: /site.css$
+Allow: /site.js$
+Allow: /glow.css$
+Allow: /home-preview.css$
+Allow: /filler-art.css$
+Allow: /start-box.css$
+Allow: /start-box.js$
+Allow: /contact.js$
+Allow: /chat.js$
+Allow: /giscus-client.js$
+Allow: /giscus-theme.css$
+Disallow: /kit/
+Disallow: /starter-kit/
+Disallow: /full-kit/
+Disallow: /drafts/
+Disallow: /draft/
+Disallow: /staged/
+Disallow: /bak/
+Disallow: /notes/
+Disallow: /dist/
+Disallow: /shots/
+Disallow: /*.zip$
+Disallow: /*.md$
+Disallow: /*.key$
+Disallow: /*.sha256$
+Disallow: /*.patch$
+Disallow: /*.sh$
+Disallow: /*.ps1$
+Disallow: /*.cmd$
+Disallow: /*.command$
+Disallow: /*.exe$
+Disallow: /*.dmg$
+Disallow: /*.pkg$
+Disallow: /*.tgz$
+Disallow: /*.gz$
+Disallow: /*.7z$
+Disallow: /*.tar$
+Disallow: /*.json$
+Disallow: /LICENSE
+Disallow: /CNAME
+Disallow: /
+
+# Allowed by name: these bots get the same access as in robots.txt. They are not blocked there either.
+User-Agent: ExaBot
+Allow: /
+
+User-Agent: QueritBot
+Allow: /
+
+User-Agent: Querit-SearchBot
+Allow: /
+
+User-Agent: TavilyBot
+Allow: /
+
+User-Agent: ShapBot
+Allow: /
+
+User-Agent: TerraCotta
+Allow: /
+
+User-Agent: HenkBot
+Allow: /
+
+User-Agent: Factset_spyderbot
+Allow: /
+
+# Everyone else not named above is blocked.
 User-Agent: *
 Disallow: /
