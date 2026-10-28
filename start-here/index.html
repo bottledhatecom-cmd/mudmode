@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
-<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noai, noimageai">
 <title>Start here: your first mudmode chat, step by step</title>
@@ -84,7 +84,7 @@
     <!-- STEP 2 -->
     <section class="step" id="wstep-2" aria-labelledby="h-2" data-step="2" hidden>
       <h2 id="h-2" tabindex="-1">Do you have an AI yet?</h2>
-      <p class="sub">mudmode works inside an AI chat app you already know (or are about to). Pick one. They all work, and you can switch later; the setup file is the same.</p>
+      <p class="sub">mudmode works inside an AI chat app you already know (or are about to). Pick one. ChatGPT, Claude and Grok have all been tested with mudmode. They use the same setup file, and you can switch later.</p>
       <fieldset class="picks">
         <legend class="sr-only">Pick your AI app</legend>
         <div class="pick-grid">
@@ -132,15 +132,15 @@
       </fieldset>
 
       <div class="ai-note" id="ai-note" aria-live="polite">
-        <div data-for="chatgpt" hidden><p><b>ChatGPT it is.</b> No account yet? Make a free one, then come back to this tab.</p><a class="btn s" href="https://chatgpt.com" target="_blank" rel="noopener">Open chatgpt.com <span aria-hidden="true">↗</span><span class="sr-only">(opens in a new tab)</span></a></div>
-        <div data-for="claude" hidden><p><b>Claude it is.</b> No account yet? Make a free one, then come back to this tab.</p><a class="btn s" href="https://claude.ai" target="_blank" rel="noopener">Open claude.ai <span aria-hidden="true">↗</span><span class="sr-only">(opens in a new tab)</span></a></div>
-        <div data-for="grok" hidden><p><b>Grok it is.</b> No account yet? Make one on the grok.com website, then come back to this tab.</p><a class="btn s" href="https://grok.com" target="_blank" rel="noopener">Open grok.com <span aria-hidden="true">↗</span><span class="sr-only">(opens in a new tab)</span></a></div>
-        <div data-for="have" hidden><p><b>Which one do you use?</b> Tap it above (ChatGPT, Claude or Grok). Using a different chat app that has Projects? The same setup file works there too; step 4 shows the idea.</p></div>
+        <div data-for="chatgpt" hidden><p><b>ChatGPT it is.</b> No account yet? Make a free one, then come back to this tab.</p><a class="btn s" href="https://chatgpt.com" target="_blank" rel="noopener noreferrer">Open chatgpt.com <span aria-hidden="true">↗</span><span class="sr-only">(opens in a new tab)</span></a></div>
+        <div data-for="claude" hidden><p><b>Claude it is.</b> No account yet? Make a free one, then come back to this tab.</p><a class="btn s" href="https://claude.ai" target="_blank" rel="noopener noreferrer">Open claude.ai <span aria-hidden="true">↗</span><span class="sr-only">(opens in a new tab)</span></a></div>
+        <div data-for="grok" hidden><p><b>Grok it is.</b> No account yet? Make one on the grok.com website, then come back to this tab.</p><a class="btn s" href="https://grok.com" target="_blank" rel="noopener noreferrer">Open grok.com <span aria-hidden="true">↗</span><span class="sr-only">(opens in a new tab)</span></a></div>
+        <div data-for="have" hidden><p><b>Which one do you use?</b> Tap it above (ChatGPT, Claude or Grok). Using a different chat app that has Projects? Step 4 shows the idea.</p></div>
         <div data-for="help" hidden>
           <p><b>Two honest tips:</b></p>
           <ul class="tight">
             <li>Already have an account somewhere, or a friend who uses one? Pick that one, so you have someone to ask.</li>
-            <li>Still stuck? Just tap any of the three. mudmode sets up the same way in each, and you can switch later.</li>
+            <li>Still stuck? Just tap any of the three. All three are tested with mudmode, and you can switch later.</li>
           </ul>
         </div>
       </div>

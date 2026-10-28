@@ -23,7 +23,7 @@ body.home .hero .wrap.hero-grid{display:grid;grid-template-columns:minmax(0,1fr)
 .door p{margin:0}
 .door p.door-how{margin:6px 0 0;font-size:1rem;line-height:1.5;color:var(--muted)}
 .door p.door-lic{margin:8px 0 0;font-size:.875rem;line-height:1.5;color:var(--dim)}
-.door-after{min-height:8rem}
+.door-after{min-height:0} /* phones: no tall empty reserve under the status line (it only fills in after a tap) */
 @media (min-width:600px){.door-after{min-height:3.6rem}}
 .door p.door-status{margin:10px 0 0;font-size:1rem;line-height:1.45;font-weight:700;color:var(--gold)}
 .door p.door-status[data-door-status="files"]{min-height:2.9rem}
