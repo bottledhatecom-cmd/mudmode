@@ -3,7 +3,7 @@
 mudmode gives a group of AI assistants one rulebook you own: handoffs so the next chat picks up where the last one stopped, a lessons book you can turn on, and rules that tell them to ask you before anything risky.
 
 - Website: https://mudmodecrew.com (run by Hestertainment LLC)
-- Full Kit: out now, see [pricing](https://mudmodecrew.com/#pricing) (try me, free: [starter-kit/](starter-kit/))
+- Full Kit: out now, see [pricing](https://mudmodecrew.com/#pricing) (give it a go, free: [starter-kit/](starter-kit/))
 - Community and members chat: GitHub Discussions on this repo. Posting is covered by [CONTRIBUTING.md](CONTRIBUTING.md) (the contributor terms).
 - Privacy note: https://mudmodecrew.com/privacy.html · Terms of use: https://mudmodecrew.com/terms.html
 - Contact (rights, permissions, licensing, privacy): see the contact details in the [privacy note](privacy.html#contact)

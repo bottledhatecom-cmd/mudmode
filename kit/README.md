@@ -1,6 +1,6 @@
 # mudmode kit: out now
 
-The full mudmode kit is **out now**: see [pricing on mudmodecrew.com](https://mudmodecrew.com/#pricing). try me, free, is in [starter-kit/](../starter-kit/).
+The full mudmode kit is **out now**: see [pricing on mudmodecrew.com](https://mudmodecrew.com/#pricing). You can give it a go, free, from [starter-kit/](../starter-kit/).
 
 ## What it gets you
 - One rulebook your AI assistants share, even when they come from different AI makers
