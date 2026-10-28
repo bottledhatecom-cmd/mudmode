@@ -1,4 +1,5 @@
-// Start buttons (the door): the "Which AI do you use?" buttons at the top of the home page. No pop-up.
+// Start buttons (the door): the "Which AI do you use?" buttons at the top of the home page
+// (owner, OK-LEDGER 2026-10-24 9:12-9:14 PM; the redesign, OK-LEDGER 2026-10-25 7:13 AM). No pop-up.
 // No network calls except reading this site's own two prompt files when the page loads (both, always, so the host never
 // learns which button you tap). A chat button opens that AI in a new tab at its plain address: no prompt in the link,
 // no referrer, no tracking codes. No trackers; nothing stored (no cookies, no localStorage).
