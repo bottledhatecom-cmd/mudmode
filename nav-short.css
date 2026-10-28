@@ -1,0 +1,16 @@
+/* Short nav for pages that don't load home-preview.css (privacy, terms, full-kit-license, lesson-terms).
+   Same phone rules as home-preview.css "Top nav": the Members pill sits on row 1 and the other links on row 2,
+   so no link is cut off at 390px. members.html is left unchanged and does not load this file. */
+nav.nav-short .nav-links{display:contents}
+@media (max-width:640px){nav.nav-short .wrap{flex-wrap:wrap;height:auto;padding:6px 14px 6px;gap:2px 16px;overflow:visible}nav.nav-short .brand{flex:1 0 calc(100% - 120px);margin-right:0}nav.nav-short a.nav-members{order:1;margin-left:auto;background:transparent;color:var(--gold);border:1.5px solid var(--gold);box-shadow:none;padding:4px 12px}nav.nav-short a.nav-members:hover{background:rgba(243,201,105,.08);color:#ffe09a}nav.nav-short .nav-links{order:2;flex:1 0 100%;display:flex;gap:16px;overflow-x:auto;white-space:nowrap;scrollbar-width:none;padding-bottom:2px}nav.nav-short .nav-links::-webkit-scrollbar{display:none}nav.nav-short .nav-links a{font-size:14px;padding:4px 0}}
+/* Phones: 44px tap targets; the padding keeps the focus ring from being clipped by the scrolling link row */
+@media (max-width:640px){nav.nav-short .brand,nav.nav-short a.nav-members,nav.nav-short .nav-links a{min-height:44px;display:inline-flex;align-items:center;box-sizing:border-box}nav.nav-short .nav-links a{padding:0;min-width:44px;justify-content:center}nav.nav-short .nav-links{padding:5px;margin:0 -5px}}
+nav.nav-short a:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:6px}
+/* Trim the two-row phone nav: no gap between rows; 5px top padding keeps the focus ring (3px + 2px offset) on screen; tap targets stay 44px */
+@media (max-width:640px){nav.nav-short .wrap{padding-top:5px;padding-bottom:2px;row-gap:0}}
+@media (max-width:640px){html:has(nav.nav-short){scroll-padding-top:130px}}
+@media (min-width:640.02px) and (max-width:679.98px){nav.nav-short .wrap{gap:10px}}
+@media (max-width:389px){nav.nav-short .nav-links{gap:12px}nav.nav-short .nav-links a{font-size:13px}}
+@media (max-width:339px){nav.nav-short .wrap{padding-left:12px;padding-right:12px}nav.nav-short .nav-links{gap:9px}nav.nav-short .nav-links a{font-size:12.5px}}
+/* If Members is the current page, keep the pill look without the current-page underline */
+nav.nav-short a.nav-members[aria-current]{text-decoration:none}
