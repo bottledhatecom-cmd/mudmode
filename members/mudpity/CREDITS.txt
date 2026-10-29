@@ -8,6 +8,10 @@ Art (textures, HUD and button icons, end screens, "Made with mudmode" badge, bos
   Art by mudmode - drawn in-house for this game. Approved final set (approved Oct 27 2026).
   Files in art/ are re-encoded / resized copies of that set.
 
+Buddy companion (art/buddy.webp)
+  Art by mudmode - made in-house for this game; picked Oct 28 2026.
+  The file is a cut-out (background removed), resized and re-encoded copy.
+
 three.js (vendor/three.min.js)
   three.js r186 (npm three@0.186.1)
   Copyright (c) 2010-2026 three.js authors
