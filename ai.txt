@@ -3,7 +3,7 @@
 # No use of this site or repository to train, fine-tune or evaluate AI models,
 # no feeding it to AI agents to generate competing products, kits, prompts or services,
 # and no automated scraping. See LICENSE (mudmode Personal Use License v1.3) and
-# https://mudmodecrew.com/full-kit-license.html (mudmode Full Kit License v1.5).
+# https://mudmodecrew.com/full-kit-license.html (mudmode Full Kit License v1.6).
 # People may load mudmode files into their own AI assistants for their own use (free license section 4, Full Kit section 9).
 # Rule for bots: every bot is blocked by default, except the ones named below as allowed.
 # Allowed: ChatGPT-User, Claude-User and Perplexity-User (assistants fetching a page for a person) may read the public pages only.
