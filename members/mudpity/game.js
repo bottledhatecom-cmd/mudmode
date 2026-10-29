@@ -826,105 +826,232 @@ function buildGem(kind) {
 }
 
 /* ---- BOSSES: 1 BOGJAW (mire beast, faces +x), 2 GLOOMWING (canopy flyer, faces +x), 3 MUDTOTEM (mud golem, faces -x). ----
-   Procedural models after the approved boss art sheets (colours = the exact approved swatch hex values). */
-function skinMaker(list) { return (hex, flat) => { const m = new THREE.MeshLambertMaterial({ color: hex, flatShading: !!flat }); list.push(m); return m; }; }
-function buildBoss1(g, skins) {   // croc rearing out of the mire (its hitbox is a tall column): huge head, slit orange eyes, fangs, mud drips, ridged back, an old clay boot in its jaws
-  const BS = skinMaker(skins), h = {};
-  const C = { body: '#887a37', hi: '#a99b57', dk: '#61523c', belly: '#bcb191', deep: '#383027', drip: '#7e6f5c', tooth: '#f7f7f3', eye: '#ec8736', ink: '#0a0a0a' };
-  const sk = BS(C.body), hi = BS(C.hi), dk = BS(C.dk, true), belly = BS(C.belly), deep = BS(C.deep), drip = BS(C.drip), tooth = M(C.tooth), gum = M('#6e3b30');
-  mk(capG(1.0, 2.9), sk, -.15, 2.1, 0, 1, 1, 1.15, g);                                                               // upright body
-  mk(capG(.62, 2.5), belly, .5, 2.0, 0, 1, 1, 1.25, g);                                                                // pale belly plates
-  for (let k = 0; k < 6; k++) mk(gBox, M(C.dk), 1.08 - Math.abs(k - 2.5) * .03, .9 + k * .45, 0, .04, .05, 1.2, g, true);
-  for (let k = 0; k < 7; k++) for (const s of [1, -1]) rot(mk(gCone, dk, -1.05 + k * .02, .9 + k * .55, s * .38, .4, .6, .32, g), 0, 0, Math.PI / 2 + .25);   // ridged back
-  rot(mk(capG(.6, 1.6), sk, -1.6, .45, .3, 1, 1, 1, g), .2, 0, Math.PI / 2 + .25); rot(mk(capG(.35, 1.0), sk, -3.0, .15, .6, 1, 1, 1, g), .3, 0, Math.PI / 2);   // tail in the mud
-  for (const s of [1, -1]) { const a = new THREE.Group(); a.position.set(.5, 2.7, s * 1.05); g.add(a);              // stubby fore-legs, pale claws
-    rot(mk(capG(.32, .7), sk, .35, -.2, 0, 1, 1, 1, a), 0, 0, -1.1); mk(gSph, hi, .85, -.5, 0, .75, .45, .6, a);
-    for (let c = 0; c < 3; c++) rot(mk(gCone, tooth, 1.2, -.58, (c - 1) * .2, .1, .3, .1, a, true), 0, 0, -Math.PI / 2 - .3); }
-  mk(gSph, sk, .95, 4.35, 0, 2.5, 1.85, 2.25, g);                                                                    // big skull
-  rot(mk(capG(.6, 1.3), hi, 2.2, 3.95, 0, 1, 1, 1.5, g), 0, 0, Math.PI / 2);                                         // upper snout (to x ~3.5)
-  mk(gFlat, gum, 2.0, 3.42, 0, 2.6, 1, 1.5, g, true).rotation.x = Math.PI;                                          // roof of the mouth
-  for (let j = 0; j < 6; j++) for (const s of [1, -1]) { const f = j === 1 || j === 4; mk(gCone, tooth, 1.05 + j * .44, 3.34, s * .76, f ? .26 : .17, f ? .62 : .34, f ? .26 : .17, g).rotation.z = Math.PI; }
-  for (const s of [1, -1]) mk(gSph, deep, 3.4, 4.42, s * .26, .2, .14, .16, g, true);                               // nostrils
-  h.jaw = new THREE.Group(); h.jaw.position.set(.5, 3.45, 0); g.add(h.jaw);                                          // lower jaw (syncBoss opens it)
-  rot(mk(capG(.42, 1.6), hi, 1.35, -.42, 0, 1, 1, 1.8, h.jaw), 0, 0, Math.PI / 2); mk(gSph, belly, 1.1, -.65, 0, 2.4, .45, 1.3, h.jaw);
-  mk(gFlat, gum, 1.4, -.04, 0, 2.5, 1, 1.3, h.jaw, true);
-  for (let j = 0; j < 5; j++) for (const s of [1, -1]) mk(gCone, tooth, .75 + j * .46, .1, s * .68, .17, .38, .17, h.jaw);
-  { const bt = new THREE.Group(); bt.position.set(2.1, .15, .15); bt.rotation.set(.3, .5, -.45); h.jaw.add(bt);        // the old clay boot it is chewing on
-    const clay = M('#a05a3c'); mk(gCyl, clay, 0, .42, 0, .5, .85, .5, bt); mk(gSph, clay, .32, 0, 0, .95, .42, .56, bt); mk(gBox, M(C.deep), .2, -.19, 0, .95, .09, .54, bt, true); mk(gCyl, M('#6e3b2a'), 0, .86, 0, .56, .09, .56, bt, true); }
-  for (const [x, z, l] of [[.9, .55, .5], [1.9, -.5, .7], [2.6, .35, .4]]) mk(capG(.09, l), drip, x, -.8 - l / 2, z, 1, 1, 1, h.jaw, true);   // drool-mud
-  h.pupils = [];
-  for (const s of [1, -1]) {                                                                                          // eye bumps, slit pupils, heavy grumpy brows
-    mk(gSph, hi, .75, 5.2, s * .8, .95, .8, .8, g);
-    mk(gSph, MS(C.eye, .35, 0, '#5a2a08'), 1.0, 5.28, s * .84, .6, .52, .48, g, true);
-    h.pupils.push(mk(gSph, M(C.ink), 1.27, 5.3, s * .88, .1, .42, .13, g, true));
-    rot(mk(capG(.15, .65), dk, .95, 5.66, s * .84, 1, 1, 1.3, g), 0, 0, Math.PI / 2 - .45); }
-  for (const [x, y, z, l] of [[.9, 1.6, .8, .6], [-.5, 1.4, -1.05, .5], [.75, 2.9, -.9, .45], [-.9, 2.3, 1.0, .5], [1.6, 3.3, 1.0, .4]]) mk(capG(.12, l), drip, x, y - l / 2, z, 1, 1, 1, g, true);   // mud drips
-  for (const [x, y, z, s] of [[-.6, 3.2, 1.0, .5], [.3, 2.5, -1.15, .45], [-1.0, 1.6, -.8, .4], [1.4, 5.2, .1, .35]]) mk(gSph, drip, x, y, z, s * 1.4, s * .7, s, g, true);
-  return h;
+   Art redo to the hero's quality, in code (Michael t32u/t45u). Layout, colours (the approved swatch hex values) and every animated handle
+   are kept; the look is new: hero-style ink outline, Standard shading with soft self-light and a rim light, procedural textures.
+   How: parts are still placed with mk(), but with a paint BP(hex, layer, ink) instead of a material. bossBake() then merges every static
+   part under one pivot into ONE vertex-coloured mesh plus ONE inverted-hull ink mesh (the hero's outline, baked: each part pushed out
+   along its smoothed normals), so detail goes up while draw calls go down. Paint layer = texture slot of bossMat (0-2), 3 plain, 4 glowing. */
+const bossInk = reg(new THREE.MeshBasicMaterial({ color: '#1e1816', side: THREE.BackSide }));   // the hero's ink colour; one shared material for all bosses
+const paintCache = {};
+const BP = (hex, layer, ink) => { const k = hex + '|' + layer + '|' + ink; return paintCache[k] || (paintCache[k] = { bk: true, color: new THREE.Color(hex), layer, ink }); };
+function bossTex(draw) {      // tileable 256px canvas texture, gain = 1 / mean linear brightness so it only adds detail, not a tint
+  const t = mkTex(256, 256, (g, w, h) => { let sd = 1234; const rr = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+    const wrap = fn => { for (const ox of [-w, 0, w]) for (const oy of [-h, 0, h]) { g.save(); g.translate(ox, oy); fn(); g.restore(); } }; draw(g, w, h, rr, wrap); });
+  t.wrapS = t.wrapT = 1000; const d = t.image.getContext('2d').getImageData(0, 0, 256, 256).data; let s = 0;
+  for (let i = 0; i < d.length; i += 4) s += Math.pow((d[i] + d[i + 1] + d[i + 2]) / 765, 2.2);
+  t.userData.gain = 65536 / Math.max(1, s); return t;
 }
-function buildBoss2(g, skins) {   // round orange bird: cream belly, hooked yellow beak, grumpy brows, leaf crest, layered teal wings, seed bombs in its talons, bandaged tail
-  const BS = skinMaker(skins), h = {};
-  const C = { wing: '#4c8f91', wingL: '#94bfb5', wingD: '#36584c', leaf: '#678b54', seed: '#9db66f', body: '#eb9c4f', rust: '#ab5832', belly: '#e5d29e', eye: '#ef8b3b', ink: '#141614' };
-  const bo = BS(C.body), ru = BS(C.rust), be = BS(C.belly), wi = BS(C.wing), wl = BS(C.wingL), wd = BS(C.wingD), lf = BS(C.leaf, true), beak = BS('#efc23a'), ink = M(C.ink);
-  mk(gSph, bo, -.2, 0, 0, 3.6, 3.0, 3.0, g); mk(gSph, ru, -.9, .55, 0, 2.4, 2.0, 2.6, g);                           // body + rust back
-  mk(gSph, be, .55, -.6, 0, 2.5, 2.2, 2.4, g);                                                                       // cream belly
-  mk(gSph, bo, 1.35, 1.05, 0, 2.1, 2.0, 2.05, g); mk(gSph, ru, 1.1, 1.75, 0, 1.4, .7, 1.5, g);                     // head
-  rot(mk(gCone, beak, 2.75, .85, 0, .7, 1.4, .62, g), 0, 0, -Math.PI / 2); rot(mk(gCone, beak, 3.35, .62, 0, .24, .55, .22, g), 0, 0, Math.PI * .82);   // hooked beak
-  mk(gBox, M('#b8861e'), 2.7, .72, 0, 1.1, .05, .5, g, true);
-  for (const s of [1, -1]) {
-    mk(gSph, M(C.belly), 2.1, 1.3, s * .62, .55, .62, .45, g, true); mk(gSph, MS(C.eye, .4, 0, '#5a2a08'), 2.22, 1.28, s * .7, .45, .5, .32, g, true);
-    mk(gSph, ink, 2.34, 1.26, s * .78, .2, .26, .14, g, true);
-    mk(gBox, ru, 2.05, 1.72, s * .66, .75, .18, .32, g, true).rotation.set(0, 0, -.5); }                            // angry brows
-  for (let i = 0; i < 6; i++) { const a = (i - 2.5) * .28; rot(mk(gCone, lf, .8 - Math.abs(i - 2.5) * .12, 2.35, a * 1.4, .42, 1.4 - Math.abs(i - 2.5) * .15, .14, g), a * 1.2, 0, .55 + Math.abs(a) * .3); }   // leaf crest
-  h.wings = [1, -1].map(s => { const w = new THREE.Group(); w.position.set(-.4, .9, s * 1.25); g.add(w); mk(gSph, wd, 0, 0, s * .35, 1.4, .55, 1.2, w);
-    for (let i = 0; i < 6; i++) { const L = 2.7 - i * .22, x = .3 - i * .42, z = s * (L / 2 + .25);
-      mk(gSph, i % 2 ? wl : wi, x, -.02 + i * .03, z, .6, .14, L, w); mk(gSph, wd, x - .1, -.08, z * .8, .5, .1, L * .7, w, true);
-      mk(gSph, lf, x - .05, .03, s * (L + .1), .42, .1, .5, w, true); }
-    return w; });
-  for (let i = 0; i < 4; i++) rot(mk(gSph, i % 2 ? wl : wi, -3.3, -.25 + (i - 1.5) * .08, (i - 1.5) * .42, 2.4, .16, .55, g), 0, (i - 1.5) * .25, .3);   // tail
-  rot(mk(gTorus, M('#f4f1e6'), -2.6, -.05, 0, 1.0, 1.0, 1.15, g, true), 0, Math.PI / 2, .3);                         // white bandage on the tail
-  for (const s of [1, -1]) {                                                                                         // legs, talons, spiky seed bombs
-    rot(mk(capG(.13, .7), beak, .35, -1.75, s * .65, 1, 1, 1, g), 0, 0, .2);
-    const sb = new THREE.Group(); sb.position.set(.55, -2.45, s * .7); g.add(sb); mk(gIco, M(C.seed, '', true), 0, 0, 0, .95, .95, .95, sb);
-    for (let k = 0; k < 10; k++) { const v = new THREE.Vector3(Math.sin(k * 2.4) * Math.cos(k * 1.3), Math.cos(k * 2.4), Math.sin(k * 2.4) * Math.sin(k * 1.3)).normalize();
-      const c = mk(gCone, M('#6f8a3a'), v.x * .45, v.y * .45, v.z * .45, .12, .24, .12, sb, true); c.quaternion.setFromUnitVectors(_up0, v); }
-    for (const [dx, dz] of [[.3, 0], [-.3, .15], [0, -.3]]) rot(mk(gCone, ink, dx, .38, dz, .07, .3, .07, sb, true), 0, 0, Math.PI - dx * 2); }
-  return h;
+const texScales = bossTex((g, w, h, rr, wrap) => {   // BOGJAW: rows of flat scutes with thin dark wet gaps, pale specks
+  g.fillStyle = '#505050'; g.fillRect(0, 0, w, h); const cw = w / 6, ch = h / 8;
+  for (let r = 0; r < 8; r++) for (let c = 0; c < 6; c++) { const cx = (c + (r % 2) * .5 + .5) * cw + (rr() - .5) * 8, cy = (r + .5) * ch + (rr() - .5) * 6, l = 150 + rr() * 50 | 0, rx = cw * (.36 + rr() * .1), ry = ch * (.34 + rr() * .1);
+    wrap(() => { const gr = g.createLinearGradient(0, cy - ry, 0, cy + ry); gr.addColorStop(0, `rgb(${l + 18},${l + 18},${l + 18})`); gr.addColorStop(1, `rgb(${l - 28},${l - 28},${l - 28})`);
+      g.fillStyle = gr; g.beginPath(); if (g.roundRect) g.roundRect(cx - rx, cy - ry, rx * 2, ry * 2, rx * .6); else g.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); g.fill(); }); }
+  for (let i = 0; i < 320; i++) { const x = rr() * w, y = rr() * h, s = .5 + rr() * 1.3, l = rr() < .5 ? 225 : 70; wrap(() => { g.fillStyle = `rgba(${l},${l},${l},.45)`; g.beginPath(); g.arc(x, y, s, 0, Math.PI * 2); g.fill(); }); }
+});
+const texFeather = bossTex((g, w, h, rr, wrap) => {   // GLOOMWING: overlapping scalloped feathers with a quill and fine barbs
+  g.fillStyle = '#6a6a6a'; g.fillRect(0, 0, w, h); const cw = w / 6, ch = h / 8;
+  for (let r = 0; r < 8; r++) for (let c = 0; c < 6; c++) { const cx = (c + (r % 2) * .5 + .5) * cw, cy = (r + .5) * ch, l = 165 + rr() * 50 | 0;
+    wrap(() => { const gr = g.createLinearGradient(0, cy - ch * .6, 0, cy + ch * .75); gr.addColorStop(0, `rgb(${l + 30},${l + 30},${l + 30})`); gr.addColorStop(.75, `rgb(${l},${l},${l})`); gr.addColorStop(1, `rgb(${l * .55 | 0},${l * .55 | 0},${l * .55 | 0})`);
+      g.fillStyle = gr; g.beginPath(); g.moveTo(cx - cw * .55, cy - ch * .7); g.lineTo(cx - cw * .55, cy + ch * .1); g.quadraticCurveTo(cx - cw * .5, cy + ch * .8, cx, cy + ch * .85);
+      g.quadraticCurveTo(cx + cw * .5, cy + ch * .8, cx + cw * .55, cy + ch * .1); g.lineTo(cx + cw * .55, cy - ch * .7); g.closePath(); g.fill();
+      g.strokeStyle = 'rgba(40,40,40,.55)'; g.lineWidth = 1.4; g.stroke();
+      g.strokeStyle = 'rgba(250,250,250,.5)'; g.lineWidth = 1.2; g.beginPath(); g.moveTo(cx, cy - ch * .6); g.lineTo(cx, cy + ch * .75); g.stroke();
+      g.strokeStyle = 'rgba(30,30,30,.18)'; g.lineWidth = 1; for (let k = 1; k < 6; k++) { const y = cy - ch * .5 + k * ch * .2; g.beginPath(); g.moveTo(cx, y); g.lineTo(cx - cw * .45, y + ch * .2); g.moveTo(cx, y); g.lineTo(cx + cw * .45, y + ch * .2); g.stroke(); } }); }
+});
+// boss material: Standard + vertex colour, object-space triplanar texture per paint layer, soft self-light (like the hero's SM) and a rim light
+// so the silhouette reads against the jungle. One per boss per room (flashSkins drives its emissive); disposed with the room, never in allMats.
+function bossMat(key, layers, o) {   // layers: [{ t: canvas texture or art key, sc: tiles per unit, st: strength, rough?: override }]
+  const m = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: o.rough, metalness: 0 });
+  const U = { uRimC: { value: new THREE.Color(o.rim) }, uRimK: { value: o.rimK }, uSelf: { value: o.self } };
+  layers.forEach((L, i) => { const art = typeof L.t === 'string'; U['tB' + i] = art ? (artU[L.t] || { value: null }) : { value: L.t }; U['gB' + i] = art ? (artU[L.t] ? uArt : { value: 0 }) : { value: 1 }; });
+  m.onBeforeCompile = sh => { Object.assign(sh.uniforms, U);
+    sh.vertexShader = 'attribute float aBt; varying float vBt; varying vec3 vBP; varying vec3 vBN;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vBt=aBt; vBP=position; vBN=normal;');
+    let f = ' { vec3 bw=pow(abs(normalize(vBN)),vec3(4.)); bw/=bw.x+bw.y+bw.z+1e-4; vec3 bd=vec3(1.);\n', r = '';
+    layers.forEach((L, i) => { const gain = typeof L.t === 'string' ? artGain(L.t) : L.t.userData.gain.toFixed(3);
+      f += '  if(abs(vBt-' + i + '.)<.5) bd=mix(vec3(1.),bTri(tB' + i + ',vBP*' + L.sc.toFixed(3) + ',bw)*' + gain + ',' + L.st.toFixed(2) + '*gB' + i + ');\n';
+      if (L.rough !== undefined) r += ' if(abs(vBt-' + i + '.)<.5) roughnessFactor=' + L.rough.toFixed(2) + ';'; });
+    f += '  diffuseColor.rgb*=bd; }\n';
+    sh.fragmentShader = 'uniform vec3 uRimC; uniform float uRimK; uniform float uSelf; varying float vBt; varying vec3 vBP; varying vec3 vBN;' + layers.map((L, i) => ' uniform sampler2D tB' + i + '; uniform float gB' + i + ';').join('') +
+      '\nvec3 bTri(sampler2D t,vec3 q,vec3 w){ return texture2D(t,q.zy).rgb*w.x+texture2D(t,q.xz).rgb*w.y+texture2D(t,q.xy).rgb*w.z; }\n' +
+      sh.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\n' + f)
+        .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\n' + r)
+        .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n totalEmissiveRadiance+=diffuseColor.rgb*(uSelf+step(3.5,vBt)*.9)+uRimC*uRimK*pow(1.-clamp(dot(normalize(normal),normalize(vViewPosition)),0.,1.),3.);');
+  };
+  m.customProgramCacheKey = () => 'boss:' + key; return m;
+}
+const _bkM = new THREE.Matrix4(), _bkI = new THREE.Matrix4(), _bkC = new THREE.Color();
+// merge the painted meshes under root (skipping the stop pivots, which are baked on their own) into one mesh + one ink hull; returns the mesh
+function bossBake(root, mat, own, stops) {
+  root.updateMatrixWorld(true); _bkI.copy(root.matrixWorld).invert();
+  const parts = [], walk = o => { for (const c of o.children) { if (stops && stops.includes(c)) continue; if (c.isMesh && c.material && c.material.bk) parts.push(c); walk(c); } };
+  walk(root);
+  const pos = [], nor = [], col = [], lay = [], idx = [], inkPos = [], ii = [];
+  for (const m of parts) {
+    const pt = m.material, g = m.geometry.clone().applyMatrix4(_bkM.multiplyMatrices(_bkI, m.matrixWorld)), p = g.attributes.position, n = g.attributes.normal, vc = g.attributes.color;
+    const base = pos.length / 3, ix = g.index ? g.index.array : null, cnt = ix ? ix.length : p.count;
+    for (let i = 0; i < p.count; i++) { const ny = n.getY(i), k = .74 + .34 * (ny * .5 + .5);   // baked soft top light / dark underside
+      pos.push(p.getX(i), p.getY(i), p.getZ(i)); nor.push(n.getX(i), ny, n.getZ(i)); _bkC.copy(pt.color);
+      if (vc) _bkC.multiply(_bkC.clone().setRGB(vc.getX(i), vc.getY(i), vc.getZ(i)));
+      col.push(_bkC.r * k, _bkC.g * k, _bkC.b * k); lay.push(pt.layer); }
+    for (let i = 0; i < cnt; i++) idx.push(base + (ix ? ix[i] : i));
+    if (pt.ink > 0) {   // ink hull: push each vertex out along the normal averaged over every vertex at the same spot (closes box corners)
+      const acc = new Map(), key = i => Math.round(p.getX(i) * 500) + ',' + Math.round(p.getY(i) * 500) + ',' + Math.round(p.getZ(i) * 500);
+      for (let i = 0; i < p.count; i++) { const kk = key(i), a = acc.get(kk) || [0, 0, 0]; a[0] += n.getX(i); a[1] += n.getY(i); a[2] += n.getZ(i); acc.set(kk, a); }
+      const ib = inkPos.length / 3;
+      for (let i = 0; i < p.count; i++) { const a = acc.get(key(i)), l = Math.hypot(a[0], a[1], a[2]) || 1; inkPos.push(p.getX(i) + a[0] / l * pt.ink, p.getY(i) + a[1] / l * pt.ink, p.getZ(i) + a[2] / l * pt.ink); }
+      for (let i = 0; i < cnt; i++) ii.push(ib + (ix ? ix[i] : i)); }
+    g.dispose(); m.parent.remove(m);
+  }
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); geo.setAttribute('aBt', new THREE.Float32BufferAttribute(lay, 1)); geo.setIndex(idx); own.push(geo);
+  const mesh = mk(geo, mat, 0, 0, 0, 1, 1, 1, root);
+  if (ii.length) { const ig = new THREE.BufferGeometry(); ig.setAttribute('position', new THREE.Float32BufferAttribute(inkPos, 3)); ig.setIndex(ii); own.push(ig); mk(ig, bossInk, 0, 0, 0, 1, 1, 1, root, true); }
+  return mesh;
 }
 const _up0 = new THREE.Vector3(0, 1, 0);
-function buildBoss3(g, skins) {   // stacked stone golem: head slab with a sapling, chest block with a carved angry face, slab belly with a band-aid, mossy shoulders, boulder fists
-  const BS = skinMaker(skins), h = {}; const body = new THREE.Group(); g.add(body); h.body = body;
+function buildBoss1(g, skins, own) {   // croc rearing out of the mire (its hitbox is a tall column): huge head, slit orange eyes, fangs, mud drips, ridged back, an old clay boot in its jaws
+  const h = {};
+  const C = { body: '#887a37', hi: '#a99b57', dk: '#61523c', belly: '#bcb191', deep: '#383027', drip: '#7e6f5c', tooth: '#f7f7f3', eye: '#ec8736', ink: '#0a0a0a' };
+  // wet scaly skin (procedural scutes, glossy), belly plates (same scutes, bigger, softer), matte mud (in-repo mud art); thick ink + warm rim so it reads half-sunk in the mire
+  const mat = bossMat('b1', [{ t: texScales, sc: .55, st: .42 }, { t: 'mud', sc: .5, st: .5, rough: .95 }, { t: texScales, sc: .22, st: .35, rough: .6 }], { rough: .34, rim: '#ffe2a8', rimK: .32, self: .1 });
+  skins.push(mat);
+  const sk = BP(C.body, 0, .12), skS = BP(C.body, 0, .05), hi = BP(C.hi, 0, .1), hiS = BP(C.hi, 0, .04), dk = BP(C.dk, 0, .045), dkS = BP(C.dk, 0, 0), be = BP(C.belly, 2, .07), seam = BP('#8a7f5e', 3, 0);
+  const mud = BP(C.drip, 1, .05), mudS = BP(C.drip, 1, .025), mudW = BP('#5a4632', 1, .05), tooth = BP(C.tooth, 3, .022), gum = BP('#6e3b30', 3, 0), throat = BP('#3a1d18', 3, 0), tongue = BP('#b8545a', 3, 0), deep = BP(C.deep, 3, 0);
+  mk(capG(1.0, 2.9), sk, -.15, 2.1, 0, 1, 1, 1.15, g);                                                               // upright body
+  mk(capG(.62, 2.5), be, .5, 2.0, 0, 1, 1, 1.25, g);                                                                 // pale belly plates
+  for (let k = 0; k < 6; k++) mk(gBox, seam, 1.1 - Math.abs(k - 2.5) * .03, .9 + k * .45, 0, .05, .06, 1.25, g);    // plate seams
+  for (let k = 0; k < 7; k++) for (const s of [1, -1]) rot(mk(gCone, dk, -1.05 + k * .02, .9 + k * .55, s * .38, .4, .6, .32, g), 0, 0, Math.PI / 2 + .25);   // ridged back (two rows of scutes)
+  for (let k = 0; k < 7; k++) mk(gSph, dk, -1.12 + k * .02, 1.15 + k * .55, 0, .34, .26, .3, g);                   // knobbly spine between the rows
+  for (let k = 0; k < 9; k++) { const a = k / 9 * Math.PI * 2; mk(gBlob, k % 2 ? mud : mudW, -.15 + Math.cos(a) * 1.0, .45 + (k % 3) * .12, Math.sin(a) * 1.15, .95, .5, .8, g); }   // mud collar where it breaks the mire
+  rot(mk(capG(.6, 1.6), sk, -1.6, .45, .3, 1, 1, 1, g), .2, 0, Math.PI / 2 + .25); rot(mk(capG(.35, 1.0), sk, -3.0, .15, .6, 1, 1, 1, g), .3, 0, Math.PI / 2);   // tail in the mud
+  for (let k = 0; k < 4; k++) rot(mk(gCone, dkS, -1.4 - k * .45, .95 - k * .2, .32 + k * .1, .22, .4, .22, g), .2, 0, .5);   // tail scutes
+  for (const s of [1, -1]) { const a = new THREE.Group(); a.position.set(.5, 2.7, s * 1.05); g.add(a);              // stubby fore-legs, pale claws, scaly elbows
+    rot(mk(capG(.32, .7), sk, .35, -.2, 0, 1, 1, 1, a), 0, 0, -1.1); mk(gSph, hi, .85, -.5, 0, .75, .45, .6, a); mk(gSph, dk, .05, .1, s * .12, .3, .25, .3, a);
+    for (let c = 0; c < 3; c++) rot(mk(gCone, tooth, 1.2, -.58, (c - 1) * .2, .1, .3, .1, a), 0, 0, -Math.PI / 2 - .3); }
+  mk(gSph, sk, .95, 4.35, 0, 2.5, 1.85, 2.25, g);                                                                    // big skull
+  for (const [x, y, z] of [[.25, 5.08, .38], [-.05, 4.85, .32], [-.3, 4.55, .26]]) for (const s of [1, -1]) mk(gSph, dk, x, y, s * z, .32, .22, .3, g);   // skull knobs
+  rot(mk(capG(.6, 1.3), hi, 2.2, 3.95, 0, 1, 1, 1.5, g), 0, 0, Math.PI / 2);                                         // upper snout (to x ~3.5)
+  for (const x of [1.75, 2.25, 2.75]) for (const s of [1, -1]) mk(gSph, hiS, x, 4.5, s * .36, .26, .18, .24, g);    // snout scutes
+  for (const s of [1, -1]) { mk(gSph, hiS, 3.3, 4.5, s * .27, .34, .26, .3, g); mk(gSph, deep, 3.42, 4.6, s * .27, .14, .1, .12, g); }   // nostril bumps + holes
+  mk(gFlat, gum, 2.0, 3.42, 0, 2.6, 1, 1.5, g).rotation.x = Math.PI;                                                 // roof of the mouth
+  mk(gSph, throat, .95, 3.4, 0, 1.0, .5, 1.2, g);                                                                    // dark throat (the open mouth reads deep)
+  for (let j = 0; j < 6; j++) for (const s of [1, -1]) { const f = j === 1 || j === 4; mk(gCone, tooth, 1.05 + j * .44, 3.34, s * .76, f ? .26 : .17, f ? .62 : .34, f ? .26 : .17, g).rotation.z = Math.PI; }
+  h.jaw = new THREE.Group(); h.jaw.position.set(.5, 3.45, 0); g.add(h.jaw);                                          // lower jaw (syncBoss opens it)
+  rot(mk(capG(.42, 1.6), hi, 1.35, -.42, 0, 1, 1, 1.8, h.jaw), 0, 0, Math.PI / 2); mk(gSph, be, 1.1, -.65, 0, 2.4, .45, 1.3, h.jaw);
+  mk(gFlat, gum, 1.4, -.04, 0, 2.5, 1, 1.3, h.jaw); mk(gSph, tongue, 1.0, -.08, 0, 1.6, .22, .7, h.jaw);
+  for (let j = 0; j < 5; j++) for (const s of [1, -1]) mk(gCone, tooth, .75 + j * .46, .1, s * .68, .17, .38, .17, h.jaw);
+  { const bt = new THREE.Group(); bt.position.set(2.1, .15, .15); bt.rotation.set(.3, .5, -.45); h.jaw.add(bt);        // the old clay boot it is chewing on
+    const clay = BP('#a05a3c', 3, .05); mk(gCyl, clay, 0, .42, 0, .5, .85, .5, bt); mk(gSph, clay, .32, 0, 0, .95, .42, .56, bt); mk(gBox, BP(C.deep, 3, .03), .2, -.19, 0, .95, .09, .54, bt); mk(gCyl, BP('#6e3b2a', 3, .03), 0, .86, 0, .56, .09, .56, bt);
+    for (let k = 0; k < 3; k++) mk(gBox, BP('#e8d9b0', 3, 0), .26, .3 + k * .17, 0, .04, .04, .5, bt).rotation.x = (k % 2 - .5) * .7; }   // laces
+  for (const [x, z, l] of [[.9, .55, .5], [1.9, -.5, .7], [2.6, .35, .4]]) mk(capG(.09, l), mudS, x, -.8 - l / 2, z, 1, 1, 1, h.jaw);   // drool-mud
+  const pg = new THREE.Group(); g.add(pg);                                                                            // pupils: one mesh, syncBoss swaps its colour on the tell
+  for (const s of [1, -1]) {                                                                                          // eye bumps, glowing slit eyes, half lids, heavy grumpy brows
+    mk(gSph, hi, .75, 5.2, s * .8, .95, .8, .8, g);
+    mk(gSph, BP(C.eye, 4, 0), .98, 5.28, s * 1.0, .64, .58, .54, g); mk(gSph, BP('#fff6d8', 4, 0), 1.16, 5.44, s * 1.25, .1, .1, .08, g);   // eyes sit on the sides of the skull bumps, so they read from the side-on game camera
+    rot(mk(gSph, hiS, .92, 5.6, s * .96, .74, .28, .64, g), 0, 0, -.3);                                               // grumpy upper lid
+    mk(gSph, BP(C.ink, 3, 0), 1.1, 5.28, s * 1.2, .14, .46, .14, pg);
+    rot(mk(capG(.17, .75), BP(C.deep, 0, .04), .95, 5.74, s * .95, 1, 1, 1.35, g), 0, 0, Math.PI / 2 - .55); }
+  for (const [x, y, z, l] of [[.9, 1.6, .8, .6], [-.5, 1.4, -1.05, .5], [.75, 2.9, -.9, .45], [-.9, 2.3, 1.0, .5], [1.6, 3.3, 1.0, .4]]) mk(capG(.12, l), mudS, x, y - l / 2, z, 1, 1, 1, g);   // mud drips
+  for (const [x, y, z, s] of [[-.6, 3.2, 1.0, .5], [.3, 2.5, -1.15, .45], [-1.0, 1.6, -.8, .4], [1.4, 5.2, .1, .35], [-.2, 3.4, -.95, .4]]) mk(gBlob, mud, x, y, z, s * 1.4, s * .7, s, g);
+  for (const s of [1, -1]) mk(gBlob, mud, .1, 3.15, s * 1.05, .85, .45, .7, g);                                       // mud slopped on the shoulders
+  bossBake(h.jaw, mat, own); h.pupils = [bossBake(pg, M('#2a1c13'), own)]; h.pupils[0].castShadow = false; bossBake(g, mat, own, [h.jaw, pg]);
+  return h;
+}
+function buildBoss2(g, skins, own) {   // round orange bird: cream belly, hooked yellow beak, grumpy brows, leaf crest, layered teal wings, seed bombs in its talons, bandaged tail
+  const h = {};
+  const C = { wing: '#4c8f91', wingL: '#94bfb5', wingD: '#36584c', leaf: '#678b54', seed: '#9db66f', body: '#eb9c4f', rust: '#ab5832', belly: '#e5d29e', eye: '#ef8b3b', ink: '#141614' };
+  // feathers: fine procedural feather texture on the body, a bigger one on wing and tail feathers, the in-repo leaf art on the crest and seed pods
+  const mat = bossMat('b2', [{ t: texFeather, sc: .8, st: .5 }, { t: 'leaf', sc: 1.4, st: .6 }, { t: texFeather, sc: .9, st: .4 }], { rough: .78, rim: '#fff0c8', rimK: .2, self: .1 });
+  skins.push(mat);
+  const bo = BP(C.body, 0, .1), ru = BP(C.rust, 0, .08), ruS = BP(C.rust, 0, .03), be = BP(C.belly, 0, .07), beS = BP('#d9bf86', 0, 0), wi = BP(C.wing, 2, .05), wl = BP(C.wingL, 2, .05), wd = BP(C.wingD, 2, .04), wdS = BP(C.wingD, 2, 0);
+  const lf = BP(C.leaf, 1, .04), lfS = BP('#55743f', 1, 0), beak = BP('#efc23a', 3, .055), beakD = BP('#b8861e', 3, 0), white = BP(C.belly, 3, .035), ink = BP(C.ink, 3, 0);
+  mk(gSph, bo, -.2, 0, 0, 3.6, 3.0, 3.0, g); mk(gSph, ru, -.9, .55, 0, 2.4, 2.0, 2.6, g);                           // body + rust back
+  mk(gSph, be, .55, -.6, 0, 2.5, 2.2, 2.4, g);                                                                       // cream belly
+  for (let r = 0; r < 3; r++) for (let k = 0; k < 4 - (r === 2 ? 1 : 0); k++) { const z = (k - (r === 2 ? 1 : 1.5)) * .5, y = -.15 - r * .5, x = 1.62 - r * .05 - Math.abs(z) * .25;   // chest feather chevrons
+    rot(mk(gSph, beS, x, y, z, .14, .42, .34, g), 0, 0, -.25); }
+  mk(gSph, bo, 1.35, 1.05, 0, 2.1, 2.0, 2.05, g); mk(gSph, ru, 1.1, 1.75, 0, 1.4, .7, 1.5, g);                     // head + rust cap
+  for (let k = 0; k < 4; k++) rot(mk(gCone, ruS, .25 - k * .12, 1.95 + k * .06, (k - 1.5) * .28, .28, .9, .2, g), (k - 1.5) * .3, 0, 1.25 + k * .08);   // ruffled nape feathers
+  for (const s of [1, -1]) for (let k = 0; k < 3; k++) rot(mk(gCone, bo, 1.0 - k * .1, .35 - k * .12, s * (.95 - k * .05), .22, .6, .16, g), s * .5, 0, 2.3 + k * .15);   // cheek fluff
+  rot(mk(gCone, beak, 2.75, .85, 0, .7, 1.4, .62, g), 0, 0, -Math.PI / 2); rot(mk(gCone, beak, 3.35, .62, 0, .24, .55, .22, g), 0, 0, Math.PI * .82);   // hooked beak
+  rot(mk(gCone, BP('#d9a52a', 3, .04), 2.55, .55, 0, .42, .9, .38, g), 0, 0, -Math.PI / 2 - .12);                    // lower mandible
+  mk(gBox, beakD, 2.7, .72, 0, 1.1, .05, .5, g); for (const s of [1, -1]) mk(gSph, beakD, 2.95, .98, s * .16, .1, .06, .07, g);   // gape line + nostrils
+  for (const s of [1, -1]) {                                                                                         // big eyes: white, glowing iris, pupil, glint, angry brow
+    mk(gSph, white, 2.1, 1.3, s * .62, .55, .62, .45, g); mk(gSph, BP(C.eye, 4, 0), 2.22, 1.28, s * .7, .45, .5, .32, g);
+    mk(gSph, ink, 2.34, 1.26, s * .78, .2, .26, .14, g); mk(gSph, BP('#ffffff', 4, 0), 2.36, 1.38, s * .84, .08, .08, .06, g);
+    mk(gBox, BP('#7a3a20', 0, .035), 2.05, 1.72, s * .66, .8, .2, .34, g).rotation.set(0, 0, -.5); }
+  for (let i = 0; i < 6; i++) { const a = (i - 2.5) * .28; rot(mk(gCone, lf, .8 - Math.abs(i - 2.5) * .12, 2.35, a * 1.4, .42, 1.4 - Math.abs(i - 2.5) * .15, .14, g), a * 1.2, 0, .55 + Math.abs(a) * .3); }   // leaf crest
+  h.wings = [1, -1].map(s => { const w = new THREE.Group(); w.position.set(-.4, .9, s * 1.25); g.add(w); mk(gSph, wd, 0, 0, s * .35, 1.4, .55, 1.2, w);
+    for (let k = 0; k < 4; k++) mk(gSph, ruS, .35 - k * .3, .18, s * (.75 + k * .1), .55, .16, .7, w);              // rust covert feathers at the wing root
+    for (let i = 0; i < 6; i++) { const L = 2.7 - i * .22, x = .3 - i * .42, z = s * (L / 2 + .25);
+      mk(gSph, i % 2 ? wl : wi, x, -.02 + i * .03, z, .6, .14, L, w); mk(gSph, wdS, x - .1, -.08, z * .8, .5, .1, L * .7, w);
+      mk(gBox, BP('#e8efe6', 3, 0), x + .02, .06 + i * .03, z, .03, .02, L * .8, w);                                   // feather quill
+      mk(gSph, lfS, x - .05, .03, s * (L + .1), .42, .1, .5, w); }
+    bossBake(w, mat, own); return w; });
+  for (let i = 0; i < 4; i++) { rot(mk(gSph, i % 2 ? wl : wi, -3.3, -.25 + (i - 1.5) * .08, (i - 1.5) * .42, 2.4, .16, .55, g), 0, (i - 1.5) * .25, .3);   // tail + dark tips
+    rot(mk(gSph, wdS, -4.25 - Math.abs(i - 1.5) * .05, -.55 + (i - 1.5) * .08, (i - 1.5) * .62, .7, .14, .45, g), 0, (i - 1.5) * .25, .3); }
+  rot(mk(gTorus, BP('#f4f1e6', 3, .03), -2.6, -.05, 0, 1.0, 1.0, 1.15, g), 0, Math.PI / 2, .3);                        // white bandage on the tail
+  rot(mk(gBox, BP('#d8cfb8', 3, 0), -2.62, .2, .5, .06, .3, .3, g), 0, 0, .3);                                          // its tucked end
+  for (const s of [1, -1]) {                                                                                         // scaly legs, three-toed talons, spiky seed bombs
+    rot(mk(capG(.15, .7), beak, .35, -1.75, s * .65, 1, 1, 1, g), 0, 0, .2);
+    for (let k = 0; k < 3; k++) rot(mk(gCone, BP(C.ink, 3, .02), .62 + (k === 1 ? .1 : 0), -2.12, s * .65 + (k - 1) * .22, .1, .34, .1, g), (k - 1) * .5, 0, Math.PI * .72);
+    const sb = new THREE.Group(); sb.position.set(.55, -2.45, s * .7); g.add(sb); mk(gIco, BP(C.seed, 1, .04), 0, 0, 0, .95, .95, .95, sb);
+    for (let k = 0; k < 10; k++) { const v = new THREE.Vector3(Math.sin(k * 2.4) * Math.cos(k * 1.3), Math.cos(k * 2.4), Math.sin(k * 2.4) * Math.sin(k * 1.3)).normalize();
+      const c = mk(gCone, BP('#6f8a3a', 3, 0), v.x * .45, v.y * .45, v.z * .45, .12, .24, .12, sb); c.quaternion.setFromUnitVectors(_up0, v); }
+    for (const [dx, dz] of [[.3, 0], [-.3, .15], [0, -.3]]) rot(mk(gCone, ink, dx, .38, dz, .07, .3, .07, sb), 0, 0, Math.PI - dx * 2); }
+  bossBake(g, mat, own, h.wings);
+  return h;
+}
+function buildBoss3(g, skins, own) {   // stacked stone golem: head slab with a sapling, chest block with a carved angry face, slab belly with a band-aid, mossy shoulders, boulder fists
+  const h = {}; const body = new THREE.Group(); g.add(body); h.body = body;
   const C = { stone: '#a18c78', clay: '#946a48', pale: '#b9b093', bone: '#d2cdb9', dk: '#605044', moss: '#6a806e', ochre: '#b39a52', eye: '#e09523', char: '#33302c', ink: '#090a0d' };
-  const st = BS(C.stone, true), cl = BS(C.clay), pa = BS(C.pale, true), bn = BS(C.bone, true), dk = BS(C.dk, true), mo = BS(C.moss, true), oc = BS(C.ochre), ch = M(C.char), ink = M(C.ink);
-  for (const s of [1, -1]) { mk(gBox, cl, .1, .95, s * 1.15, 1.3, 1.7, 1.35, body); mk(gSph, st, -.35, .35, s * 1.2, 2.4, .95, 1.75, body);   // stubby legs, big feet
+  // the scenery's stone art on the slabs and fists, the mud art on the clay, the leaf art on the moss; stone is matte, the sapling sways on its own pivot
+  const mat = bossMat('b3', [{ t: 'stone', sc: .5, st: .6 }, { t: 'mud', sc: .5, st: .45 }, { t: 'leaf', sc: 1.2, st: .6 }], { rough: .9, rim: '#ffe6b0', rimK: .18, self: .08 });
+  skins.push(mat);
+  const st = BP(C.stone, 0, .1), stS = BP(C.stone, 0, .04), cl = BP(C.clay, 1, .09), pa = BP(C.pale, 0, .1), bn = BP(C.bone, 0, .09), bnS = BP(C.bone, 0, .04), dk = BP(C.dk, 0, .045), mo = BP(C.moss, 2, .06), moS = BP(C.moss, 2, .02);
+  const oc = BP(C.ochre, 1, .025), ch = BP(C.char, 3, 0), crack = BP('#1c1712', 3, 0), fang = BP(C.bone, 3, .03);
+  for (const s of [1, -1]) { mk(gBox, cl, .1, .95, s * 1.15, 1.3, 1.7, 1.35, body); mk(gSph, st, -.35, .35, s * 1.2, 2.4, .95, 1.75, body);   // stubby legs, big feet with stone toes
+    for (let k = 0; k < 3; k++) mk(gSph, stS, -1.45, .25, s * 1.2 + (k - 1) * .5, .5, .45, .45, body);
     mk(gBlob, mo, -.2, 1.6, s * 1.6, .9, .7, .6, body); }
   rot(mk(gBox, pa, 0, 2.2, 0, 3.0, 1.15, 3.4, body), 0, .05, 0); rot(mk(gBox, bn, -.05, 3.15, 0, 3.3, .9, 3.7, body), 0, -.05, 0);   // stacked slab belly
-  mk(gBox, bn, -1.55, 2.3, -1.0, .6, .7, 1.1, body);                                                                  // loose block
+  mk(gBox, bn, -1.55, 2.3, -1.0, .6, .7, 1.1, body); mk(gBox, bnS, 1.3, 3.55, 1.5, .7, .4, .6, body);                 // loose blocks
+  for (const [x, z] of [[-1.2, 1.72], [.4, 1.72], [1.0, -1.72]]) mk(gIco, BP('#8d8272', 0, .03), x, 1.95, z, .35, .3, .3, body);   // pebbles stuck in the slab
   { const ba = new THREE.Group(); ba.position.set(-1.72, 2.85, .5); ba.rotation.x = .55; body.add(ba);              // band-aid over a crack
-    mk(gBox, M('#e8d9b0'), 0, 0, 0, .06, .4, 1.3, ba, true); mk(gBox, M('#cdb07a'), -.02, 0, 0, .06, .36, .4, ba, true); }
-  for (const [y, z, r, l] of [[2.5, .2, .9, .8], [2.1, -.4, -.6, .6], [3.3, -.9, .3, .5]]) mk(gBox, ink, -1.56, y, z, .03, .04, l, body, true).rotation.x = r;
+    mk(gBox, BP('#e8d9b0', 3, .02), 0, 0, 0, .06, .4, 1.3, ba); mk(gBox, BP('#cdb07a', 3, 0), -.02, 0, 0, .06, .36, .4, ba); }
+  for (const [y, z, r, l] of [[2.5, .2, .9, .8], [2.1, -.4, -.6, .6], [3.3, -.9, .3, .5]]) mk(gBox, crack, -1.56, y, z, .03, .05, l, body).rotation.x = r;
   mk(gBox, st, 0, 5.0, 0, 3.4, 2.9, 3.9, body);                                                                       // chest block
-  h.eyes = [];
+  for (const [x, y, r, l] of [[-.8, 5.6, .5, 1.1], [.3, 4.4, -.4, .9], [.9, 5.9, 1.1, .7], [-.2, 6.1, -.2, .6]]) mk(gBox, BP('#5a4c40', 3, 0), x, y, 1.96, l, .07, .03, body).rotation.z = r;   // carved rune lines (camera side)
+  for (const [x, y] of [[-1.4, 6.2], [1.45, 3.95], [1.4, 6.25]]) mk(gBox, stS, x, y, 1.75, .5, .5, .5, body);         // chipped corner stones
+  const eg = new THREE.Group(); body.add(eg);                                                                         // glowing eyes: one mesh, one material (syncBoss dims it when dazed)
   for (const s of [1, -1]) {                                                                                         // carved angry face on the -x side
-    rot(mk(gBox, dk, -1.78, 5.9, s * .72, .34, .34, 1.3, body), s * .38, 0, 0);
-    mk(gSph, ch, -1.7, 5.4, s * .72, .5, .7, .9, body, true);
-    h.eyes.push(mk(gSph, reg(new THREE.MeshStandardMaterial({ color: C.eye, emissive: C.eye, emissiveIntensity: 1.2, roughness: .4 })), -1.8, 5.42, s * .72, .4, .52, .62, body, true));
-    mk(gSph, ink, -2.0, 5.4, s * .72, .14, .18, .18, body, true); }
-  mk(gBox, st, -1.85, 4.85, 0, .34, .5, .5, body); mk(gBox, ch, -1.72, 4.2, 0, .2, .6, 2.1, body, true);           // nose + mouth
-  for (const z of [.6, -.6]) mk(gCone, bn, -1.86, 4.05, z, .26, .55, .26, body, true);                               // fangs up
-  for (const z of [.25, -.25, .95, -.95]) mk(gCone, bn, -1.86, 4.38, z, .17, .3, .17, body, true).rotation.z = Math.PI;
-  for (const [x, z, l] of [[-1.72, 1.4, .9], [-1.72, -.2, .6], [-1.0, 1.96, .8], [.5, -1.96, .7]]) mk(capG(.1, l), oc, x, 3.6 - l / 2, z, 1, 1, 1, body, true);   // ochre mud drips
-  for (const s of [1, -1]) { mk(gBlob, mo, 0, 6.5, s * 1.85, 1.9, .9, 1.4, body); for (const dx of [-.6, .4]) mk(capG(.12, .5), mo, dx, 5.85, s * 2.05, 1, 1, 1, body, true); }   // mossy shoulders
-  mk(gBox, pa, 0, 7.25, 0, 2.6, 1.6, 2.9, body); mk(gBox, ink, -1.31, 7.25, .2, .03, 1.5, .04, body, true);        // head slab + seam
+    rot(mk(gBox, dk, -1.85, 6.0, s * .72, .5, .42, 1.4, body), s * .42, 0, 0);                                         // heavy brow slab
+    mk(gSph, ch, -1.68, 5.4, s * .72, .62, .82, 1.0, body);                                                           // deep socket
+    mk(gSph, BP(C.eye, 3, 0), -1.82, 5.42, s * .72, .46, .6, .72, eg);
+    mk(gSph, BP(C.ink, 3, 0), -2.05, 5.4, s * .72, .14, .22, .2, body);
+    mk(gSph, BP('#fff2c0', 4, 0), -2.06, 5.58, s * .84, .08, .08, .08, body);                                          // glint
+    mk(gBox, crack, -1.72, 4.85, s * 1.2, .03, .5, .05, body).rotation.x = s * .5; }                                  // cheek cracks
+  mk(gBox, st, -1.85, 4.85, 0, .42, .55, .55, body); mk(gBox, stS, -2.0, 4.65, 0, .3, .2, .5, body);                 // nose
+  mk(gBox, ch, -1.72, 4.2, 0, .24, .66, 2.2, body); mk(gBox, BP('#4a2c22', 3, 0), -1.76, 4.0, 0, .2, .2, 1.8, body);  // mouth + dark gum
+  for (const z of [.6, -.6]) mk(gCone, fang, -1.86, 4.05, z, .26, .55, .26, body);                                     // fangs up
+  for (const z of [.25, -.25, .95, -.95]) mk(gCone, fang, -1.86, 4.38, z, .17, .3, .17, body).rotation.z = Math.PI;
+  for (const [x, z, l] of [[-1.72, 1.4, .9], [-1.72, -.2, .6], [-1.0, 1.96, .8], [.5, -1.96, .7], [.9, 1.96, .55]]) mk(capG(.1, l), oc, x, 3.6 - l / 2, z, 1, 1, 1, body);   // ochre mud drips
+  for (const s of [1, -1]) { mk(gBlob, mo, 0, 6.5, s * 1.85, 1.9, .9, 1.4, body); for (const dx of [-.6, .4, -.1]) mk(capG(.12, .5 + (dx + .6) * .3), moS, dx, 5.85, s * 2.05, 1, 1, 1, body); }   // mossy shoulders, hanging moss
+  mk(gBox, pa, 0, 7.25, 0, 2.6, 1.6, 2.9, body); mk(gBox, crack, -1.31, 7.25, .2, .03, 1.5, .05, body);             // head slab + seam
   mk(gBox, bn, -.2, 7.0, -1.0, 2.2, .8, .95, body); mk(gBlob, mo, -.6, 7.8, 1.2, 1.1, .5, .7, body);
-  mk(capG(.1, .55), oc, -1.3, 6.85, -.6, 1, 1, 1, body, true);
-  mk(gCyl, dk, 0, 8.1, 0, 2.3, .16, 2.5, body, true);                                                                // soil on top
+  mk(capG(.1, .55), oc, -1.3, 6.85, -.6, 1, 1, 1, body);
+  mk(gCyl, BP(C.dk, 1, .03), 0, 8.1, 0, 2.3, .16, 2.5, body);                                                          // soil on top
   h.core = new THREE.Group(); h.core.position.set(-.2, 8.15, .1); body.add(h.core);                                  // the sapling (sways; replaces the old gold core)
-  { const stem = M('#7a5a38'), lf = M('#5fa04a'); rot(mk(capG(.07, .9), stem, 0, .5, 0, 1, 1, 1, h.core), 0, 0, .12);
+  { const stem = BP('#7a5a38', 1, .025), lf = BP('#5fa04a', 2, .025); rot(mk(capG(.07, .9), stem, 0, .5, 0, 1, 1, 1, h.core), 0, 0, .12);
     rot(mk(gSph, lf, -.35, 1.05, .25, .75, .1, .4, h.core), .3, .4, .5); rot(mk(gSph, lf, .35, 1.15, -.2, .8, .1, .42, h.core), -.3, .4, -.5); mk(gSph, lf, 0, 1.05, 0, .35, .25, .3, h.core); }
-  h.arms = [1, -1].map(s => { const a = new THREE.Group(); a.position.set(0, 5.3, s * 2.6); body.add(a); mk(gSph, cl, 0, 0, 0, 1.3, 1.3, 1.3, a);
-    mk(capG(.55, 2.2), cl, 0, -1.7, 0, 1, 1, 1, a); mk(gSph, st, 0, -3.35, 0, 2.0, 1.8, 2.0, a);                      // round boulder fists
-    for (let k = 0; k < 3; k++) mk(gSph, st, -.85, -3.0 - k * .35, (k - 1) * .45, .45, .4, .45, a, true); return a; });
+  bossBake(h.core, mat, own);
+  // arms hang behind the face now (pivot x 0 -> +.85, z 2.6 -> 2.75): from the game camera the near fist used to cover the face. Visual only, the slam logic is unchanged.
+  h.arms = [1, -1].map(s => { const a = new THREE.Group(); a.position.set(.85, 5.3, s * 2.75); body.add(a); mk(gSph, cl, 0, 0, 0, 1.3, 1.3, 1.3, a);
+    mk(capG(.55, 2.2), cl, 0, -1.7, 0, 1, 1, 1, a); for (const y of [-1.2, -2.2]) mk(gCyl, BP(C.dk, 1, .02), 0, y, 0, 1.2, .14, 1.2, a);   // clay arm with mud bands
+    mk(gSph, st, 0, -3.35, 0, 2.0, 1.8, 2.0, a);                                                                       // round boulder fists
+    for (let k = 0; k < 3; k++) mk(gSph, stS, -.85, -3.0 - k * .35, (k - 1) * .45, .45, .4, .45, a);
+    mk(gBlob, moS, .2, .55, 0, .9, .45, .9, a);
+    bossBake(a, mat, own); return a; });
+  h.eyes = [bossBake(eg, reg(new THREE.MeshStandardMaterial({ color: C.eye, emissive: C.eye, emissiveIntensity: 1.2, roughness: .4 })), own)];
+  h.eyes[0].castShadow = false; bossBake(body, mat, own, [h.core, eg, ...h.arms]);
   return h;
 }
 
@@ -1151,10 +1278,10 @@ function buildBossModel(room, R, v) {
   const g = new THREE.Group(); R.add(g); const bm = { kind: room.kind, g, skins: [] };
   if (room.kind === 'boss1') {
     mk(gFlat, mats.mire, X(160), .07, 0, 21, 1, 8.4, R, true).receiveShadow = true;                                    // the mire
-    Object.assign(bm, buildBoss1(g, bm.skins));
+    Object.assign(bm, buildBoss1(g, bm.skins, v.own));
     for (let k = 0; k < 10; k++) { const a = k / 10 * TAU, x = X(160) + Math.cos(a) * 11.5, z = Math.sin(a) * 4.8; mk(gRock, AM.bossRock, x, .15, z, 1.2 + (k % 3) * .4, 1.0, 1.0, R); }
-  } else if (room.kind === 'boss2') Object.assign(bm, buildBoss2(g, bm.skins));
-  else Object.assign(bm, buildBoss3(g, bm.skins));
+  } else if (room.kind === 'boss2') Object.assign(bm, buildBoss2(g, bm.skins, v.own));
+  else Object.assign(bm, buildBoss3(g, bm.skins, v.own));
   g.traverse(o => { if (o.isMesh) { o.userData.bossPart = true; } });
   v.own.push(...bm.skins); if (bm.eyes) for (const e of bm.eyes) v.own.push(e.material);
   bm.g = g; v.bm = bm;
