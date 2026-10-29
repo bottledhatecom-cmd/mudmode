@@ -1,6 +1,8 @@
 /* mudpity - early access. All original code and low-poly shapes built in code.
    Game logic is the same as the original 2D version (logical 320x180 px room space); this file adds a three.js view.
-   Genre mechanics only (run, jump pits, swing on vines, avoid hazards, collect treasure, countdown). */
+   Genre mechanics only (run, jump pits, swing on vines, avoid hazards, collect treasure, countdown).
+   dev-moves: stamina shield (projectiles, physical attacks and logs push you back and drain stamina; when stamina is out the
+   shield is gone and the next hit costs a heart; a new heart refills it). Pits still cost a heart straight away. */
 (() => {
 'use strict';
 const W = 320, H = 180, GY = 130;          // logical size, ground line
@@ -9,6 +11,8 @@ const BOSS_ROOMS = [3, 7, 11];            // rooms 4, 8 and 12 (1-based) are bos
 const SPEED = 70, JUMP_V = 190, GRAV = 520, STEP = 1 / 60;
 const VINE_L = 78, VINE_A = 0.85, VINE_W = 2.1, VINE_Y = 28;
 const SNAP_C = 2.8;
+const STAM_MAX = 100, STAM_HIT = 34, PUSH_VX = 130, PUSH_VY = 110, PUSH_T = 0.5;   // stamina shield: 3 pushes, then it is gone
+const BEST_KEY = s => 'mudpity-best-v2:' + s;   // new best-score key: the shield changes scoring, so old bests stay under their old key
 
 const P = { // earthy palette matching the approved art textures
   sky1:'#8fbfae', sky2:'#e9dfb8', trunk:'#2c6c66', trunk2:'#3a8079', canopy:'#5a3a22', canopy2:'#3f2616',
@@ -69,11 +73,11 @@ function genRoom(seed,i,kind,hasT){
 const qs=new URLSearchParams(location.search);
 const G={state:'title', seed:(qs.get('seed')||'mud').slice(0,24), world:null, t:0, timeLeft:TIME, lives:LIVES, score:0,
   got:new Set(), bosses:{}, burst:[], winT:0, allGems:false, room:0, p:null, rs:null, result:'', msg:'', msgT:0, best:0};
-try{ G.best=+localStorage.getItem('jr3d-best:'+G.seed)||0; }catch(e){}
+try{ G.best=+localStorage.getItem(BEST_KEY(G.seed))||0; }catch(e){}
 const keys={left:false,right:false,jump:false}; let jumpQ=0;
 G.world=genWorld(G.seed);
 
-function newPlayer(x){return {x,y:GY,vx:0,vy:0,face:1,onGround:true,coyote:0,vine:null,vs:1,grabCd:0,kick:0,inv:0,dead:0,step:0};}
+function newPlayer(x){return {x,y:GY,vx:0,vy:0,face:1,onGround:true,coyote:0,vine:null,vs:1,grabCd:0,kick:0,inv:0,dead:0,step:0,stam:STAM_MAX,push:0};}
 function startRun(){
   G.world=genWorld(G.seed); G.t=0; G.timeLeft=TIME; G.lives=LIVES; G.score=0; G.got=new Set(); G.result='';
   G.bosses={}; G.winT=0; G.burst=[]; G.allGems=false;
@@ -106,11 +110,21 @@ function loseLife(why){
   const p=G.p; if(p.dead>0) return;
   p.dead=0.8; p.vine=null; G.lives--; G.msg=why; G.msgT=1.2; sfx(110,.35,'sawtooth');
 }
+/* stamina shield: a hit from a projectile, a physical attack or a log pushes you away from it and drains stamina;
+   when stamina is out you lose the shield, and from then on a hit costs a heart as before */
+function harm(why,sx){
+  const p=G.p; if(p.inv>0||p.dead>0) return;
+  if(p.stam<=0){ loseLife(why); return; }
+  p.stam=Math.max(0,p.stam-STAM_HIT);
+  const d=(sx===undefined||sx===p.x)?-p.face:(p.x<sx?-1:1);
+  p.vine=null; p.grabCd=0.3; p.kick=0; p.vx=d*PUSH_VX; p.vy=-PUSH_VY; p.onGround=false; p.coyote=0; p.inv=PUSH_T; p.push=PUSH_T; jumpQ=0;
+  if(p.stam<=0){ G.msg='shield lost!'; G.msgT=1.2; sfx(160,.3,'sawtooth'); } else { G.msg='shield: '+why; G.msgT=.7; sfx(520,.09,'triangle'); }
+}
 function addScore(n){ G.score+=n; }
 function endRun(result){
   G.state='end'; G.result=result;
   if(result==='win') addScore(Math.max(0,Math.floor(G.timeLeft))*10);
-  try{ if(G.score>G.best){G.best=G.score; localStorage.setItem('jr3d-best:'+G.seed,String(G.best));} }catch(e){}
+  try{ if(G.score>G.best){G.best=G.score; localStorage.setItem(BEST_KEY(G.seed),String(G.best));} }catch(e){}
   sfx(result==='win'?880:140,.4);
 }
 
@@ -121,7 +135,7 @@ function update(dt){
   G.t+=dt; G.timeLeft-=dt; if(G.msgT>0) G.msgT-=dt;
   if(G.timeLeft<=0){ G.timeLeft=0; endRun('time'); return; }
   if(jumpQ>0) jumpQ-=dt;
-  if(p.grabCd>0) p.grabCd-=dt; if(p.inv>0) p.inv-=dt; if(p.kick>0) p.kick-=dt;
+  if(p.grabCd>0) p.grabCd-=dt; if(p.inv>0) p.inv-=dt; if(p.push>0) p.push-=dt; if(p.kick>0) p.kick-=dt;
   if(G.winT>0){ G.winT-=dt; if(G.winT<=0){ endRun('win'); return; } }
 
   // dying: wait then respawn or end
@@ -129,7 +143,7 @@ function update(dt){
     p.dead-=dt; p.y+=Math.min(p.vy,60)*dt;
     if(p.dead<=0){
       if(G.lives<=0){ endRun('lives'); return; }
-      p.x=rs.spawn; p.y=GY; p.vx=0; p.vy=0; p.onGround=true; p.vine=null; p.inv=1.6; p.dead=0; jumpQ=0; p.kick=0; if(rs.boss) bossReset(rs.boss);
+      p.x=rs.spawn; p.y=GY; p.vx=0; p.vy=0; p.onGround=true; p.vine=null; p.inv=1.6; p.dead=0; jumpQ=0; p.kick=0; p.stam=STAM_MAX; p.push=0; if(rs.boss) bossReset(rs.boss);
     }
     stepWorld(room,rs,dt); return;
   }
@@ -147,9 +161,10 @@ function update(dt){
   } else {
     if(p.onGround) p.coyote=0.08; else if(p.coyote>0) p.coyote-=dt;
     if(ax) p.face=ax;
-    if(p.onGround){ p.vx=ax*SPEED; }
+    if(p.onGround&&p.push<=0){ p.vx=ax*SPEED; }
+    else if(p.onGround){ p.vx*=Math.exp(-6*dt); }   // a push slides you along the ground and fades
     else { const tv=ax*SPEED, d=tv-p.vx, m=260*dt; p.vx+=Math.abs(d)<m?d:Math.sign(d)*m; }
-    if(jumpQ>0 && p.coyote>0){ p.vy=-JUMP_V; p.onGround=false; p.coyote=0; jumpQ=0; sfx(440,.08); }
+    if(jumpQ>0 && p.coyote>0 && p.push<=0){ p.vy=-JUMP_V; p.onGround=false; p.coyote=0; jumpQ=0; sfx(440,.08); }
     const prevY=p.y;
     p.vy+=GRAV*dt; p.x+=p.vx*dt; p.y+=p.vy*dt;
     if(p.onGround) p.step+=Math.abs(p.vx)*dt;
@@ -183,10 +198,10 @@ function update(dt){
 
   // hazards (skip while invulnerable)
   if(p.inv<=0 && p.dead<=0){
-    for(const l of rs2.logs) if(Math.abs(p.x-l.x)<9 && p.y>GY-13){ loseLife('hit by a log'); break; }
-    if(p.dead<=0) for(const c of rs2.crawlers) if(Math.abs(p.x-c.x)<9 && p.y>GY-8){ loseLife('crawler bite'); break; }
+    for(const l of rs2.logs) if(Math.abs(p.x-l.x)<9 && p.y>GY-13){ harm('hit by a log',l.x); break; }
+    if(p.dead<=0) for(const c of rs2.crawlers) if(Math.abs(p.x-c.x)<9 && p.y>GY-8){ harm('crawler bite',c.x); break; }
     if(p.dead<=0 && p.onGround) for(const pl of room2.pools){
-      if(p.x>pl.x0&&p.x<pl.x1){ const k=Math.min(pl.n-1,Math.floor((p.x-pl.x0)/((pl.x1-pl.x0)/pl.n))); if(snapOpen(pl,k,G.t)) loseLife('snapped'); } }
+      if(p.x>pl.x0&&p.x<pl.x1){ const k=Math.min(pl.n-1,Math.floor((p.x-pl.x0)/((pl.x1-pl.x0)/pl.n))); if(snapOpen(pl,k,G.t)) harm('snapped'); } }
   }
   // treasure
   const tr=room2.treasure;
@@ -227,7 +242,7 @@ function bossReset(b){          // after losing a life: same health, fresh teleg
   if(b.kind==='boss1'){ b.h=0; } if(b.kind==='boss2'){ b.x=160; b.y=70; b.state='hover'; } if(b.kind==='boss3'){ b.x=248; b.h=78; }
 }
 const B_go=(b,s)=>{ b.state=s; b.t=0; };
-function hitP(why){ const p=G.p; if(p.inv<=0&&p.dead<=0) loseLife(why); }
+function hitP(why,sx){ const p=G.p; if(p.inv<=0&&p.dead<=0) harm(why,sx); }
 function stompOn(b,top,half){ const p=G.p; return p.vy>0&&!p.vine&&p.dead<=0&&Math.abs(p.x-b.x)<half+4&&p.y>=top-5&&p.y<=top+12; }
 function bounceP(){ const p=G.p; p.vy=-170; p.onGround=false; p.coyote=0; }
 function kickOn(b,hw,hh,cy){ const p=G.p; return p.kick>0&&!p.onGround&&!p.vine&&p.dead<=0&&Math.abs(p.x-b.x)<hw+6&&Math.abs((p.y-12)-cy)<hh+12; }
@@ -273,7 +288,7 @@ function ai1(b,dt,p,rs,enr,m){
       if(b.wait<=0){ b.n++; if(b.n===1||rs.rng()<.6){ b.cx=clampC(p.x+p.vx*.3); B_go(b,'tele'); } else { b.cx=p.x<160?236:84; B_go(b,'stele'); } } break;
     case 'tele': { const dur=1.0*m; b.h=0; b.x=b.cx; if(b.t>=dur) B_go(b,'lunge'); break; }   // the ripple marks where it will lunge; step out of it
     case 'lunge': b.x=b.cx; b.h=52*Math.sin(Math.min(1,b.t/.2)*Math.PI/2); b.mouth=1;
-      if(p.dead<=0&&Math.abs(p.x-b.cx)<16&&p.y>GY-b.h+2&&b.h>8) hitP('mauled by Bogjaw');
+      if(p.dead<=0&&Math.abs(p.x-b.cx)<16&&p.y>GY-b.h+2&&b.h>8) hitP('mauled by Bogjaw',b.cx);
       if(b.t>=.45) B_go(b,'stun'); break;
     case 'stun': b.x=b.cx; b.h=Math.max(24,b.h-160*dt); b.mouth=.3;
       if(stompOn(b,GY-b.h,16)){ bounceP(); hurtBoss(b); if(!b.dead) B_go(b,'sink'); break; }
@@ -286,8 +301,8 @@ function ai1(b,dt,p,rs,enr,m){
   }
   for(let i=b.proj.length-1;i>=0;i--){ const q=b.proj[i];
     if(q.t==='ball'){ q.vy+=GRAV*dt; q.x+=q.vx*dt; q.y+=q.vy*dt; if(q.y>=GY-4){ q.t='puddle'; q.y=GY; q.life=.55; }
-      else if(p.dead<=0&&Math.hypot(p.x-q.x,(p.y-12)-q.y)<9) hitP('mud ball'); }
-    else { q.life-=dt; if(q.life<=0){ b.proj.splice(i,1); continue; } if(p.dead<=0&&Math.abs(p.x-q.x)<13&&p.y>GY-9) hitP('mud splash'); }
+      else if(p.dead<=0&&Math.hypot(p.x-q.x,(p.y-12)-q.y)<9) hitP('mud ball',q.x); }
+    else { q.life-=dt; if(q.life<=0){ b.proj.splice(i,1); continue; } if(p.dead<=0&&Math.abs(p.x-q.x)<13&&p.y>GY-9) hitP('mud splash',q.x); }
   }
 }
 /* ---- boss 2: GLOOMWING, a canopy creature: seed-bombs, swoops, then lands exhausted ---- */
@@ -307,7 +322,7 @@ function ai2(b,dt,p,rs,enr,m){
     case 'stel': { const tx=p.x<160?Math.min(296,p.x+110):Math.max(24,p.x-110); b.x+=(tx-b.x)*ease(5); b.y+=(46-b.y)*ease(5);
       if(b.t>=.9*m){ b.sx=b.x; b.ex=Math.max(-20,Math.min(340,2*p.x-b.sx)); B_go(b,'swoop'); sfx(150,.3,'sawtooth'); } break; }   // dives straight through where you stood: jump it
     case 'swoop': { const dur=1.6*m, u=Math.min(1,b.t/dur); b.x=b.sx+(b.ex-b.sx)*u; b.y=46+(GY-12-46)*Math.sin(Math.PI*u);
-      if(p.dead<=0&&Math.abs(p.x-b.x)<18&&Math.abs((p.y-12)-b.y)<16) hitP('Gloomwing swoop');
+      if(p.dead<=0&&Math.abs(p.x-b.x)<18&&Math.abs((p.y-12)-b.y)<16) hitP('Gloomwing swoop',b.x);
       if(u>=1){ B_go(b,'land'); } break; }
     case 'land': b.y+=(GY-14-b.y)*ease(7); b.x+=(Math.max(30,Math.min(290,b.x))-b.x)*ease(8); if(b.t>=.6){ b.y=GY-14; B_go(b,'rest'); } break;
     case 'rest': b.y=GY-14;
@@ -318,7 +333,7 @@ function ai2(b,dt,p,rs,enr,m){
   for(let i=b.proj.length-1;i>=0;i--){ const q=b.proj[i]; q.tt+=dt;
     if(q.st==='fall'){ q.vy+=380*dt; q.y+=q.vy*dt; if(q.y>=GY-5){ q.y=GY-5; q.st='fuse'; q.tt=0; } }
     else if(q.st==='fuse'){ if(q.tt>=.75){ q.st='boom'; q.tt=0; sfx(90,.25,'sawtooth'); } }
-    else { if(p.dead<=0&&Math.hypot(p.x-q.x,(p.y-10)-q.y)<18&&q.tt<.25) hitP('seed bomb'); if(q.tt>=.3) b.proj.splice(i,1); }
+    else { if(p.dead<=0&&Math.hypot(p.x-q.x,(p.y-10)-q.y)<18&&q.tt<.25) hitP('seed bomb',q.x); if(q.tt>=.3) b.proj.splice(i,1); }
   }
 }
 /* ---- boss 3: MUDTOTEM, ground slams send shockwaves along the floor; jump over them ---- */
@@ -344,15 +359,15 @@ function ai3(b,dt,p,rs,enr,m){
       if(b.fired<b.shots&&b.t>=b.fired*gap){ b.proj.push({t:'ball',x:b.x-22,y:((b.seq+b.fired)%2)?GY-46:GY-8,v:-(enr?110:100)}); b.fired++; sfx(200,.08,'square'); }
       if(b.fired>=b.shots&&b.t>b.shots*gap+.4){ B_go(b,'idle'); b.wait=(enr?.8:1.0); } break; }
   }
-  if(vuln&&b.state!=='dazed'&&(b.state!=='idle'||b.t>.7)&&p.dead<=0&&Math.abs(p.x-b.x)<24&&p.y>GY-b.h+4) hitP('crushed by the totem');
+  if(vuln&&b.state!=='dazed'&&(b.state!=='idle'||b.t>.7)&&p.dead<=0&&Math.abs(p.x-b.x)<24&&p.y>GY-b.h+4) hitP('crushed by the totem',b.x);
   for(let i=b.proj.length-1;i>=0;i--){ const q=b.proj[i];
-    if(q.t==='wave'){ q.x+=q.v*dt; if(q.x<-10||q.x>W+10){ b.proj.splice(i,1); continue; } if(p.dead<=0&&Math.abs(p.x-q.x)<7&&p.y>GY-13) hitP('shockwave'); }
-    else { q.x+=q.v*dt; if(q.x<-10){ b.proj.splice(i,1); continue; } if(p.dead<=0&&Math.abs(p.x-q.x)<8&&p.y>q.y-7&&(p.y-25)<q.y+7) hitP('mud ball'); }
+    if(q.t==='wave'){ q.x+=q.v*dt; if(q.x<-10||q.x>W+10){ b.proj.splice(i,1); continue; } if(p.dead<=0&&Math.abs(p.x-q.x)<7&&p.y>GY-13) hitP('shockwave',q.x); }
+    else { q.x+=q.v*dt; if(q.x<-10){ b.proj.splice(i,1); continue; } if(p.dead<=0&&Math.abs(p.x-q.x)<8&&p.y>q.y-7&&(p.y-25)<q.y+7) hitP('mud ball',q.x); }
   }
 }
 
 /* ======================= 3D renderer (three.js, plain WebGL) =======================
-   Layout of this half of the file (the game logic above is untouched from v2):
+   Layout of this half of the file (the game logic above is v2 plus the dev-moves stamina shield):
    setup + quality -> noise / materials / textures -> shared geometry -> particles
    -> ART BUILDERS (buildHero / buildCrawler / buildLog / buildSnapper / buildGem / buildBoss1-3: each returns a Group plus the
    handles the animation code drives, so real art can replace one builder at a time) -> room builder -> per-frame sync -> camera -> HUD -> input -> loop.
@@ -849,6 +864,9 @@ function buildBoss3(g, skins) {   // stacked stone golem: head slab with a sapli
    Room geometry: ground plane (vertex colours + gentle displacement outside the lane), strata dirt box, back bank with hills, instanced foliage. */
 const roomGroup = new THREE.Group(); scene.add(roomGroup);
 const pl = buildHero(); pl.root.visible = false; scene.add(pl.root);
+// stamina shield bubble: a plain translucent sphere drawn in code (no art file); fades with stamina, swells on a push
+const shieldMat = reg(new THREE.MeshBasicMaterial({ color: '#9fe3ff', transparent: true, opacity: .2, depthWrite: false, fog: false }));
+const shieldMesh = new THREE.Mesh(gSph, shieldMat); shieldMesh.renderOrder = 5; shieldMesh.visible = false; shieldMesh.position.y = 1.25; pl.root.add(shieldMesh);
 pl.sq = 0; pl.tailB = 0; pl.dustT = 0; pl.wasAir = false; pl.wasGround = true; pl.vyMax = 0; pl.wasDead = false; pl.lastInv = 0; pl.lastLives = -1; pl.lastRoom = -1; pl.runPh = 0; pl.hurtT = 0; pl.smokeT = 0; pl.lid = .13; pl.slant = 0;
 const Z_BACK = -6, Z_FRONT = 9;
 const frontH = (x, z) => { const m = z >= 0 ? sstep(2.4, 4.4, z) * (1 - sstep(7.4, Z_FRONT, z)) : sstep(2.4, 4.4, -z) * (1 - sstep(4.2, -Z_BACK, -z)); return m * (.15 + fbm(x * .33, z * .33) * .75); };
@@ -1131,6 +1149,9 @@ function drawUI() {
   const nl = Math.max(0, G.lives); setHTML('h-lives', ICON('heart').repeat(nl) + ICON('heart').replace('"ic"', '"ic lost"').repeat(Math.max(0, LIVES - nl)));
   $('h-lives').title = nl + ' lives';
   setHTML('h-gems', ICON('gem') + G.got.size + '/' + TREASURES);
+  { const sp = G.p ? Math.max(0, G.p.stam) : STAM_MAX, sk = String(Math.round(sp));
+    if (cache.stam !== sk) { cache.stam = sk; $('h-sfill').style.width = sp + '%'; $('h-stam').className = sp <= 0 ? 'out' : ''; $('h-stam').title = sp <= 0 ? 'Shield lost: next hit costs a heart' : 'Shield stamina ' + sk + '%'; } }
+  syncTouchDim(st);
   sysb.style.display = (st === 'play' || st === 'paused') ? 'flex' : 'none'; setTxt('h-room', 'ROOM ' + (G.room + 1) + '/' + ROOMS); setTxt('h-score', String(G.score));
   const bb = G.rs && G.rs.boss, showBar = bb && !bb.dead && (st === 'play' || st === 'paused');
   bossHud.style.display = showBar ? 'block' : 'none';
@@ -1144,17 +1165,32 @@ function drawUI() {
     panel.style.display = 'block';
     if (cache.panel !== key) { cache.panel = key;
       panel.className = st === 'title' ? 'title' : 'endp ' + (G.result === 'win' ? 'win' : 'over');
-      const seedLine = 'Seed: ' + esc(G.seed) + ' &nbsp; best: ' + G.best + '<br><small>[N] random seed &nbsp; [D] daily seed &nbsp; or add ?seed=name to the address</small>';
+      const tch = document.body.classList.contains('touch');
       panel.innerHTML = st === 'title'
         ? '<h1>MUDPITY</h1><div class="sub">(early access)</div>' +
-          '<p>Arrows / A D: move &nbsp; Space / W / Up: jump<br>Hit a vine mid-air to grab it; jump to let go<br>Beat the 3 bosses (rooms 4, 8 and 12) before the 3:00 timer ends<br>Weak spots glow: jump on them, kick with a vine release, or roll a log in</p>' +
-          '<p>' + seedLine + '</p><div class="go">PRESS ENTER / TAP TO START</div>' + BADGE
+          '<p class="goal">Beat the 3 bosses (rooms 4, 8 and 12) before the 3:00 timer ends</p>' +
+          '<div class="how">' +
+            '<b>Move</b><span>' + (tch ? 'left / right buttons' : 'Arrows or A D') + '</span>' +
+            '<b>Jump</b><span>' + (tch ? 'jump button' : 'Space, W or Up') + '</span>' +
+            '<b>Vines</b><span>hit one mid-air to grab it; jump to let go</span>' +
+            '<b>Bosses</b><span>weak spots glow: jump on them, kick with a vine release, or roll a log in</span>' +
+            '<b>Shield</b><span>logs, mud and boss hits push you back and drain stamina; when it runs out the shield is gone and the next hit costs a heart</span>' +
+          '</div>' +
+          '<div class="seedbox">Seed <b>' + esc(G.seed) + '</b> &nbsp; best <b>' + G.best + '</b><br><small>' + (tch ? 'add ?seed=name to the address for a set world' : '[N] random seed &nbsp; [D] daily seed &nbsp; or add ?seed=name to the address') + '</small></div>' +
+          '<div class="go">' + (tch ? 'TAP TO START' : 'PRESS ENTER / TAP TO START') + '</div>' + BADGE
         : '<div class="top"><h1>' + (G.result === 'win' ? 'ALL BOSSES DOWN!' : G.result === 'time' ? 'TIME UP' : 'OUT OF LIVES') + '</h1>' +
           '<p>Score ' + G.score + ' &nbsp; gems ' + G.got.size + '/' + TREASURES + ' &nbsp; best ' + G.best + ' &nbsp; seed ' + esc(G.seed) + '</p>' +
           '<div class="go">ENTER / TAP: play again &nbsp; [H] title &nbsp; [N] new seed</div></div>' +
           '<img class="ib" id="e-restart" src="art/icons/restart.png" alt="Play again" title="Play again (Enter)"><img class="ib" id="e-home" src="art/icons/home.png" alt="Title" title="Back to the title (H)">' + BADGE;
     }
   } else panel.style.display = 'none';
+}
+/* touch buttons dim when their action can't do anything right now (menus, pause, falling, being pushed, between lives) */
+const tbEls = { left: $('bl'), right: $('br'), jump: $('bj') };
+function syncTouchDim(st) {
+  const p = G.p, live = st === 'play' && p && p.dead <= 0, free = live && p.push <= 0;
+  const on = { left: !!free, right: !!free, jump: (st === 'title' || st === 'end') || !!(free && (p.onGround || p.coyote > 0 || p.vine)) };
+  for (const k in tbEls) { const d = !on[k], ck = 'dim' + k; if (cache[ck] !== d) { cache[ck] = d; tbEls[k].classList.toggle('dim', d); } }
 }
 function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 
@@ -1186,6 +1222,10 @@ function syncHero(room, p, dt) {
   pl.wasAir = air; pl.wasGround = p.onGround && !vine;
   if (p.dead > 0 && !pl.wasDead) { fxBurst(g.position.x, g.position.y + 1.2, 18, '#d6a577', 7); fxDust(g.position.x, g.position.y + 1, 8, 4, 3, '#8d6544'); addShake(.5); }
   pl.wasDead = p.dead > 0;
+  { const on = p.stam > 0 && p.dead <= 0, k = p.stam / STAM_MAX, sw = p.push > 0 ? 1 + p.push * .5 : 1;
+    if (pl.lastStam > 0 && p.stam <= 0 && p.dead <= 0) { fxBurst(g.position.x, g.position.y + 1.25, 14, '#9fe3ff', 6); addShake(.25); }
+    pl.lastStam = p.stam; shieldMesh.visible = on; shieldMat.opacity = .1 + .16 * k + (p.push > 0 ? .15 : 0);
+    const bs = (3.0 + Math.sin(VT * 3) * .06) * sw / HS; shieldMesh.scale.set(bs, bs * 1.05, bs); }
   if (pl.lastLives >= 0 && G.lives < pl.lastLives) { pl.hurtT = 1.1; if (p.dead <= 0) addShake(.4); }
   pl.lastLives = G.lives;
   if (p.inv > 0 && pl.lastInv <= 0 && p.dead <= 0) fxSpark(g.position.x, g.position.y + 1.6, 7, '#ffffff', 5);
@@ -1286,7 +1326,7 @@ applyQuality(); pl.shadow.visible = false;
 /* ---------- input ---------- */
 const keyMap = { ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', ArrowUp: 'jump', KeyW: 'jump', Space: 'jump' };
 function startOrRestart() { if (G.state === 'title' || G.state === 'end') { G.p = null; startRun(); } }
-function setSeed(s) { G.seed = s; G.world = genWorld(s); G.best = 0; try { G.best = +localStorage.getItem('jr3d-best:' + s) || 0; } catch (e) {} }
+function setSeed(s) { G.seed = s; G.world = genWorld(s); G.best = 0; try { G.best = +localStorage.getItem(BEST_KEY(s)) || 0; } catch (e) {} }
 const dailySeed = () => { const d = new Date(); return 'daily-' + d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 addEventListener('keydown', e => {
   const menu = G.state === 'title' || G.state === 'end';
@@ -1332,6 +1372,6 @@ requestAnimationFrame(frame);
 // test hook (read/steer only; no network)
 window.__jr = { G, keys, genWorld, update, render, press(k, d) { keys[k] = d; if (k === 'jump' && d) jumpQ = 0.12; },
   fingerprint(seed) { return JSON.stringify(genWorld(seed).rooms); }, startRun, setSeed, ROOMS, TREASURES, GY, enterRoom, hurtBoss, isLocked, nextBoss, BOSS_ROOMS, BOSS_DEF,
-  setQuality, quality: () => QL().name, photo(o) { photoCam = o || null; },
+  setQuality, quality: () => QL().name, harm, BEST_KEY, STAM_MAX, photo(o) { photoCam = o || null; },
   info: () => renderer ? { calls: renderer.info.render.calls, tris: renderer.info.render.triangles, fps, rev: THREE.REVISION, quality: QL().name } : null };
 })();
