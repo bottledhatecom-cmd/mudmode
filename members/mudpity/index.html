@@ -55,8 +55,12 @@
   #bl{left:3vmin} #br{left:21vmin} #bj{right:3vmin;width:22vmin}
   body.touch .tb{display:flex}
   .tb.dim{opacity:.35;filter:grayscale(1)}
-  #h-stam .sbar{display:inline-block;width:4.2em;height:.62em;border:2px solid #3f2616;background:rgba(31,20,14,.8);vertical-align:middle}
-  #h-sfill{display:block;height:100%;width:100%;background:#9fe3ff;transition:width .2s} #h-stam{color:#bfeeff} #h-stam.out{opacity:.45;color:#f3e6c4}
+  #h-vit{gap:.45em} .hc{position:relative;display:inline-flex} .hc .hf{position:absolute;left:0;top:0}
+  #h-stam .sbar{display:inline-block;width:4.6em;height:.62em;border:2px solid #3f2616;background:rgba(31,20,14,.8);vertical-align:middle}
+  #h-sfill{display:block;height:100%;width:100%;background:#9fe3ff;box-shadow:0 0 4px #9fe3ff;transition:width .2s} #h-stam.out .sbar{opacity:.5}
+  #h-stam.noshield .sbar{border-style:dashed;border-color:#d9894a}
+  #bk{right:27vmin;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='24' fill='%237a5233' stroke='%239fe3ff' stroke-width='5'/%3E%3Cpath d='M32 9V55M9 32H55' stroke='%23bf5c40' stroke-width='5'/%3E%3Ccircle cx='32' cy='32' r='6' fill='%239a9a92'/%3E%3C/svg%3E");background-size:66%}
+  #panel.title .setb{margin:.2em auto .1em;font-size:.9em;cursor:pointer} #panel.title .setb b{padding:0 .3em;border-radius:3px;opacity:.55} #panel.title .setb b.sel{opacity:1;background:#d9894a;color:#f3e6c4}
   #panel.title .goal{font-weight:bold;margin:.4em 0}
   #panel.title .how{display:grid;grid-template-columns:auto 1fr;gap:.15em .8em;text-align:left;margin:.5em auto;max-width:34em;font-size:.92em;line-height:1.35}
   #panel.title .how b{color:#5a3a22;white-space:nowrap}
@@ -72,7 +76,7 @@
 <canvas id="c" tabindex="0"></canvas>
 <div id="vig"></div>
 <div id="qbtn" title="Toggle graphics quality (Q)">QUALITY</div>
-<div id="hud"><span id="h-time"></span><span id="h-lives"></span><span id="h-gems"></span><span id="h-stam">SHIELD <span class="sbar"><span id="h-sfill"></span></span></span><span id="h-room"></span><span id="h-next"></span><span id="h-score"></span></div>
+<div id="hud"><span id="h-time"></span><span id="h-vit"><span id="h-lives"></span><span id="h-stam" title="Stamina"><span class="sbar"><span id="h-sfill"></span></span></span></span><span id="h-gems"></span><span id="h-room"></span><span id="h-next"></span><span id="h-score"></span></div>
 <div id="bosshud"><div id="bname"></div><div id="bbar"><div id="bfill"></div></div></div>
 <div id="msg"></div>
 <div id="panel"></div>
@@ -80,6 +84,7 @@
 <div class="tb" id="bl" data-k="left" aria-label="Left"></div>
 <div class="tb" id="br" data-k="right" aria-label="Right"></div>
 <div class="tb" id="bj" data-k="jump" aria-label="Jump"></div>
+<div class="tb" id="bk" data-k="block" aria-label="Block"></div>
 <div id="err">This browser could not start WebGL, so the 3D view cannot run here.</div>
 <div id="fps"></div>
 <script src="vendor/three.min.js"></script>

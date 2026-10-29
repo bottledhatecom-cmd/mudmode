@@ -1,8 +1,11 @@
 /* mudpity - early access. All original code and low-poly shapes built in code.
    Game logic is the same as the original 2D version (logical 320x180 px room space); this file adds a three.js view.
    Genre mechanics only (run, jump pits, swing on vines, avoid hazards, collect treasure, countdown).
-   dev-moves: stamina shield (projectiles, physical attacks and logs push you back and drain stamina; when stamina is out the
-   shield is gone and the next hit costs a heart; a new heart refills it). Pits still cost a heart straight away. */
+   dev-moves: physical shield (approved plan, items 1-11). It rides on his back; the block input brings it round to the front.
+   A block stops projectiles, physical attacks and logs; the shove and the stamina cost both scale with how hard the hit is.
+   Stamina runs out while blocking = the shield drops where he stands and he has to walk over it to pick it up. With no shield
+   he blocks with his hands and takes reduced damage. Stamina refills slowly on its own. An unblocked hit costs a heart; pits
+   still cost a heart straight away. Every shield / stamina number is in the TUNE block below. */
 (() => {
 'use strict';
 const W = 320, H = 180, GY = 130;          // logical size, ground line
@@ -11,7 +14,39 @@ const BOSS_ROOMS = [3, 7, 11];            // rooms 4, 8 and 12 (1-based) are bos
 const SPEED = 70, JUMP_V = 190, GRAV = 520, STEP = 1 / 60;
 const VINE_L = 78, VINE_A = 0.85, VINE_W = 2.1, VINE_Y = 28;
 const SNAP_C = 2.8;
-const STAM_MAX = 100, STAM_HIT = 34, PUSH_VX = 130, PUSH_VY = 110, PUSH_T = 0.5;   // stamina shield: 3 pushes, then it is gone
+/* ======================= TUNING (shield + stamina) =======================
+   Every shield and stamina number lives here. These are DEFAULTS for Michael to set in playtest; nothing else in the file
+   hard-codes them. Units: stamina 0..STAM_MAX; force 1 = an ordinary rolling log; speeds in logical px/s (a room is 320 px
+   wide, the hero runs at 70); times in seconds. */
+const TUNE = {
+  STAM_MAX: 100,               // full stamina
+  BLOCK_COST_PER_FORCE: 25,    // stamina drained by one block = hit force x this (a force-1 log costs 25: 4 log blocks from full)
+  REGEN_PER_SEC: 4,            // slow refill on its own, stamina per second (empty -> full in 25 s)
+  REGEN_DELAY: 1.5,            // seconds after a block before the refill starts again
+  RAISE_TIME: 0.18,            // seconds to reach back and bring the shield to the front; a block only counts once it is in front
+  LOWER_TIME: 0.22,            // seconds to put it back on his back (look only)
+  HAND_RAISE_TIME: 0.08,       // seconds to get his hands up when he has no shield
+  HAND_BLOCK_DAMAGE: 0.5,      // hearts lost per hand block (an unblocked hit costs 1 heart); 0.5 = half damage
+  REACT_VX_PER_FORCE: 110,     // shove speed per unit of force (no fixed push: a force-0.5 hit shoves half as hard)
+  REACT_VY_PER_FORCE: 70,      // upward pop per unit of force
+  REACT_T_PER_FORCE: 0.30,     // seconds of stagger per unit of force (no running or jumping while staggered)
+  REACT_T_MAX: 0.8,            // a stagger never lasts longer than this
+  BLOCK_INV: 0.45,             // seconds after a block in which the same hit can't land again
+  PICKUP_RANGE: 8,             // px: walk this close over the dropped shield to pick it up
+  BLOCK_MOVE_SCALE: 1,         // run speed while blocking (1 = unchanged)
+  BLOCK_MODE_DEFAULT: 'press', // 'press' = tap to raise, tap again to lower; 'hold' = up while held (the player picks on the title screen)
+  FORCE: {                     // how hard each hit is: more force = bigger shove and more stamina per block
+    log: 1.0,                  //   x the log's speed / 57 (logs roll at 50-64 px/s)
+    crawler: 0.6, snap: 0.8,
+    mudBall: 0.8, mudSplash: 0.5, bogjaw: 1.6,      // boss 1 (BOGJAW)
+    seedBomb: 1.2, swoop: 1.4,                      // boss 2 (GLOOMWING)
+    totem: 2.0, shockwave: 1.0, totemBall: 0.9      // boss 3 (MUDTOTEM)
+  },
+  GLOW_MIN: 0.08,              // shield glow brightness at empty stamina
+  GLOW_MAX: 1.0                // shield glow brightness at full stamina
+};
+const STAM_MAX = TUNE.STAM_MAX, FORCE = TUNE.FORCE;
+const BLOCK_MODE_KEY = 'mudpity-block-mode';   // the player's press / hold choice, stored on this device only
 const BEST_KEY = s => 'mudpity-best-v2:' + s;   // new best-score key: the shield changes scoring, so old bests stay under their old key
 
 const P = { // earthy palette matching the approved art textures
@@ -72,15 +107,21 @@ function genRoom(seed,i,kind,hasT){
 /* ---------- state ---------- */
 const qs=new URLSearchParams(location.search);
 const G={state:'title', seed:(qs.get('seed')||'mud').slice(0,24), world:null, t:0, timeLeft:TIME, lives:LIVES, score:0,
-  got:new Set(), bosses:{}, burst:[], winT:0, allGems:false, room:0, p:null, rs:null, result:'', msg:'', msgT:0, best:0};
+  got:new Set(), bosses:{}, burst:[], winT:0, drop:null, blocks:0, lastBlock:null, allGems:false, room:0, p:null, rs:null, result:'', msg:'', msgT:0, best:0};
 try{ G.best=+localStorage.getItem(BEST_KEY(G.seed))||0; }catch(e){}
-const keys={left:false,right:false,jump:false}; let jumpQ=0;
+const keys={left:false,right:false,jump:false,block:false}; let jumpQ=0;
+/* block input: 'press' toggles the block on and off, 'hold' blocks while the key / button is down */
+let blockMode=TUNE.BLOCK_MODE_DEFAULT, blockLatch=false;
+try{ const m=localStorage.getItem(BLOCK_MODE_KEY); if(m==='press'||m==='hold') blockMode=m; }catch(e){}
+function setBlockMode(m){ blockMode=m==='hold'?'hold':'press'; blockLatch=false; keys.block=false; try{ localStorage.setItem(BLOCK_MODE_KEY,blockMode); }catch(e){} }
+function blockInput(down){ if(blockMode==='hold') keys.block=!!down; else if(down) blockLatch=!blockLatch; }
+const wantBlock=()=>blockMode==='hold'?keys.block:blockLatch;
 G.world=genWorld(G.seed);
 
-function newPlayer(x){return {x,y:GY,vx:0,vy:0,face:1,onGround:true,coyote:0,vine:null,vs:1,grabCd:0,kick:0,inv:0,dead:0,step:0,stam:STAM_MAX,push:0};}
+function newPlayer(x){return {x,y:GY,vx:0,vy:0,face:1,onGround:true,coyote:0,vine:null,vs:1,grabCd:0,kick:0,inv:0,dead:0,step:0,stam:STAM_MAX,react:0,binv:0,shield:true,blocking:false,blk:0,chip:0,regenT:0};}
 function startRun(){
   G.world=genWorld(G.seed); G.t=0; G.timeLeft=TIME; G.lives=LIVES; G.score=0; G.got=new Set(); G.result='';
-  G.bosses={}; G.winT=0; G.burst=[]; G.allGems=false;
+  G.bosses={}; G.winT=0; G.burst=[]; G.allGems=false; G.drop=null; G.blocks=0; G.lastBlock=null; blockLatch=false; keys.block=false;
   G.state='play'; enterRoom(0,null); sfx(520,.08);
 }
 function enterRoom(i,from){
@@ -108,17 +149,37 @@ function sfx(f,d,type){ try{ if(!ac){ac=new (window.AudioContext||window.webkitA
 
 function loseLife(why){
   const p=G.p; if(p.dead>0) return;
-  p.dead=0.8; p.vine=null; G.lives--; G.msg=why; G.msgT=1.2; sfx(110,.35,'sawtooth');
+  p.dead=0.8; p.vine=null; p.chip=0; G.lives--; G.msg=why; G.msgT=1.2; sfx(110,.35,'sawtooth');
 }
-/* stamina shield: a hit from a projectile, a physical attack or a log pushes you away from it and drains stamina;
-   when stamina is out you lose the shield, and from then on a hit costs a heart as before */
-function harm(why,sx){
-  const p=G.p; if(p.inv>0||p.dead>0) return;
-  if(p.stam<=0){ loseLife(why); return; }
-  p.stam=Math.max(0,p.stam-STAM_HIT);
+/* shield (plan items 3-10). A hit from a projectile, a physical attack or a log:
+   - blocking with the shield in front: stamina drops by force x BLOCK_COST_PER_FORCE and he is shoved by the force of the hit;
+     if that empties his stamina the shield drops on the ground where he is
+   - blocking with no shield (hands): same shove, and HAND_BLOCK_DAMAGE of a heart instead of a whole one
+   - not blocking (or the shield is still coming round): the hit costs a heart */
+const blockReady=p=>p.blocking&&p.blk>=(p.shield?TUNE.RAISE_TIME:TUNE.HAND_RAISE_TIME);
+function harm(why,sx,force){
+  const p=G.p; if(p.inv>0||p.binv>0||p.dead>0) return;
+  const f=force===undefined?1:Math.max(0,force);
+  if(!blockReady(p)){ loseLife(why); return; }
   const d=(sx===undefined||sx===p.x)?-p.face:(p.x<sx?-1:1);
-  p.vine=null; p.grabCd=0.3; p.kick=0; p.vx=d*PUSH_VX; p.vy=-PUSH_VY; p.onGround=false; p.coyote=0; p.inv=PUSH_T; p.push=PUSH_T; jumpQ=0;
-  if(p.stam<=0){ G.msg='shield lost!'; G.msgT=1.2; sfx(160,.3,'sawtooth'); } else { G.msg='shield: '+why; G.msgT=.7; sfx(520,.09,'triangle'); }
+  p.vine=null; p.grabCd=0.3; p.kick=0; p.vx=d*TUNE.REACT_VX_PER_FORCE*f; p.vy=-TUNE.REACT_VY_PER_FORCE*f; if(p.vy<0) p.onGround=false; p.coyote=0;
+  p.react=Math.min(TUNE.REACT_T_MAX,TUNE.REACT_T_PER_FORCE*f); p.binv=TUNE.BLOCK_INV; jumpQ=0;
+  G.blocks++; G.lastBlock={why,force:f,hand:!p.shield,cost:p.shield?f*TUNE.BLOCK_COST_PER_FORCE:0};
+  if(p.shield){
+    p.stam=Math.max(0,p.stam-f*TUNE.BLOCK_COST_PER_FORCE); p.regenT=TUNE.REGEN_DELAY;
+    if(p.stam<=0) dropShield(); else { G.msg='blocked: '+why; G.msgT=.7; sfx(520,.09,'triangle'); }
+  } else {
+    p.chip+=TUNE.HAND_BLOCK_DAMAGE;
+    if(p.chip>=1-1e-9){ const rest=p.chip-1; loseLife(why+' (hand block)'); p.chip=Math.max(0,rest); }
+    else { G.msg='hand block: '+why; G.msgT=.8; sfx(300,.1,'square'); }
+  }
+}
+/* stamina ran out while blocking: the shield falls where he stands (over a pit it lands on the nearer edge) */
+function dropShield(){
+  const p=G.p, room=G.world.rooms[G.room]; let x=Math.max(8,Math.min(W-8,p.x)); const h=holeAt(room,x);
+  if(h) x=(x-h.x0<h.x1-x)?h.x0-6:h.x1+6;
+  G.drop={room:G.room,x:Math.max(8,Math.min(W-8,x))}; p.shield=false;
+  G.msg='shield dropped! walk over it to pick it up'; G.msgT=1.6; sfx(160,.3,'sawtooth');
 }
 function addScore(n){ G.score+=n; }
 function endRun(result){
@@ -135,7 +196,11 @@ function update(dt){
   G.t+=dt; G.timeLeft-=dt; if(G.msgT>0) G.msgT-=dt;
   if(G.timeLeft<=0){ G.timeLeft=0; endRun('time'); return; }
   if(jumpQ>0) jumpQ-=dt;
-  if(p.grabCd>0) p.grabCd-=dt; if(p.inv>0) p.inv-=dt; if(p.push>0) p.push-=dt; if(p.kick>0) p.kick-=dt;
+  if(p.grabCd>0) p.grabCd-=dt; if(p.inv>0) p.inv-=dt; if(p.binv>0) p.binv-=dt; if(p.react>0) p.react-=dt; if(p.kick>0) p.kick-=dt;
+  // stamina refills slowly on its own (a short pause after each block)
+  if(p.regenT>0) p.regenT-=dt; else p.stam=Math.min(STAM_MAX,p.stam+TUNE.REGEN_PER_SEC*dt);
+  // block input: blk counts how long the block has been up (the shield has to come round from his back first)
+  p.blocking=wantBlock()&&!p.vine&&p.dead<=0; p.blk=p.blocking?p.blk+dt:0;
   if(G.winT>0){ G.winT-=dt; if(G.winT<=0){ endRun('win'); return; } }
 
   // dying: wait then respawn or end
@@ -143,7 +208,7 @@ function update(dt){
     p.dead-=dt; p.y+=Math.min(p.vy,60)*dt;
     if(p.dead<=0){
       if(G.lives<=0){ endRun('lives'); return; }
-      p.x=rs.spawn; p.y=GY; p.vx=0; p.vy=0; p.onGround=true; p.vine=null; p.inv=1.6; p.dead=0; jumpQ=0; p.kick=0; p.stam=STAM_MAX; p.push=0; if(rs.boss) bossReset(rs.boss);
+      p.x=rs.spawn; p.y=GY; p.vx=0; p.vy=0; p.onGround=true; p.vine=null; p.inv=1.6; p.dead=0; jumpQ=0; p.kick=0; p.react=0; p.binv=0; if(rs.boss) bossReset(rs.boss);
     }
     stepWorld(room,rs,dt); return;
   }
@@ -161,10 +226,10 @@ function update(dt){
   } else {
     if(p.onGround) p.coyote=0.08; else if(p.coyote>0) p.coyote-=dt;
     if(ax) p.face=ax;
-    if(p.onGround&&p.push<=0){ p.vx=ax*SPEED; }
-    else if(p.onGround){ p.vx*=Math.exp(-6*dt); }   // a push slides you along the ground and fades
+    if(p.onGround&&p.react<=0){ p.vx=ax*SPEED*(p.blocking?TUNE.BLOCK_MOVE_SCALE:1); }
+    else if(p.onGround){ p.vx*=Math.exp(-6*dt); }   // a shove from a blocked hit slides him along the ground and fades
     else { const tv=ax*SPEED, d=tv-p.vx, m=260*dt; p.vx+=Math.abs(d)<m?d:Math.sign(d)*m; }
-    if(jumpQ>0 && p.coyote>0 && p.push<=0){ p.vy=-JUMP_V; p.onGround=false; p.coyote=0; jumpQ=0; sfx(440,.08); }
+    if(jumpQ>0 && p.coyote>0 && p.react<=0){ p.vy=-JUMP_V; p.onGround=false; p.coyote=0; jumpQ=0; sfx(440,.08); }
     const prevY=p.y;
     p.vy+=GRAV*dt; p.x+=p.vx*dt; p.y+=p.vy*dt;
     if(p.onGround) p.step+=Math.abs(p.vx)*dt;
@@ -186,6 +251,9 @@ function update(dt){
     }
   }
   if(p.dead>0) return;
+  // dropped shield: walk over it to pick it up
+  if(!p.shield && G.drop && G.drop.room===G.room && p.onGround && Math.abs(p.x-G.drop.x)<TUNE.PICKUP_RANGE){
+    p.shield=true; G.drop=null; G.msg='shield picked up'; G.msgT=.9; sfx(700,.08,'triangle'); }
 
   // room transitions
   if(!p.vine){
@@ -198,10 +266,10 @@ function update(dt){
 
   // hazards (skip while invulnerable)
   if(p.inv<=0 && p.dead<=0){
-    for(const l of rs2.logs) if(Math.abs(p.x-l.x)<9 && p.y>GY-13){ harm('hit by a log',l.x); break; }
-    if(p.dead<=0) for(const c of rs2.crawlers) if(Math.abs(p.x-c.x)<9 && p.y>GY-8){ harm('crawler bite',c.x); break; }
+    for(const l of rs2.logs) if(Math.abs(p.x-l.x)<9 && p.y>GY-13){ harm('hit by a log',l.x,FORCE.log*l.sp/57); break; }
+    if(p.dead<=0) for(const c of rs2.crawlers) if(Math.abs(p.x-c.x)<9 && p.y>GY-8){ harm('crawler bite',c.x,FORCE.crawler); break; }
     if(p.dead<=0 && p.onGround) for(const pl of room2.pools){
-      if(p.x>pl.x0&&p.x<pl.x1){ const k=Math.min(pl.n-1,Math.floor((p.x-pl.x0)/((pl.x1-pl.x0)/pl.n))); if(snapOpen(pl,k,G.t)) harm('snapped'); } }
+      if(p.x>pl.x0&&p.x<pl.x1){ const k=Math.min(pl.n-1,Math.floor((p.x-pl.x0)/((pl.x1-pl.x0)/pl.n))); if(snapOpen(pl,k,G.t)) harm('snapped',undefined,FORCE.snap); } }
   }
   // treasure
   const tr=room2.treasure;
@@ -242,7 +310,7 @@ function bossReset(b){          // after losing a life: same health, fresh teleg
   if(b.kind==='boss1'){ b.h=0; } if(b.kind==='boss2'){ b.x=160; b.y=70; b.state='hover'; } if(b.kind==='boss3'){ b.x=248; b.h=78; }
 }
 const B_go=(b,s)=>{ b.state=s; b.t=0; };
-function hitP(why,sx){ const p=G.p; if(p.inv<=0&&p.dead<=0) harm(why,sx); }
+function hitP(why,sx,f){ const p=G.p; if(p.inv<=0&&p.dead<=0) harm(why,sx,f); }
 function stompOn(b,top,half){ const p=G.p; return p.vy>0&&!p.vine&&p.dead<=0&&Math.abs(p.x-b.x)<half+4&&p.y>=top-5&&p.y<=top+12; }
 function bounceP(){ const p=G.p; p.vy=-170; p.onGround=false; p.coyote=0; }
 function kickOn(b,hw,hh,cy){ const p=G.p; return p.kick>0&&!p.onGround&&!p.vine&&p.dead<=0&&Math.abs(p.x-b.x)<hw+6&&Math.abs((p.y-12)-cy)<hh+12; }
@@ -288,7 +356,7 @@ function ai1(b,dt,p,rs,enr,m){
       if(b.wait<=0){ b.n++; if(b.n===1||rs.rng()<.6){ b.cx=clampC(p.x+p.vx*.3); B_go(b,'tele'); } else { b.cx=p.x<160?236:84; B_go(b,'stele'); } } break;
     case 'tele': { const dur=1.0*m; b.h=0; b.x=b.cx; if(b.t>=dur) B_go(b,'lunge'); break; }   // the ripple marks where it will lunge; step out of it
     case 'lunge': b.x=b.cx; b.h=52*Math.sin(Math.min(1,b.t/.2)*Math.PI/2); b.mouth=1;
-      if(p.dead<=0&&Math.abs(p.x-b.cx)<16&&p.y>GY-b.h+2&&b.h>8) hitP('mauled by Bogjaw',b.cx);
+      if(p.dead<=0&&Math.abs(p.x-b.cx)<16&&p.y>GY-b.h+2&&b.h>8) hitP('mauled by Bogjaw',b.cx,FORCE.bogjaw);
       if(b.t>=.45) B_go(b,'stun'); break;
     case 'stun': b.x=b.cx; b.h=Math.max(24,b.h-160*dt); b.mouth=.3;
       if(stompOn(b,GY-b.h,16)){ bounceP(); hurtBoss(b); if(!b.dead) B_go(b,'sink'); break; }
@@ -301,8 +369,8 @@ function ai1(b,dt,p,rs,enr,m){
   }
   for(let i=b.proj.length-1;i>=0;i--){ const q=b.proj[i];
     if(q.t==='ball'){ q.vy+=GRAV*dt; q.x+=q.vx*dt; q.y+=q.vy*dt; if(q.y>=GY-4){ q.t='puddle'; q.y=GY; q.life=.55; }
-      else if(p.dead<=0&&Math.hypot(p.x-q.x,(p.y-12)-q.y)<9) hitP('mud ball',q.x); }
-    else { q.life-=dt; if(q.life<=0){ b.proj.splice(i,1); continue; } if(p.dead<=0&&Math.abs(p.x-q.x)<13&&p.y>GY-9) hitP('mud splash',q.x); }
+      else if(p.dead<=0&&Math.hypot(p.x-q.x,(p.y-12)-q.y)<9) hitP('mud ball',q.x,FORCE.mudBall); }
+    else { q.life-=dt; if(q.life<=0){ b.proj.splice(i,1); continue; } if(p.dead<=0&&Math.abs(p.x-q.x)<13&&p.y>GY-9) hitP('mud splash',q.x,FORCE.mudSplash); }
   }
 }
 /* ---- boss 2: GLOOMWING, a canopy creature: seed-bombs, swoops, then lands exhausted ---- */
@@ -322,7 +390,7 @@ function ai2(b,dt,p,rs,enr,m){
     case 'stel': { const tx=p.x<160?Math.min(296,p.x+110):Math.max(24,p.x-110); b.x+=(tx-b.x)*ease(5); b.y+=(46-b.y)*ease(5);
       if(b.t>=.9*m){ b.sx=b.x; b.ex=Math.max(-20,Math.min(340,2*p.x-b.sx)); B_go(b,'swoop'); sfx(150,.3,'sawtooth'); } break; }   // dives straight through where you stood: jump it
     case 'swoop': { const dur=1.6*m, u=Math.min(1,b.t/dur); b.x=b.sx+(b.ex-b.sx)*u; b.y=46+(GY-12-46)*Math.sin(Math.PI*u);
-      if(p.dead<=0&&Math.abs(p.x-b.x)<18&&Math.abs((p.y-12)-b.y)<16) hitP('Gloomwing swoop',b.x);
+      if(p.dead<=0&&Math.abs(p.x-b.x)<18&&Math.abs((p.y-12)-b.y)<16) hitP('Gloomwing swoop',b.x,FORCE.swoop);
       if(u>=1){ B_go(b,'land'); } break; }
     case 'land': b.y+=(GY-14-b.y)*ease(7); b.x+=(Math.max(30,Math.min(290,b.x))-b.x)*ease(8); if(b.t>=.6){ b.y=GY-14; B_go(b,'rest'); } break;
     case 'rest': b.y=GY-14;
@@ -333,7 +401,7 @@ function ai2(b,dt,p,rs,enr,m){
   for(let i=b.proj.length-1;i>=0;i--){ const q=b.proj[i]; q.tt+=dt;
     if(q.st==='fall'){ q.vy+=380*dt; q.y+=q.vy*dt; if(q.y>=GY-5){ q.y=GY-5; q.st='fuse'; q.tt=0; } }
     else if(q.st==='fuse'){ if(q.tt>=.75){ q.st='boom'; q.tt=0; sfx(90,.25,'sawtooth'); } }
-    else { if(p.dead<=0&&Math.hypot(p.x-q.x,(p.y-10)-q.y)<18&&q.tt<.25) hitP('seed bomb',q.x); if(q.tt>=.3) b.proj.splice(i,1); }
+    else { if(p.dead<=0&&Math.hypot(p.x-q.x,(p.y-10)-q.y)<18&&q.tt<.25) hitP('seed bomb',q.x,FORCE.seedBomb); if(q.tt>=.3) b.proj.splice(i,1); }
   }
 }
 /* ---- boss 3: MUDTOTEM, ground slams send shockwaves along the floor; jump over them ---- */
@@ -359,15 +427,15 @@ function ai3(b,dt,p,rs,enr,m){
       if(b.fired<b.shots&&b.t>=b.fired*gap){ b.proj.push({t:'ball',x:b.x-22,y:((b.seq+b.fired)%2)?GY-46:GY-8,v:-(enr?110:100)}); b.fired++; sfx(200,.08,'square'); }
       if(b.fired>=b.shots&&b.t>b.shots*gap+.4){ B_go(b,'idle'); b.wait=(enr?.8:1.0); } break; }
   }
-  if(vuln&&b.state!=='dazed'&&(b.state!=='idle'||b.t>.7)&&p.dead<=0&&Math.abs(p.x-b.x)<24&&p.y>GY-b.h+4) hitP('crushed by the totem',b.x);
+  if(vuln&&b.state!=='dazed'&&(b.state!=='idle'||b.t>.7)&&p.dead<=0&&Math.abs(p.x-b.x)<24&&p.y>GY-b.h+4) hitP('crushed by the totem',b.x,FORCE.totem);
   for(let i=b.proj.length-1;i>=0;i--){ const q=b.proj[i];
-    if(q.t==='wave'){ q.x+=q.v*dt; if(q.x<-10||q.x>W+10){ b.proj.splice(i,1); continue; } if(p.dead<=0&&Math.abs(p.x-q.x)<7&&p.y>GY-13) hitP('shockwave',q.x); }
-    else { q.x+=q.v*dt; if(q.x<-10){ b.proj.splice(i,1); continue; } if(p.dead<=0&&Math.abs(p.x-q.x)<8&&p.y>q.y-7&&(p.y-25)<q.y+7) hitP('mud ball',q.x); }
+    if(q.t==='wave'){ q.x+=q.v*dt; if(q.x<-10||q.x>W+10){ b.proj.splice(i,1); continue; } if(p.dead<=0&&Math.abs(p.x-q.x)<7&&p.y>GY-13) hitP('shockwave',q.x,FORCE.shockwave); }
+    else { q.x+=q.v*dt; if(q.x<-10){ b.proj.splice(i,1); continue; } if(p.dead<=0&&Math.abs(p.x-q.x)<8&&p.y>q.y-7&&(p.y-25)<q.y+7) hitP('mud ball',q.x,FORCE.totemBall); }
   }
 }
 
 /* ======================= 3D renderer (three.js, plain WebGL) =======================
-   Layout of this half of the file (the game logic above is v2 plus the dev-moves stamina shield):
+   Layout of this half of the file (the game logic above is v2 plus the dev-moves physical shield):
    setup + quality -> noise / materials / textures -> shared geometry -> particles
    -> ART BUILDERS (buildHero / buildCrawler / buildLog / buildSnapper / buildGem / buildBoss1-3: each returns a Group plus the
    handles the animation code drives, so real art can replace one builder at a time) -> room builder -> per-frame sync -> camera -> HUD -> input -> loop.
@@ -864,9 +932,27 @@ function buildBoss3(g, skins) {   // stacked stone golem: head slab with a sapli
    Room geometry: ground plane (vertex colours + gentle displacement outside the lane), strata dirt box, back bank with hills, instanced foliage. */
 const roomGroup = new THREE.Group(); scene.add(roomGroup);
 const pl = buildHero(); pl.root.visible = false; scene.add(pl.root);
-// stamina shield bubble: a plain translucent sphere drawn in code (no art file); fades with stamina, swells on a push
-const shieldMat = reg(new THREE.MeshBasicMaterial({ color: '#9fe3ff', transparent: true, opacity: .2, depthWrite: false, fog: false }));
-const shieldMesh = new THREE.Mesh(gSph, shieldMat); shieldMesh.renderOrder = 5; shieldMesh.visible = false; shieldMesh.position.y = 1.25; pl.root.add(shieldMesh);
+// physical shield (plan items 1-3, 8, 9): a round wooden shield with a copper rim and a steel boss, built in code (no art file).
+// It hangs on the hero's back, swings round his right side to the front when he blocks, and lies on the ground when dropped.
+// A tight cool glow hugs the rim and the face; its brightness follows his stamina (TUNE.GLOW_MIN at empty .. GLOW_MAX at full).
+function buildShield() {
+  const root = new THREE.Group(), face = new THREE.Group(); root.add(face);       // the face points along local +x
+  const board = new THREE.CylinderGeometry(.6, .6, .09, 22); board.rotateZ(Math.PI / 2);
+  const rimG = new THREE.TorusGeometry(.6, .055, 6, 30); rimG.rotateY(Math.PI / 2);
+  const glowM = reg(new THREE.MeshStandardMaterial({ color: '#bf5c40', emissive: '#9fe3ff', emissiveIntensity: 1, roughness: .4, metalness: .2 }));
+  mk(board, MS('#7a5233', .85, 0), 0, 0, 0, 1, 1, 1, face);
+  for (const z of [-.3, 0, .3]) mk(gBox, MS('#5e3d25', .9, 0), .047, 0, z, .01, 1.08 - Math.abs(z) * .9, .025, face, true);   // plank seams
+  mk(rimG, glowM, 0, 0, 0, 1, 1, 1, face, true);
+  mk(gBox, MS('#bf5c40', .5, .12), .055, 0, 0, .03, 1.1, .12, face, true); mk(gBox, MS('#bf5c40', .5, .12), .055, 0, 0, .03, .12, 1.1, face, true);   // copper cross straps
+  const boss = new THREE.SphereGeometry(.17, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2); boss.rotateZ(-Math.PI / 2);
+  mk(boss, MS('#9a9a92', .35, .35), .05, 0, 0, 1, 1, 1, face, true);
+  // tight glow: a ring-shaped glow card just behind the board, so it hugs the rim (texRing peaks at the rim radius)
+  const texRing = mkTex(64, 64, (c, w) => { const r = c.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, 'rgba(255,255,255,0)'); r.addColorStop(.58, 'rgba(255,255,255,0)'); r.addColorStop(.72, 'rgba(255,255,255,1)'); r.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = r; c.fillRect(0, 0, w, w); });
+  const haloM = reg(new THREE.MeshBasicMaterial({ map: texRing, color: '#9fe3ff', transparent: true, opacity: .6, depthWrite: false, fog: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }));
+  const halo = new THREE.Mesh(gQuad, haloM); halo.rotation.y = Math.PI / 2; halo.position.x = -.06; halo.scale.set(1.7, 1.7, 1); halo.renderOrder = 5; face.add(halo);
+  return { root, face, glowM, haloM, halo };
+}
+const shield = buildShield(); pl.bod.add(shield.root);
 // buddy companion: the picked buddy drawing (art/buddy.webp) on an upright quad that turns to the camera and trails the hero.
 // Visual only (no gameplay effect). Not shown when the page is opened from file://, where browsers block image upload to WebGL.
 const BUDDY_H = 1.9, BUDDY_W = BUDDY_H * 247 / 320, BUDDY_ART_FACE = -1;   // the drawing's 3/4 view looks to the viewer's left
@@ -1166,11 +1252,13 @@ function drawUI() {
   hudEl.style.display = (st === 'play' || st === 'paused' || st === 'end') ? 'flex' : 'none';
   const m = Math.floor(G.timeLeft / 60), s = Math.floor(G.timeLeft % 60);
   setTxt('h-time', 'TIME ' + m + ':' + String(s).padStart(2, '0')); $('h-time').className = G.timeLeft < 30 ? 'warn' : '';
-  const nl = Math.max(0, G.lives); setHTML('h-lives', ICON('heart').repeat(nl) + ICON('heart').replace('"ic"', '"ic lost"').repeat(Math.max(0, LIVES - nl)));
-  $('h-lives').title = nl + ' lives';
   setHTML('h-gems', ICON('gem') + G.got.size + '/' + TREASURES);
-  { const sp = G.p ? Math.max(0, G.p.stam) : STAM_MAX, sk = String(Math.round(sp));
-    if (cache.stam !== sk) { cache.stam = sk; $('h-sfill').style.width = sp + '%'; $('h-stam').className = sp <= 0 ? 'out' : ''; $('h-stam').title = sp <= 0 ? 'Shield lost: next hit costs a heart' : 'Shield stamina ' + sk + '%'; } }
+  const nl = Math.max(0, G.lives), chip = G.p && nl > 0 ? Math.max(0, Math.min(1, G.p.chip)) : 0, full = chip > 0 ? nl - 1 : nl;   // a hand block takes part of the current heart
+  setHTML('h-lives', ICON('heart').repeat(full) + (chip > 0 ? '<span class="hc">' + ICON('heart').replace('"ic"', '"ic lost"') + ICON('heart').replace('"ic"', '"ic hf" style="clip-path:inset(0 ' + Math.round(chip * 100) + '% 0 0)"') + '</span>' : '') + ICON('heart').replace('"ic"', '"ic lost"').repeat(Math.max(0, LIVES - nl)));
+  $('h-lives').title = (nl - chip) + ' lives';
+  { const sp = G.p ? Math.max(0, G.p.stam) : STAM_MAX, pct = 100 * sp / STAM_MAX, has = !G.p || G.p.shield, sk = Math.round(pct) + '|' + has;   // stamina meter next to the hearts
+    if (cache.stam !== sk) { cache.stam = sk; $('h-sfill').style.width = pct + '%'; $('h-stam').className = (pct <= 0 ? 'out' : '') + (has ? '' : ' noshield');
+      $('h-stam').title = 'Stamina ' + Math.round(pct) + '%' + (has ? '' : ' (shield on the ground: walk over it)'); } }
   syncTouchDim(st);
   sysb.style.display = (st === 'play' || st === 'paused') ? 'flex' : 'none'; setTxt('h-room', 'ROOM ' + (G.room + 1) + '/' + ROOMS); setTxt('h-score', String(G.score));
   const bb = G.rs && G.rs.boss, showBar = bb && !bb.dead && (st === 'play' || st === 'paused');
@@ -1180,7 +1268,7 @@ function drawUI() {
   setTxt('h-next', (bb && !bb.dead) ? 'BOSS FIGHT' : nb < 0 ? '' : 'NEXT BOSS IN ' + nr + (nr === 1 ? ' ROOM' : ' ROOMS'));
   msgEl.style.display = (G.msgT > 0 && st === 'play') ? 'block' : (st === 'paused' ? 'block' : 'none');
   setTxt('msg', st === 'paused' ? 'PAUSED' : G.msg);
-  let key = st + '|' + G.seed + '|' + G.best + '|' + G.result + '|' + G.score + '|' + G.got.size;
+  let key = st + '|' + G.seed + '|' + G.best + '|' + G.result + '|' + G.score + '|' + G.got.size + '|' + blockMode;
   if (st === 'title' || st === 'end') {
     panel.style.display = 'block';
     if (cache.panel !== key) { cache.panel = key;
@@ -1194,8 +1282,9 @@ function drawUI() {
             '<b>Jump</b><span>' + (tch ? 'jump button' : 'Space, W or Up') + '</span>' +
             '<b>Vines</b><span>hit one mid-air to grab it; jump to let go</span>' +
             '<b>Bosses</b><span>weak spots glow: jump on them, kick with a vine release, or roll a log in</span>' +
-            '<b>Shield</b><span>logs, mud and boss hits push you back and drain stamina; when it runs out the shield is gone and the next hit costs a heart</span>' +
+            '<b>Block</b><span>' + (tch ? 'shield button' : 'S or Down') + ': swing the shield off your back to stop logs, mud and boss hits. Each block costs stamina (bigger hits cost more) and it refills slowly. Out of stamina = the shield drops: walk over it to pick it up. No shield: block with your hands (' + Math.round((1 - TUNE.HAND_BLOCK_DAMAGE) * 100) + '% less damage). Unblocked hits cost a heart</span>' +
           '</div>' +
+          '<div class="setb" id="set-block">Block button: <b' + (blockMode === 'press' ? ' class="sel"' : '') + '>PRESS</b> / <b' + (blockMode === 'hold' ? ' class="sel"' : '') + '>HOLD</b> &nbsp;<small>' + (tch ? 'tap here to change' : '[B] or click to change') + '</small></div>' +
           '<div class="seedbox">Seed <b>' + esc(G.seed) + '</b> &nbsp; best <b>' + G.best + '</b><br><small>' + (tch ? 'add ?seed=name to the address for a set world' : '[N] random seed &nbsp; [D] daily seed &nbsp; or add ?seed=name to the address') + '</small></div>' +
           '<div class="go">' + (tch ? 'TAP TO START' : 'PRESS ENTER / TAP TO START') + '</div>' + BADGE
         : '<div class="top"><h1>' + (G.result === 'win' ? 'ALL BOSSES DOWN!' : G.result === 'time' ? 'TIME UP' : 'OUT OF LIVES') + '</h1>' +
@@ -1205,12 +1294,13 @@ function drawUI() {
     }
   } else panel.style.display = 'none';
 }
-/* touch buttons dim when their action can't do anything right now (menus, pause, falling, being pushed, between lives) */
-const tbEls = { left: $('bl'), right: $('br'), jump: $('bj') };
+/* touch buttons dim when their action can't do anything right now (menus, pause, falling, staggered by a blocked hit, between lives) */
+const tbEls = { left: $('bl'), right: $('br'), jump: $('bj'), block: $('bk') };
 function syncTouchDim(st) {
-  const p = G.p, live = st === 'play' && p && p.dead <= 0, free = live && p.push <= 0;
-  const on = { left: !!free, right: !!free, jump: (st === 'title' || st === 'end') || !!(free && (p.onGround || p.coyote > 0 || p.vine)) };
+  const p = G.p, live = st === 'play' && p && p.dead <= 0, free = live && p.react <= 0;
+  const on = { left: !!free, right: !!free, jump: (st === 'title' || st === 'end') || !!(free && (p.onGround || p.coyote > 0 || p.vine)), block: !!(live && !p.vine) };
   for (const k in tbEls) { const d = !on[k], ck = 'dim' + k; if (cache[ck] !== d) { cache[ck] = d; tbEls[k].classList.toggle('dim', d); } }
+  const bo = st === 'play' && wantBlock(); if (cache.bkon !== bo) { cache.bkon = bo; tbEls.block.classList.toggle('on', bo); }   // lit while the block is up (press mode stays lit)
 }
 function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 
@@ -1228,6 +1318,31 @@ qbtn.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagatio
 let fps = 0, fpsN = 0, fpsT = 0;
 const hold = (cur, tgt, dt, rate) => cur + (tgt - cur) * (1 - Math.exp(-dt * rate));
 const HS = 1.08;   // hero display scale (visual only; the hitbox is unchanged)
+/* shield: on his back -> swings round his right side to the front while blocking -> on the ground when dropped */
+const SH_R = .8;   // distance from the hero's middle to the shield face
+function syncShield(room, p, dt) {
+  const sh = shield, k = Math.max(0, Math.min(1, p.stam / STAM_MAX)), glow = TUNE.GLOW_MIN + (TUNE.GLOW_MAX - TUNE.GLOW_MIN) * k;
+  if (G.blocks !== pl.lastBlocks) { if (pl.lastBlocks !== undefined && G.blocks > pl.lastBlocks && G.lastBlock && !G.lastBlock.hand) { pl.blkFlash = .25; const w = sh.halo.getWorldPosition(_vA); fxSpark(w.x, w.y, 8, '#dff6ff', 5); } pl.lastBlocks = G.blocks; }
+  pl.blkFlash = Math.max(0, (pl.blkFlash || 0) - dt);
+  if (pl.hadShield && !p.shield) { const w = sh.root.getWorldPosition(_vA); fxBurst(w.x, w.y, 14, '#9fe3ff', 6); addShake(.25); }
+  pl.hadShield = p.shield;
+  sh.glowM.emissiveIntensity = .05 + 1.1 * glow + pl.blkFlash * 2; sh.haloM.opacity = Math.min(1, glow + pl.blkFlash * 2);
+  const hs = 1.62 + .14 * glow + Math.sin(VT * 6) * .03 * glow; sh.halo.scale.set(hs, hs, 1);
+  if (p.shield) {
+    if (sh.root.parent !== pl.bod) { pl.bod.add(sh.root); pl.shE = 0; }
+    sh.root.visible = true;
+    const tgt = p.blocking && p.dead <= 0 ? 1 : 0;
+    pl.shE = tgt > (pl.shE || 0) ? Math.min(1, (pl.shE || 0) + dt / TUNE.RAISE_TIME) : Math.max(0, (pl.shE || 0) - dt / TUNE.LOWER_TIME);
+    const e = pl.shE * pl.shE * (3 - 2 * pl.shE), th = Math.PI * (1 - e);           // th: pi = on his back, pi/2 = his right side, 0 = in front
+    sh.root.position.set(Math.cos(th) * SH_R, 1.28 + Math.sin(th) * .12, Math.sin(th) * SH_R);
+    sh.root.rotation.set(0, -th, (1 - e) * .12); sh.root.scale.setScalar(1);
+  } else {
+    const d = G.drop, here = d && d.room === G.room && G.state !== 'title';
+    if (sh.root.parent !== scene) scene.add(sh.root);
+    sh.root.visible = !!here;
+    if (here) { sh.root.position.set(X(d.x), .1 + Math.max(0, Math.sin(VT * 3)) * .04, .2); sh.root.rotation.set(0, .3, Math.PI / 2); sh.root.scale.setScalar(HS); }
+  }
+}
 function syncHero(room, p, dt) {
   const g = pl.root, bod = pl.bod;
   if (!p || G.state === 'title') { g.visible = false; pl.shadow.visible = false; pl.lastLives = -1; return; }
@@ -1242,10 +1357,7 @@ function syncHero(room, p, dt) {
   pl.wasAir = air; pl.wasGround = p.onGround && !vine;
   if (p.dead > 0 && !pl.wasDead) { fxBurst(g.position.x, g.position.y + 1.2, 18, '#d6a577', 7); fxDust(g.position.x, g.position.y + 1, 8, 4, 3, '#8d6544'); addShake(.5); }
   pl.wasDead = p.dead > 0;
-  { const on = p.stam > 0 && p.dead <= 0, k = p.stam / STAM_MAX, sw = p.push > 0 ? 1 + p.push * .5 : 1;
-    if (pl.lastStam > 0 && p.stam <= 0 && p.dead <= 0) { fxBurst(g.position.x, g.position.y + 1.25, 14, '#9fe3ff', 6); addShake(.25); }
-    pl.lastStam = p.stam; shieldMesh.visible = on; shieldMat.opacity = .1 + .16 * k + (p.push > 0 ? .15 : 0);
-    const bs = (3.0 + Math.sin(VT * 3) * .06) * sw / HS; shieldMesh.scale.set(bs, bs * 1.05, bs); }
+  syncShield(room, p, dt);
   if (pl.lastLives >= 0 && G.lives < pl.lastLives) { pl.hurtT = 1.1; if (p.dead <= 0) addShake(.4); }
   pl.lastLives = G.lives;
   if (p.inv > 0 && pl.lastInv <= 0 && p.dead <= 0) fxSpark(g.position.x, g.position.y + 1.6, 7, '#ffffff', 5);
@@ -1266,6 +1378,11 @@ function syncHero(room, p, dt) {
   else if (run) { const s = Math.sin(ph); ll = s * 1.05; lr = -s * 1.05; ka = -ll * .55 + Math.max(0, s) * .3; kr = -lr * .55 + Math.max(0, -s) * .3; al = -s * 1.1; ar = s * 1.1; sl = sr = .22;
     bob = Math.abs(Math.cos(ph)) * .13; lean = -.16 - .07 * spd; hd = .06 + Math.sin(ph * 2) * .03; tw = s * .14; lid = .07; slant = .3; }
   else { const br = Math.sin(VT * 2.4); al = br * .06; ar = -al; sl = sr = .12; bob = br * .02 + .02; tw = Math.sin(VT * .7) * .18 * (Math.sin(VT * .23) > .6 ? 1 : 0); }
+  // block pose: the right arm reaches back for the shield, then both arms hold it out front; with no shield both hands come up
+  if (p.blocking && !vine && p.dead <= 0) {
+    if (p.shield) { if (pl.shE < .55) { ar = -1.35; sr = .35; } else { ar = 1.45; al = 1.1; sr = .45; sl = .25; } lean = Math.min(lean, -.06); }
+    else { al = ar = 1.75; sl = sr = -.25; lean = -.1; }
+  }
   const R = (o, k, v, r) => { o.rotation[k] = hold(o.rotation[k], v, dt, r || 30); };
   R(pl.legL, 'z', ll); R(pl.legR, 'z', lr); R(pl.ankL, 'z', ka); R(pl.ankR, 'z', kr);
   R(pl.armL, 'z', al); R(pl.armR, 'z', ar); R(pl.splL, 'x', sl); R(pl.splR, 'x', -sr);
@@ -1355,6 +1472,8 @@ addEventListener('keydown', e => {
   if (menu && e.code === 'KeyD') { setSeed(dailySeed()); G.state = 'title'; return; }
   const k = keyMap[e.code];
   if (k) { e.preventDefault(); if (k === 'jump' && !keys.jump) jumpQ = 0.12; keys[k] = true; return; }
+  if (e.code === 'ArrowDown' || e.code === 'KeyS') { e.preventDefault(); if (!e.repeat && G.state === 'play') blockInput(true); return; }
+  if (e.code === 'KeyB' && menu && !e.repeat) { setBlockMode(blockMode === 'press' ? 'hold' : 'press'); return; }
   if (e.code === 'Enter') { e.preventDefault(); startOrRestart(); }
   else if (e.code === 'KeyP' && (G.state === 'play' || G.state === 'paused')) { G.state = G.state === 'play' ? 'paused' : 'play'; }
   else if (e.code === 'KeyN' && menu) { setSeed(Math.random().toString(36).slice(2, 8)); G.state = 'title'; }
@@ -1370,16 +1489,19 @@ function togglePause() { if (G.state === 'play' || G.state === 'paused') G.state
 function goHome() { if (G.state === 'end') { G.state = 'title'; } }
 syncSnd();
 [['b-pause', togglePause], ['b-snd', toggleMute]].forEach(([id, f]) => $(id).addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); f(); }));
-addEventListener('keyup', e => { const k = keyMap[e.code]; if (k) keys[k] = false; });
-addEventListener('blur', () => { keys.left = keys.right = keys.jump = false; });
+addEventListener('keyup', e => { const k = keyMap[e.code]; if (k) keys[k] = false; if (e.code === 'ArrowDown' || e.code === 'KeyS') blockInput(false); });
+addEventListener('blur', () => { keys.left = keys.right = keys.jump = keys.block = false; });
 if ('ontouchstart' in window || matchMedia('(pointer: coarse)').matches) document.body.classList.add('touch');
 document.querySelectorAll('.tb').forEach(b => { const k = b.dataset.k;
+  if (k === 'block') {   // block button: press mode toggles, hold mode blocks while the finger is down (lit state set in syncTouchDim)
+    const bd = e => { e.preventDefault(); if (G.state === 'play') blockInput(true); try { b.setPointerCapture(e.pointerId); } catch (_) {} }, bu = e => { e.preventDefault(); blockInput(false); };
+    b.addEventListener('pointerdown', bd); b.addEventListener('pointerup', bu); b.addEventListener('pointercancel', bu); b.addEventListener('lostpointercapture', bu); return; }
   const down = e => { e.preventDefault(); if (k === 'jump' && !keys.jump) { jumpQ = 0.12; startOrRestart(); } keys[k] = true; b.classList.add('on'); try { b.setPointerCapture(e.pointerId); } catch (_) {} };
   const up = e => { e.preventDefault(); keys[k] = false; b.classList.remove('on'); };
   b.addEventListener('pointerdown', down); b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); b.addEventListener('lostpointercapture', up);
 });
 cv.addEventListener('pointerdown', () => { startOrRestart(); });
-panel.addEventListener('pointerdown', e => { e.preventDefault(); if (e.target && e.target.id === 'e-home') { goHome(); return; } startOrRestart(); });
+panel.addEventListener('pointerdown', e => { e.preventDefault(); if (e.target && e.target.id === 'e-home') { goHome(); return; } if (e.target && e.target.closest && e.target.closest('#set-block')) { setBlockMode(blockMode === 'press' ? 'hold' : 'press'); return; } startOrRestart(); });
 
 /* ---------- loop ---------- */
 let last = performance.now(), acc = 0;
@@ -1391,8 +1513,10 @@ function frame(now) {
 requestAnimationFrame(frame);
 
 // test hook (read/steer only; no network)
-window.__jr = { G, keys, genWorld, update, render, press(k, d) { keys[k] = d; if (k === 'jump' && d) jumpQ = 0.12; },
+window.__jr = { G, keys, genWorld, update, render, press(k, d) { if (k === 'block') { blockInput(d); return; } keys[k] = d; if (k === 'jump' && d) jumpQ = 0.12; },
   fingerprint(seed) { return JSON.stringify(genWorld(seed).rooms); }, startRun, setSeed, ROOMS, TREASURES, GY, enterRoom, hurtBoss, isLocked, nextBoss, BOSS_ROOMS, BOSS_DEF,
-  setQuality, quality: () => QL().name, harm, BEST_KEY, STAM_MAX, buddy: () => ({ on: buddy.on, visible: buddy.root.visible, x: buddy.root.position.x, y: buddy.root.position.y, face: buddy.face, heroX: G.p ? X(G.p.x) : null }), photo(o) { photoCam = o || null; },
+  setQuality, quality: () => QL().name, harm, BEST_KEY, STAM_MAX, TUNE, setBlockMode, blockMode: () => blockMode, wantBlock, blockReady: () => !!(G.p && blockReady(G.p)),
+  shieldView: () => { const w = shield.root.getWorldPosition(new THREE.Vector3()); return { parent: shield.root.parent === pl.bod ? 'hero' : 'ground', visible: shield.root.visible, e: pl.shE || 0, x: w.x, y: w.y, z: w.z, heroX: G.p ? X(G.p.x) : null, glow: shield.glowM.emissiveIntensity, halo: shield.haloM.opacity }; },
+  buddy: () => ({ on: buddy.on, visible: buddy.root.visible, x: buddy.root.position.x, y: buddy.root.position.y, face: buddy.face, heroX: G.p ? X(G.p.x) : null }), photo(o) { photoCam = o || null; },
   info: () => renderer ? { calls: renderer.info.render.calls, tris: renderer.info.render.triangles, fps, rev: THREE.REVISION, quality: QL().name } : null };
 })();
