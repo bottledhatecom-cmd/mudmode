@@ -508,7 +508,6 @@ const reg = m => { allMats.add(m); return m; };
 const M = (hex, emissive, flat) => { const k = hex + (emissive || '') + (flat ? 'F' : ''); return matCache[k] || (matCache[k] = reg(new THREE.MeshLambertMaterial({ color: hex, flatShading: !!flat, emissive: emissive || '#000000' }))); };
 const MS = (hex, rough, metal, emissive, flat) => { const k = 's' + hex + rough + metal + (emissive || '') + (flat ? 'F' : ''); return matCache[k] || (matCache[k] = reg(new THREE.MeshStandardMaterial({ color: hex, roughness: rough, metalness: metal, flatShading: !!flat, emissive: emissive || '#000000' }))); };
 const MB = (hex, op, add) => { const k = 'b' + hex + op + (add ? 'A' : ''); return matCache[k] || (matCache[k] = reg(new THREE.MeshBasicMaterial({ color: hex, transparent: true, opacity: op, depthWrite: false, fog: !add, blending: add ? THREE.AdditiveBlending : 1 }))); };
-const VC = (flat, side) => { const k = 'vc' + (flat ? 'F' : '') + (side ? 'D' : ''); return matCache[k] || (matCache[k] = reg(new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: !!flat, side: side ? THREE.DoubleSide : 0 }))); };
 // wind sway for foliage: expr is a GLSL float using the local `position`; instanced meshes get a per-instance phase
 function swayMat(key, expr, flat, side) {
   const m = reg(new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: !!flat, side: side ? THREE.DoubleSide : 0 }));
@@ -608,7 +607,7 @@ function mkPool(add, tex) {
   const mesh = new THREE.InstancedMesh(geo, m, PMAX); mesh.count = 0; mesh.frustumCulled = false; mesh.renderOrder = 5;
   mesh.setColorAt(0, _c.set('#ffffff')); scene.add(mesh); return { mesh, al, list: [], add };
 }
-const poolN = mkPool(false, texSoft), poolA = mkPool(true, texStar), poolG = mkPool(true, texGlow);
+const poolN = mkPool(false, texSoft), poolA = mkPool(true, texStar);
 function emit(pool, x, y, z, vx, vy, vz, life, size, color, grav, drag, grow) {
   if (pool.list.length >= Math.min(PMAX, QL().pmax)) return;
   pool.list.push({ x, y, z, vx, vy, vz, life, max: life, size, c: new THREE.Color(color), grav: grav || 0, drag: drag || 0, grow: grow || 0 });
@@ -688,7 +687,8 @@ artify(mats.tar, 'md', [{ t: 'mud', sc: .2, st: .45, flow: 'uTime*.01,0.,uTime*.
 artify(mats.mire, 'mr', [{ t: 'mud', sc: .14, st: .5, flow: 'uTime*.015,0.,uTime*.01' }]); mats.mire.color.set('#6a5238');
 const gScarf = new THREE.TorusGeometry(.5, .15, 8, 20); gScarf.rotateX(Math.PI / 2);
 const gCirc = new THREE.CircleGeometry(.5, 18);
-const blobShadow = (par, y, size) => { const m = mk(gFlat, reg(new THREE.MeshBasicMaterial({ map: texGlow, color: '#000000', transparent: true, opacity: .45, depthWrite: false, fog: false })), 0, y, 0, size, 1, size, par, true); m.userData.blob = true; m.visible = !QL().shadows; return m; };
+const blobMat = () => reg(new THREE.MeshBasicMaterial({ map: texGlow, color: '#000000', transparent: true, opacity: .45, depthWrite: false, fog: false })), blobShared = blobMat();   // crawlers + logs share one; the hero's is its own
+const blobShadow = (par, y, size, own) => { const m = mk(gFlat, own ? blobMat() : blobShared, 0, y, 0, size, 1, size, par, true); m.userData.blob = true; m.visible = !QL().shadows; return m; };
 
 /* ---- HERO: robot hero (approved design: glass dome, seedling, telescoping pipe arms), low-poly in code. Faces +x. ---- */
 function buildHero() {   // robot hero (approved design, adapted to low-poly 3D in code). Faces +x; +z is its right side. Swap this whole function to change the hero art.
@@ -772,7 +772,7 @@ function buildHero() {   // robot hero (approved design, adapted to low-poly 3D 
   const up = (a, b) => new THREE.Vector3(Math.cos(b) * Math.cos(a), Math.sin(b) * 1.3, Math.cos(b) * Math.sin(a));
   for (const [a, b, l, sp_] of [[.75, .6, .24, .4], [.95, .45, .18, -.7], [.6, .35, .16, 1.2], [2.6, .5, .2, .3]]) { const c = onSurf(new THREE.Mesh(gBox, crack), head, up(a, b), .78, sp_); c.scale.set(.012, l, .005); c.position.y += .3; }
   for (const sp_ of [.7, -.7]) { const t = onSurf(new THREE.Mesh(gBox, tape), head, up(.78, .52), .785, sp_); t.scale.set(.06, .24, .006); t.position.y += .3; }
-  h.shadow = blobShadow(scene, .06, 1.6);                                                         // low-quality contact shadow (also a faint one on high)
+  h.shadow = blobShadow(scene, .06, 1.6, true);                                                         // low-quality contact shadow (also a faint one on high)
   return h;
 }
 
@@ -820,8 +820,8 @@ function buildSnapper(w) {
 function buildGem(kind) {
   const root = new THREE.Group(), col = P.gem[kind], h = { root, stars: [] };
   h.core = mk(gOct, MS(col, .18, .25, col, true), 0, 0, 0, 1.0, 1.6, .9, root); h.core.material = h.core.material.clone(); h.core.material.emissiveIntensity = .45;
-  h.halo = new THREE.Mesh(gQuad, reg(new THREE.MeshBasicMaterial({ map: texGlow, color: col, transparent: true, opacity: .55, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }))); h.halo.scale.set(3.4, 3.4, 1); h.halo.position.z = -.3; h.halo.renderOrder = 4;
-  for (let i = 0; i < 3; i++) { const s = new THREE.Mesh(gQuad, reg(new THREE.MeshBasicMaterial({ map: texStar, color: '#fff4c8', transparent: true, opacity: .9, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }))); s.renderOrder = 4; h.stars.push(s); }
+  h.halo = new THREE.Mesh(gQuad, matCache['gh' + col] || (matCache['gh' + col] = reg(new THREE.MeshBasicMaterial({ map: texGlow, color: col, transparent: true, opacity: .55, depthWrite: false, fog: false, blending: THREE.AdditiveBlending })))); h.halo.scale.set(3.4, 3.4, 1); h.halo.position.z = -.3; h.halo.renderOrder = 4;
+  for (let i = 0; i < 3; i++) { const s = new THREE.Mesh(gQuad, matCache.gemStar || (matCache.gemStar = reg(new THREE.MeshBasicMaterial({ map: texStar, color: '#fff4c8', transparent: true, opacity: .9, depthWrite: false, fog: false, blending: THREE.AdditiveBlending })))); s.renderOrder = 4; h.stars.push(s); }
   return h;
 }
 
@@ -1040,7 +1040,7 @@ function instFrom(list, geo, mat, R, v, cast) {
   m.castShadow = !!cast; m.receiveShadow = true; R.add(m); v.own.push(m); return m;
 }
 let view = null, builtKey = '', forceRebuild = false;
-function disposeView() { if (!view) return; for (const o of view.own) o.dispose(); }
+function disposeView() { if (!view) return; for (const o of view.own) { o.dispose(); if (o.isMaterial) allMats.delete(o); } }   // per-room geometry, instanced meshes and materials
 function buildRoom(room) {
   disposeView(); roomGroup.clear();
   const R = roomGroup, q = QL(), v = { vines: [], snaps: [], logs: [], crawlers: [], gem: null, bubbles: [], tarFlag: room.holeKind === 'tar', own: [], pools: {}, bev: {}, qi: Qi, rays: [], gemGot: G.got.has(gid(room.i)) };
@@ -1073,7 +1073,7 @@ function buildRoom(room) {
     const w = pw / pool.n;
     for (let k = 0; k < pool.n; k++) { const sn = buildSnapper(w); sn.root.position.x = X(pool.x0) + (k + .5) * w; R.add(sn.root); v.snaps.push({ jaw: sn.jaw, pa: sn.pa, pb: sn.pb, pool, k }); }
   }
-  const leafCard = reg(new THREE.MeshLambertMaterial({ color: '#8fc04a', side: THREE.DoubleSide })), vineMat = M(P.vine), knobMat = M('#8a5a30');
+  const leafCard = matCache.leafCard || (matCache.leafCard = reg(new THREE.MeshLambertMaterial({ color: '#8fc04a', side: THREE.DoubleSide }))), vineMat = M(P.vine), knobMat = M('#8a5a30');
   for (const vn_ of room.vines) {
     const bx = X(vn_.ax), by = Y(VINE_Y);
     rot(mk(capG(.42, 5.2), AM.barkBranch, bx, by + .4, 0, 1, 1, 1, R), Math.PI / 2, 0, 0);                              // branch the vine hangs from
@@ -1121,11 +1121,11 @@ function buildRoom(room) {
   instFrom(lians, gLian, mats.lian, R, v, false);
   // foreground bushes in front of the lane
   for (let k = 0; k < 8; k++) { const x = -6 + rr() * 44, z = 7.5 + rr() * 1.4; mk(gBlob, MV(rr() < .5 ? '#2f8a4a' : '#3d7f5c', true), x, .35, z, 2 + rr() * 1.6, 1.2 + rr(), 1.6, R); }
-  if (room.treasure) { const t = room.treasure, gem = buildGem(t.kind); gem.root.position.set(X(t.x), Y(t.y), 0); R.add(gem.root, gem.halo, ...gem.stars); gem.root.userData.id = gid(room.i); gem.t = t; v.gem = gem; }
+  if (room.treasure) { const t = room.treasure, gem = buildGem(t.kind); gem.root.position.set(X(t.x), Y(t.y), 0); R.add(gem.root, gem.halo, ...gem.stars); gem.root.userData.id = gid(room.i); gem.t = t; v.gem = gem; v.own.push(gem.core.material); }
   // sunlit god-ray cards (additive, slowly breathing) and drifting motes
   for (let k = 0; k < q.rays; k++) { const m = new THREE.Mesh(gQuad, new THREE.MeshBasicMaterial({ map: texRay, transparent: true, opacity: .2, depthWrite: false, fog: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide })); m.renderOrder = 3;
     m.userData = { ox: -15 + k * (30 / Math.max(1, q.rays - 1)) + (rd() - .5) * 3, oz: -3.5 - rd() * 8, w: 2.2 + rd() * 3, ph: rd() * 6, base: .1 + rd() * .1 }; R.add(m); v.rays.push(m); v.own.push(m.material); }
-  if (q.motes) { const mm = new THREE.InstancedMesh(gQuad, reg(new THREE.MeshBasicMaterial({ map: texGlow, color: '#ffeab0', transparent: true, opacity: .55, depthWrite: false, fog: false, blending: THREE.AdditiveBlending })), q.motes); mm.frustumCulled = false; mm.renderOrder = 4; R.add(mm); v.own.push(mm);
+  if (q.motes) { const mm = new THREE.InstancedMesh(gQuad, matCache.motes || (matCache.motes = reg(new THREE.MeshBasicMaterial({ map: texGlow, color: '#ffeab0', transparent: true, opacity: .55, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }))), q.motes); mm.frustumCulled = false; mm.renderOrder = 4; R.add(mm); v.own.push(mm);
     v.motes = { mesh: mm, d: Array.from({ length: q.motes }, () => ({ x: rd() * 34 - 17, y: 1 + rd() * 9, z: -6 + rd() * 12, p: rd() * 6, s: .08 + rd() * .1 })) }; }
   if (BOSS_DEF[room.kind]) buildBossModel(room, R, v);
   view = v;
@@ -1145,7 +1145,7 @@ function buildBossModel(room, R, v) {
     return gr; };
   v.gates = [mkGate(X(1)), mkGate(X(W - 1))];
   const wk = new THREE.Group(); R.add(wk); mk(gOct, MS('#ffb347', .3, .2, '#ff8a30', true), 0, 0, 0, 1.1, 1.6, 1.1, wk); wk.visible = false; v.weak = wk;
-  v.weakHalo = new THREE.Mesh(gQuad, new THREE.MeshBasicMaterial({ map: texGlow, color: '#ffb347', transparent: true, opacity: .6, depthWrite: false, fog: false, blending: THREE.AdditiveBlending })); v.weakHalo.scale.set(4.5, 4.5, 1); v.weakHalo.renderOrder = 4; v.weakHalo.visible = false; R.add(v.weakHalo);
+  v.weakHalo = new THREE.Mesh(gQuad, new THREE.MeshBasicMaterial({ map: texGlow, color: '#ffb347', transparent: true, opacity: .6, depthWrite: false, fog: false, blending: THREE.AdditiveBlending })); v.weakHalo.scale.set(4.5, 4.5, 1); v.weakHalo.renderOrder = 4; v.weakHalo.visible = false; R.add(v.weakHalo); v.own.push(v.weakHalo.material);
   const mkMark = () => { const m = new THREE.Group(); const d = mk(gDisc, MB('#d9534f', .5), 0, .09, 0, 1, 1, 1, m, true); const r = mk(gRing, MB('#ff7a5a', .9), 0, .1, 0, 1.0, 1, 1.0, m, true); m.visible = false; m.disc = d; R.add(m); return m; };
   v.mark = mkMark();
   const g = new THREE.Group(); R.add(g); const bm = { kind: room.kind, g, skins: [] };
@@ -1156,6 +1156,7 @@ function buildBossModel(room, R, v) {
   } else if (room.kind === 'boss2') Object.assign(bm, buildBoss2(g, bm.skins));
   else Object.assign(bm, buildBoss3(g, bm.skins));
   g.traverse(o => { if (o.isMesh) { o.userData.bossPart = true; } });
+  v.own.push(...bm.skins); if (bm.eyes) for (const e of bm.eyes) v.own.push(e.material);
   bm.g = g; v.bm = bm;
 }
 function pget(key, i, mkf) { const a = view.pools[key] || (view.pools[key] = []); while (a.length <= i) { const m = mkf(); roomGroup.add(m); a.push(m); } return a[i]; }
@@ -1181,7 +1182,7 @@ function bossFx(b, bev, prev) {
   }
   bev.state = b.state;
 }
-function syncBoss(T) {
+function syncBoss() {
   const v = view; if (!v.bm) return;
   const b = G.rs && G.rs.boss, bm = v.bm, g = bm.g, p = G.p, used = {};
   const use = (key, mkf) => { const i = used[key] || 0; used[key] = i + 1; const m = pget(key, i, mkf); m.visible = true; return m; };
@@ -1350,7 +1351,7 @@ const hold = (cur, tgt, dt, rate) => cur + (tgt - cur) * (1 - Math.exp(-dt * rat
 const HS = 1.08;   // hero display scale (visual only; the hitbox is unchanged)
 /* shield: on his back -> swings round his right side to the front while blocking -> on the ground when dropped */
 const SH_R = .8;   // distance from the hero's middle to the shield face
-function syncShield(room, p, dt) {
+function syncShield(p, dt) {
   const sh = shield, k = Math.max(0, Math.min(1, p.stam / STAM_MAX)), glow = TUNE.GLOW_MIN + (TUNE.GLOW_MAX - TUNE.GLOW_MIN) * k;
   if (G.blocks !== pl.lastBlocks) { if (pl.lastBlocks !== undefined && G.blocks > pl.lastBlocks && G.lastBlock && !G.lastBlock.hand) { pl.blkFlash = .25; const w = sh.halo.getWorldPosition(_vA); fxSpark(w.x, w.y, 8, '#dff6ff', 5); } pl.lastBlocks = G.blocks; }
   pl.blkFlash = Math.max(0, (pl.blkFlash || 0) - dt);
@@ -1387,7 +1388,7 @@ function syncHero(room, p, dt) {
   pl.wasAir = air; pl.wasGround = p.onGround && !vine;
   if (p.dead > 0 && !pl.wasDead) { fxBurst(g.position.x, g.position.y + 1.2, 18, '#d6a577', 7); fxDust(g.position.x, g.position.y + 1, 8, 4, 3, '#8d6544'); addShake(.5); }
   pl.wasDead = p.dead > 0;
-  syncShield(room, p, dt);
+  syncShield(p, dt);
   if (pl.lastLives >= 0 && G.lives < pl.lastLives) { pl.hurtT = 1.1; if (p.dead <= 0) addShake(.4); }
   pl.lastLives = G.lives;
   if (p.inv > 0 && pl.lastInv <= 0 && p.dead <= 0) fxSpark(g.position.x, g.position.y + 1.6, 7, '#ffffff', 5);
@@ -1473,17 +1474,16 @@ function render(dtReal) {
     cr.root.visible = true; cr.root.position.set(X(s.x), 0, 0); cr.body.rotation.y = hold(cr.body.rotation.y, s.d > 0 ? 0 : Math.PI, dt, 14);
     cr.body.position.y = Math.abs(Math.sin(VT * 9 + k)) * .06; cr.body.scale.set(1, 1 + Math.sin(VT * 5 + k) * .03, 1);
     cr.legs.forEach(l => { l.p.rotation.z = Math.sin(VT * 14 + l.ph) * .5; }); cr.ant.forEach((a, i) => { a.rotation.z = Math.sin(VT * 4 + i) * .2; }); });
-  syncBoss(T);
+  syncBoss();
   syncHero(room, p, dt);
   syncBuddy(p, dt);
   // ambient: god-rays + motes follow the camera, camera shake, sky + sun follow
-  const cx = camera.position.x;
-  for (const r of view.rays) { const u = r.userData, d = G.state === 'title' ? 0 : 0; r.position.set(cam.x + u.ox * .85, 9, u.oz); r.scale.set(u.w, 26, 1); r.rotation.z = .42; r.material.opacity = u.base * (.65 + .35 * Math.sin(VT * .5 + u.ph)); }
+  for (const r of view.rays) { const u = r.userData; r.position.set(cam.x + u.ox * .85, 9, u.oz); r.scale.set(u.w, 26, 1); r.rotation.z = .42; r.material.opacity = u.base * (.65 + .35 * Math.sin(VT * .5 + u.ph)); }
   if (view.motes) { const mm = view.motes; mm.d.forEach((m, i) => { _o.position.set(cam.x + m.x + Math.sin(VT * m.s * 4 + m.p) * 1.2, m.y + Math.sin(VT * m.s * 3 + m.p * 2) * .7, m.z); _o.quaternion.copy(camera.quaternion); const s = .14 + .08 * Math.sin(VT * 2 + m.p); _o.scale.set(s, s, s); _o.updateMatrix(); mm.mesh.setMatrixAt(i, _o.matrix); }); mm.mesh.instanceMatrix.needsUpdate = true; }
   setCamera(dt); camera.updateMatrixWorld(); camQ.copy(camera.quaternion);
   sky.position.copy(camera.position);
   if (q.shadows) { sun.target.position.set(Math.round(cam.x * 2) / 2, 3, 0); sun.position.copy(sun.target.position).add(SUNOFF); } else { sun.target.position.set(cam.x, 3, 0); sun.position.copy(sun.target.position).add(SUNOFF); }
-  updatePool(poolN, dt); updatePool(poolA, dt); updatePool(poolG, dt);
+  updatePool(poolN, dt); updatePool(poolA, dt);
   if (renderer) renderer.render(scene, camera);
   drawUI();
   fpsN++; fpsT += dtReal || 0; if (fpsT >= 1) { fps = fpsN / fpsT; fpsN = 0; fpsT = 0; if (fpsEl) fpsEl.textContent = fps.toFixed(0) + ' fps' + (fpsEl.dataset.q ? ' ' + QL().name : ''); }
@@ -1493,7 +1493,10 @@ applyQuality(); pl.shadow.visible = false;
 
 /* ---------- input ---------- */
 const keyMap = { ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', ArrowUp: 'jump', KeyW: 'jump', Space: 'jump' };
-function startOrRestart() { if (G.state === 'title' || G.state === 'end') { G.p = null; startRun(); } }
+// end screen: ignore restart presses for END_LOCK ms after it appears (mashing jump / tapping no longer skips it); then a fresh press is needed
+const END_LOCK = 1000; let endShownAt = -1e9, wasEnd = false;
+function noteEnd() { const e = G.state === 'end'; if (e && !wasEnd) endShownAt = performance.now(); wasEnd = e; }
+function startOrRestart() { noteEnd(); if (G.state === 'end' && performance.now() - endShownAt < END_LOCK) return; if (G.state === 'title' || G.state === 'end') { G.p = null; startRun(); } }
 function setSeed(s) { G.seed = s; G.world = genWorld(s); G.best = 0; try { G.best = +localStorage.getItem(BEST_KEY(s)) || 0; } catch (e) {} }
 const dailySeed = () => { const d = new Date(); return 'daily-' + d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 addEventListener('keydown', e => {
@@ -1504,7 +1507,7 @@ addEventListener('keydown', e => {
   if (k) { e.preventDefault(); if (k === 'jump' && !keys.jump) jumpQ = 0.12; keys[k] = true; return; }
   if (e.code === 'ArrowDown' || e.code === 'KeyS') { e.preventDefault(); if (!e.repeat && G.state === 'play') blockInput(true); return; }
   if (e.code === 'KeyB' && menu && !e.repeat) { setBlockMode(blockMode === 'press' ? 'hold' : 'press'); return; }
-  if (e.code === 'Enter') { e.preventDefault(); startOrRestart(); }
+  if (e.code === 'Enter') { e.preventDefault(); if (!(e.repeat && G.state === 'end')) startOrRestart(); }
   else if (e.code === 'KeyP' && (G.state === 'play' || G.state === 'paused')) { G.state = G.state === 'play' ? 'paused' : 'play'; }
   else if (e.code === 'KeyN' && menu) { setSeed(Math.random().toString(36).slice(2, 8)); G.state = 'title'; }
   else if (e.code === 'KeyM' && !e.repeat) toggleMute();
@@ -1520,7 +1523,13 @@ function goHome() { if (G.state === 'end') { G.state = 'title'; } }
 syncSnd();
 [['b-pause', togglePause], ['b-snd', toggleMute]].forEach(([id, f]) => $(id).addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); f(); }));
 addEventListener('keyup', e => { const k = keyMap[e.code]; if (k) keys[k] = false; if (e.code === 'ArrowDown' || e.code === 'KeyS') blockInput(false); });
-addEventListener('blur', () => { keys.left = keys.right = keys.jump = keys.block = false; });
+// leaving the tab / window: drop held input and pause (the existing P pause, so the timer stops); a pause made this way resumes on return
+let autoPaused = false;
+function pauseOnLeave() { keys.left = keys.right = keys.jump = keys.block = false; blockLatch = false; jumpQ = 0; if (G.state === 'play') { G.state = 'paused'; autoPaused = true; } }
+function resumeOnReturn() { if (autoPaused && G.state === 'paused') G.state = 'play'; autoPaused = false; }
+addEventListener('blur', pauseOnLeave);
+addEventListener('focus', () => { if (!document.hidden) resumeOnReturn(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) pauseOnLeave(); else if (document.hasFocus()) resumeOnReturn(); });
 if ('ontouchstart' in window || matchMedia('(pointer: coarse)').matches) document.body.classList.add('touch');
 document.querySelectorAll('.tb').forEach(b => { const k = b.dataset.k;
   if (k === 'block') {   // block button: press mode toggles, hold mode blocks while the finger is down (lit state set in syncTouchDim)
@@ -1538,6 +1547,7 @@ let last = performance.now(), acc = 0;
 function frame(now) {
   const dtr = Math.min(0.1, (now - last) / 1000); acc += dtr; last = now;
   while (acc >= STEP) { update(STEP); if (G.state === 'title') G.t += STEP; acc -= STEP; }
+  noteEnd();
   render(dtr); requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
@@ -1548,5 +1558,6 @@ window.__jr = { G, keys, genWorld, update, render, press(k, d) { if (k === 'bloc
   setQuality, quality: () => QL().name, harm, BEST_KEY, STAM_MAX, TUNE, setBlockMode, blockMode: () => blockMode, wantBlock, blockReady: () => !!(G.p && blockReady(G.p)),
   shieldView: () => { const w = shield.root.getWorldPosition(new THREE.Vector3()); return { parent: shield.root.parent === pl.bod ? 'hero' : 'ground', visible: shield.root.visible, e: pl.shE || 0, x: w.x, y: w.y, z: w.z, heroX: G.p ? X(G.p.x) : null, glow: shield.glowM.emissiveIntensity, halo: shield.haloM.opacity }; },
   buddy: () => ({ on: buddy.on, visible: buddy.root.visible, x: buddy.root.position.x, y: buddy.root.position.y, face: buddy.face, heroX: G.p ? X(G.p.x) : null }), photo(o) { photoCam = o || null; },
+  mats: () => ({ all: allMats.size, cached: Object.keys(matCache).length }), endLockMs: END_LOCK,
   info: () => renderer ? { calls: renderer.info.render.calls, tris: renderer.info.render.triangles, fps, rev: THREE.REVISION, quality: QL().name } : null };
 })();
