@@ -1,6 +1,11 @@
 /* mudpity - early access. All original code and low-poly shapes built in code.
    Game logic is the same as the original 2D version (logical 320x180 px room space); this file adds a three.js view.
-   Genre mechanics only (run, jump pits, swing on vines, avoid hazards, collect treasure, countdown). */
+   Genre mechanics only (run, jump pits, swing on vines, avoid hazards, collect treasure, countdown).
+   dev-moves: physical shield (approved plan, items 1-11). It rides on his back; the block input brings it round to the front.
+   A block stops projectiles, physical attacks and logs; the shove and the stamina cost both scale with how hard the hit is.
+   Stamina runs out while blocking = the shield drops where he stands and he has to walk over it to pick it up. With no shield
+   he blocks with his hands and takes reduced damage. Stamina refills slowly on its own. An unblocked hit costs a heart; pits
+   still cost a heart straight away. Every shield / stamina number is in the TUNE block below. */
 (() => {
 'use strict';
 const W = 320, H = 180, GY = 130;          // logical size, ground line
@@ -9,6 +14,40 @@ const BOSS_ROOMS = [3, 7, 11];            // rooms 4, 8 and 12 (1-based) are bos
 const SPEED = 70, JUMP_V = 190, GRAV = 520, STEP = 1 / 60;
 const VINE_L = 78, VINE_A = 0.85, VINE_W = 2.1, VINE_Y = 28;
 const SNAP_C = 2.8;
+/* ======================= TUNING (shield + stamina) =======================
+   Every shield and stamina number lives here. These are DEFAULTS for Michael to set in playtest; nothing else in the file
+   hard-codes them. Units: stamina 0..STAM_MAX; force 1 = an ordinary rolling log; speeds in logical px/s (a room is 320 px
+   wide, the hero runs at 70); times in seconds. */
+const TUNE = {
+  STAM_MAX: 100,               // full stamina
+  BLOCK_COST_PER_FORCE: 25,    // stamina drained by one block = hit force x this (a force-1 log costs 25: 4 log blocks from full)
+  REGEN_PER_SEC: 4,            // slow refill on its own, stamina per second (empty -> full in 25 s)
+  REGEN_DELAY: 1.5,            // seconds after a block before the refill starts again
+  RAISE_TIME: 0.18,            // seconds to reach back and bring the shield to the front; a block only counts once it is in front
+  LOWER_TIME: 0.22,            // seconds to put it back on his back (look only)
+  HAND_RAISE_TIME: 0.08,       // seconds to get his hands up when he has no shield
+  HAND_BLOCK_DAMAGE: 0.5,      // hearts lost per hand block (an unblocked hit costs 1 heart); 0.5 = half damage
+  REACT_VX_PER_FORCE: 110,     // shove speed per unit of force (no fixed push: a force-0.5 hit shoves half as hard)
+  REACT_VY_PER_FORCE: 70,      // upward pop per unit of force
+  REACT_T_PER_FORCE: 0.30,     // seconds of stagger per unit of force (no running or jumping while staggered)
+  REACT_T_MAX: 0.8,            // a stagger never lasts longer than this
+  BLOCK_INV: 0.45,             // seconds after a block in which the same hit can't land again
+  PICKUP_RANGE: 8,             // px: walk this close over the dropped shield to pick it up
+  BLOCK_MOVE_SCALE: 1,         // run speed while blocking (1 = unchanged)
+  BLOCK_MODE_DEFAULT: 'press', // 'press' = tap to raise, tap again to lower; 'hold' = up while held (the player picks on the title screen)
+  FORCE: {                     // how hard each hit is: more force = bigger shove and more stamina per block
+    log: 1.0,                  //   x the log's speed / 57 (logs roll at 50-64 px/s)
+    crawler: 0.6, snap: 0.8,
+    mudBall: 0.8, mudSplash: 0.5, bogjaw: 1.6,      // boss 1 (BOGJAW)
+    seedBomb: 1.2, swoop: 1.4,                      // boss 2 (GLOOMWING)
+    totem: 2.0, shockwave: 1.0, totemBall: 0.9      // boss 3 (MUDTOTEM)
+  },
+  GLOW_MIN: 0.08,              // shield glow brightness at empty stamina
+  GLOW_MAX: 1.0                // shield glow brightness at full stamina
+};
+const STAM_MAX = TUNE.STAM_MAX, FORCE = TUNE.FORCE;
+const BLOCK_MODE_KEY = 'mudpity-block-mode';   // the player's press / hold choice, stored on this device only
+const BEST_KEY = s => 'mudpity-best-v2:' + s;   // new best-score key: the shield changes scoring, so old bests stay under their old key
 
 const P = { // earthy palette matching the approved art textures
   sky1:'#8fbfae', sky2:'#e9dfb8', trunk:'#2c6c66', trunk2:'#3a8079', canopy:'#5a3a22', canopy2:'#3f2616',
@@ -68,15 +107,21 @@ function genRoom(seed,i,kind,hasT){
 /* ---------- state ---------- */
 const qs=new URLSearchParams(location.search);
 const G={state:'title', seed:(qs.get('seed')||'mud').slice(0,24), world:null, t:0, timeLeft:TIME, lives:LIVES, score:0,
-  got:new Set(), bosses:{}, burst:[], winT:0, allGems:false, room:0, p:null, rs:null, result:'', msg:'', msgT:0, best:0};
-try{ G.best=+localStorage.getItem('jr3d-best:'+G.seed)||0; }catch(e){}
-const keys={left:false,right:false,jump:false}; let jumpQ=0;
+  got:new Set(), bosses:{}, burst:[], winT:0, drop:null, blocks:0, lastBlock:null, allGems:false, room:0, p:null, rs:null, result:'', msg:'', msgT:0, best:0};
+try{ G.best=+localStorage.getItem(BEST_KEY(G.seed))||0; }catch(e){}
+const keys={left:false,right:false,jump:false,block:false}; let jumpQ=0;
+/* block input: 'press' toggles the block on and off, 'hold' blocks while the key / button is down */
+let blockMode=TUNE.BLOCK_MODE_DEFAULT, blockLatch=false;
+try{ const m=localStorage.getItem(BLOCK_MODE_KEY); if(m==='press'||m==='hold') blockMode=m; }catch(e){}
+function setBlockMode(m){ blockMode=m==='hold'?'hold':'press'; blockLatch=false; keys.block=false; try{ localStorage.setItem(BLOCK_MODE_KEY,blockMode); }catch(e){} }
+function blockInput(down){ if(blockMode==='hold') keys.block=!!down; else if(down) blockLatch=!blockLatch; }
+const wantBlock=()=>blockMode==='hold'?keys.block:blockLatch;
 G.world=genWorld(G.seed);
 
-function newPlayer(x){return {x,y:GY,vx:0,vy:0,face:1,onGround:true,coyote:0,vine:null,vs:1,grabCd:0,kick:0,inv:0,dead:0,step:0};}
+function newPlayer(x){return {x,y:GY,vx:0,vy:0,face:1,onGround:true,coyote:0,vine:null,vs:1,grabCd:0,kick:0,inv:0,dead:0,step:0,stam:STAM_MAX,react:0,binv:0,shield:true,blocking:false,blk:0,chip:0,regenT:0};}
 function startRun(){
   G.world=genWorld(G.seed); G.t=0; G.timeLeft=TIME; G.lives=LIVES; G.score=0; G.got=new Set(); G.result='';
-  G.bosses={}; G.winT=0; G.burst=[]; G.allGems=false;
+  G.bosses={}; G.winT=0; G.burst=[]; G.allGems=false; G.drop=null; G.blocks=0; G.lastBlock=null; blockLatch=false; keys.block=false;
   G.state='play'; enterRoom(0,null); sfx(520,.08);
 }
 function enterRoom(i,from){
@@ -104,13 +149,43 @@ function sfx(f,d,type){ try{ if(!ac){ac=new (window.AudioContext||window.webkitA
 
 function loseLife(why){
   const p=G.p; if(p.dead>0) return;
-  p.dead=0.8; p.vine=null; G.lives--; G.msg=why; G.msgT=1.2; sfx(110,.35,'sawtooth');
+  p.dead=0.8; p.vine=null; p.chip=0; G.lives--; G.msg=why; G.msgT=1.2; sfx(110,.35,'sawtooth');
+}
+/* shield (plan items 3-10). A hit from a projectile, a physical attack or a log:
+   - blocking with the shield in front: stamina drops by force x BLOCK_COST_PER_FORCE and he is shoved by the force of the hit;
+     if that empties his stamina the shield drops on the ground where he is
+   - blocking with no shield (hands): same shove, and HAND_BLOCK_DAMAGE of a heart instead of a whole one
+   - not blocking (or the shield is still coming round): the hit costs a heart */
+const blockReady=p=>p.blocking&&p.blk>=(p.shield?TUNE.RAISE_TIME:TUNE.HAND_RAISE_TIME);
+function harm(why,sx,force){
+  const p=G.p; if(p.inv>0||p.binv>0||p.dead>0) return;
+  const f=force===undefined?1:Math.max(0,force);
+  if(!blockReady(p)){ loseLife(why); return; }
+  const d=(sx===undefined||sx===p.x)?-p.face:(p.x<sx?-1:1);
+  p.vine=null; p.grabCd=0.3; p.kick=0; p.vx=d*TUNE.REACT_VX_PER_FORCE*f; p.vy=-TUNE.REACT_VY_PER_FORCE*f; if(p.vy<0) p.onGround=false; p.coyote=0;
+  p.react=Math.min(TUNE.REACT_T_MAX,TUNE.REACT_T_PER_FORCE*f); p.binv=TUNE.BLOCK_INV; jumpQ=0;
+  G.blocks++; G.lastBlock={why,force:f,hand:!p.shield,cost:p.shield?f*TUNE.BLOCK_COST_PER_FORCE:0};
+  if(p.shield){
+    p.stam=Math.max(0,p.stam-f*TUNE.BLOCK_COST_PER_FORCE); p.regenT=TUNE.REGEN_DELAY;
+    if(p.stam<=0) dropShield(); else { G.msg='blocked: '+why; G.msgT=.7; sfx(520,.09,'triangle'); }
+  } else {
+    p.chip+=TUNE.HAND_BLOCK_DAMAGE;
+    if(p.chip>=1-1e-9){ const rest=p.chip-1; loseLife(why+' (hand block)'); p.chip=Math.max(0,rest); }
+    else { G.msg='hand block: '+why; G.msgT=.8; sfx(300,.1,'square'); }
+  }
+}
+/* stamina ran out while blocking: the shield falls where he stands (over a pit it lands on the nearer edge) */
+function dropShield(){
+  const p=G.p, room=G.world.rooms[G.room]; let x=Math.max(8,Math.min(W-8,p.x)); const h=holeAt(room,x);
+  if(h) x=(x-h.x0<h.x1-x)?h.x0-6:h.x1+6;
+  G.drop={room:G.room,x:Math.max(8,Math.min(W-8,x))}; p.shield=false;
+  G.msg='shield dropped! walk over it to pick it up'; G.msgT=1.6; sfx(160,.3,'sawtooth');
 }
 function addScore(n){ G.score+=n; }
 function endRun(result){
   G.state='end'; G.result=result;
   if(result==='win') addScore(Math.max(0,Math.floor(G.timeLeft))*10);
-  try{ if(G.score>G.best){G.best=G.score; localStorage.setItem('jr3d-best:'+G.seed,String(G.best));} }catch(e){}
+  try{ if(G.score>G.best){G.best=G.score; localStorage.setItem(BEST_KEY(G.seed),String(G.best));} }catch(e){}
   sfx(result==='win'?880:140,.4);
 }
 
@@ -121,7 +196,11 @@ function update(dt){
   G.t+=dt; G.timeLeft-=dt; if(G.msgT>0) G.msgT-=dt;
   if(G.timeLeft<=0){ G.timeLeft=0; endRun('time'); return; }
   if(jumpQ>0) jumpQ-=dt;
-  if(p.grabCd>0) p.grabCd-=dt; if(p.inv>0) p.inv-=dt; if(p.kick>0) p.kick-=dt;
+  if(p.grabCd>0) p.grabCd-=dt; if(p.inv>0) p.inv-=dt; if(p.binv>0) p.binv-=dt; if(p.react>0) p.react-=dt; if(p.kick>0) p.kick-=dt;
+  // stamina refills slowly on its own (a short pause after each block)
+  if(p.regenT>0) p.regenT-=dt; else p.stam=Math.min(STAM_MAX,p.stam+TUNE.REGEN_PER_SEC*dt);
+  // block input: blk counts how long the block has been up (the shield has to come round from his back first)
+  p.blocking=wantBlock()&&!p.vine&&p.dead<=0; p.blk=p.blocking?p.blk+dt:0;
   if(G.winT>0){ G.winT-=dt; if(G.winT<=0){ endRun('win'); return; } }
 
   // dying: wait then respawn or end
@@ -129,7 +208,7 @@ function update(dt){
     p.dead-=dt; p.y+=Math.min(p.vy,60)*dt;
     if(p.dead<=0){
       if(G.lives<=0){ endRun('lives'); return; }
-      p.x=rs.spawn; p.y=GY; p.vx=0; p.vy=0; p.onGround=true; p.vine=null; p.inv=1.6; p.dead=0; jumpQ=0; p.kick=0; if(rs.boss) bossReset(rs.boss);
+      p.x=rs.spawn; p.y=GY; p.vx=0; p.vy=0; p.onGround=true; p.vine=null; p.inv=1.6; p.dead=0; jumpQ=0; p.kick=0; p.react=0; p.binv=0; if(rs.boss) bossReset(rs.boss);
     }
     stepWorld(room,rs,dt); return;
   }
@@ -147,9 +226,10 @@ function update(dt){
   } else {
     if(p.onGround) p.coyote=0.08; else if(p.coyote>0) p.coyote-=dt;
     if(ax) p.face=ax;
-    if(p.onGround){ p.vx=ax*SPEED; }
+    if(p.onGround&&p.react<=0){ p.vx=ax*SPEED*(p.blocking?TUNE.BLOCK_MOVE_SCALE:1); }
+    else if(p.onGround){ p.vx*=Math.exp(-6*dt); }   // a shove from a blocked hit slides him along the ground and fades
     else { const tv=ax*SPEED, d=tv-p.vx, m=260*dt; p.vx+=Math.abs(d)<m?d:Math.sign(d)*m; }
-    if(jumpQ>0 && p.coyote>0){ p.vy=-JUMP_V; p.onGround=false; p.coyote=0; jumpQ=0; sfx(440,.08); }
+    if(jumpQ>0 && p.coyote>0 && p.react<=0){ p.vy=-JUMP_V; p.onGround=false; p.coyote=0; jumpQ=0; sfx(440,.08); }
     const prevY=p.y;
     p.vy+=GRAV*dt; p.x+=p.vx*dt; p.y+=p.vy*dt;
     if(p.onGround) p.step+=Math.abs(p.vx)*dt;
@@ -171,6 +251,9 @@ function update(dt){
     }
   }
   if(p.dead>0) return;
+  // dropped shield: walk over it to pick it up
+  if(!p.shield && G.drop && G.drop.room===G.room && p.onGround && Math.abs(p.x-G.drop.x)<TUNE.PICKUP_RANGE){
+    p.shield=true; G.drop=null; G.msg='shield picked up'; G.msgT=.9; sfx(700,.08,'triangle'); }
 
   // room transitions
   if(!p.vine){
@@ -183,10 +266,10 @@ function update(dt){
 
   // hazards (skip while invulnerable)
   if(p.inv<=0 && p.dead<=0){
-    for(const l of rs2.logs) if(Math.abs(p.x-l.x)<9 && p.y>GY-13){ loseLife('hit by a log'); break; }
-    if(p.dead<=0) for(const c of rs2.crawlers) if(Math.abs(p.x-c.x)<9 && p.y>GY-8){ loseLife('crawler bite'); break; }
+    for(const l of rs2.logs) if(Math.abs(p.x-l.x)<9 && p.y>GY-13){ harm('hit by a log',l.x,FORCE.log*l.sp/57); break; }
+    if(p.dead<=0) for(const c of rs2.crawlers) if(Math.abs(p.x-c.x)<9 && p.y>GY-8){ harm('crawler bite',c.x,FORCE.crawler); break; }
     if(p.dead<=0 && p.onGround) for(const pl of room2.pools){
-      if(p.x>pl.x0&&p.x<pl.x1){ const k=Math.min(pl.n-1,Math.floor((p.x-pl.x0)/((pl.x1-pl.x0)/pl.n))); if(snapOpen(pl,k,G.t)) loseLife('snapped'); } }
+      if(p.x>pl.x0&&p.x<pl.x1){ const k=Math.min(pl.n-1,Math.floor((p.x-pl.x0)/((pl.x1-pl.x0)/pl.n))); if(snapOpen(pl,k,G.t)) harm('snapped',undefined,FORCE.snap); } }
   }
   // treasure
   const tr=room2.treasure;
@@ -227,7 +310,7 @@ function bossReset(b){          // after losing a life: same health, fresh teleg
   if(b.kind==='boss1'){ b.h=0; } if(b.kind==='boss2'){ b.x=160; b.y=70; b.state='hover'; } if(b.kind==='boss3'){ b.x=248; b.h=78; }
 }
 const B_go=(b,s)=>{ b.state=s; b.t=0; };
-function hitP(why){ const p=G.p; if(p.inv<=0&&p.dead<=0) loseLife(why); }
+function hitP(why,sx,f){ const p=G.p; if(p.inv<=0&&p.dead<=0) harm(why,sx,f); }
 function stompOn(b,top,half){ const p=G.p; return p.vy>0&&!p.vine&&p.dead<=0&&Math.abs(p.x-b.x)<half+4&&p.y>=top-5&&p.y<=top+12; }
 function bounceP(){ const p=G.p; p.vy=-170; p.onGround=false; p.coyote=0; }
 function kickOn(b,hw,hh,cy){ const p=G.p; return p.kick>0&&!p.onGround&&!p.vine&&p.dead<=0&&Math.abs(p.x-b.x)<hw+6&&Math.abs((p.y-12)-cy)<hh+12; }
@@ -273,7 +356,7 @@ function ai1(b,dt,p,rs,enr,m){
       if(b.wait<=0){ b.n++; if(b.n===1||rs.rng()<.6){ b.cx=clampC(p.x+p.vx*.3); B_go(b,'tele'); } else { b.cx=p.x<160?236:84; B_go(b,'stele'); } } break;
     case 'tele': { const dur=1.0*m; b.h=0; b.x=b.cx; if(b.t>=dur) B_go(b,'lunge'); break; }   // the ripple marks where it will lunge; step out of it
     case 'lunge': b.x=b.cx; b.h=52*Math.sin(Math.min(1,b.t/.2)*Math.PI/2); b.mouth=1;
-      if(p.dead<=0&&Math.abs(p.x-b.cx)<16&&p.y>GY-b.h+2&&b.h>8) hitP('mauled by Bogjaw');
+      if(p.dead<=0&&Math.abs(p.x-b.cx)<16&&p.y>GY-b.h+2&&b.h>8) hitP('mauled by Bogjaw',b.cx,FORCE.bogjaw);
       if(b.t>=.45) B_go(b,'stun'); break;
     case 'stun': b.x=b.cx; b.h=Math.max(24,b.h-160*dt); b.mouth=.3;
       if(stompOn(b,GY-b.h,16)){ bounceP(); hurtBoss(b); if(!b.dead) B_go(b,'sink'); break; }
@@ -286,8 +369,8 @@ function ai1(b,dt,p,rs,enr,m){
   }
   for(let i=b.proj.length-1;i>=0;i--){ const q=b.proj[i];
     if(q.t==='ball'){ q.vy+=GRAV*dt; q.x+=q.vx*dt; q.y+=q.vy*dt; if(q.y>=GY-4){ q.t='puddle'; q.y=GY; q.life=.55; }
-      else if(p.dead<=0&&Math.hypot(p.x-q.x,(p.y-12)-q.y)<9) hitP('mud ball'); }
-    else { q.life-=dt; if(q.life<=0){ b.proj.splice(i,1); continue; } if(p.dead<=0&&Math.abs(p.x-q.x)<13&&p.y>GY-9) hitP('mud splash'); }
+      else if(p.dead<=0&&Math.hypot(p.x-q.x,(p.y-12)-q.y)<9) hitP('mud ball',q.x,FORCE.mudBall); }
+    else { q.life-=dt; if(q.life<=0){ b.proj.splice(i,1); continue; } if(p.dead<=0&&Math.abs(p.x-q.x)<13&&p.y>GY-9) hitP('mud splash',q.x,FORCE.mudSplash); }
   }
 }
 /* ---- boss 2: GLOOMWING, a canopy creature: seed-bombs, swoops, then lands exhausted ---- */
@@ -307,7 +390,7 @@ function ai2(b,dt,p,rs,enr,m){
     case 'stel': { const tx=p.x<160?Math.min(296,p.x+110):Math.max(24,p.x-110); b.x+=(tx-b.x)*ease(5); b.y+=(46-b.y)*ease(5);
       if(b.t>=.9*m){ b.sx=b.x; b.ex=Math.max(-20,Math.min(340,2*p.x-b.sx)); B_go(b,'swoop'); sfx(150,.3,'sawtooth'); } break; }   // dives straight through where you stood: jump it
     case 'swoop': { const dur=1.6*m, u=Math.min(1,b.t/dur); b.x=b.sx+(b.ex-b.sx)*u; b.y=46+(GY-12-46)*Math.sin(Math.PI*u);
-      if(p.dead<=0&&Math.abs(p.x-b.x)<18&&Math.abs((p.y-12)-b.y)<16) hitP('Gloomwing swoop');
+      if(p.dead<=0&&Math.abs(p.x-b.x)<18&&Math.abs((p.y-12)-b.y)<16) hitP('Gloomwing swoop',b.x,FORCE.swoop);
       if(u>=1){ B_go(b,'land'); } break; }
     case 'land': b.y+=(GY-14-b.y)*ease(7); b.x+=(Math.max(30,Math.min(290,b.x))-b.x)*ease(8); if(b.t>=.6){ b.y=GY-14; B_go(b,'rest'); } break;
     case 'rest': b.y=GY-14;
@@ -318,7 +401,7 @@ function ai2(b,dt,p,rs,enr,m){
   for(let i=b.proj.length-1;i>=0;i--){ const q=b.proj[i]; q.tt+=dt;
     if(q.st==='fall'){ q.vy+=380*dt; q.y+=q.vy*dt; if(q.y>=GY-5){ q.y=GY-5; q.st='fuse'; q.tt=0; } }
     else if(q.st==='fuse'){ if(q.tt>=.75){ q.st='boom'; q.tt=0; sfx(90,.25,'sawtooth'); } }
-    else { if(p.dead<=0&&Math.hypot(p.x-q.x,(p.y-10)-q.y)<18&&q.tt<.25) hitP('seed bomb'); if(q.tt>=.3) b.proj.splice(i,1); }
+    else { if(p.dead<=0&&Math.hypot(p.x-q.x,(p.y-10)-q.y)<18&&q.tt<.25) hitP('seed bomb',q.x,FORCE.seedBomb); if(q.tt>=.3) b.proj.splice(i,1); }
   }
 }
 /* ---- boss 3: MUDTOTEM, ground slams send shockwaves along the floor; jump over them ---- */
@@ -344,15 +427,15 @@ function ai3(b,dt,p,rs,enr,m){
       if(b.fired<b.shots&&b.t>=b.fired*gap){ b.proj.push({t:'ball',x:b.x-22,y:((b.seq+b.fired)%2)?GY-46:GY-8,v:-(enr?110:100)}); b.fired++; sfx(200,.08,'square'); }
       if(b.fired>=b.shots&&b.t>b.shots*gap+.4){ B_go(b,'idle'); b.wait=(enr?.8:1.0); } break; }
   }
-  if(vuln&&b.state!=='dazed'&&(b.state!=='idle'||b.t>.7)&&p.dead<=0&&Math.abs(p.x-b.x)<24&&p.y>GY-b.h+4) hitP('crushed by the totem');
+  if(vuln&&b.state!=='dazed'&&(b.state!=='idle'||b.t>.7)&&p.dead<=0&&Math.abs(p.x-b.x)<24&&p.y>GY-b.h+4) hitP('crushed by the totem',b.x,FORCE.totem);
   for(let i=b.proj.length-1;i>=0;i--){ const q=b.proj[i];
-    if(q.t==='wave'){ q.x+=q.v*dt; if(q.x<-10||q.x>W+10){ b.proj.splice(i,1); continue; } if(p.dead<=0&&Math.abs(p.x-q.x)<7&&p.y>GY-13) hitP('shockwave'); }
-    else { q.x+=q.v*dt; if(q.x<-10){ b.proj.splice(i,1); continue; } if(p.dead<=0&&Math.abs(p.x-q.x)<8&&p.y>q.y-7&&(p.y-25)<q.y+7) hitP('mud ball'); }
+    if(q.t==='wave'){ q.x+=q.v*dt; if(q.x<-10||q.x>W+10){ b.proj.splice(i,1); continue; } if(p.dead<=0&&Math.abs(p.x-q.x)<7&&p.y>GY-13) hitP('shockwave',q.x,FORCE.shockwave); }
+    else { q.x+=q.v*dt; if(q.x<-10){ b.proj.splice(i,1); continue; } if(p.dead<=0&&Math.abs(p.x-q.x)<8&&p.y>q.y-7&&(p.y-25)<q.y+7) hitP('mud ball',q.x,FORCE.totemBall); }
   }
 }
 
 /* ======================= 3D renderer (three.js, plain WebGL) =======================
-   Layout of this half of the file (the game logic above is untouched from v2):
+   Layout of this half of the file (the game logic above is v2 plus the dev-moves physical shield):
    setup + quality -> noise / materials / textures -> shared geometry -> particles
    -> ART BUILDERS (buildHero / buildCrawler / buildLog / buildSnapper / buildGem / buildBoss1-3: each returns a Group plus the
    handles the animation code drives, so real art can replace one builder at a time) -> room builder -> per-frame sync -> camera -> HUD -> input -> loop.
@@ -425,7 +508,6 @@ const reg = m => { allMats.add(m); return m; };
 const M = (hex, emissive, flat) => { const k = hex + (emissive || '') + (flat ? 'F' : ''); return matCache[k] || (matCache[k] = reg(new THREE.MeshLambertMaterial({ color: hex, flatShading: !!flat, emissive: emissive || '#000000' }))); };
 const MS = (hex, rough, metal, emissive, flat) => { const k = 's' + hex + rough + metal + (emissive || '') + (flat ? 'F' : ''); return matCache[k] || (matCache[k] = reg(new THREE.MeshStandardMaterial({ color: hex, roughness: rough, metalness: metal, flatShading: !!flat, emissive: emissive || '#000000' }))); };
 const MB = (hex, op, add) => { const k = 'b' + hex + op + (add ? 'A' : ''); return matCache[k] || (matCache[k] = reg(new THREE.MeshBasicMaterial({ color: hex, transparent: true, opacity: op, depthWrite: false, fog: !add, blending: add ? THREE.AdditiveBlending : 1 }))); };
-const VC = (flat, side) => { const k = 'vc' + (flat ? 'F' : '') + (side ? 'D' : ''); return matCache[k] || (matCache[k] = reg(new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: !!flat, side: side ? THREE.DoubleSide : 0 }))); };
 // wind sway for foliage: expr is a GLSL float using the local `position`; instanced meshes get a per-instance phase
 function swayMat(key, expr, flat, side) {
   const m = reg(new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: !!flat, side: side ? THREE.DoubleSide : 0 }));
@@ -525,7 +607,7 @@ function mkPool(add, tex) {
   const mesh = new THREE.InstancedMesh(geo, m, PMAX); mesh.count = 0; mesh.frustumCulled = false; mesh.renderOrder = 5;
   mesh.setColorAt(0, _c.set('#ffffff')); scene.add(mesh); return { mesh, al, list: [], add };
 }
-const poolN = mkPool(false, texSoft), poolA = mkPool(true, texStar), poolG = mkPool(true, texGlow);
+const poolN = mkPool(false, texSoft), poolA = mkPool(true, texStar);
 function emit(pool, x, y, z, vx, vy, vz, life, size, color, grav, drag, grow) {
   if (pool.list.length >= Math.min(PMAX, QL().pmax)) return;
   pool.list.push({ x, y, z, vx, vy, vz, life, max: life, size, c: new THREE.Color(color), grav: grav || 0, drag: drag || 0, grow: grow || 0 });
@@ -605,7 +687,8 @@ artify(mats.tar, 'md', [{ t: 'mud', sc: .2, st: .45, flow: 'uTime*.01,0.,uTime*.
 artify(mats.mire, 'mr', [{ t: 'mud', sc: .14, st: .5, flow: 'uTime*.015,0.,uTime*.01' }]); mats.mire.color.set('#6a5238');
 const gScarf = new THREE.TorusGeometry(.5, .15, 8, 20); gScarf.rotateX(Math.PI / 2);
 const gCirc = new THREE.CircleGeometry(.5, 18);
-const blobShadow = (par, y, size) => { const m = mk(gFlat, reg(new THREE.MeshBasicMaterial({ map: texGlow, color: '#000000', transparent: true, opacity: .45, depthWrite: false, fog: false })), 0, y, 0, size, 1, size, par, true); m.userData.blob = true; m.visible = !QL().shadows; return m; };
+const blobMat = () => reg(new THREE.MeshBasicMaterial({ map: texGlow, color: '#000000', transparent: true, opacity: .45, depthWrite: false, fog: false })), blobShared = blobMat();   // crawlers + logs share one; the hero's is its own
+const blobShadow = (par, y, size, own) => { const m = mk(gFlat, own ? blobMat() : blobShared, 0, y, 0, size, 1, size, par, true); m.userData.blob = true; m.visible = !QL().shadows; return m; };
 
 /* ---- HERO: robot hero (approved design: glass dome, seedling, telescoping pipe arms), low-poly in code. Faces +x. ---- */
 function buildHero() {   // robot hero (approved design, adapted to low-poly 3D in code). Faces +x; +z is its right side. Swap this whole function to change the hero art.
@@ -689,7 +772,7 @@ function buildHero() {   // robot hero (approved design, adapted to low-poly 3D 
   const up = (a, b) => new THREE.Vector3(Math.cos(b) * Math.cos(a), Math.sin(b) * 1.3, Math.cos(b) * Math.sin(a));
   for (const [a, b, l, sp_] of [[.75, .6, .24, .4], [.95, .45, .18, -.7], [.6, .35, .16, 1.2], [2.6, .5, .2, .3]]) { const c = onSurf(new THREE.Mesh(gBox, crack), head, up(a, b), .78, sp_); c.scale.set(.012, l, .005); c.position.y += .3; }
   for (const sp_ of [.7, -.7]) { const t = onSurf(new THREE.Mesh(gBox, tape), head, up(.78, .52), .785, sp_); t.scale.set(.06, .24, .006); t.position.y += .3; }
-  h.shadow = blobShadow(scene, .06, 1.6);                                                         // low-quality contact shadow (also a faint one on high)
+  h.shadow = blobShadow(scene, .06, 1.6, true);                                                         // low-quality contact shadow (also a faint one on high)
   return h;
 }
 
@@ -737,111 +820,389 @@ function buildSnapper(w) {
 function buildGem(kind) {
   const root = new THREE.Group(), col = P.gem[kind], h = { root, stars: [] };
   h.core = mk(gOct, MS(col, .18, .25, col, true), 0, 0, 0, 1.0, 1.6, .9, root); h.core.material = h.core.material.clone(); h.core.material.emissiveIntensity = .45;
-  h.halo = new THREE.Mesh(gQuad, reg(new THREE.MeshBasicMaterial({ map: texGlow, color: col, transparent: true, opacity: .55, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }))); h.halo.scale.set(3.4, 3.4, 1); h.halo.position.z = -.3; h.halo.renderOrder = 4;
-  for (let i = 0; i < 3; i++) { const s = new THREE.Mesh(gQuad, reg(new THREE.MeshBasicMaterial({ map: texStar, color: '#fff4c8', transparent: true, opacity: .9, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }))); s.renderOrder = 4; h.stars.push(s); }
+  h.halo = new THREE.Mesh(gQuad, matCache['gh' + col] || (matCache['gh' + col] = reg(new THREE.MeshBasicMaterial({ map: texGlow, color: col, transparent: true, opacity: .55, depthWrite: false, fog: false, blending: THREE.AdditiveBlending })))); h.halo.scale.set(3.4, 3.4, 1); h.halo.position.z = -.3; h.halo.renderOrder = 4;
+  for (let i = 0; i < 3; i++) { const s = new THREE.Mesh(gQuad, matCache.gemStar || (matCache.gemStar = reg(new THREE.MeshBasicMaterial({ map: texStar, color: '#fff4c8', transparent: true, opacity: .9, depthWrite: false, fog: false, blending: THREE.AdditiveBlending })))); s.renderOrder = 4; h.stars.push(s); }
   return h;
 }
 
 /* ---- BOSSES: 1 BOGJAW (mire beast, faces +x), 2 GLOOMWING (canopy flyer, faces +x), 3 MUDTOTEM (mud golem, faces -x). ----
-   Procedural models after the approved boss art sheets (colours = the exact approved swatch hex values). */
-function skinMaker(list) { return (hex, flat) => { const m = new THREE.MeshLambertMaterial({ color: hex, flatShading: !!flat }); list.push(m); return m; }; }
-function buildBoss1(g, skins) {   // croc rearing out of the mire (its hitbox is a tall column): huge head, slit orange eyes, fangs, mud drips, ridged back, an old clay boot in its jaws
-  const BS = skinMaker(skins), h = {};
-  const C = { body: '#887a37', hi: '#a99b57', dk: '#61523c', belly: '#bcb191', deep: '#383027', drip: '#7e6f5c', tooth: '#f7f7f3', eye: '#ec8736', ink: '#0a0a0a' };
-  const sk = BS(C.body), hi = BS(C.hi), dk = BS(C.dk, true), belly = BS(C.belly), deep = BS(C.deep), drip = BS(C.drip), tooth = M(C.tooth), gum = M('#6e3b30');
-  mk(capG(1.0, 2.9), sk, -.15, 2.1, 0, 1, 1, 1.15, g);                                                               // upright body
-  mk(capG(.62, 2.5), belly, .5, 2.0, 0, 1, 1, 1.25, g);                                                                // pale belly plates
-  for (let k = 0; k < 6; k++) mk(gBox, M(C.dk), 1.08 - Math.abs(k - 2.5) * .03, .9 + k * .45, 0, .04, .05, 1.2, g, true);
-  for (let k = 0; k < 7; k++) for (const s of [1, -1]) rot(mk(gCone, dk, -1.05 + k * .02, .9 + k * .55, s * .38, .4, .6, .32, g), 0, 0, Math.PI / 2 + .25);   // ridged back
-  rot(mk(capG(.6, 1.6), sk, -1.6, .45, .3, 1, 1, 1, g), .2, 0, Math.PI / 2 + .25); rot(mk(capG(.35, 1.0), sk, -3.0, .15, .6, 1, 1, 1, g), .3, 0, Math.PI / 2);   // tail in the mud
-  for (const s of [1, -1]) { const a = new THREE.Group(); a.position.set(.5, 2.7, s * 1.05); g.add(a);              // stubby fore-legs, pale claws
-    rot(mk(capG(.32, .7), sk, .35, -.2, 0, 1, 1, 1, a), 0, 0, -1.1); mk(gSph, hi, .85, -.5, 0, .75, .45, .6, a);
-    for (let c = 0; c < 3; c++) rot(mk(gCone, tooth, 1.2, -.58, (c - 1) * .2, .1, .3, .1, a, true), 0, 0, -Math.PI / 2 - .3); }
-  mk(gSph, sk, .95, 4.35, 0, 2.5, 1.85, 2.25, g);                                                                    // big skull
-  rot(mk(capG(.6, 1.3), hi, 2.2, 3.95, 0, 1, 1, 1.5, g), 0, 0, Math.PI / 2);                                         // upper snout (to x ~3.5)
-  mk(gFlat, gum, 2.0, 3.42, 0, 2.6, 1, 1.5, g, true).rotation.x = Math.PI;                                          // roof of the mouth
-  for (let j = 0; j < 6; j++) for (const s of [1, -1]) { const f = j === 1 || j === 4; mk(gCone, tooth, 1.05 + j * .44, 3.34, s * .76, f ? .26 : .17, f ? .62 : .34, f ? .26 : .17, g).rotation.z = Math.PI; }
-  for (const s of [1, -1]) mk(gSph, deep, 3.4, 4.42, s * .26, .2, .14, .16, g, true);                               // nostrils
-  h.jaw = new THREE.Group(); h.jaw.position.set(.5, 3.45, 0); g.add(h.jaw);                                          // lower jaw (syncBoss opens it)
-  rot(mk(capG(.42, 1.6), hi, 1.35, -.42, 0, 1, 1, 1.8, h.jaw), 0, 0, Math.PI / 2); mk(gSph, belly, 1.1, -.65, 0, 2.4, .45, 1.3, h.jaw);
-  mk(gFlat, gum, 1.4, -.04, 0, 2.5, 1, 1.3, h.jaw, true);
-  for (let j = 0; j < 5; j++) for (const s of [1, -1]) mk(gCone, tooth, .75 + j * .46, .1, s * .68, .17, .38, .17, h.jaw);
-  { const bt = new THREE.Group(); bt.position.set(2.1, .15, .15); bt.rotation.set(.3, .5, -.45); h.jaw.add(bt);        // the old clay boot it is chewing on
-    const clay = M('#a05a3c'); mk(gCyl, clay, 0, .42, 0, .5, .85, .5, bt); mk(gSph, clay, .32, 0, 0, .95, .42, .56, bt); mk(gBox, M(C.deep), .2, -.19, 0, .95, .09, .54, bt, true); mk(gCyl, M('#6e3b2a'), 0, .86, 0, .56, .09, .56, bt, true); }
-  for (const [x, z, l] of [[.9, .55, .5], [1.9, -.5, .7], [2.6, .35, .4]]) mk(capG(.09, l), drip, x, -.8 - l / 2, z, 1, 1, 1, h.jaw, true);   // drool-mud
-  h.pupils = [];
-  for (const s of [1, -1]) {                                                                                          // eye bumps, slit pupils, heavy grumpy brows
-    mk(gSph, hi, .75, 5.2, s * .8, .95, .8, .8, g);
-    mk(gSph, MS(C.eye, .35, 0, '#5a2a08'), 1.0, 5.28, s * .84, .6, .52, .48, g, true);
-    h.pupils.push(mk(gSph, M(C.ink), 1.27, 5.3, s * .88, .1, .42, .13, g, true));
-    rot(mk(capG(.15, .65), dk, .95, 5.66, s * .84, 1, 1, 1.3, g), 0, 0, Math.PI / 2 - .45); }
-  for (const [x, y, z, l] of [[.9, 1.6, .8, .6], [-.5, 1.4, -1.05, .5], [.75, 2.9, -.9, .45], [-.9, 2.3, 1.0, .5], [1.6, 3.3, 1.0, .4]]) mk(capG(.12, l), drip, x, y - l / 2, z, 1, 1, 1, g, true);   // mud drips
-  for (const [x, y, z, s] of [[-.6, 3.2, 1.0, .5], [.3, 2.5, -1.15, .45], [-1.0, 1.6, -.8, .4], [1.4, 5.2, .1, .35]]) mk(gSph, drip, x, y, z, s * 1.4, s * .7, s, g, true);
-  return h;
+   Art redo to the hero's quality, in code (Michael t32u/t45u). Layout, colours (the approved swatch hex values) and every animated handle
+   are kept; the look is new: hero-style ink outline, Standard shading with soft self-light and a rim light, procedural textures.
+   How: parts are still placed with mk(), but with a paint BP(hex, layer, ink) instead of a material. bossBake() then merges every static
+   part under one pivot into ONE vertex-coloured mesh plus ONE inverted-hull ink mesh (the hero's outline, baked: each part pushed out
+   along its smoothed normals), so detail goes up while draw calls go down. Paint layer = texture slot of bossMat (0-2), 3 plain, 4 glowing. */
+const bossInk = reg(new THREE.MeshBasicMaterial({ color: '#1e1816', side: THREE.BackSide }));   // the hero's ink colour; one shared material for all bosses
+const paintCache = {};
+const BP = (hex, layer, ink) => { const k = hex + '|' + layer + '|' + ink; return paintCache[k] || (paintCache[k] = { bk: true, color: new THREE.Color(hex), layer, ink }); };
+function bossTex(draw) {      // tileable 256px canvas texture, gain = 1 / mean linear brightness so it only adds detail, not a tint
+  const t = mkTex(256, 256, (g, w, h) => { let sd = 1234; const rr = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+    const wrap = fn => { for (const ox of [-w, 0, w]) for (const oy of [-h, 0, h]) { g.save(); g.translate(ox, oy); fn(); g.restore(); } }; draw(g, w, h, rr, wrap); });
+  t.wrapS = t.wrapT = 1000; const d = t.image.getContext('2d').getImageData(0, 0, 256, 256).data; let s = 0;
+  for (let i = 0; i < d.length; i += 4) s += Math.pow((d[i] + d[i + 1] + d[i + 2]) / 765, 2.2);
+  t.userData.gain = 65536 / Math.max(1, s); return t;
 }
-function buildBoss2(g, skins) {   // round orange bird: cream belly, hooked yellow beak, grumpy brows, leaf crest, layered teal wings, seed bombs in its talons, bandaged tail
-  const BS = skinMaker(skins), h = {};
-  const C = { wing: '#4c8f91', wingL: '#94bfb5', wingD: '#36584c', leaf: '#678b54', seed: '#9db66f', body: '#eb9c4f', rust: '#ab5832', belly: '#e5d29e', eye: '#ef8b3b', ink: '#141614' };
-  const bo = BS(C.body), ru = BS(C.rust), be = BS(C.belly), wi = BS(C.wing), wl = BS(C.wingL), wd = BS(C.wingD), lf = BS(C.leaf, true), beak = BS('#efc23a'), ink = M(C.ink);
-  mk(gSph, bo, -.2, 0, 0, 3.6, 3.0, 3.0, g); mk(gSph, ru, -.9, .55, 0, 2.4, 2.0, 2.6, g);                           // body + rust back
-  mk(gSph, be, .55, -.6, 0, 2.5, 2.2, 2.4, g);                                                                       // cream belly
-  mk(gSph, bo, 1.35, 1.05, 0, 2.1, 2.0, 2.05, g); mk(gSph, ru, 1.1, 1.75, 0, 1.4, .7, 1.5, g);                     // head
-  rot(mk(gCone, beak, 2.75, .85, 0, .7, 1.4, .62, g), 0, 0, -Math.PI / 2); rot(mk(gCone, beak, 3.35, .62, 0, .24, .55, .22, g), 0, 0, Math.PI * .82);   // hooked beak
-  mk(gBox, M('#b8861e'), 2.7, .72, 0, 1.1, .05, .5, g, true);
-  for (const s of [1, -1]) {
-    mk(gSph, M(C.belly), 2.1, 1.3, s * .62, .55, .62, .45, g, true); mk(gSph, MS(C.eye, .4, 0, '#5a2a08'), 2.22, 1.28, s * .7, .45, .5, .32, g, true);
-    mk(gSph, ink, 2.34, 1.26, s * .78, .2, .26, .14, g, true);
-    mk(gBox, ru, 2.05, 1.72, s * .66, .75, .18, .32, g, true).rotation.set(0, 0, -.5); }                            // angry brows
-  for (let i = 0; i < 6; i++) { const a = (i - 2.5) * .28; rot(mk(gCone, lf, .8 - Math.abs(i - 2.5) * .12, 2.35, a * 1.4, .42, 1.4 - Math.abs(i - 2.5) * .15, .14, g), a * 1.2, 0, .55 + Math.abs(a) * .3); }   // leaf crest
-  h.wings = [1, -1].map(s => { const w = new THREE.Group(); w.position.set(-.4, .9, s * 1.25); g.add(w); mk(gSph, wd, 0, 0, s * .35, 1.4, .55, 1.2, w);
-    for (let i = 0; i < 6; i++) { const L = 2.7 - i * .22, x = .3 - i * .42, z = s * (L / 2 + .25);
-      mk(gSph, i % 2 ? wl : wi, x, -.02 + i * .03, z, .6, .14, L, w); mk(gSph, wd, x - .1, -.08, z * .8, .5, .1, L * .7, w, true);
-      mk(gSph, lf, x - .05, .03, s * (L + .1), .42, .1, .5, w, true); }
-    return w; });
-  for (let i = 0; i < 4; i++) rot(mk(gSph, i % 2 ? wl : wi, -3.3, -.25 + (i - 1.5) * .08, (i - 1.5) * .42, 2.4, .16, .55, g), 0, (i - 1.5) * .25, .3);   // tail
-  rot(mk(gTorus, M('#f4f1e6'), -2.6, -.05, 0, 1.0, 1.0, 1.15, g, true), 0, Math.PI / 2, .3);                         // white bandage on the tail
-  for (const s of [1, -1]) {                                                                                         // legs, talons, spiky seed bombs
-    rot(mk(capG(.13, .7), beak, .35, -1.75, s * .65, 1, 1, 1, g), 0, 0, .2);
-    const sb = new THREE.Group(); sb.position.set(.55, -2.45, s * .7); g.add(sb); mk(gIco, M(C.seed, '', true), 0, 0, 0, .95, .95, .95, sb);
-    for (let k = 0; k < 10; k++) { const v = new THREE.Vector3(Math.sin(k * 2.4) * Math.cos(k * 1.3), Math.cos(k * 2.4), Math.sin(k * 2.4) * Math.sin(k * 1.3)).normalize();
-      const c = mk(gCone, M('#6f8a3a'), v.x * .45, v.y * .45, v.z * .45, .12, .24, .12, sb, true); c.quaternion.setFromUnitVectors(_up0, v); }
-    for (const [dx, dz] of [[.3, 0], [-.3, .15], [0, -.3]]) rot(mk(gCone, ink, dx, .38, dz, .07, .3, .07, sb, true), 0, 0, Math.PI - dx * 2); }
-  return h;
+const texScales = bossTex((g, w, h, rr, wrap) => {   // BOGJAW: rows of flat scutes with thin dark wet gaps, pale specks
+  g.fillStyle = '#505050'; g.fillRect(0, 0, w, h); const cw = w / 6, ch = h / 8;
+  for (let r = 0; r < 8; r++) for (let c = 0; c < 6; c++) { const cx = (c + (r % 2) * .5 + .5) * cw + (rr() - .5) * 8, cy = (r + .5) * ch + (rr() - .5) * 6, l = 150 + rr() * 50 | 0, rx = cw * (.36 + rr() * .1), ry = ch * (.34 + rr() * .1);
+    wrap(() => { const gr = g.createLinearGradient(0, cy - ry, 0, cy + ry); gr.addColorStop(0, `rgb(${l + 18},${l + 18},${l + 18})`); gr.addColorStop(1, `rgb(${l - 28},${l - 28},${l - 28})`);
+      g.fillStyle = gr; g.beginPath(); if (g.roundRect) g.roundRect(cx - rx, cy - ry, rx * 2, ry * 2, rx * .6); else g.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); g.fill(); }); }
+  for (let i = 0; i < 320; i++) { const x = rr() * w, y = rr() * h, s = .5 + rr() * 1.3, l = rr() < .5 ? 225 : 70; wrap(() => { g.fillStyle = `rgba(${l},${l},${l},.45)`; g.beginPath(); g.arc(x, y, s, 0, Math.PI * 2); g.fill(); }); }
+});
+const texFeather = bossTex((g, w, h, rr, wrap) => {   // GLOOMWING: overlapping scalloped feathers with a quill and fine barbs
+  g.fillStyle = '#6a6a6a'; g.fillRect(0, 0, w, h); const cw = w / 6, ch = h / 8;
+  for (let r = 0; r < 8; r++) for (let c = 0; c < 6; c++) { const cx = (c + (r % 2) * .5 + .5) * cw, cy = (r + .5) * ch, l = 165 + rr() * 50 | 0;
+    wrap(() => { const gr = g.createLinearGradient(0, cy - ch * .6, 0, cy + ch * .75); gr.addColorStop(0, `rgb(${l + 30},${l + 30},${l + 30})`); gr.addColorStop(.75, `rgb(${l},${l},${l})`); gr.addColorStop(1, `rgb(${l * .55 | 0},${l * .55 | 0},${l * .55 | 0})`);
+      g.fillStyle = gr; g.beginPath(); g.moveTo(cx - cw * .55, cy - ch * .7); g.lineTo(cx - cw * .55, cy + ch * .1); g.quadraticCurveTo(cx - cw * .5, cy + ch * .8, cx, cy + ch * .85);
+      g.quadraticCurveTo(cx + cw * .5, cy + ch * .8, cx + cw * .55, cy + ch * .1); g.lineTo(cx + cw * .55, cy - ch * .7); g.closePath(); g.fill();
+      g.strokeStyle = 'rgba(40,40,40,.55)'; g.lineWidth = 1.4; g.stroke();
+      g.strokeStyle = 'rgba(250,250,250,.5)'; g.lineWidth = 1.2; g.beginPath(); g.moveTo(cx, cy - ch * .6); g.lineTo(cx, cy + ch * .75); g.stroke();
+      g.strokeStyle = 'rgba(30,30,30,.18)'; g.lineWidth = 1; for (let k = 1; k < 6; k++) { const y = cy - ch * .5 + k * ch * .2; g.beginPath(); g.moveTo(cx, y); g.lineTo(cx - cw * .45, y + ch * .2); g.moveTo(cx, y); g.lineTo(cx + cw * .45, y + ch * .2); g.stroke(); } }); }
+});
+// boss material: Standard + vertex colour, object-space triplanar texture per paint layer, soft self-light (like the hero's SM) and a rim light
+// so the silhouette reads against the jungle. One per boss per room (flashSkins drives its emissive); disposed with the room, never in allMats.
+function bossMat(key, layers, o) {   // layers: [{ t: canvas texture or art key, sc: tiles per unit, st: strength, rough?: override }]
+  const m = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: o.rough, metalness: 0 });
+  const sh0 = o.sh || [0, 8, [0, 0, 0]], U = { uRimC: { value: new THREE.Color(o.rim) }, uRimK: { value: o.rimK }, uSelf: { value: o.self }, uAn: { value: { x: 0, y: 0, z: 0, w: 0 } }, uDt: { value: new THREE.Vector3() }, uBT: uTime,
+    uShK: { value: sh0[0] }, uShP: { value: sh0[1] }, uShM: { value: new THREE.Vector3(...sh0[2]) }, uGr: { value: o.grit || 0 } }; m.userData.U = U;   // sh: [wet/feather sheen strength, tightness, per-layer mask]; grit: stone grain
+  layers.forEach((L, i) => { const art = typeof L.t === 'string'; U['tB' + i] = art ? (artU[L.t] || { value: null }) : { value: L.t }; U['gB' + i] = art ? (artU[L.t] ? uArt : { value: 0 }) : { value: 1 }; });
+  m.onBeforeCompile = sh => { Object.assign(sh.uniforms, U);
+    sh.vertexShader = BANIM_D + 'attribute float aBt; varying float vBt; varying vec3 vBP; varying vec3 vBN;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vBt=aBt; vBP=position; vBN=normal;\n' + BANIM);
+    let f = ' float bDet=1.; { vec3 bw=pow(abs(normalize(vBN)),vec3(4.)); bw/=bw.x+bw.y+bw.z+1e-4; vec3 bd=vec3(1.);\n', r = '';
+    layers.forEach((L, i) => { const gain = typeof L.t === 'string' ? artGain(L.t) : L.t.userData.gain.toFixed(3);
+      f += '  if(abs(vBt-' + i + '.)<.5) bd=mix(vec3(1.),bTri(tB' + i + ',vBP*' + L.sc.toFixed(3) + ',bw)*' + gain + ',' + L.st.toFixed(2) + '*gB' + i + ');\n';
+      if (L.rough !== undefined) r += ' if(abs(vBt-' + i + '.)<.5) roughnessFactor=' + L.rough.toFixed(2) + ';'; });
+    f += '  bd*=1.+uGr*step(vBt,.5)*(bHs(floor(vBP*26.))-.5+(bHs(floor(vBP*61.)+7.)-.5)*.6);\n  diffuseColor.rgb*=bd; bDet=dot(bd,vec3(.333)); }\n';   // grit: two scales of grain on the stone layer
+    sh.fragmentShader = 'uniform vec3 uRimC; uniform float uRimK; uniform float uSelf; uniform float uShK; uniform float uShP; uniform vec3 uShM; uniform float uGr; varying float vBt; varying vec3 vBP; varying vec3 vBN;' + layers.map((L, i) => ' uniform sampler2D tB' + i + '; uniform float gB' + i + ';').join('') +
+      '\nfloat bHs(vec3 p){ return fract(sin(dot(p,vec3(12.9898,78.233,37.719)))*43758.5453); }\nvec3 bTri(sampler2D t,vec3 q,vec3 w){ return texture2D(t,q.zy).rgb*w.x+texture2D(t,q.xz).rgb*w.y+texture2D(t,q.xy).rgb*w.z; }\n' +
+      sh.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\n' + f)
+        .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\n' + r)
+        .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n totalEmissiveRadiance+=diffuseColor.rgb*(uSelf+step(3.5,vBt)*.9)+uRimC*uRimK*pow(1.-clamp(dot(normalize(normal),normalize(vViewPosition)),0.,1.),3.);\n'
+        + ' { vec3 bL=normalize((viewMatrix*vec4(.35,.85,.4,0.)).xyz), bHv=normalize(bL+normalize(vViewPosition)); float bM=vBt<.5?uShM.x:vBt<1.5?uShM.y:vBt<2.5?uShM.z:0.;\n'
+        + '   totalEmissiveRadiance+=vec3(1.,.97,.9)*uShK*bM*pow(max(dot(normalize(normal),bHv),0.),uShP)*clamp(bDet*1.3-.15,0.,1.4); }');   // sheen from a fixed key light, strongest on the raised texture (wet scutes, feather vanes)
+  };
+  m.customProgramCacheKey = () => 'boss:' + key; return m;
+}
+const _bkM = new THREE.Matrix4(), _bkI = new THREE.Matrix4(), _bkC = new THREE.Color(), _bkV = new THREE.Vector3(), _bkW = new THREE.Vector3();
+// ---- depth + character pass (Michael t53u): sculpted forms (vertex displacement on denser shapes), bevelled stone, contact shading baked
+// into the vertex colour, varied ink weight, and idle face animation done in the vertex shader. Everything still bakes to the same meshes,
+// so the draw calls stay as they were; the extra cost is triangles. ----
+const gSphH = new THREE.SphereGeometry(.5, 28, 18), gSphM = new THREE.SphereGeometry(.5, 18, 12), gHalfL = new THREE.SphereGeometry(.5, 9, 3, 0, Math.PI * 2, 0, Math.PI / 2), gConeH = new THREE.ConeGeometry(.5, 1, 14, 4);
+const capHC = {}, capH = (r, len) => capHC[r + '_' + len] || (capHC[r + '_' + len] = new THREE.CapsuleGeometry(r, len, 7, 22));
+const boxHC = {}, boxHG = (sx, sy, sz) => { const s = v => Math.max(2, Math.round(v * 2.6)), k = s(sx) + '_' + s(sy) + '_' + s(sz);   // subdivided unit box (enough vertices to bevel and carve), shared
+  if (!boxHC[k]) { boxHC[k] = new THREE.BoxGeometry(1, 1, 1, s(sx), s(sy), s(sz)); boxHC[k].userData.box = true; } return boxHC[k]; };
+gBox.userData.box = true;
+const bH = (a, b, c) => { let n = Math.imul(a | 0, 374761393) ^ Math.imul(b | 0, 668265263) ^ Math.imul(c | 0, 1274126177); n = Math.imul(n ^ (n >>> 13), 1274126177); return ((n ^ (n >>> 16)) >>> 0) / 4294967296; };
+function bN(x, y, z) {   // value noise, -1..1
+  const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z), s = t => t * t * (3 - 2 * t), u = s(x - xi), v = s(y - yi), w = s(z - zi), L = (a, b, t) => a + (b - a) * t;
+  return L(L(L(bH(xi, yi, zi), bH(xi + 1, yi, zi), u), L(bH(xi, yi + 1, zi), bH(xi + 1, yi + 1, zi), u), v),
+    L(L(bH(xi, yi, zi + 1), bH(xi + 1, yi, zi + 1), u), L(bH(xi, yi + 1, zi + 1), bH(xi + 1, yi + 1, zi + 1), u), v), w) * 2 - 1;
+}
+const bF = (x, y, z) => bN(x, y, z) * .55 + bN(x * 2.03 + 5.1, y * 2.03, z * 2.03) * .3 + bN(x * 4.1, y * 4.1 + 9.3, z * 4.1) * .15;
+function bW(x, y, z) {   // cellular noise: distance to the nearest and second nearest jittered point
+  const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z); let d1 = 9, d2 = 9;
+  for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) for (let k = -1; k <= 1; k++) { const cx = xi + i, cy = yi + j, cz = zi + k;
+    const dx = cx + .15 + bH(cx, cy, cz) * .7 - x, dy = cy + .15 + bH(cy + 7, cz, cx) * .7 - y, dz = cz + .15 + bH(cz + 3, cx, cy + 5) * .7 - z, d = dx * dx + dy * dy + dz * dz;
+    if (d < d1) { d2 = d1; d1 = d; } else if (d < d2) d2 = d; }
+  return [Math.sqrt(d1), Math.sqrt(d2)];
+}
+const SCULPT = {   // displacement shapes, about -1..1 (times the part's amplitude), sampled in the boss's own space so they run on across parts
+  bump: (x, y, z, f) => bF(x * f, y * f, z * f),
+  scale: (x, y, z, f) => { const w = bW(x * f, y * f * 1.2, z * f); return Math.min(1, (w[1] - w[0]) * 2.6) * 2 - 1 + bN(x * f * 3, y * f * 3, z * f * 3) * .2; },   // raised plates, sunk wet gaps
+  bands: (x, y, z, f) => 1 - 2 * Math.pow(1 - Math.abs(Math.sin(y * f * Math.PI)), 12) + bN(x * 3, y * 3, z * 3) * .15,   // belly plates with sunk seams
+  stone: (x, y, z, f) => { const r = 1 - Math.abs(bN(x * f * .8 + 3, y * f * .8, z * f * .8)); return bF(x * f, y * f, z * f) * .7 - Math.pow(r, 7) * 1.6 + .25; },   // lumpy, with sharp cracks
+  strata: (x, y, z, f) => { const s = y * f + bN(x * .9, y * .3, z * .9) * .6, q = s - Math.floor(s); return (q < .12 ? -1.6 : .35) + bF(x * 2.2, y * 2.2, z * 2.2) * .55; },   // layered sediment: sunk bedding lines, rough between
+  feather: (x, y, z, f, o) => { const c = o.c || [0, 0], u = Math.atan2(z - c[1], x - c[0]) * (o.ur || 1.5), t = y * f + .32 * Math.abs(Math.sin(u * f * 1.1 + Math.floor(y * f) * 1.9)) + bN(x * 2, y * 2, z * 2) * .22;
+    return 1 - 2 * (t - Math.floor(t)); }   // tiers of overlapping feathers: each tip sits proud of the row below
+};
+const gSphL = new THREE.SphereGeometry(.5, 8, 5), gFeat = new THREE.ConeGeometry(.5, 1, 7, 1); gFeat.rotateX(Math.PI / 2);   // gFeat: a pointed feather tile, tip down the skin
+function bShingle(par, paint, c, r, rows, cols, th0, th1, ph0, ph1, sz, o) {   // overlapping tiles (feathers, scutes) laid over an ellipsoid; each tile's lower edge is lifted, like a roof
+  o = o || {};
+  for (let i = 0; i < rows; i++) for (let j = 0; j < cols; j++) {
+    const ph = ph0 + (ph1 - ph0) * (rows > 1 ? i / (rows - 1) : .5), th = th0 + (th1 - th0) * (j + (i % 2) * .5) / cols, cp = Math.cos(ph), sp = Math.sin(ph), ct = Math.cos(th), st = Math.sin(th);
+    const n = new THREE.Vector3(cp * ct / r[0], sp / r[1], cp * st / r[2]).normalize(), fl = new THREE.Vector3(...(o.flow || [0, -1, 0])).normalize(), t = fl.clone().addScaledVector(n, -n.dot(fl)).normalize();
+    const up = n.clone().addScaledVector(t, o.lift === undefined ? .35 : o.lift).normalize(), bx = new THREE.Vector3().crossVectors(up, t).normalize(), tz = new THREE.Vector3().crossVectors(bx, up), k = 1 + (bH(i, j, 9) - .5) * .25;
+    const m = (o.an ? bAn : (q => q))(mk(o.geo || gSphL, typeof paint === 'function' ? paint(i, j) : paint, c[0] + r[0] * cp * ct + n.x * (o.out || 0) + t.x * sz[2] * .2, c[1] + r[1] * sp + n.y * (o.out || 0) + t.y * sz[2] * .2, c[2] + r[2] * cp * st + n.z * (o.out || 0) + t.z * sz[2] * .2, sz[0] * k, sz[1], sz[2] * k, par), ...(o.an || []));
+    m.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(bx, up, tz)); }
+}
+const bSc = (m, o) => { m.userData.sc = o; return m; };            // sculpt a part: { k: shape, a: amplitude, f: frequency, bev: stone bevel, dent: [[x, y, z, r, depth]] }
+const bAn = (m, grp, w) => { m.userData.an = [grp, w]; return m; };  // idle animation group: 1 breathe, 2/3 brows, 4 lids (blink), 5 eyes (dart), 6 sway, 7 ruffle; w = travel (or fn(x, y, z) per vertex)
+function bevelBox(g, s, r) {   // round off a unit box's edges in its scaled space (a chiselled chamfer on the subdivided boxes)
+  const p = g.attributes.position, hx = Math.max(0, s.x / 2 - r), hy = Math.max(0, s.y / 2 - r), hz = Math.max(0, s.z / 2 - r), cl = (v, h) => Math.max(-h, Math.min(h, v));
+  for (let i = 0; i < p.count; i++) { const qx = p.getX(i) * s.x, qy = p.getY(i) * s.y, qz = p.getZ(i) * s.z, ix = cl(qx, hx), iy = cl(qy, hy), iz = cl(qz, hz), dx = qx - ix, dy = qy - iy, dz = qz - iz, l = Math.hypot(dx, dy, dz);
+    if (l > 1e-6) p.setXYZ(i, (ix + dx / l * r) / s.x, (iy + dy / l * r) / s.y, (iz + dz / l * r) / s.z); }
+}
+const BANIM_D = 'attribute float aAn; attribute float aAw; uniform vec4 uAn; uniform vec3 uDt; uniform float uBT;\n';
+const BANIM = ' { float bg=floor(aAn+.5); if(bg==1.) transformed+=normal*(uAn.x*aAw); else if(bg==2.) transformed.y+=uAn.y*aAw; else if(bg==3.) transformed.y+=uAn.z*aAw; else if(bg==4.) transformed.y-=uAn.w*aAw; else if(bg==5.) transformed+=uDt*aAw;\n'
+  + '  else if(bg==6.) { float s=sin(uBT*1.35-position.x*.8+position.y*.2)+.35*sin(uBT*2.9-position.x*1.7); transformed.z+=s*aAw; transformed.x+=s*aAw*.12; }\n'   // 6 sway (tail, hanging moss): a slow wave down the part
+  + '  else if(bg==7.) transformed+=normal*(sin(uBT*5.3+dot(position,vec3(3.7,2.9,4.3)))*.6+sin(uBT*8.1+dot(position,vec3(-2.3,5.1,1.7)))*.4)*aAw; }\n';   // 7 ruffle (feathers, leaves, moss)
+function bossInkMat(key, mat) {   // the hero's ink, per boss so the outline follows the breathing / brows / blinks (shares the boss's animation uniforms)
+  const U = mat.userData.U, m = new THREE.MeshBasicMaterial({ color: '#1e1816', side: THREE.BackSide });
+  m.onBeforeCompile = sh => { sh.uniforms.uAn = U.uAn; sh.uniforms.uDt = U.uDt; sh.uniforms.uBT = U.uBT; sh.vertexShader = BANIM_D + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n' + BANIM); };
+  m.customProgramCacheKey = () => 'bink:' + key; return m;
+}
+const AO_D = [.09, .24, .5], AO_W = [.45, .35, .2];
+// merge the painted meshes under root (skipping the stop pivots, which are baked on their own) into one mesh + one ink hull; returns the mesh.
+// Per part: optional bevel + sculpt (displaced along the normal averaged per spot, so box corners stay closed), smooth normals of the new
+// surface, then contact shading (is the point a little way out along the normal inside another part?), cavity shading from the sculpt, top light.
+function bossBake(root, mat, own, stops, ink, bo) {   // bo (buddy): { bones: Map(joint group -> index) adds a per-vertex joint id for the shader rig, aoS: size scale for the contact shading }
+  const aS = bo && bo.aoS || 1; root.updateMatrixWorld(true); _bkI.copy(root.matrixWorld).invert();
+  const parts = [], walk = o => { for (const c of o.children) { if (stops && stops.includes(c)) continue; if (c.isMesh && c.material && c.material.bk) parts.push(c); walk(c); } };
+  walk(root);
+  const recs = [];
+  for (const m of parts) {
+    const pt = m.material, sc = m.userData.sc, g0 = m.geometry; if (!g0.boundingBox) g0.computeBoundingBox();
+    let bi = 0; if (bo && bo.bones) for (let q = m.parent; q && q !== root; q = q.parent) if (bo.bones.has(q)) { bi = bo.bones.get(q); break; }
+    const g = g0.clone(); if (sc && sc.bev) bevelBox(g, m.scale, sc.bev);
+    const mw = new THREE.Matrix4().multiplyMatrices(_bkI, m.matrixWorld); g.applyMatrix4(mw);
+    const p = g.attributes.position, n = g.attributes.normal, vc = g.attributes.color, N = p.count, ix = g.index ? g.index.array : null, cnt = ix ? ix.length : N;
+    const P = new Float32Array(N * 3), Nn = new Float32Array(N * 3), Av = new Float32Array(N * 3), D = new Float32Array(N), keys = new Array(N), acc = new Map();
+    for (let i = 0; i < N; i++) { P[i * 3] = p.getX(i); P[i * 3 + 1] = p.getY(i); P[i * 3 + 2] = p.getZ(i);
+      const kk = keys[i] = Math.round(P[i * 3] * 500) + ',' + Math.round(P[i * 3 + 1] * 500) + ',' + Math.round(P[i * 3 + 2] * 500), a = acc.get(kk) || [0, 0, 0];
+      a[0] += n.getX(i); a[1] += n.getY(i); a[2] += n.getZ(i); acc.set(kk, a); }
+    for (let i = 0; i < N; i++) { const a = acc.get(keys[i]), l = Math.hypot(a[0], a[1], a[2]) || 1; Av[i * 3] = a[0] / l; Av[i * 3 + 1] = a[1] / l; Av[i * 3 + 2] = a[2] / l; }
+    if (sc && (sc.k || sc.dent || sc.bev)) {
+      const fn = SCULPT[sc.k], amp = sc.a || 0, f = sc.f || 1;
+      for (let i = 0; i < N; i++) { const x = P[i * 3], y = P[i * 3 + 1], z = P[i * 3 + 2]; let d = fn ? fn(x, y, z, f, sc) * amp : 0; if (sc.lo) d += bF(x * sc.lo[1] + 11, y * sc.lo[1], z * sc.lo[1]) * sc.lo[0];   // lo: [amp, freq] big lumps that break the silhouette
+        if (sc.dent) for (const q of sc.dent) { const t = Math.hypot(x - q[0], y - q[1], z - q[2]) / q[3]; if (t < 1) d -= q[4] * (1 - t * t) * (1 - t * t); }
+        D[i] = d; P[i * 3] += Av[i * 3] * d; P[i * 3 + 1] += Av[i * 3 + 1] * d; P[i * 3 + 2] += Av[i * 3 + 2] * d; }
+      const fa = new Map();   // smooth normals of the carved surface, merged per spot
+      for (let t = 0; t < cnt; t += 3) { const a = ix ? ix[t] : t, b = ix ? ix[t + 1] : t + 1, c = ix ? ix[t + 2] : t + 2;
+        const ux = P[b * 3] - P[a * 3], uy = P[b * 3 + 1] - P[a * 3 + 1], uz = P[b * 3 + 2] - P[a * 3 + 2], vx = P[c * 3] - P[a * 3], vy = P[c * 3 + 1] - P[a * 3 + 1], vz = P[c * 3 + 2] - P[a * 3 + 2];
+        const cx = uy * vz - uz * vy, cy = uz * vx - ux * vz, cz = ux * vy - uy * vx;
+        for (const v of [a, b, c]) { const s = fa.get(keys[v]) || [0, 0, 0]; s[0] += cx; s[1] += cy; s[2] += cz; fa.set(keys[v], s); } }
+      for (let i = 0; i < N; i++) { const s = fa.get(keys[i]), l = s ? Math.hypot(s[0], s[1], s[2]) : 0;
+        if (l > 1e-9) { Nn[i * 3] = s[0] / l; Nn[i * 3 + 1] = s[1] / l; Nn[i * 3 + 2] = s[2] / l; } else { Nn[i * 3] = Av[i * 3]; Nn[i * 3 + 1] = Av[i * 3 + 1]; Nn[i * 3 + 2] = Av[i * 3 + 2]; } }
+    } else for (let i = 0; i < N; i++) { Nn[i * 3] = n.getX(i); Nn[i * 3 + 1] = n.getY(i); Nn[i * 3 + 2] = n.getZ(i); }
+    const bb = g0.boundingBox, c = bb.getCenter(new THREE.Vector3()), hs = bb.getSize(new THREE.Vector3()).multiplyScalar(.5);
+    recs.push({ pt, sc, bi, an: m.userData.an, P, Nn, Av, D, N, ix, cnt, vc, inv: mw.clone().invert(), box: !!g0.userData.box, c0: c, hs, c: c.clone().applyMatrix4(mw), r: hs.length() * mw.getMaxScaleOnAxis() });
+    g.dispose(); m.parent.remove(m);
+  }
+  const pos = [], nor = [], col = [], lay = [], aan = [], aaw = [], idx = [], inkPos = [], inkN = [], inkA = [], inkW = [], ii = [], bon = [], inkB = [];
+  for (const R of recs) {
+    const pt = R.pt, glow = pt.layer === 4, cand = glow ? [] : recs.filter(o => o !== R && o.pt.layer !== 4 && o.r > .1 * aS && o.c.distanceTo(R.c) < R.r + o.r + .6 * aS);
+    const amp = R.sc && R.sc.a ? R.sc.a : 0, base = pos.length / 3, grp = R.an ? R.an[0] : 0, gw = R.an ? R.an[1] : 0;
+    for (let i = 0; i < R.N; i++) { const x = R.P[i * 3], y = R.P[i * 3 + 1], z = R.P[i * 3 + 2], nx = R.Nn[i * 3], ny = R.Nn[i * 3 + 1], nz = R.Nn[i * 3 + 2];
+      let occ = 0;
+      for (let s = 0; s < 3 && cand.length; s++) { const d = AO_D[s] * aS; _bkV.set(x + nx * d, y + ny * d, z + nz * d);
+        for (const o of cand) { if (_bkV.distanceTo(o.c) > o.r) continue; const q = _bkW.copy(_bkV).applyMatrix4(o.inv), ux = (q.x - o.c0.x) / o.hs.x, uy = (q.y - o.c0.y) / o.hs.y, uz = (q.z - o.c0.z) / o.hs.z;
+          if (o.box ? Math.max(Math.abs(ux), Math.abs(uy), Math.abs(uz)) < 1 : ux * ux + uy * uy + uz * uz < 1) { occ += AO_W[s]; break; } } }
+      const cav = amp ? 1 + Math.max(-1, Math.min(1, R.D[i] / amp)) * .26 : 1, mot = R.sc && R.sc.mot ? 1 + bF(x * .7 / aS + 4, y * .7 / aS, z * .7 / aS) * R.sc.mot : 1, k = (.72 + .36 * (ny * .5 + .5)) * (1 - .62 * occ) * cav * mot;   // top light, contact shade, cavity, mottling
+      pos.push(x, y, z); nor.push(nx, ny, nz); _bkC.copy(pt.color); if (R.vc) _bkC.multiply(_bkC.clone().setRGB(R.vc.getX(i), R.vc.getY(i), R.vc.getZ(i)));
+      col.push(_bkC.r * k, _bkC.g * k, _bkC.b * k); lay.push(pt.layer); bon.push(R.bi); aan.push(grp); aaw.push(typeof gw === 'function' ? gw(x, y, z) : gw); }
+    for (let i = 0; i < R.cnt; i++) idx.push(base + (R.ix ? R.ix[i] : i));
+    if (pt.ink > 0) {   // ink hull along the per-spot normal; heavier under the forms and a little uneven, like a brush line
+      const ib = inkPos.length / 3;
+      for (let i = 0; i < R.N; i++) { const x = R.P[i * 3], y = R.P[i * 3 + 1], z = R.P[i * 3 + 2], ax = R.Av[i * 3], ay = R.Av[i * 3 + 1], az = R.Av[i * 3 + 2];
+        const w = pt.ink * (.72 + .6 * Math.max(0, -ay) - .18 * Math.max(0, ay) + .42 * bN(x * 1.7 / aS, y * 1.7 / aS, z * 1.7 / aS));   // thin on top, heavy underneath
+        inkPos.push(x + ax * w, y + ay * w, z + az * w); inkN.push(ax, ay, az); inkB.push(R.bi); inkA.push(grp); inkW.push(typeof gw === 'function' ? gw(x, y, z) : gw); }
+      for (let i = 0; i < R.cnt; i++) ii.push(ib + (R.ix ? R.ix[i] : i)); }
+  }
+  const F = (a, s) => new THREE.Float32BufferAttribute(a, s);
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', F(pos, 3)); geo.setAttribute('normal', F(nor, 3)); geo.setAttribute('color', F(col, 3));
+  geo.setAttribute('aBt', F(lay, 1)); geo.setAttribute('aAn', F(aan, 1)); geo.setAttribute('aAw', F(aaw, 1)); if (bo && bo.bones) geo.setAttribute('aBone', F(bon, 1)); geo.setIndex(idx); own.push(geo);
+  const mesh = mk(geo, mat, 0, 0, 0, 1, 1, 1, root);
+  if (ii.length) { const ig = new THREE.BufferGeometry(); ig.setAttribute('position', F(inkPos, 3)); ig.setAttribute('normal', F(inkN, 3)); ig.setAttribute('aAn', F(inkA, 1)); ig.setAttribute('aAw', F(inkW, 1)); if (bo && bo.bones) ig.setAttribute('aBone', F(inkB, 1));
+    ig.setIndex(ii); own.push(ig); mesh.userData.ink = mk(ig, ink || bossInk, 0, 0, 0, 1, 1, 1, root, true); }
+  return mesh;
+}
+// idle personality, visual only (breathing, brow twitches, blinks, glances). Reads the boss state to pick a mood; never writes game state.
+function bossIdle(bm, b, tele) {
+  const U = bm.an; if (!U) return; const t = VT + bm.idSeed, a = U.uAn.value, daze = b.state === 'stun' || b.state === 'dazed' || b.state === 'rest';
+  const tw = s => Math.pow(Math.max(0, Math.sin(t * 1.1 + s) * Math.sin(t * 2.9 + s * 1.7)), 8);   // a rare quick twitch
+  a.x = Math.sin(t * (daze ? 3.4 : 2.0)) * (daze ? 1.6 : 1);
+  const fu = tele ? -1 : 0; a.y = tw(0) * .9 + fu + (daze ? .7 : 0); a.z = tw(2.3) * .9 + fu * 1.25 + (daze ? .35 : 0);   // lopsided: one brow works harder
+  const bp = (t * .23) % 1; a.w = daze ? .55 : bp < .035 ? Math.sin(bp / .035 * Math.PI) : 0;
+  const j = Math.floor(t * .8), d = bm.dart; let tx = (bH(j, 3, 7) - .5) * 2, ty = (bH(j, 5, 1) - .5) * 1.4; if (tele) tx = ty = 0;   // glances; a fixed stare on the tell
+  d[0] += (tx - d[0]) * .2; d[1] += (ty - d[1]) * .2; bm.look(d[0], d[1]);
 }
 const _up0 = new THREE.Vector3(0, 1, 0);
-function buildBoss3(g, skins) {   // stacked stone golem: head slab with a sapling, chest block with a carved angry face, slab belly with a band-aid, mossy shoulders, boulder fists
-  const BS = skinMaker(skins), h = {}; const body = new THREE.Group(); g.add(body); h.body = body;
+function buildBoss1(g, skins, own) {   // croc rearing out of the mire (its hitbox is a tall column): huge head, slit orange eyes, fangs, mud drips, ridged back, an old clay boot in its jaws
+  const h = {};
+  const C = { body: '#887a37', hi: '#a99b57', dk: '#61523c', belly: '#bcb191', deep: '#383027', drip: '#7e6f5c', tooth: '#f7f7f3', eye: '#ec8736', ink: '#0a0a0a' };
+  // wet scaly skin (procedural scutes, glossy), belly plates (same scutes, bigger, softer), matte mud (in-repo mud art); thick ink + warm rim so it reads half-sunk in the mire
+  const mat = bossMat('b1', [{ t: texScales, sc: .55, st: .32 }, { t: 'mud', sc: .5, st: .5, rough: .95 }, { t: texScales, sc: .22, st: .35, rough: .6 }], { rough: .34, rim: '#ffe2a8', rimK: .32, self: .1, sh: [.3, 26, [1, 0, .45]] });   // wet sheen on the scutes, none on the mud
+  skins.push(mat); const ink = bossInkMat('b1', mat); own.push(ink);
+  const sk = BP(C.body, 0, .12), skS = BP(C.body, 0, .05), hi = BP(C.hi, 0, .1), hiS = BP(C.hi, 0, .04), dk = BP(C.dk, 0, .05), dkS = BP(C.dk, 0, .03), be = BP(C.belly, 2, .07), seam = BP('#6f6448', 3, 0);
+  const mud = BP(C.drip, 1, .05), mudS = BP(C.drip, 1, .025), mudW = BP('#5a4632', 1, .05), tooth = BP(C.tooth, 3, .022), gum = BP('#6e3b30', 3, 0), throat = BP('#3a1d18', 3, 0), tongue = BP('#b8545a', 3, 0), deep = BP(C.deep, 3, 0);
+  const scar = BP('#c9b98c', 3, .015), stitch = BP('#3a2c22', 3, 0);
+  const onBody = (th, y, sx, sz) => [-.15 + Math.cos(th) * sx, y, Math.sin(th) * sz];   // a point on the body's skin at angle th (0 = belly side)
+  const tSw = (x) => Math.pow(Math.max(0, Math.min(1, (-x - .9) / 2.9)), 1.5) * .32;   // tail sway weight: still at the root, most at the tip (look only; the hitbox is the body column)
+  bAn(bSc(mk(capH(1.0, 2.9), sk, -.15, 2.1, 0, 1, 1, 1.15, g), { k: 'scale', a: .075, f: 2.0, lo: [.2, .55], mot: .35 }), 1, .035);         // upright body: real raised scutes, breathing
+  bAn(bSc(mk(capH(.62, 2.5), be, .5, 2.0, 0, 1, 1, 1.25, g), { k: 'bands', a: .05, f: 2.22 }), 1, .07);           // pale belly plates with sunk seams (breathes most)
+  for (let k = 0; k < 6; k++) mk(gBox, seam, 1.08 - Math.abs(k - 2.5) * .03, .9 + k * .45, 0, .04, .05, 1.2, g);    // seam lines in the grooves
+  for (let k = 0; k < 7; k++) for (const s of [1, -1]) rot(mk(gCone, dk, -1.08 + k * .02, .95 + k * .52, s * .42, .6, 1.0 - (k % 2) * .3, .34, g), s * .5, 0, Math.PI / 2 - .45);   // ridged back: two rows of keeled scutes, splayed out so they break the outline from behind
+  for (let k = 0; k < 11; k++) { const y = .9 + k * .42, x = y < 2.9 ? -1.42 + k * .01 : -1.36 + (y - 2.9) * .4, hgt = (1.05 + (k % 2) * .5 + bH(k, 2, 5) * .2) * (k === 6 ? .55 : 1) * (1 - Math.abs(k - 4.5) * .045);   // bold saw-tooth crest from the tail root up onto the skull (one plate snapped)
+    rot(mk(gConeH, k % 3 ? dk : dkS, x, y, 0, .7, hgt, .26, g), 0, 0, Math.PI / 2 - .55 + (y > 2.9 ? (y - 2.9) * .3 : 0)); }
+  for (let k = 0; k < 3; k++) rot(mk(capG(.2, 1.45 - k * .25), skS, -.84 + k * .08, 3.0 + k * .3, 0, 1, 1, 1, g), Math.PI / 2, 0, 0);   // skin folds across the back of the neck
+  for (const s of [1, -1]) bSc(mk(gSphM, sk, -.35, 1.05, s * .92, 1.35, 1.25, .95, g), { k: 'scale', a: .05, f: 2.4 });   // heavy haunches (the body narrows to the neck)
+  for (const th of [Math.PI - .62, Math.PI + .62, Math.PI - 1.1, Math.PI + 1.1]) for (let k = 0; k < 7; k++) {   // osteoderm domes over the back and flanks (relief, not paint)
+    const y = .95 + k * .45 + (Math.abs(th - Math.PI) > 1 ? .22 : 0), [x, , z] = onBody(th, y, .97, 1.1), m = mk(gHalfL, k % 3 ? skS : dkS, x, y, z, .58, .28, .44, g);
+    m.quaternion.setFromUnitVectors(_up0, _bkV.set(Math.cos(th), .15, Math.sin(th) / 1.15).normalize()); }
+  for (let k = 0; k < 9; k++) { const a = k / 9 * Math.PI * 2; mk(gBlob, k % 2 ? mud : mudW, -.15 + Math.cos(a) * 1.0, .45 + (k % 3) * .12, Math.sin(a) * 1.15, .95, .5, .8, g); }   // mud collar where it breaks the mire
+  [[-1.05, .72, .15, .62], [-1.6, .5, .34, .53], [-2.13, .34, .53, .45], [-2.62, .23, .71, .37], [-3.07, .15, .87, .3], [-3.47, .1, 1.0, .23], [-3.8, .07, 1.1, .16]].forEach(([x, y, z, r], i) => {   // tail: tapering scaly segments with a double crest that joins into one
+    bAn(rot(bSc(mk(gSphM, i % 2 ? skS : sk, x, y, z, r * 2.5, r * 1.55, r * 1.8, g), { k: 'scale', a: .045, f: 2.3, mot: .25 }), 0, .35, 0), 6, tSw);
+    for (const s of i < 4 ? [1, -1] : [0]) bAn(rot(mk(gCone, dk, x + .05, y + r * .78, z + s * r * .36, .22 + r * .14, .42 + r * .7, .2, g), s * .25, 0, .45), 6, tSw); });
+  for (const s of [1, -1]) { const a = new THREE.Group(); a.position.set(.5, 2.7, s * 1.05); g.add(a);              // stubby fore-legs, scaly elbows, knuckles, pale claws
+    rot(bSc(mk(capH(.32, .7), sk, .35, -.2, 0, 1, 1, 1, a), { k: 'scale', a: .03, f: 3 }), 0, 0, -1.1); bSc(mk(gSphM, hi, .85, -.5, 0, .75, .45, .6, a), { k: 'bump', a: .04, f: 4 }); mk(gSph, dk, .05, .1, s * .12, .34, .28, .32, a);
+    for (let c = 0; c < 3; c++) { mk(gSph, hiS, 1.08, -.5, (c - 1) * .2, .18, .15, .17, a); rot(mk(gCone, tooth, 1.22, -.6, (c - 1) * .2, .1, .3, .1, a), 0, 0, -Math.PI / 2 - .3); } }
+  bSc(mk(gSphH, sk, .95, 4.35, 0, 2.5, 1.85, 2.25, g), { k: 'scale', a: .07, f: 1.5, dent: [[.5, 3.75, 1.05, .45, .12], [.5, 3.75, -1.05, .45, .12]] });   // big skull: scaly relief, sunk cheeks behind the jaw hinge
+  for (const [x, y, z] of [[.25, 5.08, .38], [-.05, 4.85, .32], [-.3, 4.55, .26]]) for (const s of [1, -1]) bSc(mk(gSph, dk, x, y, s * z, .34, .24, .32, g), { k: 'bump', a: .03, f: 5 });   // skull knobs
+  for (const s of [1, -1]) { bSc(mk(gSphM, hi, 1.7, 4.2, s * .96, .95, .42, .48, g), { k: 'bump', a: .03, f: 3 });   // cheekbones under the eyes
+    bSc(mk(gSphM, sk, .15, 4.0, s * 1.0, 1.0, .95, .62, g), { k: 'scale', a: .04, f: 2.4 }); }                    // jaw muscles
+  rot(bSc(mk(capH(.6, 1.3), hi, 2.2, 3.95, 0, 1, 1, 1.5, g), { k: 'bump', a: .035, f: 3 }), 0, 0, Math.PI / 2);   // upper snout (to x ~3.5), lumpy
+  for (const x of [1.75, 2.25, 2.75]) for (const s of [1, -1]) mk(gHalfL, hiS, x, 4.48, s * .36, .3, .16, .26, g);  // snout scutes (raised domes)
+  for (const s of [1, -1]) { mk(gSph, hiS, 3.3, 4.5, s * .27, .36, .28, .32, g); mk(gSph, deep, 3.44, 4.6, s * .27, .14, .1, .12, g); }   // nostril bumps + holes
+  mk(gFlat, gum, 2.0, 3.42, 0, 2.6, 1, 1.5, g).rotation.x = Math.PI;                                                 // roof of the mouth
+  bAn(mk(gSph, throat, .95, 3.4, 0, 1.0, .5, 1.2, g), 1, .05);                                                       // dark throat (the open mouth reads deep), gulping
+  for (let j = 0; j < 6; j++) for (const s of [1, -1]) { const f = j === 1 || j === 4, br = j === 4 && s === 1;     // upper teeth; one big fang snapped off
+    mk(gCone, tooth, 1.05 + j * .44, br ? 3.3 : 3.34, s * .76, f ? .26 : .17, br ? .26 : f ? .62 : .34, f ? .26 : .17, g).rotation.z = Math.PI;
+    if (br) mk(gIco, tooth, 1.05 + j * .44, 3.17, s * .76, .17, .07, .17, g); }
+  { const sc = new THREE.Group(); sc.position.set(.55, 4.75, 1.0); sc.rotation.set(-.35, .2, .6); g.add(sc);           // old claw scar across one cheek, stitched
+    mk(capG(.055, 1.1), scar, 0, 0, 0, 1, 1, 1, sc); for (let k = 0; k < 4; k++) mk(gBox, stitch, 0, -.42 + k * .28, 0, .3, .04, .06, sc); }
+  h.jaw = new THREE.Group(); h.jaw.position.set(.5, 3.45, 0); g.add(h.jaw);                                          // lower jaw (syncBoss opens it)
+  rot(bSc(mk(capH(.42, 1.6), hi, 1.35, -.42, 0, 1, 1, 1.8, h.jaw), { k: 'scale', a: .04, f: 2.2 }), 0, 0, Math.PI / 2); bSc(mk(gSphM, be, 1.1, -.65, 0, 2.4, .45, 1.3, h.jaw), { k: 'bands', a: .03, f: 3 });
+  mk(gFlat, gum, 1.4, -.04, 0, 2.5, 1, 1.3, h.jaw); mk(gSph, tongue, 1.0, -.08, 0, 1.6, .22, .7, h.jaw);
+  for (let j = 0; j < 5; j++) for (const s of [1, -1]) mk(gCone, tooth, .75 + j * .46, .1, s * .68, .17, j === 2 && s < 0 ? .22 : .38, .17, h.jaw);   // one worn-down tooth
+  { const bt = new THREE.Group(); bt.position.set(2.1, .15, .15); bt.rotation.set(.3, .5, -.45); h.jaw.add(bt);        // the old clay boot it is chewing on (bitten: tooth dents)
+    const clay = BP('#a05a3c', 3, .05); mk(gCyl, clay, 0, .42, 0, .5, .85, .5, bt); bSc(mk(gSphM, clay, .32, 0, 0, .95, .42, .56, bt), { k: 'bump', a: .02, f: 6 });
+    mk(gBox, BP(C.deep, 3, .03), .2, -.19, 0, .95, .09, .54, bt); mk(gCyl, BP('#6e3b2a', 3, .03), 0, .86, 0, .56, .09, .56, bt);
+    for (let k = 0; k < 3; k++) mk(gBox, BP('#e8d9b0', 3, 0), .26, .3 + k * .17, 0, .04, .04, .5, bt).rotation.x = (k % 2 - .5) * .7; }   // laces
+  for (const [x, z, l] of [[.9, .55, .5], [1.9, -.5, .7], [2.6, .35, .4]]) mk(capG(.09, l), mudS, x, -.8 - l / 2, z, 1, 1, 1, h.jaw);   // drool-mud
+  const pg = new THREE.Group(); g.add(pg);                                                                            // pupils: one mesh, syncBoss swaps its colour on the tell; glances in idle
+  for (const s of [1, -1]) {                                                                                          // eye bumps, glowing slit eyes, blinking lids, heavy lopsided brows
+    bSc(mk(gSphM, hi, .75, 5.2, s * .8, .95, .8, .8, g), { k: 'bump', a: .03, f: 4 });
+    mk(gSph, BP(C.eye, 4, 0), .98, 5.28, s * 1.0, .64, .58, .54, g); mk(gSph, BP('#fff6d8', 4, 0), 1.16, 5.44, s * 1.25, .1, .1, .08, g);   // eyes sit on the sides of the skull bumps, so they read from the side-on game camera
+    bAn(rot(mk(gSph, hiS, .92, 5.6, s * .96, .74, .3, .66, g), 0, 0, -.3), 4, .3);                                     // grumpy upper lid (blinks)
+    mk(gSph, BP(C.ink, 3, 0), 1.1, 5.28, s * 1.2, .14, .46, .14, pg);
+    bAn(rot(bSc(mk(capH(.19, .78), BP(C.deep, 0, .05), .95, s > 0 ? 5.82 : 5.74, s * .95, 1, 1, 1.35, g), { k: 'bump', a: .03, f: 5 }), 0, 0, Math.PI / 2 - (s > 0 ? .75 : .5)), s > 0 ? 2 : 3, .13); }
+  for (const [x, y, z, l] of [[.9, 1.6, .8, .6], [-.5, 1.4, -1.05, .5], [.75, 2.9, -.9, .45], [-.9, 2.3, 1.0, .5], [1.6, 3.3, 1.0, .4]]) mk(capG(.12, l), mudS, x, y - l / 2, z, 1, 1, 1, g);   // mud drips
+  for (const [x, y, z, s] of [[-.6, 3.2, 1.0, .5], [.3, 2.5, -1.15, .45], [-1.0, 1.6, -.8, .4], [1.4, 5.2, .1, .35], [-.2, 3.4, -.95, .4]]) mk(gBlob, mud, x, y, z, s * 1.4, s * .7, s, g);
+  for (const s of [1, -1]) mk(gBlob, mud, .1, 3.15, s * 1.05, .85, .45, .7, g);                                       // mud slopped on the shoulders
+  bossBake(h.jaw, mat, own, null, ink); h.pupils = [bossBake(pg, M('#2a1c13'), own)]; h.pupils[0].castShadow = false; bossBake(g, mat, own, [h.jaw, pg], ink);
+  h.an = mat.userData.U; h.idSeed = 0; h.dart = [0, 0]; h.look = (x, y) => h.pupils[0].position.set(x * .07, y * .05, 0);
+  return h;
+}
+function buildBoss2(g, skins, own) {   // round orange bird: cream belly, hooked yellow beak, grumpy brows, leaf crest, layered teal wings, seed bombs in its talons, bandaged tail
+  const h = {};
+  const C = { wing: '#4c8f91', wingL: '#94bfb5', wingD: '#36584c', leaf: '#678b54', seed: '#9db66f', body: '#eb9c4f', rust: '#ab5832', belly: '#e5d29e', eye: '#ef8b3b', ink: '#141614' };
+  // feathers: fine procedural feather texture on the body, a bigger one on wing and tail feathers, the in-repo leaf art on the crest and seed pods
+  const mat = bossMat('b2', [{ t: texFeather, sc: .8, st: .5 }, { t: 'leaf', sc: 1.4, st: .6 }, { t: texFeather, sc: .9, st: .4 }], { rough: .78, rim: '#fff0c8', rimK: .2, self: .1, sh: [.09, 5, [1, 0, 1]] });   // soft broad feather sheen
+  skins.push(mat); const ink = bossInkMat('b2', mat); own.push(ink);
+  const bo = BP(C.body, 0, .1), boS = BP(C.body, 0, .03), ru = BP(C.rust, 0, .08), ruS = BP(C.rust, 0, .03), be = BP(C.belly, 0, .07), beS = BP('#d9bf86', 0, .02), wi = BP(C.wing, 2, .05), wl = BP(C.wingL, 2, .05), wd = BP(C.wingD, 2, .04), wdS = BP(C.wingD, 2, 0);
+  const lf = BP(C.leaf, 1, .04), lfS = BP('#55743f', 1, 0), beak = BP('#efc23a', 3, .055), beakD = BP('#b8861e', 3, 0), white = BP(C.belly, 3, .035), ink3 = BP(C.ink, 3, 0);
+  const fe = (k, f, a) => ({ k: 'feather', f, a, c: [k, 0], mot: .12 });
+  const ruF = BP(C.rust, 0, 0), ruF2 = BP('#9a4a2a', 0, 0), boF = BP(C.body, 0, 0), boF2 = BP('#e3954a', 0, 0);   // no ink on the tiles: soft edges, shaded by the bake   // feather tiles: thin ink so they read as feathers, not armour                                                     // feather tiers wrapped round a centre
+  bAn(bSc(mk(gSphH, bo, -.2, 0, 0, 3.6, 3.0, 3.0, g), fe(-.2, 1.7, .12)), 1, .04); bSc(mk(gSphH, ru, -.9, .55, 0, 2.4, 2.0, 2.6, g), { k: 'feather', f: 1.9, a: .11, c: [3.6, 0], ur: 5, mot: .12 });   // tiers swept from a point ahead of the bird, so there is no pinch on top of the back   // body + rust back, layered feather tiers
+  bAn(bSc(mk(gSphH, be, .55, -.6, 0, 2.5, 2.2, 2.4, g), fe(.55, 2.4, .08)), 1, .09);                                  // cream belly, puffs as it breathes
+  for (let r = 0; r < 3; r++) for (let k = 0; k < 4 - (r === 2 ? 1 : 0); k++) { const z = (k - (r === 2 ? 1 : 1.5)) * .5, y = -.15 - r * .5, x = 1.62 - r * .05 - Math.abs(z) * .25;   // chest feather chevrons
+    bAn(rot(mk(gSph, beS, x, y, z, .16, .44, .36, g), 0, 0, -.25), 1, .09); }
+  bSc(mk(gSphH, bo, 1.35, 1.05, 0, 2.1, 2.0, 2.05, g), fe(1.35, 2.8, .06)); bSc(mk(gSphM, ru, 1.1, 1.75, 0, 1.4, .7, 1.5, g), fe(1.1, 4, .04));   // head + rust cap
+  bShingle(g, (i, j) => (i + j) % 3 ? ruF : ruF2, [-.9, .55, 0], [1.2, 1.0, 1.3], 5, 10, Math.PI - 1.45, Math.PI + 1.45, -.15, .8, [.95, .13, 1.1], { out: -.05, lift: .13, geo: gSphL, flow: [-1, -.55, 0], an: [7, .025] });   // overlapping rust feathers over the back
+  bShingle(g, (i, j) => (i * 3 + j) % 4 ? boF : boF2, [-.2, 0, 0], [1.8, 1.5, 1.5], 3, 12, Math.PI - 1.65, Math.PI + 1.65, -.95, -.3, [1.0, .12, 1.15], { out: -.075, lift: .11, geo: gSphL, flow: [-1, -.75, 0], an: [7, .02] });   // flat, sunk and swept back toward the tail, so they lie like feathers   // and over the lower back and flanks
+  for (let k = 0; k < 4; k++) bAn(rot(mk(gCone, ruS, .25 - k * .12, 1.95 + k * .06, (k - 1.5) * .28, .28, .9, .2, g), (k - 1.5) * .3, 0, 1.25 + k * .08), 7, .04);   // ruffled nape feathers
+  rot(mk(gCone, ruS, 1.55, 2.2, .3, .16, .7, .12, g), .5, 0, -.6); rot(mk(gCone, ruS, 1.7, 2.15, .38, .12, .5, .1, g), .7, 0, -1.1);   // a stubborn cowlick
+  for (const s of [1, -1]) for (let k = 0; k < 3; k++) bAn(rot(mk(gCone, bo, 1.0 - k * .1, .35 - k * .12, s * (.95 - k * .05), .24, .62, .17, g), s * .5, 0, 2.3 + k * .15), 7, .03);   // cheek fluff
+  for (const s of [1, -1]) bSc(mk(gSphM, bo, 1.75, .78, s * .75, .9, .55, .5, g), { k: 'bump', a: .03, f: 4 });  // puffed cheeks under the eyes
+  rot(bSc(mk(gConeH, beak, 2.75, .85, 0, .7, 1.4, .62, g), { k: 'bump', a: .025, f: 5, dent: [[3.25, .7, .15, .14, .06]] }), 0, 0, -Math.PI / 2); rot(mk(gCone, beak, 3.35, .62, 0, .24, .55, .22, g), 0, 0, Math.PI * .82);   // hooked beak, one old chip
+  rot(mk(capG(.07, .9), BP('#f6d460', 3, .02), 2.7, 1.15, 0, 1, 1, 1, g), 0, 0, Math.PI / 2 + .32);                    // ridge along the top of the beak
+  rot(mk(gCone, BP('#d9a52a', 3, .04), 2.55, .55, 0, .42, .9, .38, g), 0, 0, -Math.PI / 2 - .12);                    // lower mandible
+  mk(gBox, beakD, 2.7, .72, 0, 1.1, .05, .5, g); for (const s of [1, -1]) mk(gSph, beakD, 2.95, .98, s * .16, .1, .06, .07, g);   // gape line + nostrils
+  for (const s of [1, -1]) {                                                                                         // big eyes: white, glowing iris, pupil + glint (glance), blinking lids, lopsided angry brows
+    mk(gSph, white, 2.1, 1.3, s * .62, .55, .62, .45, g); mk(gSph, BP(C.eye, 4, 0), 2.22, 1.28, s * .7, .45, .5, .32, g);
+    bAn(mk(gSph, ink3, 2.34, 1.26, s * .78, .2, .26, .14, g), 5, 1); bAn(mk(gSph, BP('#ffffff', 4, 0), 2.36, 1.38, s * .84, .08, .08, .06, g), 5, 1);
+    bAn(rot(mk(gSph, boS, 2.08, 1.62, s * .62, .62, .3, .52, g), 0, 0, -.35), 4, .34);
+    bAn(rot(bSc(mk(capH(.13, .62), BP('#7a3a20', 0, .035), 2.05, s > 0 ? 1.8 : 1.72, s * .66, 1, 1, 1.5, g), { k: 'bump', a: .02, f: 6 }), 0, 0, Math.PI / 2 - (s > 0 ? .3 : .55)), s > 0 ? 2 : 3, .12); }
+  for (let i = 0; i < 6; i++) { const a = (i - 2.5) * .28; bAn(rot(mk(gCone, lf, .8 - Math.abs(i - 2.5) * .12, 2.35, a * 1.4, .42, (1.4 - Math.abs(i - 2.5) * .15) * (i === 4 ? .6 : 1), .14, g), a * 1.2, 0, .55 + Math.abs(a) * .3), 7, .05); }   // leaf crest (one leaf torn short)
+  h.wings = [1, -1].map(s => { const w = new THREE.Group(); w.position.set(-.4, .9, s * 1.25); g.add(w); bSc(mk(gSphM, wd, 0, 0, s * .35, 1.4, .55, 1.2, w), { k: 'bump', a: .03, f: 4 });
+    for (let k = 0; k < 4; k++) mk(gSph, ruS, .35 - k * .3, .18, s * (.75 + k * .1), .55, .17, .7, w);           // rust covert feathers at the wing root
+    for (let k = 0; k < 5; k++) mk(gSph, wdS, .2 - k * .32, .12, s * (1.15 + (k % 2) * .1), .4, .12, .5, w);       // a second row of small coverts
+    for (let i = 0; i < 6; i++) { const L = (2.7 - i * .22) * (s > 0 && i === 3 ? .72 : 1), x = .3 - i * .42, z = s * (L / 2 + .25);   // one primary broken short
+      bAn(mk(gSph, i % 2 ? wl : wi, x, -.02 + i * .03, z, .6, .15, L, w), 7, .02); mk(gSph, wdS, x - .1, -.08, z * .8, .5, .1, L * .7, w);
+      mk(gBox, BP('#e8efe6', 3, 0), x + .02, .07 + i * .03, z, .035, .025, L * .8, w);                                 // feather quill
+      mk(gSph, lfS, x - .05, .03, s * (L + .1), .42, .1, .5, w); }
+    bossBake(w, mat, own, null, ink); return w; });
+  const twS = (x) => Math.max(0, -x - 2.2) * .07;   // tail feathers fan and sway a little (look only)
+  for (let i = 0; i < 4; i++) { bAn(rot(mk(gSph, i % 2 ? wl : wi, -3.3, -.25 + (i - 1.5) * .08, (i - 1.5) * .42, 2.4, .17, .55, g), 0, (i - 1.5) * .25, .3), 6, twS);   // tail + dark tips
+    bAn(rot(mk(gSph, wdS, -4.25 - Math.abs(i - 1.5) * .05, -.55 + (i - 1.5) * .08, (i - 1.5) * .62, .7, .14, .45, g), 0, (i - 1.5) * .25, .3), 6, twS); }
+  rot(mk(gTorus, BP('#f4f1e6', 3, .03), -2.6, -.05, 0, 1.0, 1.0, 1.15, g), 0, Math.PI / 2, .3);                        // white bandage on the tail
+  rot(mk(gBox, BP('#d8cfb8', 3, 0), -2.62, .2, .5, .06, .3, .3, g), 0, 0, .3);                                          // its tucked end
+  for (const s of [1, -1]) {                                                                                         // scaly legs, knuckled three-toed talons, spiky seed bombs
+    rot(mk(capG(.15, .7), beak, .35, -1.75, s * .65, 1, 1, 1, g), 0, 0, .2); for (let k = 0; k < 3; k++) mk(gCyl, beakD, .37 - k * .04, -1.55 - k * .2, s * .65, .32, .04, .32, g);   // leg scale rings
+    for (let k = 0; k < 3; k++) { const z = s * .65 + (k - 1) * .22; mk(gSph, beak, .55 + (k === 1 ? .08 : 0), -2.02, z, .16, .14, .16, g);
+      rot(mk(gCone, BP(C.ink, 3, .02), .66 + (k === 1 ? .1 : 0), -2.14, z, .1, .34, .1, g), (k - 1) * .5, 0, Math.PI * .72); }
+    const sb = new THREE.Group(); sb.position.set(.55, -2.45, s * .7); g.add(sb); mk(gIco, BP(C.seed, 1, .04), 0, 0, 0, .95, .95, .95, sb);
+    for (let k = 0; k < 10; k++) { const v = new THREE.Vector3(Math.sin(k * 2.4) * Math.cos(k * 1.3), Math.cos(k * 2.4), Math.sin(k * 2.4) * Math.sin(k * 1.3)).normalize();
+      const c = mk(gCone, BP('#6f8a3a', 3, 0), v.x * .45, v.y * .45, v.z * .45, .12, .24, .12, sb); c.quaternion.setFromUnitVectors(_up0, v); }
+    for (const [dx, dz] of [[.3, 0], [-.3, .15], [0, -.3]]) rot(mk(gCone, ink3, dx, .38, dz, .07, .3, .07, sb), 0, 0, Math.PI - dx * 2); }
+  bossBake(g, mat, own, h.wings, ink);
+  const U = mat.userData.U; h.an = U; h.idSeed = 1.7; h.dart = [0, 0]; h.look = (x, y) => U.uDt.value.set(x * .07, y * .05, 0);
+  return h;
+}
+function buildBoss3(g, skins, own) {   // stacked stone golem: head slab with a sapling, chest block with a carved angry face, slab belly with a band-aid, mossy shoulders, boulder fists
+  const h = {}; const body = new THREE.Group(); g.add(body); h.body = body;
   const C = { stone: '#a18c78', clay: '#946a48', pale: '#b9b093', bone: '#d2cdb9', dk: '#605044', moss: '#6a806e', ochre: '#b39a52', eye: '#e09523', char: '#33302c', ink: '#090a0d' };
-  const st = BS(C.stone, true), cl = BS(C.clay), pa = BS(C.pale, true), bn = BS(C.bone, true), dk = BS(C.dk, true), mo = BS(C.moss, true), oc = BS(C.ochre), ch = M(C.char), ink = M(C.ink);
-  for (const s of [1, -1]) { mk(gBox, cl, .1, .95, s * 1.15, 1.3, 1.7, 1.35, body); mk(gSph, st, -.35, .35, s * 1.2, 2.4, .95, 1.75, body);   // stubby legs, big feet
+  // the scenery's stone art on the slabs and fists, the mud art on the clay, the leaf art on the moss; stone is matte, the sapling sways on its own pivot
+  const mat = bossMat('b3', [{ t: 'stone', sc: .5, st: .6 }, { t: 'mud', sc: .5, st: .45 }, { t: 'leaf', sc: 1.2, st: .6 }], { rough: .9, rim: '#ffe6b0', rimK: .18, self: .08, grit: .3, sh: [.05, 4, [0, .6, 1]] });   // stone grit; a faint damp sheen on clay and moss
+  skins.push(mat); const ink = bossInkMat('b3', mat); own.push(ink);
+  const st = BP(C.stone, 0, .1), stS = BP(C.stone, 0, .04), cl = BP(C.clay, 1, .09), pa = BP(C.pale, 0, .1), bn = BP(C.bone, 0, .09), bnS = BP(C.bone, 0, .04), dk = BP(C.dk, 0, .05), mo = BP(C.moss, 2, .06), moS = BP(C.moss, 2, .02);
+  const oc = BP(C.ochre, 1, .025), ch = BP(C.char, 3, 0), crack = BP('#1c1712', 3, 0), fang = BP(C.bone, 3, .03);
+  const SB = (paint, x, y, z, sx, sy, sz, par, o) => bSc(mk(boxHG(sx, sy, sz), paint, x, y, z, sx, sy, sz, par), Object.assign({ k: 'stone', a: .1, f: .9, bev: .16 }, o));   // carved stone block
+  const ST = { k: 'stone', a: .09, f: 1.1 };
+  for (const s of [1, -1]) { SB(cl, .1, .95, s * 1.15, 1.3, 1.7, 1.35, body, { k: 'bump', a: .06, f: 1.6, bev: .25 }); bSc(mk(gSphH, st, -.35, .35, s * 1.2, 2.4, .95, 1.75, body), ST);   // stubby legs, big feet with stone toes
+    for (let k = 0; k < 3; k++) bSc(mk(gSphM, stS, -1.45, .25, s * 1.2 + (k - 1) * .5, .52, .47, .47, body), { k: 'stone', a: .05, f: 2 });
     mk(gBlob, mo, -.2, 1.6, s * 1.6, .9, .7, .6, body); }
-  rot(mk(gBox, pa, 0, 2.2, 0, 3.0, 1.15, 3.4, body), 0, .05, 0); rot(mk(gBox, bn, -.05, 3.15, 0, 3.3, .9, 3.7, body), 0, -.05, 0);   // stacked slab belly
-  mk(gBox, bn, -1.55, 2.3, -1.0, .6, .7, 1.1, body);                                                                  // loose block
+  rot(SB(pa, 0, 2.2, 0, 3.0, 1.15, 3.4, body, { k: 'strata', a: .07, f: 3.2, dent: [[-1.5, 2.75, -1.6, .45, .2]] }), 0, .05, 0); rot(SB(bn, -.05, 3.15, 0, 3.3, .9, 3.7, body, { k: 'strata', a: .07, f: 3.6, dent: [[1.6, 3.6, 1.85, .5, .22]] }), 0, -.05, 0);   // sediment bedding lines   // stacked slab belly, chipped corners
+  SB(bn, -1.55, 2.3, -1.0, .6, .7, 1.1, body, { bev: .1 }); SB(bnS, 1.3, 3.55, 1.5, .7, .4, .6, body, { bev: .1 });     // loose blocks
+  for (const [x, z] of [[-1.2, 1.72], [.4, 1.72], [1.0, -1.72]]) mk(gIco, BP('#8d8272', 0, .03), x, 1.95, z, .35, .3, .3, body);   // pebbles stuck in the slab
   { const ba = new THREE.Group(); ba.position.set(-1.72, 2.85, .5); ba.rotation.x = .55; body.add(ba);              // band-aid over a crack
-    mk(gBox, M('#e8d9b0'), 0, 0, 0, .06, .4, 1.3, ba, true); mk(gBox, M('#cdb07a'), -.02, 0, 0, .06, .36, .4, ba, true); }
-  for (const [y, z, r, l] of [[2.5, .2, .9, .8], [2.1, -.4, -.6, .6], [3.3, -.9, .3, .5]]) mk(gBox, ink, -1.56, y, z, .03, .04, l, body, true).rotation.x = r;
-  mk(gBox, st, 0, 5.0, 0, 3.4, 2.9, 3.9, body);                                                                       // chest block
-  h.eyes = [];
-  for (const s of [1, -1]) {                                                                                         // carved angry face on the -x side
-    rot(mk(gBox, dk, -1.78, 5.9, s * .72, .34, .34, 1.3, body), s * .38, 0, 0);
-    mk(gSph, ch, -1.7, 5.4, s * .72, .5, .7, .9, body, true);
-    h.eyes.push(mk(gSph, reg(new THREE.MeshStandardMaterial({ color: C.eye, emissive: C.eye, emissiveIntensity: 1.2, roughness: .4 })), -1.8, 5.42, s * .72, .4, .52, .62, body, true));
-    mk(gSph, ink, -2.0, 5.4, s * .72, .14, .18, .18, body, true); }
-  mk(gBox, st, -1.85, 4.85, 0, .34, .5, .5, body); mk(gBox, ch, -1.72, 4.2, 0, .2, .6, 2.1, body, true);           // nose + mouth
-  for (const z of [.6, -.6]) mk(gCone, bn, -1.86, 4.05, z, .26, .55, .26, body, true);                               // fangs up
-  for (const z of [.25, -.25, .95, -.95]) mk(gCone, bn, -1.86, 4.38, z, .17, .3, .17, body, true).rotation.z = Math.PI;
-  for (const [x, z, l] of [[-1.72, 1.4, .9], [-1.72, -.2, .6], [-1.0, 1.96, .8], [.5, -1.96, .7]]) mk(capG(.1, l), oc, x, 3.6 - l / 2, z, 1, 1, 1, body, true);   // ochre mud drips
-  for (const s of [1, -1]) { mk(gBlob, mo, 0, 6.5, s * 1.85, 1.9, .9, 1.4, body); for (const dx of [-.6, .4]) mk(capG(.12, .5), mo, dx, 5.85, s * 2.05, 1, 1, 1, body, true); }   // mossy shoulders
-  mk(gBox, pa, 0, 7.25, 0, 2.6, 1.6, 2.9, body); mk(gBox, ink, -1.31, 7.25, .2, .03, 1.5, .04, body, true);        // head slab + seam
-  mk(gBox, bn, -.2, 7.0, -1.0, 2.2, .8, .95, body); mk(gBlob, mo, -.6, 7.8, 1.2, 1.1, .5, .7, body);
-  mk(capG(.1, .55), oc, -1.3, 6.85, -.6, 1, 1, 1, body, true);
-  mk(gCyl, dk, 0, 8.1, 0, 2.3, .16, 2.5, body, true);                                                                // soil on top
+    mk(gBox, BP('#e8d9b0', 3, .02), 0, 0, 0, .06, .4, 1.3, ba); mk(gBox, BP('#cdb07a', 3, 0), -.02, 0, 0, .06, .36, .4, ba); }
+  for (const [y, z, r, l] of [[2.5, .2, .9, .8], [2.1, -.4, -.6, .6], [3.3, -.9, .3, .5]]) mk(gBox, crack, -1.56, y, z, .03, .05, l, body).rotation.x = r;
+  const gash = [[-1.0, 6.3], [-.55, 5.7], [-.75, 5.2], [-.1, 4.6], [.35, 4.1]];                                        // a deep crack carved across the chest (camera side)
+  const glyph = [...Array(9)].map((_, k) => [.95 + Math.cos(k / 9 * 6.283) * .52, 4.95 + Math.sin(k / 9 * 6.283) * .52, 1.95, .17, .12]).concat([[.95, 4.95, 1.95, .2, .14], [.95, 5.75, 1.95, .14, .1], [.95, 4.15, 1.95, .14, .1]]);   // a carved sun glyph (engraved ring + eye)
+  SB(st, 0, 5.0, 0, 3.4, 2.9, 3.9, body, { a: .08, bev: .2, dent: [...gash.map(([x, y]) => [x, y, 1.95, .34, .2]), ...glyph, [1.7, 6.45, -1.95, .55, .3], [-1.75, 6.4, 1.95, .4, .2]] });   // chest block
+  for (let i = 0; i < gash.length - 1; i++) { const [x0, y0] = gash[i], [x1, y1] = gash[i + 1]; mk(gBox, crack, (x0 + x1) / 2, (y0 + y1) / 2, 1.8, Math.hypot(x1 - x0, y1 - y0) + .05, .07, .05, body).rotation.z = Math.atan2(y1 - y0, x1 - x0); }
+  for (const [x, y, r, l] of [[-.8, 5.6, .5, 1.1], [.3, 4.4, -.4, .9], [.9, 5.9, 1.1, .7]]) mk(gBox, BP('#5a4c40', 3, 0), x + .5, y, 1.93, l, .07, .03, body).rotation.z = r;   // carved rune lines (camera side)
+  for (const [x, y] of [[-1.4, 6.2], [1.45, 3.95], [1.4, 6.25]]) SB(stS, x, y, 1.75, .5, .5, .5, body, { bev: .08, a: .04 });   // chipped corner stones
+  const eg = new THREE.Group(); body.add(eg);                                                                         // glowing eyes: one mesh, one material (syncBoss dims it when dazed; glances in idle)
+  for (const s of [1, -1]) {                                                                                         // carved angry face on the -x side: lopsided grinding brows, cheekbones, deep sockets
+    bAn(rot(SB(dk, -1.85, s > 0 ? 6.08 : 5.98, s * .72, .52, .44, 1.45, body, { a: .05, f: 2, bev: .1 }), s * (s > 0 ? .55 : .36), 0, 0), s > 0 ? 2 : 3, .12);
+    mk(gSphM, ch, -1.68, 5.4, s * .72, .62, .82, 1.0, body);                                                           // deep socket
+    mk(gSphM, BP(C.eye, 3, 0), -1.82, 5.42, s * .72, .46, .6, .72, eg);
+    bAn(mk(gSph, BP(C.ink, 3, 0), -2.05, 5.4, s * .72, .14, .22, .2, body), 5, 1);
+    bAn(mk(gSph, BP('#fff2c0', 4, 0), -2.06, 5.58, s * .84, .08, .08, .08, body), 5, 1);                               // glint
+    SB(stS, -1.84, 4.88, s * 1.15, .45, .32, .75, body, { bev: .08, a: .04 });                                         // cheekbones
+    mk(gBox, crack, -1.72, 4.6, s * 1.3, .03, .4, .05, body).rotation.x = s * .5; }                                  // cheek cracks
+  SB(st, -1.86, 6.5, 0, .55, .34, 2.6, body, { bev: .12, a: .05, f: 2, dent: [[-2.1, 6.4, 0, .22, .12]] });   // heavy forehead ledge over the face, notched in the middle
+  for (const s of [1, -1]) { mk(gBox, crack, -1.75, 6.05, s * .2, .03, .42, .05, body).rotation.x = s * .25;   // frown furrows between the brows
+    bAn(rot(SB(stS, -1.98, 5.92, s * .72, .32, .26, .98, body, { bev: .1, a: .02 }), s * .1, 0, .1), 4, .5); }   // stone eyelids (blink; droop when dazed)
+  SB(stS, -1.98, 3.78, 0, .4, .26, 1.95, body, { bev: .1, a: .04, f: 2 });   // jutting lower lip: a sulky underbite
+  SB(st, -1.85, 4.85, 0, .42, .55, .55, body, { bev: .08, a: .03 }); SB(stS, -2.0, 4.65, 0, .3, .2, .5, body, { bev: .06, a: .02 });   // nose
+  mk(gBox, ch, -1.72, 4.2, 0, .24, .66, 2.2, body); mk(gBox, BP('#4a2c22', 3, 0), -1.76, 4.0, 0, .2, .2, 1.8, body);  // mouth + dark gum
+  for (const z of [.6, -.6]) mk(gCone, fang, -1.86, 4.05, z, .26, z > 0 ? .55 : .3, .26, body);                       // fangs up (one broken)
+  for (const z of [.25, -.25, .95, -.95]) mk(gCone, fang, -1.86, 4.38, z, .17, .3, .17, body).rotation.z = Math.PI;
+  for (const [x, z, l] of [[-1.72, 1.4, .9], [-1.72, -.2, .6], [-1.0, 1.96, .8], [.5, -1.96, .7], [.9, 1.96, .55]]) mk(capG(.1, l), oc, x, 3.6 - l / 2, z, 1, 1, 1, body);   // ochre mud drips
+  for (const s of [1, -1]) { bAn(bSc(mk(gBlob, mo, 0, 6.5, s * 1.85, 1.9, .9, 1.4, body), { k: 'bump', a: .1, f: 2.5 }), 1, .03);   // mossy shoulders, hanging moss
+    for (const dx of [-.6, .4, -.1]) bAn(mk(capG(.12, .5 + (dx + .6) * .3), moS, dx, 5.85, s * 2.05, 1, 1, 1, body), 6, (x, y) => Math.max(0, 6.3 - y) * .22); }   // hanging moss sways
+  SB(pa, 0, 7.25, 0, 2.6, 1.6, 2.9, body, { k: 'strata', a: .07, f: 3.0, dent: [[1.25, 8.0, 1.4, .55, .3]] }); mk(gBox, crack, -1.31, 7.25, .2, .03, 1.5, .05, body);   // head slab (a corner knocked off) + seam
+  SB(bn, -.2, 7.0, -1.0, 2.2, .8, .95, body, { bev: .12 }); mk(gBlob, mo, -.6, 7.8, 1.2, 1.1, .5, .7, body);
+  rot(bSc(mk(gConeH, st, -.3, 8.55, -1.05, .55, 1.1, .55, body), ST), -.45, 0, .15);                                   // stone horns: one whole,
+  rot(bSc(mk(gConeH, st, -.3, 8.3, 1.05, .6, .55, .6, body), { k: 'stone', a: .06, f: 1.6, dent: [[-.3, 8.62, 1.05, .32, .14]] }), .4, 0, .15);   // one snapped off
+  mk(capG(.1, .55), oc, -1.3, 6.85, -.6, 1, 1, 1, body);
+  mk(gCyl, BP(C.dk, 1, .03), 0, 8.1, 0, 2.3, .16, 2.5, body);                                                          // soil on top
   h.core = new THREE.Group(); h.core.position.set(-.2, 8.15, .1); body.add(h.core);                                  // the sapling (sways; replaces the old gold core)
-  { const stem = M('#7a5a38'), lf = M('#5fa04a'); rot(mk(capG(.07, .9), stem, 0, .5, 0, 1, 1, 1, h.core), 0, 0, .12);
-    rot(mk(gSph, lf, -.35, 1.05, .25, .75, .1, .4, h.core), .3, .4, .5); rot(mk(gSph, lf, .35, 1.15, -.2, .8, .1, .42, h.core), -.3, .4, -.5); mk(gSph, lf, 0, 1.05, 0, .35, .25, .3, h.core); }
-  h.arms = [1, -1].map(s => { const a = new THREE.Group(); a.position.set(0, 5.3, s * 2.6); body.add(a); mk(gSph, cl, 0, 0, 0, 1.3, 1.3, 1.3, a);
-    mk(capG(.55, 2.2), cl, 0, -1.7, 0, 1, 1, 1, a); mk(gSph, st, 0, -3.35, 0, 2.0, 1.8, 2.0, a);                      // round boulder fists
-    for (let k = 0; k < 3; k++) mk(gSph, st, -.85, -3.0 - k * .35, (k - 1) * .45, .45, .4, .45, a, true); return a; });
+  { const stem = BP('#7a5a38', 1, .025), lf = BP('#5fa04a', 2, .025); rot(mk(capG(.07, .9), stem, 0, .5, 0, 1, 1, 1, h.core), 0, 0, .12);
+    bAn(rot(mk(gSph, lf, -.35, 1.05, .25, .75, .1, .4, h.core), .3, .4, .5), 7, .04); bAn(rot(mk(gSph, lf, .35, 1.15, -.2, .8, .1, .42, h.core), -.3, .4, -.5), 7, .04); mk(gSph, lf, 0, 1.05, 0, .35, .25, .3, h.core); }
+  bossBake(h.core, mat, own, null, ink);
+  // arms hang behind the face (pivot x +.85, z 2.75): from the game camera the near fist used to cover the face. Visual only, the slam logic is unchanged.
+  h.arms = [1, -1].map(s => { const a = new THREE.Group(); a.position.set(.85, 5.3, s * 2.75); body.add(a); bSc(mk(gSphM, cl, 0, 0, 0, 1.3, 1.3, 1.3, a), { k: 'bump', a: .06, f: 2 });
+    bSc(mk(capH(.55, 2.2), cl, 0, -1.7, 0, 1, 1, 1, a), { k: 'bump', a: .06, f: 1.8 }); for (const y of [-1.2, -2.2]) mk(gCyl, BP(C.dk, 1, .02), 0, y, 0, 1.2, .14, 1.2, a);   // clay arm with mud bands
+    bSc(mk(gSphH, st, 0, -3.35, 0, 2.0, 1.8, 2.0, a), { k: 'stone', a: .1, f: 1.2 });                                  // boulder fists
+    for (let k = 0; k < 4; k++) bSc(mk(gSphM, stS, -.82, -2.85 - k * .1, (k - 1.5) * .42, .5, .44, .42, a), { k: 'stone', a: .04, f: 2.5 });   // knuckles
+    bAn(mk(gBlob, moS, .2, .55, 0, .9, .45, .9, a), 7, .03); for (const dz of [-.3, .25]) bAn(mk(capG(.09, .45), moS, -.45, .05, dz, 1, 1, 1, a), 6, (x, y) => Math.max(0, .4 - y) * .25);   // moss on the shoulder, two strands
+    bossBake(a, mat, own, null, ink); return a; });
+  h.eyes = [bossBake(eg, reg(new THREE.MeshStandardMaterial({ color: C.eye, emissive: C.eye, emissiveIntensity: 1.2, roughness: .4 })), own)];
+  h.eyes[0].castShadow = false; bossBake(body, mat, own, [h.core, eg, ...h.arms], ink);
+  const U = mat.userData.U; h.an = U; h.idSeed = 3.3; h.dart = [0, 0]; h.look = (x, y) => { U.uDt.value.set(0, y * .06, x * .08); h.eyes[0].position.set(0, y * .03, x * .04); };
   return h;
 }
 
@@ -849,6 +1210,219 @@ function buildBoss3(g, skins) {   // stacked stone golem: head slab with a sapli
    Room geometry: ground plane (vertex colours + gentle displacement outside the lane), strata dirt box, back bank with hills, instanced foliage. */
 const roomGroup = new THREE.Group(); scene.add(roomGroup);
 const pl = buildHero(); pl.root.visible = false; scene.add(pl.root);
+// physical shield (plan items 1-3, 8, 9). Look (Michael t31u): something a robot would build from scrap. Built in code (no art file):
+// mismatched steel / rust / galvanized plates (one instanced mesh), hex bolts, a bent uneven hoop, a pipe-cap boss and weld beads.
+// It hangs on the hero's back, swings round his right side to the front when he blocks, and lies on the ground when dropped.
+// A tight cool glow runs along the bent hoop and the weld beads, plus a ring card behind; its brightness follows his stamina
+// (TUNE.GLOW_MIN at empty .. GLOW_MAX at full). Look only: no gameplay number lives here. About 8 draw calls, low poly (fine on ?q=low).
+function buildShield() {
+  const root = new THREE.Group(), face = new THREE.Group(); root.add(face);       // the face points along local +x
+  const glowM = reg(new THREE.MeshStandardMaterial({ color: '#8b9096', emissive: '#9fe3ff', emissiveIntensity: 1, roughness: .45, metalness: .5, flatShading: true }));
+  const dm = new THREE.Object3D(), inst = (geo, mat, list, colors, shadow) => {   // list: [x, y, z, sx, sy, sz, rx, ry, rz]
+    const m = new THREE.InstancedMesh(geo, mat, list.length);
+    list.forEach((t, i) => { dm.position.set(t[0], t[1], t[2]); dm.scale.set(t[3], t[4], t[5]); dm.rotation.set(t[6] || 0, t[7] || 0, t[8] || 0); dm.updateMatrix(); m.setMatrixAt(i, dm.matrix); if (colors) m.setColorAt(i, new THREE.Color(colors[i])); });
+    m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; m.castShadow = m.receiveShadow = !!shadow; face.add(m); return m; };
+  // scrap plates: different metals, a little crooked, stacked at slightly different depths so they overlap like patches
+  const plates = [
+    [0,    0,    0,    .07, .84, .74,  0,   0,   0  ],   // backing sheet (worn steel)
+    [.03,  .25, -.23,  .05, .46, .44,  .14, .04, 0  ],   // rusty patch, upper left
+    [.034,-.25,  .22,  .05, .48, .44, -.1, -.03, .03],   // dark steel, lower right
+    [.027, .28,  .24,  .04, .36, .38, -.2,  0,  -.04],   // galvanized scrap, upper right
+    [.032,-.27, -.21,  .045,.42, .4,   .09, .03, .02],   // orange rust, lower left
+    [.052, .01,  .0,   .03, .13, .92,  .05, 0,   0  ]];  // steel bar riveted across the middle
+  inst(gBox, reg(new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: .62, metalness: .18, flatShading: true })), plates,
+    ['#9aa1a8', '#b05a30', '#6d747b', '#c9c4ae', '#cf7536', '#7f878e'], true);
+  // hex bolts / rivets on the plate corners and along the bar
+  const boltG = new THREE.CylinderGeometry(.034, .038, .03, 6); boltG.rotateZ(Math.PI / 2);
+  const bolts = [[.07, .44, -.4], [.07, .07, -.06], [.068, .45, .07], [.07, .1, .4], [.075, -.06, -.07], [.074, -.44, .41], [.075, -.08, .41],
+    [.066, -.45, -.38], [.066, -.1, -.39], [.075, .02, -.36], [.075, .02, .36], [.075, .02, .12], [.075, .02, -.12], [.06, .43, -.03]];
+  inst(boltG, MS('#5d6266', .45, .35, 0, true), bolts.map(b => [b[0], b[1], b[2], 1, 1, 1, (b[1] * 7 + b[2] * 5) % 1]), null, false);
+  // weld beads along two seams (they carry the stamina glow)
+  const beadG = new THREE.SphereGeometry(.5, 6, 4), beads = [];
+  for (let i = 0; i < 7; i++) beads.push([.05, -.02 - i * .062, .015 + Math.sin(i * 2.3) * .02, .05, .045, .07, 0, 0, i * .7]);   // vertical seam, lower half
+  for (let i = 0; i < 6; i++) beads.push([.045, .07 + Math.sin(i * 1.9) * .015, -.38 + i * .062, .045, .07, .05, 0, 0, i * .9]); // short seam, upper left
+  inst(beadG, glowM, beads, null, false);
+  // bent hoop: a 9-sided square-section ring, pushed in and out and bowed so it looks hammered from scrap
+  const rimG = new THREE.TorusGeometry(.58, .045, 4, 9); rimG.rotateY(Math.PI / 2); rimG.rotateX(.2);
+  { const pa = rimG.attributes.position, v = new THREE.Vector3();
+    for (let i = 0; i < pa.count; i++) { v.fromBufferAttribute(pa, i); const a = Math.atan2(v.y, v.z), f = 1 + .055 * Math.sin(3 * a + 1) + .03 * Math.sin(5 * a + 2);
+      pa.setXYZ(i, v.x + .04 * Math.sin(2 * a + .5), v.y * f, v.z * f); }
+    rimG.computeVertexNormals(); }
+  mk(rimG, glowM, .01, 0, 0, 1, 1, 1, face, true);
+  // pipe-cap boss with a brass nut, and a pipe handle on the back
+  const capGeo = new THREE.CylinderGeometry(.13, .16, .07, 8); capGeo.rotateZ(-Math.PI / 2);
+  mk(capGeo, MS('#565b60', .45, .35, 0, true), .085, .01, 0, 1, 1, 1, face, true);
+  mk(boltG, MS('#d39a4a', .4, .35, 0, true), .13, .01, 0, 1.6, 1.6, 1.6, face, true).rotation.x = .3;
+  mk(gBox, MS('#2e2b28', .6, .5), -.07, 0, 0, .04, .5, .07, face, true);
+  // tight glow: a ring-shaped glow card just behind the plates, so it hugs the hoop (texRing peaks at the hoop radius)
+  const texRing = mkTex(64, 64, (c, w) => { const r = c.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, 'rgba(255,255,255,0)'); r.addColorStop(.58, 'rgba(255,255,255,0)'); r.addColorStop(.72, 'rgba(255,255,255,1)'); r.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = r; c.fillRect(0, 0, w, w); });
+  const haloM = reg(new THREE.MeshBasicMaterial({ map: texRing, color: '#9fe3ff', transparent: true, opacity: .6, depthWrite: false, fog: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }));
+  const halo = new THREE.Mesh(gQuad, haloM); halo.rotation.y = Math.PI / 2; halo.position.x = -.06; halo.scale.set(1.7, 1.7, 1); halo.renderOrder = 5; face.add(halo);
+  return { root, face, glowM, haloM, halo };
+}
+const shield = buildShield(); pl.bod.add(shield.root);
+// buddy companion (Michael t57u): the picked buddy drawing (art/buddy.webp, kept in the repo as the reference) rebuilt as a rigged 3D model
+// in code, the hero's way (simple shapes, bold swatch colours, ink hull) at the bosses' finish (sculpt, contact shading, pencil texture).
+// Every part bakes into ONE mesh + ONE ink hull. Each vertex carries a joint id; the joints are plain groups (hips, torso, head, eyes, lids,
+// brows, ears, mustache, arms, forearms, legs, feet) posed on the CPU each frame and sent to the shader as matrices, so the vertex shader
+// does the skinning (the slim three build has no SkinnedMesh). Modelled in his own units (1 = his height, feet at 0): his size is only
+// root.scale, so the shapes, ink and pencil texture all scale together (built to hold up at 2-4x for a later grow move).
+// Visual only (no gameplay effect); global and built once at load, so nothing is per room.
+const BUDDY_H = 1.0;   // world height in play: crawls through mudbot's chest (~.6 tall x .78 wide) and stands waist-deep in its dome
+const texPencil = bossTex((g, w, h, rr, wrap) => {   // coloured-pencil paper: short hatching strokes, mostly one slant, some cross
+  g.fillStyle = '#c2c2c2'; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 1100; i++) { const x = rr() * w, y = rr() * h, l = 5 + rr() * 15, a = (rr() < .72 ? .85 : -.75) + (rr() - .5) * .3, c = rr() < .6 ? 95 + rr() * 60 | 0 : 222 + rr() * 30 | 0, al = .16 + rr() * .26, lw = .6 + rr() * .8;
+    wrap(() => { g.strokeStyle = `rgba(${c},${c},${c},${al})`; g.lineWidth = lw; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); g.stroke(); }); }
+});
+const texHair = bossTex((g, w, h, rr, wrap) => {   // brows and mustache: long soft strands, dark and light
+  g.fillStyle = '#9c9c9c'; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 760; i++) { const x = rr() * w, y = rr() * h, l = 14 + rr() * 28, bd = (rr() - .5) * 12, c = rr() < .5 ? 55 + rr() * 50 | 0 : 200 + rr() * 50 | 0, al = .25 + rr() * .35, lw = .8 + rr();
+    wrap(() => { g.strokeStyle = `rgba(${c},${c},${c},${al})`; g.lineWidth = lw; g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + bd, y + l * .5, x + bd * .3, y + l); g.stroke(); }); }
+});
+// layers: 0 skin (pencil), 1 hair, 2 belly (soft pencil), 3 sclera / claws / scalp stones, 4 eyes (glow, like the hero's lenses)
+const buddyMat = bossMat('bd', [{ t: texPencil, sc: 2.6, st: .38 }, { t: texHair, sc: 3.2, st: .6 }, { t: texPencil, sc: 2.0, st: .22 }, { t: texPencil, sc: 3.5, st: .15, rough: .45 }, { t: texPencil, sc: 1, st: 0, rough: .25 }],
+  { rough: .8, rim: '#fff0d0', rimK: .25, self: .12, sh: [.05, 6, [1, 0, 1]] });
+const BJN = 18, buddyBJ = { value: new Float32Array(BJN * 12) };   // joint matrices, 3 rows (vec4) each
+const BRIG_D = 'attribute float aBone; uniform vec4 uBJ[' + BJN * 3 + '];\nmat4 bJoint(){ int i=int(aBone+.5)*3; vec4 a=uBJ[i],b=uBJ[i+1],c=uBJ[i+2]; return mat4(a.x,b.x,c.x,0.,a.y,b.y,c.y,0.,a.z,b.z,c.z,0.,a.w,b.w,c.w,1.); }\n';
+{ const ob = buddyMat.onBeforeCompile; buddyMat.onBeforeCompile = sh => { ob(sh); sh.uniforms.uBJ = buddyBJ;
+    sh.vertexShader = BRIG_D + sh.vertexShader.replace('#include <defaultnormal_vertex>', 'mat4 bJ=bJoint(); objectNormal=normalize(mat3(bJ)*objectNormal);\n#include <defaultnormal_vertex>')
+      .replace('#include <project_vertex>', 'transformed=(bJ*vec4(transformed,1.)).xyz;\n#include <project_vertex>'); };
+  buddyMat.customProgramCacheKey = () => 'buddy'; reg(buddyMat); }
+const buddyInk = bossInkMat('bd', buddyMat);
+{ const ob = buddyInk.onBeforeCompile; buddyInk.onBeforeCompile = sh => { ob(sh); sh.uniforms.uBJ = buddyBJ;
+    sh.vertexShader = BRIG_D + sh.vertexShader.replace('#include <project_vertex>', 'transformed=(bJoint()*vec4(transformed,1.)).xyz;\n#include <project_vertex>'); };
+  buddyInk.customProgramCacheKey = () => 'bink:buddy'; reg(buddyInk); }
+const gLidB = new THREE.SphereGeometry(.5, 14, 5, 0, Math.PI * 2, 0, Math.PI / 2), gSphB = new THREE.SphereGeometry(.5, 24, 16), gSphS = new THREE.SphereGeometry(.5, 11, 7), gSphT = new THREE.SphereGeometry(.5, 6, 4), gConeS = new THREE.ConeGeometry(.5, 1, 8, 2);   // buddy-sized detail levels
+const capBC = {}, capB = (r, len) => capBC[r + '_' + len] || (capBC[r + '_' + len] = new THREE.CapsuleGeometry(r, len, 3, 10));   // eyelid: a cap over the eyeball, rolls down to blink
+function buildBuddy() {
+  const root = new THREE.Group(), rig = new THREE.Group(); root.add(rig); rig.userData.o = [0, 0, 0]; const J = [], j = {};
+  const jt = (n, par, x, y, z) => { const g = new THREE.Group(), po = par.userData.o; g.position.set(x - po[0], y - po[1], z - po[2]); g.userData.o = [x, y, z]; g.userData.p0 = g.position.clone(); par.add(g); J.push(g); j[n] = g; return g; };
+  const P = (geo, paint, par, x, y, z, sx, sy, sz) => { const o = par.userData.o; return mk(geo, paint, x - o[0], y - o[1], z - o[2], sx, sy, sz, par); };
+  const C = { skin: '#c9a784', skinD: '#a98b6b', belly: '#efe4cc', hair: '#a9bd76', hairL: '#bfd18f', hairD: '#83955a', thigh: '#b3b782', iris: '#f08a2a', pupil: '#24160f', white: '#f6f0e4', ear: '#dc9c88', claw: '#f2ede4', stone: '#e6e0d6', stoneD: '#bdb4a6', nose: '#d8b293' };
+  const sk = BP(C.skin, 0, .016), skS = BP(C.skin, 0, 0), skD = BP(C.skinD, 0, 0), be = BP(C.belly, 2, .014), hr = BP(C.hair, 1, .012), hrL = BP(C.hairL, 1, .011), hrD = BP(C.hairD, 1, 0), th = BP(C.thigh, 0, .013);
+  const wh = BP(C.white, 3, .009), ir = BP(C.iris, 4, 0), pu = BP(C.pupil, 4, 0), gl = BP('#ffffff', 4, 0), ea = BP(C.ear, 0, 0), cl = BP(C.claw, 3, 0), st = BP(C.stone, 3, 0), stD = BP(C.stoneD, 3, 0), no = BP(C.nose, 0, .012);
+  // joints (model space, feet at 0, facing +x)
+  jt('hips', rig, 0, .2, 0); jt('torso', j.hips, 0, .26, 0); jt('head', j.torso, 0, .55, 0);
+  jt('eyes', j.head, .13, .70, 0); jt('lids', j.head, .13, .70, 0); jt('browL', j.head, .17, .79, .11); jt('browR', j.head, .17, .79, -.11);
+  jt('earL', j.head, 0, .76, .19); jt('earR', j.head, 0, .76, -.19); jt('stache', j.head, .2, .6, 0);
+  jt('armL', j.torso, 0, .49, .2); jt('armR', j.torso, 0, .49, -.2); jt('foreL', j.armL, 0, .36, .255); jt('foreR', j.armR, 0, .36, -.255);
+  jt('legL', j.hips, 0, .17, .12); jt('legR', j.hips, 0, .17, -.12); jt('footL', j.legL, 0, .06, .13); jt('footR', j.legR, 0, .06, -.13);
+  // head: a big egg with a heavy brow, puffy jowls, pale stones on the scalp
+  bSc(P(gSphB, sk, j.head, 0, .76, 0, .40, .48, .44), { k: 'bump', a: .006, f: 9, lo: [.008, 4], mot: .25, dent: [[.17, .70, .12, .065, .018], [.17, .70, -.12, .065, .018]] });
+  bSc(P(gSphS, sk, j.head, .12, .785, 0, .14, .07, .30), { k: 'bump', a: .006, f: 14 });
+  for (const s of [1, -1]) bSc(P(gSphS, sk, j.head, .07, .62, s * .11, .24, .2, .2), { k: 'bump', a: .005, f: 11 });
+  [[.12, 0, .05], [.42, .35, .04], [.5, -.55, .045], [.42, 2.1, .04], [.62, 1.2, .035], [.66, -1.35, .04], [.4, 3.0, .05], [.72, .85, .03], [.62, -2.4, .04], [.3, -1.2, .035], [.25, 1.3, .04], [.55, 2.7, .03]].forEach(([t, f, r], i) => {
+    const x = .2 * Math.sin(t) * Math.cos(f), y = .76 + .24 * Math.cos(t), z = .22 * Math.sin(t) * Math.sin(f);
+    bSc(P(gSphT, i % 3 ? st : stD, j.head, x * .97, y - .004, z * .97, r * 1.3, r * .8, r * 1.2), { k: 'bump', a: .004, f: 40 }); });
+  // ears: long flat points out to the sides and up, pink inside; each flops on its own joint
+  for (const s of [1, -1]) { const e = s > 0 ? j.earL : j.earR;
+    rot(bSc(P(gConeS, sk, e, -.01, .835, s * .27, .045, .24, .13), { k: 'bump', a: .004, f: 16 }), s * .85, .0, .12);
+    rot(P(gConeS, ea, e, .01, .832, s * .265, .016, .18, .085), s * .85, 0, .12); }
+  // eyes: big orange irises with dark pupils and a glint in white eyeballs; the irises dart (eyes joint), the lids roll down to blink
+  for (const s of [1, -1]) { P(gSphS, wh, j.head, .13, .70, s * .12, .165, .165, .165);
+    P(gSphS, ir, j.eyes, .195, .70, s * .12, .05, .115, .115); P(gSphS, pu, j.eyes, .215, .70, s * .12, .02, .05, .05); P(gSphT, gl, j.eyes, .222, .725, s * .12 - .017, .012, .022, .022);
+    P(gLidB, skS, j.lids, .13, .70, s * .12, .18, .18, .18); }
+  // bushy green brows, low and grumpy at the middle
+  for (const s of [1, -1]) { const b = s > 0 ? j.browL : j.browR;
+    bAn(bSc(rot(P(capB(.034, .13), hr, b, .172, .786, s * .112, 1.3, 1, 1.45), s * (Math.PI / 2 - .3), 0, 0), { k: 'bump', a: .011, f: 30 }), 7, .003);
+    for (const [y, z, a] of [[.815, .17, .5], [.805, .2, .9]]) bAn(rot(P(gConeS, hrD, b, .165, y, s * z, .04, .07, .04), s * a, 0, -.2), 7, .004); }
+  // round nose, big swept mustache (own joint, twitches) and a goatee
+  bSc(P(gSphM, no, j.head, .205, .655, 0, .11, .09, .13), { k: 'bump', a: .003, f: 14, dent: [[.255, .628, .028, .02, .012], [.255, .628, -.028, .02, .012]] });
+  P(capB(.028, .06), sk, j.head, .19, .725, 0, 1, 1, 1);
+  for (const s of [1, -1]) {
+    bAn(bSc(rot(P(capB(.05, .13), hrL, j.stache, .215, .59, s * .105, 1.05, 1, 1.1), s * (Math.PI / 2 + .3), 0, 0), { k: 'bump', a: .01, f: 30 }), 7, .003);   // swept mustache: thick root, drooping end, a pointed tip
+    bAn(bSc(rot(P(capB(.036, .08), hrL, j.stache, .16, .535, s * .225, 1.05, 1, 1.1), s * (Math.PI / 2 + .75), 0, 0), { k: 'bump', a: .008, f: 30 }), 7, .004);
+    bAn(rot(P(gConeS, hrL, j.stache, .12, .48, s * .268, .05, .09, .05), s * (Math.PI - .64), 0, 0), 7, .005);
+    rot(bSc(P(gConeS, hrD, j.head, .03, .63, s * .21, .06, .13, .08), { k: 'bump', a: .006, f: 30 }), s * 2.2, 0, 0); }
+  rot(bSc(P(gConeH, hrL, j.stache, .175, .515, 0, .1, .13, .12), { k: 'bump', a: .008, f: 28 }), 0, 0, Math.PI + .1);
+  // body: narrow shoulders, a big cream pot belly with a navel, tan back and sides
+  bSc(P(gSphS, sk, j.torso, -.01, .46, 0, .3, .2, .38), { k: 'bump', a: .006, f: 10, mot: .2 });
+  bAn(bSc(P(gSphM, sk, j.torso, -.01, .3, 0, .38, .37, .46), { k: 'bump', a: .006, f: 9, mot: .25 }), 1, .004);
+  bAn(bSc(P(gSphB, be, j.torso, .03, .3, 0, .35, .34, .42), { k: 'bump', a: .003, f: 12, dent: [[.205, .24, 0, .022, .012]] }), 1, .007);
+  // legs: green-tinged thighs, short shins, wide feet with three clawed toes
+  for (const s of [1, -1]) { const L = s > 0 ? j.legL : j.legR, F = s > 0 ? j.footL : j.footR;
+    bSc(P(gSphS, th, L, 0, .14, s * .13, .15, .16, .14), { k: 'bump', a: .005, f: 12 }); P(capB(.045, .05), sk, L, 0, .085, s * .13, 1, 1, 1);
+    bSc(P(gSphS, sk, F, .035, .032, s * .14, .19, .07, .14), { k: 'bump', a: .004, f: 14 });
+    for (const k of [-1, 0, 1]) { const z = s * (.14 + k * .045); P(gSphT, skD, F, .12, .024, z, .07, .045, .04); rot(P(gConeS, cl, F, .165, .02, z, .024, .05, .024), 0, 0, -Math.PI / 2); } }
+  // arms: hang beside the belly; shoulder, elbow (forearm joint), four-fingered hands with pale nails
+  for (const s of [1, -1]) { const A = s > 0 ? j.armL : j.armR, F = s > 0 ? j.foreL : j.foreR;
+    P(gSphS, sk, A, 0, .48, s * .205, .1, .1, .1); rot(P(capB(.042, .1), sk, A, 0, .42, s * .232, 1, 1, 1), s * .3, 0, 0);
+    rot(P(capB(.038, .07), sk, F, .01, .305, s * .272, 1, 1, 1), s * .12, 0, .1);
+    bSc(P(gSphS, sk, F, .02, .24, s * .285, .08, .075, .06), { k: 'bump', a: .003, f: 16 });
+    for (let k = 0; k < 4; k++) { const x = .05 - k * .022, z = s * (.29 + (k === 3 ? -.02 : .012)); P(gSphT, skS, F, x, .2, z, .026, .06, .026); P(gSphT, cl, F, x + .006, .18, z, .016, .016, .016); } }
+  const own = [], mesh = bossBake(rig, buddyMat, own, null, buddyInk, { bones: new Map(J.map((g, i) => [g, i])), aoS: .15 });
+  mesh.frustumCulled = false; mesh.userData.ink.frustumCulled = false; mesh.receiveShadow = true;
+  return { root, J, j, par: J.map(g => J.indexOf(g.parent)), W: J.map(() => new THREE.Matrix4()), mesh, ink: mesh.userData.ink, own,
+    tris: own.reduce((n, g) => n + g.index.count / 3, 0) };
+}
+const _bjT = new THREE.Matrix4();
+function buddyRig(bd) {   // joint matrices: (pose, relative to the rig) x (bind pose)^-1, packed as 3 rows per joint
+  const a = buddyBJ.value;
+  for (let i = 0; i < bd.J.length; i++) { const g = bd.J[i], pi = bd.par[i], o = g.userData.o; g.updateMatrix();
+    if (pi < 0) bd.W[i].copy(g.matrix); else bd.W[i].multiplyMatrices(bd.W[pi], g.matrix);
+    const e = _bjT.copy(bd.W[i]).multiply(_bkM.makeTranslation(-o[0], -o[1], -o[2])).elements;
+    for (let r = 0; r < 3; r++) { const k = i * 12 + r * 4; a[k] = e[r]; a[k + 1] = e[4 + r]; a[k + 2] = e[8 + r]; a[k + 3] = e[12 + r]; } }
+}
+const buddy = Object.assign(buildBuddy(), { on: true, init: false, x: 0, y: 0, face: 1, ph: 0, prev: null, mound: null, lk: [0, 0], blinkT: 2 });
+buddy.root.visible = false; scene.add(buddy.root); buddyRig(buddy);
+// pose: stride while following, tuck in a hop, breathe, glance around (at the hero now and then), blink, twitch brows, ears and mustache.
+// o: { mv: 0..1 walking, air: 0..1 hop, look: yaw bias toward something, lookAmt: glance size, wave: 0..1 right arm up waving, deep: 0..1 buried }
+function poseBuddy(b, dt, o) {
+  const j = b.j, t = VT, R = (g, k, v, r) => { g.rotation[k] = hold(g.rotation[k], v, dt, r || 18); }, s = Math.sin(b.ph), mv = o.mv, air = o.air, br = Math.sin(t * 2.6);
+  const tw = (q, f) => Math.pow(Math.max(0, Math.sin(t * f + q) * Math.sin(t * f * 2.7 + q * 1.7)), 6);   // rare quick twitch
+  R(j.legL, 'z', s * .8 * mv + air * .75); R(j.legR, 'z', -s * .8 * mv + air * .45);
+  R(j.footL, 'z', -Math.max(0, -s) * .6 * mv - air * .55); R(j.footR, 'z', -Math.max(0, s) * .6 * mv - air * .5);
+  R(j.armL, 'z', -s * .7 * mv + br * .04 * (1 - mv)); R(j.armR, 'z', s * .7 * mv - br * .04 * (1 - mv));
+  R(j.armL, 'x', -.12 - air * 1.5 - mv * .1); R(j.armR, 'x', .12 + air * 1.2 + mv * .1 + o.wave * 2.5);
+  R(j.foreL, 'z', .2 + mv * .45 + air * .3); R(j.foreR, 'z', .2 + mv * .45 + air * .5 + o.wave * Math.sin(t * 10) * .55);
+  R(j.torso, 'z', -.13 * mv + air * .08, 12); R(j.torso, 'y', s * .14 * mv, 12); R(j.torso, 'x', br * .015, 8);
+  j.hips.position.y = j.hips.userData.p0.y + Math.abs(Math.cos(b.ph)) * .03 * mv + br * .004;
+  // look around: glances every ~1.6 s, mostly toward o.look; bigger when standing still or stuck in the dirt
+  const gi = Math.floor(t * .62 + 3), gy = (bH(gi, 3, 9) - .5) * 2, gp = (bH(gi, 7, 2) - .5);
+  b.lk[0] = hold(b.lk[0], o.look + gy * o.lookAmt * (1 - mv * .7), dt, 6); b.lk[1] = hold(b.lk[1], gp * .35 * o.lookAmt + air * .15, dt, 6);
+  R(j.head, 'y', b.lk[0], 14); R(j.head, 'z', b.lk[1] + s * .05 * mv, 14); R(j.head, 'x', Math.sin(t * .9) * .06 * (1 - mv) + o.deep * Math.sin(t * 1.7) * .12, 10);
+  j.eyes.position.z = j.eyes.userData.p0.z + Math.max(-1, Math.min(1, (bH(Math.floor(t * 1.9), 1, 5) - .5) * 3)) * .012; R(j.eyes, 'z', gp * .25, 20);
+  b.blinkT -= dt; if (b.blinkT < -.13) b.blinkT = 2.2 + bH(Math.floor(t), 9, 4) * 2.6; j.lids.rotation.z = b.blinkT < 0 ? -1.5 : .75 - air * .25;
+  const sur = air * .02 + tw(1, .5) * .018; for (const [g, q] of [[j.browL, 0], [j.browR, 2.3]]) { g.position.y = g.userData.p0.y + sur + tw(q, .9) * .012 - mv * .006; R(g, 'x', (g === j.browL ? 1 : -1) * (tw(q, .9) * .25 - .08), 20); }
+  R(j.earL, 'x', tw(.7, 1.3) * .5 + air * .3 + s * .08 * mv, 24); R(j.earR, 'x', -tw(2.9, 1.1) * .5 - air * .3 - s * .08 * mv, 24);
+  R(j.stache, 'z', tw(5, .8) * .12 + Math.sin(t * 7) * .02 * tw(5, .8), 24); j.stache.position.y = j.stache.userData.p0.y + tw(5, .8) * .008;
+  buddyMat.userData.U.uAn.value.x = br; buddyRig(b);
+}
+// dev-only preview (off by default): ?buddyprev=scale|dome|buried (or 1 to cycle) or __jr.buddyPrev(mode) poses him next to mudbot,
+// standing waist-deep in the soil of mudbot's head dome, or buried to the chin there. It only moves the buddy (parented to the hero's head
+// group while previewing); no game state, no hero model change, no hatch behaviour.
+const BPREV = ['scale', 'dome', 'buried'], bpq = qs.get('buddyprev'); buddy.prev = bpq ? (BPREV.includes(bpq) ? bpq : 'cycle') : null;
+function buddyMound() {   // a soil mound the same colour/finish as the dome's heap, made once on first preview
+  if (buddy.mound) return buddy.mound; const geo = new THREE.IcosahedronGeometry(.5, 2), p = geo.attributes.position;
+  for (let i = 0; i < p.count; i++) { const k = .85 + (Math.sin(p.getX(i) * 31 + p.getZ(i) * 17) * .5 + .5) * .3; p.setXYZ(i, p.getX(i) * k, p.getY(i) * k, p.getZ(i) * k); } geo.computeVertexNormals();
+  buddy.mound = new THREE.Mesh(geo, MS('#492f29', 1, 0, 0, true)); buddy.mound.visible = false; return buddy.mound;
+}
+function previewBuddy(p, dt, mode) {
+  const b = buddy, m = buddyMound();
+  if (mode === 'scale') { if (b.root.parent !== scene) scene.add(b.root); m.visible = false;
+    b.root.position.set(X(p.x) + 2.3, Math.max(0, Y(p.y)), .5); b.root.rotation.set(0, -Math.PI / 2 - .55, 0); b.root.scale.setScalar(BUDDY_H);
+    poseBuddy(b, dt, { mv: 0, air: 0, look: -.5, lookAmt: .6, wave: 0, deep: 0 }); }
+  else { const deep = mode === 'buried', hs = BUDDY_H / HS; if (b.root.parent !== pl.head) pl.head.add(b.root); if (m.parent !== pl.head) pl.head.add(m);
+    b.root.position.set(.4, deep ? .08 : .17, 0); b.root.rotation.set(0, 0, 0); b.root.scale.setScalar(hs);   // in front of the seedling, nose clear of the glass
+    m.visible = true; m.position.set(.38, deep ? .45 : .4, 0); m.scale.set(deep ? .8 : .7, deep ? .3 : .17, deep ? .9 : .8);   // waist-deep / buried to the chin
+    poseBuddy(b, dt, { mv: 0, air: 0, look: 0, lookAmt: deep ? 1.3 : .9, wave: Math.max(0, Math.sin(VT * .9)) > .8 ? 1 : 0, deep: deep ? 1 : 0 }); }
+  b.root.visible = true;
+}
+function syncBuddy(p, dt) {
+  const b = buddy; if (!b.on || !p || G.state === 'title') { b.root.visible = false; b.init = false; if (b.mound) b.mound.visible = false; return; }
+  if (b.prev) { previewBuddy(p, dt, b.prev === 'cycle' ? BPREV[Math.floor(VT / 6) % 3] : b.prev); return; }
+  if (b.root.parent !== scene) { scene.add(b.root); b.root.rotation.set(0, b.face > 0 ? -.62 : Math.PI + .62, 0); } if (b.mound) b.mound.visible = false;
+  const tx = X(p.x) - p.face * 1.9, ty = Math.max(0, Y(p.y)) * .55;   // a step behind the hero; half-height hops when the hero jumps
+  if (!b.init || Math.abs(tx - b.x) > 8) { b.x = tx; b.y = ty; b.init = true; }   // first frame, respawn or room change: appear in place
+  b.x = hold(b.x, tx, dt, 3.2); b.y = hold(b.y, ty, dt, 5);
+  const gap = Math.abs(tx - b.x); b.ph += dt * (5 + gap * 4);
+  if (gap > .25) b.face = tx > b.x ? 1 : -1; else b.face = p.face;
+  const hop = b.y < .05 ? Math.abs(Math.sin(b.ph)) * Math.min(.3, gap * .3) : 0;
+  b.root.visible = true; b.root.position.set(b.x, b.y + hop, -.7); b.root.scale.setScalar(BUDDY_H);
+  b.root.rotation.y = hold(b.root.rotation.y, b.face > 0 ? -.62 : Math.PI + .62, dt, 10);   // 3/4 view like the hero
+  const mv = Math.min(1, gap / .9), air = Math.min(1, Math.max(0, b.y - .05) * 1.2 + hop * 2);
+  poseBuddy(b, dt, { mv, air, look: (Math.abs(X(p.x) - b.x) > .3 ? .25 : 0), lookAmt: .55, wave: 0, deep: 0 });
+}
 pl.sq = 0; pl.tailB = 0; pl.dustT = 0; pl.wasAir = false; pl.wasGround = true; pl.vyMax = 0; pl.wasDead = false; pl.lastInv = 0; pl.lastLives = -1; pl.lastRoom = -1; pl.runPh = 0; pl.hurtT = 0; pl.smokeT = 0; pl.lid = .13; pl.slant = 0;
 const Z_BACK = -6, Z_FRONT = 9;
 const frontH = (x, z) => { const m = z >= 0 ? sstep(2.4, 4.4, z) * (1 - sstep(7.4, Z_FRONT, z)) : sstep(2.4, 4.4, -z) * (1 - sstep(4.2, -Z_BACK, -z)); return m * (.15 + fbm(x * .33, z * .33) * .75); };
@@ -886,7 +1460,7 @@ function instFrom(list, geo, mat, R, v, cast) {
   m.castShadow = !!cast; m.receiveShadow = true; R.add(m); v.own.push(m); return m;
 }
 let view = null, builtKey = '', forceRebuild = false;
-function disposeView() { if (!view) return; for (const o of view.own) o.dispose(); }
+function disposeView() { if (!view) return; for (const o of view.own) { o.dispose(); if (o.isMaterial) allMats.delete(o); } }   // per-room geometry, instanced meshes and materials
 function buildRoom(room) {
   disposeView(); roomGroup.clear();
   const R = roomGroup, q = QL(), v = { vines: [], snaps: [], logs: [], crawlers: [], gem: null, bubbles: [], tarFlag: room.holeKind === 'tar', own: [], pools: {}, bev: {}, qi: Qi, rays: [], gemGot: G.got.has(gid(room.i)) };
@@ -919,7 +1493,7 @@ function buildRoom(room) {
     const w = pw / pool.n;
     for (let k = 0; k < pool.n; k++) { const sn = buildSnapper(w); sn.root.position.x = X(pool.x0) + (k + .5) * w; R.add(sn.root); v.snaps.push({ jaw: sn.jaw, pa: sn.pa, pb: sn.pb, pool, k }); }
   }
-  const leafCard = reg(new THREE.MeshLambertMaterial({ color: '#8fc04a', side: THREE.DoubleSide })), vineMat = M(P.vine), knobMat = M('#8a5a30');
+  const leafCard = matCache.leafCard || (matCache.leafCard = reg(new THREE.MeshLambertMaterial({ color: '#8fc04a', side: THREE.DoubleSide }))), vineMat = M(P.vine), knobMat = M('#8a5a30');
   for (const vn_ of room.vines) {
     const bx = X(vn_.ax), by = Y(VINE_Y);
     rot(mk(capG(.42, 5.2), AM.barkBranch, bx, by + .4, 0, 1, 1, 1, R), Math.PI / 2, 0, 0);                              // branch the vine hangs from
@@ -967,11 +1541,11 @@ function buildRoom(room) {
   instFrom(lians, gLian, mats.lian, R, v, false);
   // foreground bushes in front of the lane
   for (let k = 0; k < 8; k++) { const x = -6 + rr() * 44, z = 7.5 + rr() * 1.4; mk(gBlob, MV(rr() < .5 ? '#2f8a4a' : '#3d7f5c', true), x, .35, z, 2 + rr() * 1.6, 1.2 + rr(), 1.6, R); }
-  if (room.treasure) { const t = room.treasure, gem = buildGem(t.kind); gem.root.position.set(X(t.x), Y(t.y), 0); R.add(gem.root, gem.halo, ...gem.stars); gem.root.userData.id = gid(room.i); gem.t = t; v.gem = gem; }
+  if (room.treasure) { const t = room.treasure, gem = buildGem(t.kind); gem.root.position.set(X(t.x), Y(t.y), 0); R.add(gem.root, gem.halo, ...gem.stars); gem.root.userData.id = gid(room.i); gem.t = t; v.gem = gem; v.own.push(gem.core.material); }
   // sunlit god-ray cards (additive, slowly breathing) and drifting motes
   for (let k = 0; k < q.rays; k++) { const m = new THREE.Mesh(gQuad, new THREE.MeshBasicMaterial({ map: texRay, transparent: true, opacity: .2, depthWrite: false, fog: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide })); m.renderOrder = 3;
     m.userData = { ox: -15 + k * (30 / Math.max(1, q.rays - 1)) + (rd() - .5) * 3, oz: -3.5 - rd() * 8, w: 2.2 + rd() * 3, ph: rd() * 6, base: .1 + rd() * .1 }; R.add(m); v.rays.push(m); v.own.push(m.material); }
-  if (q.motes) { const mm = new THREE.InstancedMesh(gQuad, reg(new THREE.MeshBasicMaterial({ map: texGlow, color: '#ffeab0', transparent: true, opacity: .55, depthWrite: false, fog: false, blending: THREE.AdditiveBlending })), q.motes); mm.frustumCulled = false; mm.renderOrder = 4; R.add(mm); v.own.push(mm);
+  if (q.motes) { const mm = new THREE.InstancedMesh(gQuad, matCache.motes || (matCache.motes = reg(new THREE.MeshBasicMaterial({ map: texGlow, color: '#ffeab0', transparent: true, opacity: .55, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }))), q.motes); mm.frustumCulled = false; mm.renderOrder = 4; R.add(mm); v.own.push(mm);
     v.motes = { mesh: mm, d: Array.from({ length: q.motes }, () => ({ x: rd() * 34 - 17, y: 1 + rd() * 9, z: -6 + rd() * 12, p: rd() * 6, s: .08 + rd() * .1 })) }; }
   if (BOSS_DEF[room.kind]) buildBossModel(room, R, v);
   view = v;
@@ -991,17 +1565,18 @@ function buildBossModel(room, R, v) {
     return gr; };
   v.gates = [mkGate(X(1)), mkGate(X(W - 1))];
   const wk = new THREE.Group(); R.add(wk); mk(gOct, MS('#ffb347', .3, .2, '#ff8a30', true), 0, 0, 0, 1.1, 1.6, 1.1, wk); wk.visible = false; v.weak = wk;
-  v.weakHalo = new THREE.Mesh(gQuad, new THREE.MeshBasicMaterial({ map: texGlow, color: '#ffb347', transparent: true, opacity: .6, depthWrite: false, fog: false, blending: THREE.AdditiveBlending })); v.weakHalo.scale.set(4.5, 4.5, 1); v.weakHalo.renderOrder = 4; v.weakHalo.visible = false; R.add(v.weakHalo);
+  v.weakHalo = new THREE.Mesh(gQuad, new THREE.MeshBasicMaterial({ map: texGlow, color: '#ffb347', transparent: true, opacity: .6, depthWrite: false, fog: false, blending: THREE.AdditiveBlending })); v.weakHalo.scale.set(4.5, 4.5, 1); v.weakHalo.renderOrder = 4; v.weakHalo.visible = false; R.add(v.weakHalo); v.own.push(v.weakHalo.material);
   const mkMark = () => { const m = new THREE.Group(); const d = mk(gDisc, MB('#d9534f', .5), 0, .09, 0, 1, 1, 1, m, true); const r = mk(gRing, MB('#ff7a5a', .9), 0, .1, 0, 1.0, 1, 1.0, m, true); m.visible = false; m.disc = d; R.add(m); return m; };
   v.mark = mkMark();
   const g = new THREE.Group(); R.add(g); const bm = { kind: room.kind, g, skins: [] };
   if (room.kind === 'boss1') {
     mk(gFlat, mats.mire, X(160), .07, 0, 21, 1, 8.4, R, true).receiveShadow = true;                                    // the mire
-    Object.assign(bm, buildBoss1(g, bm.skins));
+    Object.assign(bm, buildBoss1(g, bm.skins, v.own));
     for (let k = 0; k < 10; k++) { const a = k / 10 * TAU, x = X(160) + Math.cos(a) * 11.5, z = Math.sin(a) * 4.8; mk(gRock, AM.bossRock, x, .15, z, 1.2 + (k % 3) * .4, 1.0, 1.0, R); }
-  } else if (room.kind === 'boss2') Object.assign(bm, buildBoss2(g, bm.skins));
-  else Object.assign(bm, buildBoss3(g, bm.skins));
+  } else if (room.kind === 'boss2') Object.assign(bm, buildBoss2(g, bm.skins, v.own));
+  else Object.assign(bm, buildBoss3(g, bm.skins, v.own));
   g.traverse(o => { if (o.isMesh) { o.userData.bossPart = true; } });
+  v.own.push(...bm.skins); if (bm.eyes) for (const e of bm.eyes) v.own.push(e.material);
   bm.g = g; v.bm = bm;
 }
 function pget(key, i, mkf) { const a = view.pools[key] || (view.pools[key] = []); while (a.length <= i) { const m = mkf(); roomGroup.add(m); a.push(m); } return a[i]; }
@@ -1027,7 +1602,7 @@ function bossFx(b, bev, prev) {
   }
   bev.state = b.state;
 }
-function syncBoss(T) {
+function syncBoss() {
   const v = view; if (!v.bm) return;
   const b = G.rs && G.rs.boss, bm = v.bm, g = bm.g, p = G.p, used = {};
   const use = (key, mkf) => { const i = used[key] || 0; used[key] = i + 1; const m = pget(key, i, mkf); m.visible = true; return m; };
@@ -1060,6 +1635,7 @@ function syncBoss(T) {
       if (b.state === 'stele') { const q = 1 + Math.sin(VT * 14) * .15; v.mark.visible = true; v.mark.position.x = X(b.x); v.mark.scale.set(7 * q, 1, 2.4 * q); v.mark.disc.material.opacity = .35 + .25 * Math.sin(VT * 14); }
       if (b.state === 'dazed') wk(X(b.x), b.h * S + 1.5 + Math.sin(VT * 5) * .2);
     }
+    bossIdle(bm, b, tele);                                                                                          // idle face/breathing (visual only)
     if (b.state === 'dying') { const f = Math.max(.01, 1 - b.t / 1.4); g.scale.setScalar(f); g.position.y -= (1 - f) * 2; g.rotation.z = (1 - f) * .8; if (Math.random() < .5) fxBurst(g.position.x, g.position.y + 2, 1, '#ffd37a', 5); } else g.scale.setScalar(1);
     for (const q of b.proj) {
       if (q.t === 'ball' && b.kind === 'boss1') { const m = use('ball', () => { const gr = new THREE.Group(); mk(gSph, M('#5e3d25'), 0, 0, 0, 1.1, 1.0, 1.0, gr); mk(gSph, M('#46301d'), .3, .25, .2, .5, .5, .5, gr); mk(gSph, M('#46301d'), -.25, -.2, .3, .4, .4, .4, gr); return gr; }); m.position.set(X(q.x), Y(q.y), 0); m.rotation.z = VT * 8; if (Math.random() < .6) emit(poolN, X(q.x), Y(q.y), .3, rnd(-.5, .5), rnd(0, 1), 0, .45, .45, '#4a3322', 2, .5, .4); }
@@ -1128,9 +1704,14 @@ function drawUI() {
   hudEl.style.display = (st === 'play' || st === 'paused' || st === 'end') ? 'flex' : 'none';
   const m = Math.floor(G.timeLeft / 60), s = Math.floor(G.timeLeft % 60);
   setTxt('h-time', 'TIME ' + m + ':' + String(s).padStart(2, '0')); $('h-time').className = G.timeLeft < 30 ? 'warn' : '';
-  const nl = Math.max(0, G.lives); setHTML('h-lives', ICON('heart').repeat(nl) + ICON('heart').replace('"ic"', '"ic lost"').repeat(Math.max(0, LIVES - nl)));
-  $('h-lives').title = nl + ' lives';
   setHTML('h-gems', ICON('gem') + G.got.size + '/' + TREASURES);
+  const nl = Math.max(0, G.lives), chip = G.p && nl > 0 ? Math.max(0, Math.min(1, G.p.chip)) : 0, full = chip > 0 ? nl - 1 : nl;   // a hand block takes part of the current heart
+  setHTML('h-lives', ICON('heart').repeat(full) + (chip > 0 ? '<span class="hc">' + ICON('heart').replace('"ic"', '"ic lost"') + ICON('heart').replace('"ic"', '"ic hf" style="clip-path:inset(0 ' + Math.round(chip * 100) + '% 0 0)"') + '</span>' : '') + ICON('heart').replace('"ic"', '"ic lost"').repeat(Math.max(0, LIVES - nl)));
+  $('h-lives').title = (nl - chip) + ' lives';
+  { const sp = G.p ? Math.max(0, G.p.stam) : STAM_MAX, pct = 100 * sp / STAM_MAX, has = !G.p || G.p.shield, sk = Math.round(pct) + '|' + has;   // stamina meter next to the hearts
+    if (cache.stam !== sk) { cache.stam = sk; $('h-sfill').style.width = pct + '%'; $('h-stam').className = (pct <= 0 ? 'out' : '') + (has ? '' : ' noshield');
+      $('h-stam').title = 'Stamina ' + Math.round(pct) + '%' + (has ? '' : ' (shield on the ground: walk over it)'); } }
+  syncTouchDim(st);
   sysb.style.display = (st === 'play' || st === 'paused') ? 'flex' : 'none'; setTxt('h-room', 'ROOM ' + (G.room + 1) + '/' + ROOMS); setTxt('h-score', String(G.score));
   const bb = G.rs && G.rs.boss, showBar = bb && !bb.dead && (st === 'play' || st === 'paused');
   bossHud.style.display = showBar ? 'block' : 'none';
@@ -1139,22 +1720,39 @@ function drawUI() {
   setTxt('h-next', (bb && !bb.dead) ? 'BOSS FIGHT' : nb < 0 ? '' : 'NEXT BOSS IN ' + nr + (nr === 1 ? ' ROOM' : ' ROOMS'));
   msgEl.style.display = (G.msgT > 0 && st === 'play') ? 'block' : (st === 'paused' ? 'block' : 'none');
   setTxt('msg', st === 'paused' ? 'PAUSED' : G.msg);
-  let key = st + '|' + G.seed + '|' + G.best + '|' + G.result + '|' + G.score + '|' + G.got.size;
+  let key = st + '|' + G.seed + '|' + G.best + '|' + G.result + '|' + G.score + '|' + G.got.size + '|' + blockMode;
   if (st === 'title' || st === 'end') {
     panel.style.display = 'block';
     if (cache.panel !== key) { cache.panel = key;
       panel.className = st === 'title' ? 'title' : 'endp ' + (G.result === 'win' ? 'win' : 'over');
-      const seedLine = 'Seed: ' + esc(G.seed) + ' &nbsp; best: ' + G.best + '<br><small>[N] random seed &nbsp; [D] daily seed &nbsp; or add ?seed=name to the address</small>';
+      const tch = document.body.classList.contains('touch');
       panel.innerHTML = st === 'title'
         ? '<h1>MUDPITY</h1><div class="sub">(early access)</div>' +
-          '<p>Arrows / A D: move &nbsp; Space / W / Up: jump<br>Hit a vine mid-air to grab it; jump to let go<br>Beat the 3 bosses (rooms 4, 8 and 12) before the 3:00 timer ends<br>Weak spots glow: jump on them, kick with a vine release, or roll a log in</p>' +
-          '<p>' + seedLine + '</p><div class="go">PRESS ENTER / TAP TO START</div>' + BADGE
+          '<p class="goal">Beat the 3 bosses (rooms 4, 8 and 12) before the 3:00 timer ends</p>' +
+          '<div class="how">' +
+            '<b>Move</b><span>' + (tch ? 'left / right buttons' : 'Arrows or A D') + '</span>' +
+            '<b>Jump</b><span>' + (tch ? 'jump button' : 'Space, W or Up') + '</span>' +
+            '<b>Vines</b><span>hit one mid-air to grab it; jump to let go</span>' +
+            '<b>Bosses</b><span>weak spots glow: jump on them, kick with a vine release, or roll a log in</span>' +
+            '<b>Block</b><span>' + (tch ? 'shield button' : 'S or Down') + ': swing the shield off your back to stop logs, mud and boss hits. Each block costs stamina (bigger hits cost more) and it refills slowly. Out of stamina = the shield drops: walk over it to pick it up. No shield: block with your hands (' + Math.round((1 - TUNE.HAND_BLOCK_DAMAGE) * 100) + '% less damage). Unblocked hits cost a heart</span>' +
+          '</div>' +
+          '<div class="setb" id="set-block">Block button: <b' + (blockMode === 'press' ? ' class="sel"' : '') + '>PRESS</b> / <b' + (blockMode === 'hold' ? ' class="sel"' : '') + '>HOLD</b> &nbsp;<small>' + (tch ? 'tap here to change' : '[B] or click to change') + '</small></div>' +
+          '<div class="seedbox">Seed <b>' + esc(G.seed) + '</b> &nbsp; best <b>' + G.best + '</b><br><small>' + (tch ? 'add ?seed=name to the address for a set world' : '[N] random seed &nbsp; [D] daily seed &nbsp; or add ?seed=name to the address') + '</small></div>' +
+          '<div class="go">' + (tch ? 'TAP TO START' : 'PRESS ENTER / TAP TO START') + '</div>' + BADGE
         : '<div class="top"><h1>' + (G.result === 'win' ? 'ALL BOSSES DOWN!' : G.result === 'time' ? 'TIME UP' : 'OUT OF LIVES') + '</h1>' +
           '<p>Score ' + G.score + ' &nbsp; gems ' + G.got.size + '/' + TREASURES + ' &nbsp; best ' + G.best + ' &nbsp; seed ' + esc(G.seed) + '</p>' +
           '<div class="go">ENTER / TAP: play again &nbsp; [H] title &nbsp; [N] new seed</div></div>' +
           '<img class="ib" id="e-restart" src="art/icons/restart.png" alt="Play again" title="Play again (Enter)"><img class="ib" id="e-home" src="art/icons/home.png" alt="Title" title="Back to the title (H)">' + BADGE;
     }
   } else panel.style.display = 'none';
+}
+/* touch buttons dim when their action can't do anything right now (menus, pause, falling, staggered by a blocked hit, between lives) */
+const tbEls = { left: $('bl'), right: $('br'), jump: $('bj'), block: $('bk') };
+function syncTouchDim(st) {
+  const p = G.p, live = st === 'play' && p && p.dead <= 0, free = live && p.react <= 0;
+  const on = { left: !!free, right: !!free, jump: (st === 'title' || st === 'end') || !!(free && (p.onGround || p.coyote > 0 || p.vine)), block: !!(live && !p.vine) };
+  for (const k in tbEls) { const d = !on[k], ck = 'dim' + k; if (cache[ck] !== d) { cache[ck] = d; tbEls[k].classList.toggle('dim', d); } }
+  const bo = st === 'play' && wantBlock(); if (cache.bkon !== bo) { cache.bkon = bo; tbEls.block.classList.toggle('on', bo); }   // lit while the block is up (press mode stays lit)
 }
 function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 
@@ -1172,6 +1770,31 @@ qbtn.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagatio
 let fps = 0, fpsN = 0, fpsT = 0;
 const hold = (cur, tgt, dt, rate) => cur + (tgt - cur) * (1 - Math.exp(-dt * rate));
 const HS = 1.08;   // hero display scale (visual only; the hitbox is unchanged)
+/* shield: on his back -> swings round his right side to the front while blocking -> on the ground when dropped */
+const SH_R = .8;   // distance from the hero's middle to the shield face
+function syncShield(p, dt) {
+  const sh = shield, k = Math.max(0, Math.min(1, p.stam / STAM_MAX)), glow = TUNE.GLOW_MIN + (TUNE.GLOW_MAX - TUNE.GLOW_MIN) * k;
+  if (G.blocks !== pl.lastBlocks) { if (pl.lastBlocks !== undefined && G.blocks > pl.lastBlocks && G.lastBlock && !G.lastBlock.hand) { pl.blkFlash = .25; const w = sh.halo.getWorldPosition(_vA); fxSpark(w.x, w.y, 8, '#dff6ff', 5); } pl.lastBlocks = G.blocks; }
+  pl.blkFlash = Math.max(0, (pl.blkFlash || 0) - dt);
+  if (pl.hadShield && !p.shield) { const w = sh.root.getWorldPosition(_vA); fxBurst(w.x, w.y, 14, '#9fe3ff', 6); addShake(.25); }
+  pl.hadShield = p.shield;
+  sh.glowM.emissiveIntensity = .05 + 1.1 * glow + pl.blkFlash * 2; sh.haloM.opacity = Math.min(1, glow + pl.blkFlash * 2);
+  const hs = 1.62 + .14 * glow + Math.sin(VT * 6) * .03 * glow; sh.halo.scale.set(hs, hs, 1);
+  if (p.shield) {
+    if (sh.root.parent !== pl.bod) { pl.bod.add(sh.root); pl.shE = 0; }
+    sh.root.visible = true;
+    const tgt = p.blocking && p.dead <= 0 ? 1 : 0;
+    pl.shE = tgt > (pl.shE || 0) ? Math.min(1, (pl.shE || 0) + dt / TUNE.RAISE_TIME) : Math.max(0, (pl.shE || 0) - dt / TUNE.LOWER_TIME);
+    const e = pl.shE * pl.shE * (3 - 2 * pl.shE), th = Math.PI * (1 - e);           // th: pi = on his back, pi/2 = his right side, 0 = in front
+    sh.root.position.set(Math.cos(th) * SH_R, 1.28 + Math.sin(th) * .12, Math.sin(th) * SH_R);
+    sh.root.rotation.set(0, -th, (1 - e) * .12); sh.root.scale.setScalar(1);
+  } else {
+    const d = G.drop, here = d && d.room === G.room && G.state !== 'title';
+    if (sh.root.parent !== scene) scene.add(sh.root);
+    sh.root.visible = !!here;
+    if (here) { sh.root.position.set(X(d.x), .1 + Math.max(0, Math.sin(VT * 3)) * .04, .2); sh.root.rotation.set(0, .3, Math.PI / 2); sh.root.scale.setScalar(HS); }
+  }
+}
 function syncHero(room, p, dt) {
   const g = pl.root, bod = pl.bod;
   if (!p || G.state === 'title') { g.visible = false; pl.shadow.visible = false; pl.lastLives = -1; return; }
@@ -1186,6 +1809,7 @@ function syncHero(room, p, dt) {
   pl.wasAir = air; pl.wasGround = p.onGround && !vine;
   if (p.dead > 0 && !pl.wasDead) { fxBurst(g.position.x, g.position.y + 1.2, 18, '#d6a577', 7); fxDust(g.position.x, g.position.y + 1, 8, 4, 3, '#8d6544'); addShake(.5); }
   pl.wasDead = p.dead > 0;
+  syncShield(p, dt);
   if (pl.lastLives >= 0 && G.lives < pl.lastLives) { pl.hurtT = 1.1; if (p.dead <= 0) addShake(.4); }
   pl.lastLives = G.lives;
   if (p.inv > 0 && pl.lastInv <= 0 && p.dead <= 0) fxSpark(g.position.x, g.position.y + 1.6, 7, '#ffffff', 5);
@@ -1206,6 +1830,11 @@ function syncHero(room, p, dt) {
   else if (run) { const s = Math.sin(ph); ll = s * 1.05; lr = -s * 1.05; ka = -ll * .55 + Math.max(0, s) * .3; kr = -lr * .55 + Math.max(0, -s) * .3; al = -s * 1.1; ar = s * 1.1; sl = sr = .22;
     bob = Math.abs(Math.cos(ph)) * .13; lean = -.16 - .07 * spd; hd = .06 + Math.sin(ph * 2) * .03; tw = s * .14; lid = .07; slant = .3; }
   else { const br = Math.sin(VT * 2.4); al = br * .06; ar = -al; sl = sr = .12; bob = br * .02 + .02; tw = Math.sin(VT * .7) * .18 * (Math.sin(VT * .23) > .6 ? 1 : 0); }
+  // block pose: the right arm reaches back for the shield, then both arms hold it out front; with no shield both hands come up
+  if (p.blocking && !vine && p.dead <= 0) {
+    if (p.shield) { if (pl.shE < .55) { ar = -1.35; sr = .35; } else { ar = 1.45; al = 1.1; sr = .45; sl = .25; } lean = Math.min(lean, -.06); }
+    else { al = ar = 1.75; sl = sr = -.25; lean = -.1; }
+  }
   const R = (o, k, v, r) => { o.rotation[k] = hold(o.rotation[k], v, dt, r || 30); };
   R(pl.legL, 'z', ll); R(pl.legR, 'z', lr); R(pl.ankL, 'z', ka); R(pl.ankR, 'z', kr);
   R(pl.armL, 'z', al); R(pl.armR, 'z', ar); R(pl.splL, 'x', sl); R(pl.splR, 'x', -sr);
@@ -1266,16 +1895,16 @@ function render(dtReal) {
     cr.root.visible = true; cr.root.position.set(X(s.x), 0, 0); cr.body.rotation.y = hold(cr.body.rotation.y, s.d > 0 ? 0 : Math.PI, dt, 14);
     cr.body.position.y = Math.abs(Math.sin(VT * 9 + k)) * .06; cr.body.scale.set(1, 1 + Math.sin(VT * 5 + k) * .03, 1);
     cr.legs.forEach(l => { l.p.rotation.z = Math.sin(VT * 14 + l.ph) * .5; }); cr.ant.forEach((a, i) => { a.rotation.z = Math.sin(VT * 4 + i) * .2; }); });
-  syncBoss(T);
+  syncBoss();
   syncHero(room, p, dt);
+  syncBuddy(p, dt);
   // ambient: god-rays + motes follow the camera, camera shake, sky + sun follow
-  const cx = camera.position.x;
-  for (const r of view.rays) { const u = r.userData, d = G.state === 'title' ? 0 : 0; r.position.set(cam.x + u.ox * .85, 9, u.oz); r.scale.set(u.w, 26, 1); r.rotation.z = .42; r.material.opacity = u.base * (.65 + .35 * Math.sin(VT * .5 + u.ph)); }
+  for (const r of view.rays) { const u = r.userData; r.position.set(cam.x + u.ox * .85, 9, u.oz); r.scale.set(u.w, 26, 1); r.rotation.z = .42; r.material.opacity = u.base * (.65 + .35 * Math.sin(VT * .5 + u.ph)); }
   if (view.motes) { const mm = view.motes; mm.d.forEach((m, i) => { _o.position.set(cam.x + m.x + Math.sin(VT * m.s * 4 + m.p) * 1.2, m.y + Math.sin(VT * m.s * 3 + m.p * 2) * .7, m.z); _o.quaternion.copy(camera.quaternion); const s = .14 + .08 * Math.sin(VT * 2 + m.p); _o.scale.set(s, s, s); _o.updateMatrix(); mm.mesh.setMatrixAt(i, _o.matrix); }); mm.mesh.instanceMatrix.needsUpdate = true; }
   setCamera(dt); camera.updateMatrixWorld(); camQ.copy(camera.quaternion);
   sky.position.copy(camera.position);
   if (q.shadows) { sun.target.position.set(Math.round(cam.x * 2) / 2, 3, 0); sun.position.copy(sun.target.position).add(SUNOFF); } else { sun.target.position.set(cam.x, 3, 0); sun.position.copy(sun.target.position).add(SUNOFF); }
-  updatePool(poolN, dt); updatePool(poolA, dt); updatePool(poolG, dt);
+  updatePool(poolN, dt); updatePool(poolA, dt);
   if (renderer) renderer.render(scene, camera);
   drawUI();
   fpsN++; fpsT += dtReal || 0; if (fpsT >= 1) { fps = fpsN / fpsT; fpsN = 0; fpsT = 0; if (fpsEl) fpsEl.textContent = fps.toFixed(0) + ' fps' + (fpsEl.dataset.q ? ' ' + QL().name : ''); }
@@ -1285,8 +1914,11 @@ applyQuality(); pl.shadow.visible = false;
 
 /* ---------- input ---------- */
 const keyMap = { ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', ArrowUp: 'jump', KeyW: 'jump', Space: 'jump' };
-function startOrRestart() { if (G.state === 'title' || G.state === 'end') { G.p = null; startRun(); } }
-function setSeed(s) { G.seed = s; G.world = genWorld(s); G.best = 0; try { G.best = +localStorage.getItem('jr3d-best:' + s) || 0; } catch (e) {} }
+// end screen: ignore restart presses for END_LOCK ms after it appears (mashing jump / tapping no longer skips it); then a fresh press is needed
+const END_LOCK = 1000; let endShownAt = -1e9, wasEnd = false;
+function noteEnd() { const e = G.state === 'end'; if (e && !wasEnd) endShownAt = performance.now(); wasEnd = e; }
+function startOrRestart() { noteEnd(); if (G.state === 'end' && performance.now() - endShownAt < END_LOCK) return; if (G.state === 'title' || G.state === 'end') { G.p = null; startRun(); } }
+function setSeed(s) { G.seed = s; G.world = genWorld(s); G.best = 0; try { G.best = +localStorage.getItem(BEST_KEY(s)) || 0; } catch (e) {} }
 const dailySeed = () => { const d = new Date(); return 'daily-' + d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 addEventListener('keydown', e => {
   const menu = G.state === 'title' || G.state === 'end';
@@ -1294,7 +1926,9 @@ addEventListener('keydown', e => {
   if (menu && e.code === 'KeyD') { setSeed(dailySeed()); G.state = 'title'; return; }
   const k = keyMap[e.code];
   if (k) { e.preventDefault(); if (k === 'jump' && !keys.jump) jumpQ = 0.12; keys[k] = true; return; }
-  if (e.code === 'Enter') { e.preventDefault(); startOrRestart(); }
+  if (e.code === 'ArrowDown' || e.code === 'KeyS') { e.preventDefault(); if (!e.repeat && G.state === 'play') blockInput(true); return; }
+  if (e.code === 'KeyB' && menu && !e.repeat) { setBlockMode(blockMode === 'press' ? 'hold' : 'press'); return; }
+  if (e.code === 'Enter') { e.preventDefault(); if (!(e.repeat && G.state === 'end')) startOrRestart(); }
   else if (e.code === 'KeyP' && (G.state === 'play' || G.state === 'paused')) { G.state = G.state === 'play' ? 'paused' : 'play'; }
   else if (e.code === 'KeyN' && menu) { setSeed(Math.random().toString(36).slice(2, 8)); G.state = 'title'; }
   else if (e.code === 'KeyM' && !e.repeat) toggleMute();
@@ -1309,29 +1943,46 @@ function togglePause() { if (G.state === 'play' || G.state === 'paused') G.state
 function goHome() { if (G.state === 'end') { G.state = 'title'; } }
 syncSnd();
 [['b-pause', togglePause], ['b-snd', toggleMute]].forEach(([id, f]) => $(id).addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); f(); }));
-addEventListener('keyup', e => { const k = keyMap[e.code]; if (k) keys[k] = false; });
-addEventListener('blur', () => { keys.left = keys.right = keys.jump = false; });
+addEventListener('keyup', e => { const k = keyMap[e.code]; if (k) keys[k] = false; if (e.code === 'ArrowDown' || e.code === 'KeyS') blockInput(false); });
+// leaving the tab / window: drop held input and pause (the existing P pause, so the timer stops); a pause made this way resumes on return
+let autoPaused = false;
+function pauseOnLeave() { keys.left = keys.right = keys.jump = keys.block = false; blockLatch = false; jumpQ = 0; if (G.state === 'play') { G.state = 'paused'; autoPaused = true; } }
+function resumeOnReturn() { if (autoPaused && G.state === 'paused') G.state = 'play'; autoPaused = false; }
+addEventListener('blur', pauseOnLeave);
+addEventListener('focus', () => { if (!document.hidden) resumeOnReturn(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) pauseOnLeave(); else if (document.hasFocus()) resumeOnReturn(); });
 if ('ontouchstart' in window || matchMedia('(pointer: coarse)').matches) document.body.classList.add('touch');
 document.querySelectorAll('.tb').forEach(b => { const k = b.dataset.k;
+  if (k === 'block') {   // block button: press mode toggles, hold mode blocks while the finger is down (lit state set in syncTouchDim)
+    const bd = e => { e.preventDefault(); if (G.state === 'play') blockInput(true); try { b.setPointerCapture(e.pointerId); } catch (_) {} }, bu = e => { e.preventDefault(); blockInput(false); };
+    b.addEventListener('pointerdown', bd); b.addEventListener('pointerup', bu); b.addEventListener('pointercancel', bu); b.addEventListener('lostpointercapture', bu); return; }
   const down = e => { e.preventDefault(); if (k === 'jump' && !keys.jump) { jumpQ = 0.12; startOrRestart(); } keys[k] = true; b.classList.add('on'); try { b.setPointerCapture(e.pointerId); } catch (_) {} };
   const up = e => { e.preventDefault(); keys[k] = false; b.classList.remove('on'); };
   b.addEventListener('pointerdown', down); b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); b.addEventListener('lostpointercapture', up);
 });
 cv.addEventListener('pointerdown', () => { startOrRestart(); });
-panel.addEventListener('pointerdown', e => { e.preventDefault(); if (e.target && e.target.id === 'e-home') { goHome(); return; } startOrRestart(); });
+panel.addEventListener('pointerdown', e => { e.preventDefault(); if (e.target && e.target.id === 'e-home') { goHome(); return; } if (e.target && e.target.closest && e.target.closest('#set-block')) { setBlockMode(blockMode === 'press' ? 'hold' : 'press'); return; } startOrRestart(); });
 
 /* ---------- loop ---------- */
 let last = performance.now(), acc = 0;
 function frame(now) {
   const dtr = Math.min(0.1, (now - last) / 1000); acc += dtr; last = now;
   while (acc >= STEP) { update(STEP); if (G.state === 'title') G.t += STEP; acc -= STEP; }
+  noteEnd();
   render(dtr); requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
 
 // test hook (read/steer only; no network)
-window.__jr = { G, keys, genWorld, update, render, press(k, d) { keys[k] = d; if (k === 'jump' && d) jumpQ = 0.12; },
+window.__jr = { G, keys, genWorld, update, render, press(k, d) { if (k === 'block') { blockInput(d); return; } keys[k] = d; if (k === 'jump' && d) jumpQ = 0.12; },
   fingerprint(seed) { return JSON.stringify(genWorld(seed).rooms); }, startRun, setSeed, ROOMS, TREASURES, GY, enterRoom, hurtBoss, isLocked, nextBoss, BOSS_ROOMS, BOSS_DEF,
-  setQuality, quality: () => QL().name, photo(o) { photoCam = o || null; },
+  setQuality, quality: () => QL().name, harm, BEST_KEY, STAM_MAX, TUNE, setBlockMode, blockMode: () => blockMode, wantBlock, blockReady: () => !!(G.p && blockReady(G.p)),
+  shieldView: () => { const w = shield.root.getWorldPosition(new THREE.Vector3()); return { parent: shield.root.parent === pl.bod ? 'hero' : 'ground', visible: shield.root.visible, e: pl.shE || 0, x: w.x, y: w.y, z: w.z, heroX: G.p ? X(G.p.x) : null, glow: shield.glowM.emissiveIntensity, halo: shield.haloM.opacity }; },
+  buddy: () => { let meshes = 0; buddy.root.traverse(o => { if (o.isMesh) meshes++; }); const j = buddy.j;
+    return { on: buddy.on, visible: buddy.root.visible, x: buddy.root.position.x, y: buddy.root.position.y, face: buddy.face, heroX: G.p ? X(G.p.x) : null,
+      is3d: !!buddy.mesh.isMesh && !!buddy.mesh.geometry.attributes.aBone, meshes, joints: buddy.J.length, tris: buddy.tris, mainTris: buddy.mesh.geometry.index.count / 3, h: buddy.root.scale.y,
+      legL: j.legL.rotation.z, legR: j.legR.rotation.z, armL: j.armL.rotation.z, head: j.head.rotation.y, lids: j.lids.rotation.z, prev: buddy.prev }; },
+  buddyPrev(m) { buddy.prev = m || null; return buddy.prev; }, photo(o) { photoCam = o || null; },
+  mats: () => ({ all: allMats.size, cached: Object.keys(matCache).length }), endLockMs: END_LOCK,
   info: () => renderer ? { calls: renderer.info.render.calls, tris: renderer.info.render.triangles, fps, rev: THREE.REVISION, quality: QL().name } : null };
 })();
