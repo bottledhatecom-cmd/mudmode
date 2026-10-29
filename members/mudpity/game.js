@@ -1850,7 +1850,7 @@ function drawUI() {
   setTxt('h-next', (bb && !bb.dead) ? 'BOSS FIGHT' : nb < 0 ? '' : 'NEXT BOSS IN ' + nr + (nr === 1 ? ' ROOM' : ' ROOMS'));
   msgEl.style.display = (G.msgT > 0 && st === 'play') ? 'block' : (st === 'paused' ? 'block' : 'none');
   setTxt('msg', st === 'paused' ? 'PAUSED' : G.msg);
-  let key = st + '|' + G.seed + '|' + G.best + '|' + G.result + '|' + G.score + '|' + G.got.size + '|' + blockMode;
+  let key = st + '|' + G.seed + '|' + G.best + '|' + G.result + '|' + G.score + '|' + G.got.size + '|' + blockMode + '|' + Qi;
   if (st === 'title' || st === 'end') {
     panel.style.display = 'block';
     if (cache.panel !== key) { cache.panel = key;
@@ -1868,6 +1868,7 @@ function drawUI() {
             '<b>Block</b><span>' + (tch ? 'shield button' : 'Right click, S or Down') + ': swing the shield off your back to stop logs, mud and boss hits. Each block costs stamina (bigger hits cost more) and it refills slowly. Out of stamina = the shield drops: walk over it to pick it up. No shield: block with your hands (' + Math.round((1 - TUNE.HAND_BLOCK_DAMAGE) * 100) + '% less damage). Unblocked hits cost a heart</span>' +
           '</div>' +
           '<div class="setb" id="set-block">Block button: <b' + (blockMode === 'press' ? ' class="sel"' : '') + '>PRESS</b> / <b' + (blockMode === 'hold' ? ' class="sel"' : '') + '>HOLD</b> &nbsp;<small>' + (tch ? 'tap here to change' : '[B] or click to change') + '</small></div>' +
+          '<div class="setb" id="set-quality">Graphics: <b' + (Qi === 0 ? ' class="sel"' : '') + '>LOW</b> / <b' + (Qi === 1 ? ' class="sel"' : '') + '>HIGH</b> &nbsp;<small>' + (tch ? 'tap here to change' : 'click to change') + '</small></div>' +
           '<div class="seedbox">Seed <b>' + esc(G.seed) + '</b> &nbsp; best <b>' + G.best + '</b><br><small>' + (tch ? 'add ?seed=name to the address for a set world' : '[N] random seed &nbsp; [D] daily seed &nbsp; or add ?seed=name to the address') + '</small></div>' +
           '<div class="go">' + (tch ? 'TAP TO START' : 'PRESS ENTER / TAP TO START') + '</div>' + BADGE
         : '<div class="top"><h1>' + (G.result === 'win' ? 'ALL BOSSES DOWN!' : G.result === 'time' ? 'TIME UP' : 'OUT OF LIVES') + '</h1>' +
@@ -1887,11 +1888,11 @@ function syncTouchDim(st) {
 }
 function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 
-/* ---- quality toggle (Q key or the small button): LOW = no shadow maps, fewer instances, lower pixel ratio ---- */
+/* ---- quality toggle (title settings menu or the small button; not on a key, Q is kept free for the super move, Michael t46u): LOW = no shadow maps, fewer instances, lower pixel ratio ---- */
 function applyQuality() {
   const q = QL();
   if (renderer) { renderer.shadowMap.enabled = q.shadows; sun.castShadow = q.shadows; allMats.forEach(m => { m.needsUpdate = true; }); resize(); }
-  qbtn.textContent = 'QUALITY: ' + q.name + ' [Q]'; qbtn.className = q.shadows ? 'hi' : 'lo';
+  qbtn.textContent = 'QUALITY: ' + q.name; qbtn.className = q.shadows ? 'hi' : 'lo';
   pl.shadow.visible = true; pl.shadow.material.opacity = q.shadows ? .18 : .45; forceRebuild = true;
 }
 function setQuality(i, save) { Qi = i; applyQuality(); if (save) { try { localStorage.setItem('jr3d-quality', QL().name.toLowerCase()); } catch (e) {} } }
@@ -2134,7 +2135,6 @@ function setSeed(s) { G.seed = s; G.world = genWorld(s); G.best = 0; try { G.bes
 const dailySeed = () => { const d = new Date(); return 'daily-' + d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 addEventListener('keydown', e => {
   const menu = G.state === 'title' || G.state === 'end';
-  if (e.code === 'KeyQ' && !e.repeat) { setQuality(1 - Qi, true); return; }
   if (menu && e.code === 'KeyD') { setSeed(dailySeed()); G.state = 'title'; return; }
   const k = keyMap[e.code];
   if (k) { e.preventDefault(); if (k === 'jump' && !keys.jump) jumpQ = 0.12; keys[k] = true; return; }
@@ -2188,7 +2188,7 @@ function mouseButtons(e) {
 }
 ['pointerdown', 'pointermove', 'pointerup'].forEach(t => addEventListener(t, mouseButtons));
 cv.addEventListener('contextmenu', e => e.preventDefault());   // right click is the shield, so no browser menu over the game
-panel.addEventListener('pointerdown', e => { e.preventDefault(); if (e.target && e.target.id === 'e-home') { goHome(); return; } if (e.target && e.target.closest && e.target.closest('#set-block')) { setBlockMode(blockMode === 'press' ? 'hold' : 'press'); return; } startOrRestart(); });
+panel.addEventListener('pointerdown', e => { e.preventDefault(); if (e.target && e.target.id === 'e-home') { goHome(); return; } if (e.target && e.target.closest && e.target.closest('#set-block')) { setBlockMode(blockMode === 'press' ? 'hold' : 'press'); return; } if (e.target && e.target.closest && e.target.closest('#set-quality')) { setQuality(1 - Qi, true); return; } startOrRestart(); });
 
 /* ---------- loop ---------- */
 let last = performance.now(), acc = 0;
