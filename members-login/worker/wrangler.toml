@@ -1,0 +1,22 @@
+# DRAFT, not deployed. Placeholder names only. No secrets in this file.
+name = "mudmode-members-TBD"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+# route = { pattern = "members-api.mudmodecrew.com", custom_domain = true }   # TBD, needs DNS decision + OK
+
+[vars]
+ALLOWED_ORIGIN = "https://mudmodecrew.com"
+# label -> Gumroad product_id (from the License key block on the product's content page). TBD by Michael.
+PRODUCTS = '{"full-kit":"FULL_KIT_PRODUCT_ID_TBD","founders":"FOUNDERS_PRODUCT_ID_TBD"}'
+# full-kit = $29 Full Kit; founders = $15 founders edition, first 200 (cap set on Gumroad, not here). Both count as members.
+# Where a verified member is sent for downloads (Gumroad library). Not the exe.
+MEMBERS_LINK = "https://app.gumroad.com/library"
+SESSION_TTL_SECONDS = "3600"
+
+# Secret (set with: wrangler secret put MEMBERS_SESSION_SECRET) -> [SECRET OMITTED]
+
+# Rate limit binding (verify on Cloudflare docs before deploy):
+# [[ratelimits]]
+# name = "RATE_LIMITER"
+# namespace_id = "TBD"
+# simple = { limit = 10, period = 60 }
