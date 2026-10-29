@@ -10,7 +10,7 @@
  if(!door||!window.fetch||!window.Promise)return; // old browser: the buttons stay hidden; the 4 lines and the guide still work
  // Each prompt is pinned: if its file changes, its hash here must change too, so a text change is always a visible code change.
  var PROMPTS={
-  chat:{url:'first-prompt.md',sha:'sha256-Ku1Mz2eikkC/Dmb8+mkMAnWzcKU1W15+ZAmASIaP8G4='},
+  chat:{url:'first-prompt.md',sha:'sha256-K1u4N6FKr6XosPxS50oCNEvZ1pYyoVKIdPsdct2K0Mk='},
   files:{url:'setup-prompt-files.md',sha:'sha256-gXvg1egeOZRXWJ8oY6M5WgoT08CLr0qeQd9/JWeg4Bw='}
  };
  // Fixed links only, plain addresses (no prefill query: not verified for any of them); the page can't add others.
