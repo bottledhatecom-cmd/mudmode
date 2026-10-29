@@ -1,6 +1,6 @@
 /* DRAFT wk2pg4. Talks only to the members worker. Cosmetic reveal: real gating is server-side. */
 (function(){
- var API='https://WORKER-ORIGIN-TBD';
+ var API='https://mudmode-members.bottledhate-com.workers.dev';
  var f=document.getElementById('ml-form'); if(!f) return;
  var st=document.getElementById('ml-status'), box=document.getElementById('ml-members'), link=document.getElementById('ml-link');
  var MSG={ok:'Signed in.',bad:'That key did not work. Check it and try again.',refunded:'This purchase was refunded or disputed, so it no longer unlocks members.',busy:'Too many tries. Wait a minute.',err:'Could not reach the check. Try again soon.'}; /* brief-review */
