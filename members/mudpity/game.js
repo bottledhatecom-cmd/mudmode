@@ -944,13 +944,14 @@ const AO_D = [.09, .24, .5], AO_W = [.45, .35, .2];
 // merge the painted meshes under root (skipping the stop pivots, which are baked on their own) into one mesh + one ink hull; returns the mesh.
 // Per part: optional bevel + sculpt (displaced along the normal averaged per spot, so box corners stay closed), smooth normals of the new
 // surface, then contact shading (is the point a little way out along the normal inside another part?), cavity shading from the sculpt, top light.
-function bossBake(root, mat, own, stops, ink) {
-  root.updateMatrixWorld(true); _bkI.copy(root.matrixWorld).invert();
+function bossBake(root, mat, own, stops, ink, bo) {   // bo (buddy): { bones: Map(joint group -> index) adds a per-vertex joint id for the shader rig, aoS: size scale for the contact shading }
+  const aS = bo && bo.aoS || 1; root.updateMatrixWorld(true); _bkI.copy(root.matrixWorld).invert();
   const parts = [], walk = o => { for (const c of o.children) { if (stops && stops.includes(c)) continue; if (c.isMesh && c.material && c.material.bk) parts.push(c); walk(c); } };
   walk(root);
   const recs = [];
   for (const m of parts) {
     const pt = m.material, sc = m.userData.sc, g0 = m.geometry; if (!g0.boundingBox) g0.computeBoundingBox();
+    let bi = 0; if (bo && bo.bones) for (let q = m.parent; q && q !== root; q = q.parent) if (bo.bones.has(q)) { bi = bo.bones.get(q); break; }
     const g = g0.clone(); if (sc && sc.bev) bevelBox(g, m.scale, sc.bev);
     const mw = new THREE.Matrix4().multiplyMatrices(_bkI, m.matrixWorld); g.applyMatrix4(mw);
     const p = g.attributes.position, n = g.attributes.normal, vc = g.attributes.color, N = p.count, ix = g.index ? g.index.array : null, cnt = ix ? ix.length : N;
@@ -973,35 +974,35 @@ function bossBake(root, mat, own, stops, ink) {
         if (l > 1e-9) { Nn[i * 3] = s[0] / l; Nn[i * 3 + 1] = s[1] / l; Nn[i * 3 + 2] = s[2] / l; } else { Nn[i * 3] = Av[i * 3]; Nn[i * 3 + 1] = Av[i * 3 + 1]; Nn[i * 3 + 2] = Av[i * 3 + 2]; } }
     } else for (let i = 0; i < N; i++) { Nn[i * 3] = n.getX(i); Nn[i * 3 + 1] = n.getY(i); Nn[i * 3 + 2] = n.getZ(i); }
     const bb = g0.boundingBox, c = bb.getCenter(new THREE.Vector3()), hs = bb.getSize(new THREE.Vector3()).multiplyScalar(.5);
-    recs.push({ pt, sc, an: m.userData.an, P, Nn, Av, D, N, ix, cnt, vc, inv: mw.clone().invert(), box: !!g0.userData.box, c0: c, hs, c: c.clone().applyMatrix4(mw), r: hs.length() * mw.getMaxScaleOnAxis() });
+    recs.push({ pt, sc, bi, an: m.userData.an, P, Nn, Av, D, N, ix, cnt, vc, inv: mw.clone().invert(), box: !!g0.userData.box, c0: c, hs, c: c.clone().applyMatrix4(mw), r: hs.length() * mw.getMaxScaleOnAxis() });
     g.dispose(); m.parent.remove(m);
   }
-  const pos = [], nor = [], col = [], lay = [], aan = [], aaw = [], idx = [], inkPos = [], inkN = [], inkA = [], inkW = [], ii = [];
+  const pos = [], nor = [], col = [], lay = [], aan = [], aaw = [], idx = [], inkPos = [], inkN = [], inkA = [], inkW = [], ii = [], bon = [], inkB = [];
   for (const R of recs) {
-    const pt = R.pt, glow = pt.layer === 4, cand = glow ? [] : recs.filter(o => o !== R && o.pt.layer !== 4 && o.r > .1 && o.c.distanceTo(R.c) < R.r + o.r + .6);
+    const pt = R.pt, glow = pt.layer === 4, cand = glow ? [] : recs.filter(o => o !== R && o.pt.layer !== 4 && o.r > .1 * aS && o.c.distanceTo(R.c) < R.r + o.r + .6 * aS);
     const amp = R.sc && R.sc.a ? R.sc.a : 0, base = pos.length / 3, grp = R.an ? R.an[0] : 0, gw = R.an ? R.an[1] : 0;
     for (let i = 0; i < R.N; i++) { const x = R.P[i * 3], y = R.P[i * 3 + 1], z = R.P[i * 3 + 2], nx = R.Nn[i * 3], ny = R.Nn[i * 3 + 1], nz = R.Nn[i * 3 + 2];
       let occ = 0;
-      for (let s = 0; s < 3 && cand.length; s++) { const d = AO_D[s]; _bkV.set(x + nx * d, y + ny * d, z + nz * d);
+      for (let s = 0; s < 3 && cand.length; s++) { const d = AO_D[s] * aS; _bkV.set(x + nx * d, y + ny * d, z + nz * d);
         for (const o of cand) { if (_bkV.distanceTo(o.c) > o.r) continue; const q = _bkW.copy(_bkV).applyMatrix4(o.inv), ux = (q.x - o.c0.x) / o.hs.x, uy = (q.y - o.c0.y) / o.hs.y, uz = (q.z - o.c0.z) / o.hs.z;
           if (o.box ? Math.max(Math.abs(ux), Math.abs(uy), Math.abs(uz)) < 1 : ux * ux + uy * uy + uz * uz < 1) { occ += AO_W[s]; break; } } }
-      const cav = amp ? 1 + Math.max(-1, Math.min(1, R.D[i] / amp)) * .26 : 1, mot = R.sc && R.sc.mot ? 1 + bF(x * .7 + 4, y * .7, z * .7) * R.sc.mot : 1, k = (.72 + .36 * (ny * .5 + .5)) * (1 - .62 * occ) * cav * mot;   // top light, contact shade, cavity, mottling
+      const cav = amp ? 1 + Math.max(-1, Math.min(1, R.D[i] / amp)) * .26 : 1, mot = R.sc && R.sc.mot ? 1 + bF(x * .7 / aS + 4, y * .7 / aS, z * .7 / aS) * R.sc.mot : 1, k = (.72 + .36 * (ny * .5 + .5)) * (1 - .62 * occ) * cav * mot;   // top light, contact shade, cavity, mottling
       pos.push(x, y, z); nor.push(nx, ny, nz); _bkC.copy(pt.color); if (R.vc) _bkC.multiply(_bkC.clone().setRGB(R.vc.getX(i), R.vc.getY(i), R.vc.getZ(i)));
-      col.push(_bkC.r * k, _bkC.g * k, _bkC.b * k); lay.push(pt.layer); aan.push(grp); aaw.push(typeof gw === 'function' ? gw(x, y, z) : gw); }
+      col.push(_bkC.r * k, _bkC.g * k, _bkC.b * k); lay.push(pt.layer); bon.push(R.bi); aan.push(grp); aaw.push(typeof gw === 'function' ? gw(x, y, z) : gw); }
     for (let i = 0; i < R.cnt; i++) idx.push(base + (R.ix ? R.ix[i] : i));
     if (pt.ink > 0) {   // ink hull along the per-spot normal; heavier under the forms and a little uneven, like a brush line
       const ib = inkPos.length / 3;
       for (let i = 0; i < R.N; i++) { const x = R.P[i * 3], y = R.P[i * 3 + 1], z = R.P[i * 3 + 2], ax = R.Av[i * 3], ay = R.Av[i * 3 + 1], az = R.Av[i * 3 + 2];
-        const w = pt.ink * (.72 + .6 * Math.max(0, -ay) - .18 * Math.max(0, ay) + .42 * bN(x * 1.7, y * 1.7, z * 1.7));   // thin on top, heavy underneath
-        inkPos.push(x + ax * w, y + ay * w, z + az * w); inkN.push(ax, ay, az); inkA.push(grp); inkW.push(typeof gw === 'function' ? gw(x, y, z) : gw); }
+        const w = pt.ink * (.72 + .6 * Math.max(0, -ay) - .18 * Math.max(0, ay) + .42 * bN(x * 1.7 / aS, y * 1.7 / aS, z * 1.7 / aS));   // thin on top, heavy underneath
+        inkPos.push(x + ax * w, y + ay * w, z + az * w); inkN.push(ax, ay, az); inkB.push(R.bi); inkA.push(grp); inkW.push(typeof gw === 'function' ? gw(x, y, z) : gw); }
       for (let i = 0; i < R.cnt; i++) ii.push(ib + (R.ix ? R.ix[i] : i)); }
   }
   const F = (a, s) => new THREE.Float32BufferAttribute(a, s);
   const geo = new THREE.BufferGeometry(); geo.setAttribute('position', F(pos, 3)); geo.setAttribute('normal', F(nor, 3)); geo.setAttribute('color', F(col, 3));
-  geo.setAttribute('aBt', F(lay, 1)); geo.setAttribute('aAn', F(aan, 1)); geo.setAttribute('aAw', F(aaw, 1)); geo.setIndex(idx); own.push(geo);
+  geo.setAttribute('aBt', F(lay, 1)); geo.setAttribute('aAn', F(aan, 1)); geo.setAttribute('aAw', F(aaw, 1)); if (bo && bo.bones) geo.setAttribute('aBone', F(bon, 1)); geo.setIndex(idx); own.push(geo);
   const mesh = mk(geo, mat, 0, 0, 0, 1, 1, 1, root);
-  if (ii.length) { const ig = new THREE.BufferGeometry(); ig.setAttribute('position', F(inkPos, 3)); ig.setAttribute('normal', F(inkN, 3)); ig.setAttribute('aAn', F(inkA, 1)); ig.setAttribute('aAw', F(inkW, 1));
-    ig.setIndex(ii); own.push(ig); mk(ig, ink || bossInk, 0, 0, 0, 1, 1, 1, root, true); }
+  if (ii.length) { const ig = new THREE.BufferGeometry(); ig.setAttribute('position', F(inkPos, 3)); ig.setAttribute('normal', F(inkN, 3)); ig.setAttribute('aAn', F(inkA, 1)); ig.setAttribute('aAw', F(inkW, 1)); if (bo && bo.bones) ig.setAttribute('aBone', F(inkB, 1));
+    ig.setIndex(ii); own.push(ig); mesh.userData.ink = mk(ig, ink || bossInk, 0, 0, 0, 1, 1, 1, root, true); }
   return mesh;
 }
 // idle personality, visual only (breathing, brow twitches, blinks, glances). Reads the boss state to pick a mood; never writes game state.
@@ -1260,25 +1261,167 @@ function buildShield() {
   return { root, face, glowM, haloM, halo };
 }
 const shield = buildShield(); pl.bod.add(shield.root);
-// buddy companion: the picked buddy drawing (art/buddy.webp) on an upright quad that turns to the camera and trails the hero.
-// Visual only (no gameplay effect). Not shown when the page is opened from file://, where browsers block image upload to WebGL.
-const BUDDY_H = 1.9, BUDDY_W = BUDDY_H * 247 / 320, BUDDY_ART_FACE = -1;   // the drawing's 3/4 view looks to the viewer's left
-const buddyGeo = new THREE.PlaneGeometry(1, 1); buddyGeo.translate(0, .5, 0);   // origin at the feet
-const buddyMat = reg(new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, alphaTest: .5, side: THREE.DoubleSide, fog: false, toneMapped: false }));
-const buddy = { root: new THREE.Group(), mesh: new THREE.Mesh(buddyGeo, buddyMat), on: false, init: false, x: 0, y: 0, face: 1, ph: 0 };
-buddy.root.add(buddy.mesh); buddy.root.visible = false; scene.add(buddy.root);
-if (location.protocol !== 'file:') { const im = new Image(); im.onload = () => { const t = new THREE.CanvasTexture(im); t.colorSpace = THREE.SRGBColorSpace; buddyMat.map = t; buddyMat.needsUpdate = true; buddy.on = true; }; im.src = 'art/buddy.webp'; }
+// buddy companion (Michael t57u): the picked buddy drawing (art/buddy.webp, kept in the repo as the reference) rebuilt as a rigged 3D model
+// in code, the hero's way (simple shapes, bold swatch colours, ink hull) at the bosses' finish (sculpt, contact shading, pencil texture).
+// Every part bakes into ONE mesh + ONE ink hull. Each vertex carries a joint id; the joints are plain groups (hips, torso, head, eyes, lids,
+// brows, ears, mustache, arms, forearms, legs, feet) posed on the CPU each frame and sent to the shader as matrices, so the vertex shader
+// does the skinning (the slim three build has no SkinnedMesh). Modelled in his own units (1 = his height, feet at 0): his size is only
+// root.scale, so the shapes, ink and pencil texture all scale together (built to hold up at 2-4x for a later grow move).
+// Visual only (no gameplay effect); global and built once at load, so nothing is per room.
+const BUDDY_H = 1.0;   // world height in play: crawls through mudbot's chest (~.6 tall x .78 wide) and stands waist-deep in its dome
+const texPencil = bossTex((g, w, h, rr, wrap) => {   // coloured-pencil paper: short hatching strokes, mostly one slant, some cross
+  g.fillStyle = '#c2c2c2'; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 1100; i++) { const x = rr() * w, y = rr() * h, l = 5 + rr() * 15, a = (rr() < .72 ? .85 : -.75) + (rr() - .5) * .3, c = rr() < .6 ? 95 + rr() * 60 | 0 : 222 + rr() * 30 | 0, al = .16 + rr() * .26, lw = .6 + rr() * .8;
+    wrap(() => { g.strokeStyle = `rgba(${c},${c},${c},${al})`; g.lineWidth = lw; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); g.stroke(); }); }
+});
+const texHair = bossTex((g, w, h, rr, wrap) => {   // brows and mustache: long soft strands, dark and light
+  g.fillStyle = '#9c9c9c'; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 760; i++) { const x = rr() * w, y = rr() * h, l = 14 + rr() * 28, bd = (rr() - .5) * 12, c = rr() < .5 ? 55 + rr() * 50 | 0 : 200 + rr() * 50 | 0, al = .25 + rr() * .35, lw = .8 + rr();
+    wrap(() => { g.strokeStyle = `rgba(${c},${c},${c},${al})`; g.lineWidth = lw; g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + bd, y + l * .5, x + bd * .3, y + l); g.stroke(); }); }
+});
+// layers: 0 skin (pencil), 1 hair, 2 belly (soft pencil), 3 sclera / claws / scalp stones, 4 eyes (glow, like the hero's lenses)
+const buddyMat = bossMat('bd', [{ t: texPencil, sc: 2.6, st: .38 }, { t: texHair, sc: 3.2, st: .6 }, { t: texPencil, sc: 2.0, st: .22 }, { t: texPencil, sc: 3.5, st: .15, rough: .45 }, { t: texPencil, sc: 1, st: 0, rough: .25 }],
+  { rough: .8, rim: '#fff0d0', rimK: .25, self: .12, sh: [.05, 6, [1, 0, 1]] });
+const BJN = 18, buddyBJ = { value: new Float32Array(BJN * 12) };   // joint matrices, 3 rows (vec4) each
+const BRIG_D = 'attribute float aBone; uniform vec4 uBJ[' + BJN * 3 + '];\nmat4 bJoint(){ int i=int(aBone+.5)*3; vec4 a=uBJ[i],b=uBJ[i+1],c=uBJ[i+2]; return mat4(a.x,b.x,c.x,0.,a.y,b.y,c.y,0.,a.z,b.z,c.z,0.,a.w,b.w,c.w,1.); }\n';
+{ const ob = buddyMat.onBeforeCompile; buddyMat.onBeforeCompile = sh => { ob(sh); sh.uniforms.uBJ = buddyBJ;
+    sh.vertexShader = BRIG_D + sh.vertexShader.replace('#include <defaultnormal_vertex>', 'mat4 bJ=bJoint(); objectNormal=normalize(mat3(bJ)*objectNormal);\n#include <defaultnormal_vertex>')
+      .replace('#include <project_vertex>', 'transformed=(bJ*vec4(transformed,1.)).xyz;\n#include <project_vertex>'); };
+  buddyMat.customProgramCacheKey = () => 'buddy'; reg(buddyMat); }
+const buddyInk = bossInkMat('bd', buddyMat);
+{ const ob = buddyInk.onBeforeCompile; buddyInk.onBeforeCompile = sh => { ob(sh); sh.uniforms.uBJ = buddyBJ;
+    sh.vertexShader = BRIG_D + sh.vertexShader.replace('#include <project_vertex>', 'transformed=(bJoint()*vec4(transformed,1.)).xyz;\n#include <project_vertex>'); };
+  buddyInk.customProgramCacheKey = () => 'bink:buddy'; reg(buddyInk); }
+const gLidB = new THREE.SphereGeometry(.5, 14, 5, 0, Math.PI * 2, 0, Math.PI / 2), gSphB = new THREE.SphereGeometry(.5, 24, 16), gSphS = new THREE.SphereGeometry(.5, 11, 7), gSphT = new THREE.SphereGeometry(.5, 6, 4), gConeS = new THREE.ConeGeometry(.5, 1, 8, 2);   // buddy-sized detail levels
+const capBC = {}, capB = (r, len) => capBC[r + '_' + len] || (capBC[r + '_' + len] = new THREE.CapsuleGeometry(r, len, 3, 10));   // eyelid: a cap over the eyeball, rolls down to blink
+function buildBuddy() {
+  const root = new THREE.Group(), rig = new THREE.Group(); root.add(rig); rig.userData.o = [0, 0, 0]; const J = [], j = {};
+  const jt = (n, par, x, y, z) => { const g = new THREE.Group(), po = par.userData.o; g.position.set(x - po[0], y - po[1], z - po[2]); g.userData.o = [x, y, z]; g.userData.p0 = g.position.clone(); par.add(g); J.push(g); j[n] = g; return g; };
+  const P = (geo, paint, par, x, y, z, sx, sy, sz) => { const o = par.userData.o; return mk(geo, paint, x - o[0], y - o[1], z - o[2], sx, sy, sz, par); };
+  const C = { skin: '#c9a784', skinD: '#a98b6b', belly: '#efe4cc', hair: '#a9bd76', hairL: '#bfd18f', hairD: '#83955a', thigh: '#b3b782', iris: '#f08a2a', pupil: '#24160f', white: '#f6f0e4', ear: '#dc9c88', claw: '#f2ede4', stone: '#e6e0d6', stoneD: '#bdb4a6', nose: '#d8b293' };
+  const sk = BP(C.skin, 0, .016), skS = BP(C.skin, 0, 0), skD = BP(C.skinD, 0, 0), be = BP(C.belly, 2, .014), hr = BP(C.hair, 1, .012), hrL = BP(C.hairL, 1, .011), hrD = BP(C.hairD, 1, 0), th = BP(C.thigh, 0, .013);
+  const wh = BP(C.white, 3, .009), ir = BP(C.iris, 4, 0), pu = BP(C.pupil, 4, 0), gl = BP('#ffffff', 4, 0), ea = BP(C.ear, 0, 0), cl = BP(C.claw, 3, 0), st = BP(C.stone, 3, 0), stD = BP(C.stoneD, 3, 0), no = BP(C.nose, 0, .012);
+  // joints (model space, feet at 0, facing +x)
+  jt('hips', rig, 0, .2, 0); jt('torso', j.hips, 0, .26, 0); jt('head', j.torso, 0, .55, 0);
+  jt('eyes', j.head, .13, .70, 0); jt('lids', j.head, .13, .70, 0); jt('browL', j.head, .17, .79, .11); jt('browR', j.head, .17, .79, -.11);
+  jt('earL', j.head, 0, .76, .19); jt('earR', j.head, 0, .76, -.19); jt('stache', j.head, .2, .6, 0);
+  jt('armL', j.torso, 0, .49, .2); jt('armR', j.torso, 0, .49, -.2); jt('foreL', j.armL, 0, .36, .255); jt('foreR', j.armR, 0, .36, -.255);
+  jt('legL', j.hips, 0, .17, .12); jt('legR', j.hips, 0, .17, -.12); jt('footL', j.legL, 0, .06, .13); jt('footR', j.legR, 0, .06, -.13);
+  // head: a big egg with a heavy brow, puffy jowls, pale stones on the scalp
+  bSc(P(gSphB, sk, j.head, 0, .76, 0, .40, .48, .44), { k: 'bump', a: .006, f: 9, lo: [.008, 4], mot: .25, dent: [[.17, .70, .12, .065, .018], [.17, .70, -.12, .065, .018]] });
+  bSc(P(gSphS, sk, j.head, .12, .785, 0, .14, .07, .30), { k: 'bump', a: .006, f: 14 });
+  for (const s of [1, -1]) bSc(P(gSphS, sk, j.head, .07, .62, s * .11, .24, .2, .2), { k: 'bump', a: .005, f: 11 });
+  [[.12, 0, .05], [.42, .35, .04], [.5, -.55, .045], [.42, 2.1, .04], [.62, 1.2, .035], [.66, -1.35, .04], [.4, 3.0, .05], [.72, .85, .03], [.62, -2.4, .04], [.3, -1.2, .035], [.25, 1.3, .04], [.55, 2.7, .03]].forEach(([t, f, r], i) => {
+    const x = .2 * Math.sin(t) * Math.cos(f), y = .76 + .24 * Math.cos(t), z = .22 * Math.sin(t) * Math.sin(f);
+    bSc(P(gSphT, i % 3 ? st : stD, j.head, x * .97, y - .004, z * .97, r * 1.3, r * .8, r * 1.2), { k: 'bump', a: .004, f: 40 }); });
+  // ears: long flat points out to the sides and up, pink inside; each flops on its own joint
+  for (const s of [1, -1]) { const e = s > 0 ? j.earL : j.earR;
+    rot(bSc(P(gConeS, sk, e, -.01, .835, s * .27, .045, .24, .13), { k: 'bump', a: .004, f: 16 }), s * .85, .0, .12);
+    rot(P(gConeS, ea, e, .01, .832, s * .265, .016, .18, .085), s * .85, 0, .12); }
+  // eyes: big orange irises with dark pupils and a glint in white eyeballs; the irises dart (eyes joint), the lids roll down to blink
+  for (const s of [1, -1]) { P(gSphS, wh, j.head, .13, .70, s * .12, .165, .165, .165);
+    P(gSphS, ir, j.eyes, .195, .70, s * .12, .05, .115, .115); P(gSphS, pu, j.eyes, .215, .70, s * .12, .02, .05, .05); P(gSphT, gl, j.eyes, .222, .725, s * .12 - .017, .012, .022, .022);
+    P(gLidB, skS, j.lids, .13, .70, s * .12, .18, .18, .18); }
+  // bushy green brows, low and grumpy at the middle
+  for (const s of [1, -1]) { const b = s > 0 ? j.browL : j.browR;
+    bAn(bSc(rot(P(capB(.034, .13), hr, b, .172, .786, s * .112, 1.3, 1, 1.45), s * (Math.PI / 2 - .3), 0, 0), { k: 'bump', a: .011, f: 30 }), 7, .003);
+    for (const [y, z, a] of [[.815, .17, .5], [.805, .2, .9]]) bAn(rot(P(gConeS, hrD, b, .165, y, s * z, .04, .07, .04), s * a, 0, -.2), 7, .004); }
+  // round nose, big swept mustache (own joint, twitches) and a goatee
+  bSc(P(gSphM, no, j.head, .205, .655, 0, .11, .09, .13), { k: 'bump', a: .003, f: 14, dent: [[.255, .628, .028, .02, .012], [.255, .628, -.028, .02, .012]] });
+  P(capB(.028, .06), sk, j.head, .19, .725, 0, 1, 1, 1);
+  for (const s of [1, -1]) {
+    bAn(bSc(rot(P(capB(.05, .13), hrL, j.stache, .215, .59, s * .105, 1.05, 1, 1.1), s * (Math.PI / 2 + .3), 0, 0), { k: 'bump', a: .01, f: 30 }), 7, .003);   // swept mustache: thick root, drooping end, a pointed tip
+    bAn(bSc(rot(P(capB(.036, .08), hrL, j.stache, .16, .535, s * .225, 1.05, 1, 1.1), s * (Math.PI / 2 + .75), 0, 0), { k: 'bump', a: .008, f: 30 }), 7, .004);
+    bAn(rot(P(gConeS, hrL, j.stache, .12, .48, s * .268, .05, .09, .05), s * (Math.PI - .64), 0, 0), 7, .005);
+    rot(bSc(P(gConeS, hrD, j.head, .03, .63, s * .21, .06, .13, .08), { k: 'bump', a: .006, f: 30 }), s * 2.2, 0, 0); }
+  rot(bSc(P(gConeH, hrL, j.stache, .175, .515, 0, .1, .13, .12), { k: 'bump', a: .008, f: 28 }), 0, 0, Math.PI + .1);
+  // body: narrow shoulders, a big cream pot belly with a navel, tan back and sides
+  bSc(P(gSphS, sk, j.torso, -.01, .46, 0, .3, .2, .38), { k: 'bump', a: .006, f: 10, mot: .2 });
+  bAn(bSc(P(gSphM, sk, j.torso, -.01, .3, 0, .38, .37, .46), { k: 'bump', a: .006, f: 9, mot: .25 }), 1, .004);
+  bAn(bSc(P(gSphB, be, j.torso, .03, .3, 0, .35, .34, .42), { k: 'bump', a: .003, f: 12, dent: [[.205, .24, 0, .022, .012]] }), 1, .007);
+  // legs: green-tinged thighs, short shins, wide feet with three clawed toes
+  for (const s of [1, -1]) { const L = s > 0 ? j.legL : j.legR, F = s > 0 ? j.footL : j.footR;
+    bSc(P(gSphS, th, L, 0, .14, s * .13, .15, .16, .14), { k: 'bump', a: .005, f: 12 }); P(capB(.045, .05), sk, L, 0, .085, s * .13, 1, 1, 1);
+    bSc(P(gSphS, sk, F, .035, .032, s * .14, .19, .07, .14), { k: 'bump', a: .004, f: 14 });
+    for (const k of [-1, 0, 1]) { const z = s * (.14 + k * .045); P(gSphT, skD, F, .12, .024, z, .07, .045, .04); rot(P(gConeS, cl, F, .165, .02, z, .024, .05, .024), 0, 0, -Math.PI / 2); } }
+  // arms: hang beside the belly; shoulder, elbow (forearm joint), four-fingered hands with pale nails
+  for (const s of [1, -1]) { const A = s > 0 ? j.armL : j.armR, F = s > 0 ? j.foreL : j.foreR;
+    P(gSphS, sk, A, 0, .48, s * .205, .1, .1, .1); rot(P(capB(.042, .1), sk, A, 0, .42, s * .232, 1, 1, 1), s * .3, 0, 0);
+    rot(P(capB(.038, .07), sk, F, .01, .305, s * .272, 1, 1, 1), s * .12, 0, .1);
+    bSc(P(gSphS, sk, F, .02, .24, s * .285, .08, .075, .06), { k: 'bump', a: .003, f: 16 });
+    for (let k = 0; k < 4; k++) { const x = .05 - k * .022, z = s * (.29 + (k === 3 ? -.02 : .012)); P(gSphT, skS, F, x, .2, z, .026, .06, .026); P(gSphT, cl, F, x + .006, .18, z, .016, .016, .016); } }
+  const own = [], mesh = bossBake(rig, buddyMat, own, null, buddyInk, { bones: new Map(J.map((g, i) => [g, i])), aoS: .15 });
+  mesh.frustumCulled = false; mesh.userData.ink.frustumCulled = false; mesh.receiveShadow = true;
+  return { root, J, j, par: J.map(g => J.indexOf(g.parent)), W: J.map(() => new THREE.Matrix4()), mesh, ink: mesh.userData.ink, own,
+    tris: own.reduce((n, g) => n + g.index.count / 3, 0) };
+}
+const _bjT = new THREE.Matrix4();
+function buddyRig(bd) {   // joint matrices: (pose, relative to the rig) x (bind pose)^-1, packed as 3 rows per joint
+  const a = buddyBJ.value;
+  for (let i = 0; i < bd.J.length; i++) { const g = bd.J[i], pi = bd.par[i], o = g.userData.o; g.updateMatrix();
+    if (pi < 0) bd.W[i].copy(g.matrix); else bd.W[i].multiplyMatrices(bd.W[pi], g.matrix);
+    const e = _bjT.copy(bd.W[i]).multiply(_bkM.makeTranslation(-o[0], -o[1], -o[2])).elements;
+    for (let r = 0; r < 3; r++) { const k = i * 12 + r * 4; a[k] = e[r]; a[k + 1] = e[4 + r]; a[k + 2] = e[8 + r]; a[k + 3] = e[12 + r]; } }
+}
+const buddy = Object.assign(buildBuddy(), { on: true, init: false, x: 0, y: 0, face: 1, ph: 0, prev: null, mound: null, lk: [0, 0], blinkT: 2 });
+buddy.root.visible = false; scene.add(buddy.root); buddyRig(buddy);
+// pose: stride while following, tuck in a hop, breathe, glance around (at the hero now and then), blink, twitch brows, ears and mustache.
+// o: { mv: 0..1 walking, air: 0..1 hop, look: yaw bias toward something, lookAmt: glance size, wave: 0..1 right arm up waving, deep: 0..1 buried }
+function poseBuddy(b, dt, o) {
+  const j = b.j, t = VT, R = (g, k, v, r) => { g.rotation[k] = hold(g.rotation[k], v, dt, r || 18); }, s = Math.sin(b.ph), mv = o.mv, air = o.air, br = Math.sin(t * 2.6);
+  const tw = (q, f) => Math.pow(Math.max(0, Math.sin(t * f + q) * Math.sin(t * f * 2.7 + q * 1.7)), 6);   // rare quick twitch
+  R(j.legL, 'z', s * .8 * mv + air * .75); R(j.legR, 'z', -s * .8 * mv + air * .45);
+  R(j.footL, 'z', -Math.max(0, -s) * .6 * mv - air * .55); R(j.footR, 'z', -Math.max(0, s) * .6 * mv - air * .5);
+  R(j.armL, 'z', -s * .7 * mv + br * .04 * (1 - mv)); R(j.armR, 'z', s * .7 * mv - br * .04 * (1 - mv));
+  R(j.armL, 'x', -.12 - air * 1.5 - mv * .1); R(j.armR, 'x', .12 + air * 1.2 + mv * .1 + o.wave * 2.5);
+  R(j.foreL, 'z', .2 + mv * .45 + air * .3); R(j.foreR, 'z', .2 + mv * .45 + air * .5 + o.wave * Math.sin(t * 10) * .55);
+  R(j.torso, 'z', -.13 * mv + air * .08, 12); R(j.torso, 'y', s * .14 * mv, 12); R(j.torso, 'x', br * .015, 8);
+  j.hips.position.y = j.hips.userData.p0.y + Math.abs(Math.cos(b.ph)) * .03 * mv + br * .004;
+  // look around: glances every ~1.6 s, mostly toward o.look; bigger when standing still or stuck in the dirt
+  const gi = Math.floor(t * .62 + 3), gy = (bH(gi, 3, 9) - .5) * 2, gp = (bH(gi, 7, 2) - .5);
+  b.lk[0] = hold(b.lk[0], o.look + gy * o.lookAmt * (1 - mv * .7), dt, 6); b.lk[1] = hold(b.lk[1], gp * .35 * o.lookAmt + air * .15, dt, 6);
+  R(j.head, 'y', b.lk[0], 14); R(j.head, 'z', b.lk[1] + s * .05 * mv, 14); R(j.head, 'x', Math.sin(t * .9) * .06 * (1 - mv) + o.deep * Math.sin(t * 1.7) * .12, 10);
+  j.eyes.position.z = j.eyes.userData.p0.z + Math.max(-1, Math.min(1, (bH(Math.floor(t * 1.9), 1, 5) - .5) * 3)) * .012; R(j.eyes, 'z', gp * .25, 20);
+  b.blinkT -= dt; if (b.blinkT < -.13) b.blinkT = 2.2 + bH(Math.floor(t), 9, 4) * 2.6; j.lids.rotation.z = b.blinkT < 0 ? -1.5 : .75 - air * .25;
+  const sur = air * .02 + tw(1, .5) * .018; for (const [g, q] of [[j.browL, 0], [j.browR, 2.3]]) { g.position.y = g.userData.p0.y + sur + tw(q, .9) * .012 - mv * .006; R(g, 'x', (g === j.browL ? 1 : -1) * (tw(q, .9) * .25 - .08), 20); }
+  R(j.earL, 'x', tw(.7, 1.3) * .5 + air * .3 + s * .08 * mv, 24); R(j.earR, 'x', -tw(2.9, 1.1) * .5 - air * .3 - s * .08 * mv, 24);
+  R(j.stache, 'z', tw(5, .8) * .12 + Math.sin(t * 7) * .02 * tw(5, .8), 24); j.stache.position.y = j.stache.userData.p0.y + tw(5, .8) * .008;
+  buddyMat.userData.U.uAn.value.x = br; buddyRig(b);
+}
+// dev-only preview (off by default): ?buddyprev=scale|dome|buried (or 1 to cycle) or __jr.buddyPrev(mode) poses him next to mudbot,
+// standing waist-deep in the soil of mudbot's head dome, or buried to the chin there. It only moves the buddy (parented to the hero's head
+// group while previewing); no game state, no hero model change, no hatch behaviour.
+const BPREV = ['scale', 'dome', 'buried'], bpq = qs.get('buddyprev'); buddy.prev = bpq ? (BPREV.includes(bpq) ? bpq : 'cycle') : null;
+function buddyMound() {   // a soil mound the same colour/finish as the dome's heap, made once on first preview
+  if (buddy.mound) return buddy.mound; const geo = new THREE.IcosahedronGeometry(.5, 2), p = geo.attributes.position;
+  for (let i = 0; i < p.count; i++) { const k = .85 + (Math.sin(p.getX(i) * 31 + p.getZ(i) * 17) * .5 + .5) * .3; p.setXYZ(i, p.getX(i) * k, p.getY(i) * k, p.getZ(i) * k); } geo.computeVertexNormals();
+  buddy.mound = new THREE.Mesh(geo, MS('#492f29', 1, 0, 0, true)); buddy.mound.visible = false; return buddy.mound;
+}
+function previewBuddy(p, dt, mode) {
+  const b = buddy, m = buddyMound();
+  if (mode === 'scale') { if (b.root.parent !== scene) scene.add(b.root); m.visible = false;
+    b.root.position.set(X(p.x) + 2.3, Math.max(0, Y(p.y)), .5); b.root.rotation.set(0, -Math.PI / 2 - .55, 0); b.root.scale.setScalar(BUDDY_H);
+    poseBuddy(b, dt, { mv: 0, air: 0, look: -.5, lookAmt: .6, wave: 0, deep: 0 }); }
+  else { const deep = mode === 'buried', hs = BUDDY_H / HS; if (b.root.parent !== pl.head) pl.head.add(b.root); if (m.parent !== pl.head) pl.head.add(m);
+    b.root.position.set(.4, deep ? .08 : .17, 0); b.root.rotation.set(0, 0, 0); b.root.scale.setScalar(hs);   // in front of the seedling, nose clear of the glass
+    m.visible = true; m.position.set(.38, deep ? .45 : .4, 0); m.scale.set(deep ? .8 : .7, deep ? .3 : .17, deep ? .9 : .8);   // waist-deep / buried to the chin
+    poseBuddy(b, dt, { mv: 0, air: 0, look: 0, lookAmt: deep ? 1.3 : .9, wave: Math.max(0, Math.sin(VT * .9)) > .8 ? 1 : 0, deep: deep ? 1 : 0 }); }
+  b.root.visible = true;
+}
 function syncBuddy(p, dt) {
-  const b = buddy; if (!b.on || !p || G.state === 'title') { b.root.visible = false; b.init = false; return; }
+  const b = buddy; if (!b.on || !p || G.state === 'title') { b.root.visible = false; b.init = false; if (b.mound) b.mound.visible = false; return; }
+  if (b.prev) { previewBuddy(p, dt, b.prev === 'cycle' ? BPREV[Math.floor(VT / 6) % 3] : b.prev); return; }
+  if (b.root.parent !== scene) { scene.add(b.root); b.root.rotation.set(0, b.face > 0 ? -.62 : Math.PI + .62, 0); } if (b.mound) b.mound.visible = false;
   const tx = X(p.x) - p.face * 1.9, ty = Math.max(0, Y(p.y)) * .55;   // a step behind the hero; half-height hops when the hero jumps
   if (!b.init || Math.abs(tx - b.x) > 8) { b.x = tx; b.y = ty; b.init = true; }   // first frame, respawn or room change: appear in place
   b.x = hold(b.x, tx, dt, 3.2); b.y = hold(b.y, ty, dt, 5);
   const gap = Math.abs(tx - b.x); b.ph += dt * (5 + gap * 4);
   if (gap > .25) b.face = tx > b.x ? 1 : -1; else b.face = p.face;
-  const hop = b.y < .05 ? Math.abs(Math.sin(b.ph)) * Math.min(.3, gap * .3) : 0, br = 1 + Math.sin(VT * 2.6) * .025;
-  b.root.visible = true; b.root.position.set(b.x, b.y + hop, -.7);
-  b.root.rotation.y = Math.atan2(camera.position.x - b.x, camera.position.z + .7);
-  b.mesh.scale.set(BUDDY_W * b.face * BUDDY_ART_FACE, BUDDY_H * br, 1);
+  const hop = b.y < .05 ? Math.abs(Math.sin(b.ph)) * Math.min(.3, gap * .3) : 0;
+  b.root.visible = true; b.root.position.set(b.x, b.y + hop, -.7); b.root.scale.setScalar(BUDDY_H);
+  b.root.rotation.y = hold(b.root.rotation.y, b.face > 0 ? -.62 : Math.PI + .62, dt, 10);   // 3/4 view like the hero
+  const mv = Math.min(1, gap / .9), air = Math.min(1, Math.max(0, b.y - .05) * 1.2 + hop * 2);
+  poseBuddy(b, dt, { mv, air, look: (Math.abs(X(p.x) - b.x) > .3 ? .25 : 0), lookAmt: .55, wave: 0, deep: 0 });
 }
 pl.sq = 0; pl.tailB = 0; pl.dustT = 0; pl.wasAir = false; pl.wasGround = true; pl.vyMax = 0; pl.wasDead = false; pl.lastInv = 0; pl.lastLives = -1; pl.lastRoom = -1; pl.runPh = 0; pl.hurtT = 0; pl.smokeT = 0; pl.lid = .13; pl.slant = 0;
 const Z_BACK = -6, Z_FRONT = 9;
@@ -1835,7 +1978,11 @@ window.__jr = { G, keys, genWorld, update, render, press(k, d) { if (k === 'bloc
   fingerprint(seed) { return JSON.stringify(genWorld(seed).rooms); }, startRun, setSeed, ROOMS, TREASURES, GY, enterRoom, hurtBoss, isLocked, nextBoss, BOSS_ROOMS, BOSS_DEF,
   setQuality, quality: () => QL().name, harm, BEST_KEY, STAM_MAX, TUNE, setBlockMode, blockMode: () => blockMode, wantBlock, blockReady: () => !!(G.p && blockReady(G.p)),
   shieldView: () => { const w = shield.root.getWorldPosition(new THREE.Vector3()); return { parent: shield.root.parent === pl.bod ? 'hero' : 'ground', visible: shield.root.visible, e: pl.shE || 0, x: w.x, y: w.y, z: w.z, heroX: G.p ? X(G.p.x) : null, glow: shield.glowM.emissiveIntensity, halo: shield.haloM.opacity }; },
-  buddy: () => ({ on: buddy.on, visible: buddy.root.visible, x: buddy.root.position.x, y: buddy.root.position.y, face: buddy.face, heroX: G.p ? X(G.p.x) : null }), photo(o) { photoCam = o || null; },
+  buddy: () => { let meshes = 0; buddy.root.traverse(o => { if (o.isMesh) meshes++; }); const j = buddy.j;
+    return { on: buddy.on, visible: buddy.root.visible, x: buddy.root.position.x, y: buddy.root.position.y, face: buddy.face, heroX: G.p ? X(G.p.x) : null,
+      is3d: !!buddy.mesh.isMesh && !!buddy.mesh.geometry.attributes.aBone, meshes, joints: buddy.J.length, tris: buddy.tris, mainTris: buddy.mesh.geometry.index.count / 3, h: buddy.root.scale.y,
+      legL: j.legL.rotation.z, legR: j.legR.rotation.z, armL: j.armL.rotation.z, head: j.head.rotation.y, lids: j.lids.rotation.z, prev: buddy.prev }; },
+  buddyPrev(m) { buddy.prev = m || null; return buddy.prev; }, photo(o) { photoCam = o || null; },
   mats: () => ({ all: allMats.size, cached: Object.keys(matCache).length }), endLockMs: END_LOCK,
   info: () => renderer ? { calls: renderer.info.render.calls, tris: renderer.info.render.triangles, fps, rev: THREE.REVISION, quality: QL().name } : null };
 })();
