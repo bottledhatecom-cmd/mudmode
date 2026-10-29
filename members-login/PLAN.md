@@ -24,7 +24,7 @@ Members are buyers of both of these products:
 3. Cloudflare: free account signup, then `npx wrangler login`.
 4. Secret, by name only: `wrangler secret put MEMBERS_SESSION_SECRET`, with 32+ random characters → [SECRET OMITTED]. No other secrets are needed, because the verify API needs no OAuth.
 5. Rate limit: add the `[[ratelimits]]` binding `RATE_LIMITER` (about 10 per minute per IP, commented in wrangler.toml), or a WAF rate-limit rule. Without it the worker runs unlimited (TODO).
-6. Pick the worker origin (for example `members-api.mudmodecrew.com`, which needs a DNS decision, or `*.workers.dev`). Replace `https://WORKER-ORIGIN-TBD` in members.html (CSP) and members-login.js.
+6. Worker origin chosen (t23u b): `https://mudmode-members.bottledhate-com.workers.dev` (worker `mudmode-members` on account subdomain `bottledhate-com.workers.dev`). Set in members.html (CSP) and members-login.js.
 7. `wrangler deploy`, then merge the site PR.
 
 ## Redteam scope (hand to the redteam bot with a scope card)
@@ -82,5 +82,5 @@ Live repo (not hub, needs a site PR and the Brief + license OK):
 
 ## Files
 - `worker/worker.js`, `worker/wrangler.toml`
-- `site/members.html` (only this page's CSP changed: `connect-src 'self' https://WORKER-ORIGIN-TBD`), `site/members-login.js`
+- `site/members.html` (only this page's CSP changed: `connect-src 'self' https://mudmode-members.bottledhate-com.workers.dev`), `site/members-login.js`
 - `tests/worker.test.mjs`: run with `node tests/worker.test.mjs` (plain node, mocked fetch)

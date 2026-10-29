@@ -1,8 +1,10 @@
 # DRAFT, not deployed. Placeholder names only. No secrets in this file.
-name = "mudmode-members-TBD"
+name = "mudmode-members"
+workers_dev = true
+# account_id is not stored here; wrangler login picks the account.
 main = "worker.js"
 compatibility_date = "2026-10-01"
-# route = { pattern = "members-api.mudmodecrew.com", custom_domain = true }   # TBD, needs DNS decision + OK
+# Origin: https://mudmode-members.bottledhate-com.workers.dev (workers.dev). No custom route.
 
 [vars]
 ALLOWED_ORIGIN = "https://mudmodecrew.com"
