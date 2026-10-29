@@ -932,21 +932,51 @@ function buildBoss3(g, skins) {   // stacked stone golem: head slab with a sapli
    Room geometry: ground plane (vertex colours + gentle displacement outside the lane), strata dirt box, back bank with hills, instanced foliage. */
 const roomGroup = new THREE.Group(); scene.add(roomGroup);
 const pl = buildHero(); pl.root.visible = false; scene.add(pl.root);
-// physical shield (plan items 1-3, 8, 9): a round wooden shield with a copper rim and a steel boss, built in code (no art file).
+// physical shield (plan items 1-3, 8, 9). Look (Michael t31u): something a robot would build from scrap. Built in code (no art file):
+// mismatched steel / rust / galvanized plates (one instanced mesh), hex bolts, a bent uneven hoop, a pipe-cap boss and weld beads.
 // It hangs on the hero's back, swings round his right side to the front when he blocks, and lies on the ground when dropped.
-// A tight cool glow hugs the rim and the face; its brightness follows his stamina (TUNE.GLOW_MIN at empty .. GLOW_MAX at full).
+// A tight cool glow runs along the bent hoop and the weld beads, plus a ring card behind; its brightness follows his stamina
+// (TUNE.GLOW_MIN at empty .. GLOW_MAX at full). Look only: no gameplay number lives here. About 8 draw calls, low poly (fine on ?q=low).
 function buildShield() {
   const root = new THREE.Group(), face = new THREE.Group(); root.add(face);       // the face points along local +x
-  const board = new THREE.CylinderGeometry(.6, .6, .09, 22); board.rotateZ(Math.PI / 2);
-  const rimG = new THREE.TorusGeometry(.6, .055, 6, 30); rimG.rotateY(Math.PI / 2);
-  const glowM = reg(new THREE.MeshStandardMaterial({ color: '#bf5c40', emissive: '#9fe3ff', emissiveIntensity: 1, roughness: .4, metalness: .2 }));
-  mk(board, MS('#7a5233', .85, 0), 0, 0, 0, 1, 1, 1, face);
-  for (const z of [-.3, 0, .3]) mk(gBox, MS('#5e3d25', .9, 0), .047, 0, z, .01, 1.08 - Math.abs(z) * .9, .025, face, true);   // plank seams
-  mk(rimG, glowM, 0, 0, 0, 1, 1, 1, face, true);
-  mk(gBox, MS('#bf5c40', .5, .12), .055, 0, 0, .03, 1.1, .12, face, true); mk(gBox, MS('#bf5c40', .5, .12), .055, 0, 0, .03, .12, 1.1, face, true);   // copper cross straps
-  const boss = new THREE.SphereGeometry(.17, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2); boss.rotateZ(-Math.PI / 2);
-  mk(boss, MS('#9a9a92', .35, .35), .05, 0, 0, 1, 1, 1, face, true);
-  // tight glow: a ring-shaped glow card just behind the board, so it hugs the rim (texRing peaks at the rim radius)
+  const glowM = reg(new THREE.MeshStandardMaterial({ color: '#8b9096', emissive: '#9fe3ff', emissiveIntensity: 1, roughness: .45, metalness: .5, flatShading: true }));
+  const dm = new THREE.Object3D(), inst = (geo, mat, list, colors, shadow) => {   // list: [x, y, z, sx, sy, sz, rx, ry, rz]
+    const m = new THREE.InstancedMesh(geo, mat, list.length);
+    list.forEach((t, i) => { dm.position.set(t[0], t[1], t[2]); dm.scale.set(t[3], t[4], t[5]); dm.rotation.set(t[6] || 0, t[7] || 0, t[8] || 0); dm.updateMatrix(); m.setMatrixAt(i, dm.matrix); if (colors) m.setColorAt(i, new THREE.Color(colors[i])); });
+    m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; m.castShadow = m.receiveShadow = !!shadow; face.add(m); return m; };
+  // scrap plates: different metals, a little crooked, stacked at slightly different depths so they overlap like patches
+  const plates = [
+    [0,    0,    0,    .07, .84, .74,  0,   0,   0  ],   // backing sheet (worn steel)
+    [.03,  .25, -.23,  .05, .46, .44,  .14, .04, 0  ],   // rusty patch, upper left
+    [.034,-.25,  .22,  .05, .48, .44, -.1, -.03, .03],   // dark steel, lower right
+    [.027, .28,  .24,  .04, .36, .38, -.2,  0,  -.04],   // galvanized scrap, upper right
+    [.032,-.27, -.21,  .045,.42, .4,   .09, .03, .02],   // orange rust, lower left
+    [.052, .01,  .0,   .03, .13, .92,  .05, 0,   0  ]];  // steel bar riveted across the middle
+  inst(gBox, reg(new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: .62, metalness: .18, flatShading: true })), plates,
+    ['#9aa1a8', '#b05a30', '#6d747b', '#c9c4ae', '#cf7536', '#7f878e'], true);
+  // hex bolts / rivets on the plate corners and along the bar
+  const boltG = new THREE.CylinderGeometry(.034, .038, .03, 6); boltG.rotateZ(Math.PI / 2);
+  const bolts = [[.07, .44, -.4], [.07, .07, -.06], [.068, .45, .07], [.07, .1, .4], [.075, -.06, -.07], [.074, -.44, .41], [.075, -.08, .41],
+    [.066, -.45, -.38], [.066, -.1, -.39], [.075, .02, -.36], [.075, .02, .36], [.075, .02, .12], [.075, .02, -.12], [.06, .43, -.03]];
+  inst(boltG, MS('#5d6266', .45, .35, 0, true), bolts.map(b => [b[0], b[1], b[2], 1, 1, 1, (b[1] * 7 + b[2] * 5) % 1]), null, false);
+  // weld beads along two seams (they carry the stamina glow)
+  const beadG = new THREE.SphereGeometry(.5, 6, 4), beads = [];
+  for (let i = 0; i < 7; i++) beads.push([.05, -.02 - i * .062, .015 + Math.sin(i * 2.3) * .02, .05, .045, .07, 0, 0, i * .7]);   // vertical seam, lower half
+  for (let i = 0; i < 6; i++) beads.push([.045, .07 + Math.sin(i * 1.9) * .015, -.38 + i * .062, .045, .07, .05, 0, 0, i * .9]); // short seam, upper left
+  inst(beadG, glowM, beads, null, false);
+  // bent hoop: a 9-sided square-section ring, pushed in and out and bowed so it looks hammered from scrap
+  const rimG = new THREE.TorusGeometry(.58, .045, 4, 9); rimG.rotateY(Math.PI / 2); rimG.rotateX(.2);
+  { const pa = rimG.attributes.position, v = new THREE.Vector3();
+    for (let i = 0; i < pa.count; i++) { v.fromBufferAttribute(pa, i); const a = Math.atan2(v.y, v.z), f = 1 + .055 * Math.sin(3 * a + 1) + .03 * Math.sin(5 * a + 2);
+      pa.setXYZ(i, v.x + .04 * Math.sin(2 * a + .5), v.y * f, v.z * f); }
+    rimG.computeVertexNormals(); }
+  mk(rimG, glowM, .01, 0, 0, 1, 1, 1, face, true);
+  // pipe-cap boss with a brass nut, and a pipe handle on the back
+  const capGeo = new THREE.CylinderGeometry(.13, .16, .07, 8); capGeo.rotateZ(-Math.PI / 2);
+  mk(capGeo, MS('#565b60', .45, .35, 0, true), .085, .01, 0, 1, 1, 1, face, true);
+  mk(boltG, MS('#d39a4a', .4, .35, 0, true), .13, .01, 0, 1.6, 1.6, 1.6, face, true).rotation.x = .3;
+  mk(gBox, MS('#2e2b28', .6, .5), -.07, 0, 0, .04, .5, .07, face, true);
+  // tight glow: a ring-shaped glow card just behind the plates, so it hugs the hoop (texRing peaks at the hoop radius)
   const texRing = mkTex(64, 64, (c, w) => { const r = c.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, 'rgba(255,255,255,0)'); r.addColorStop(.58, 'rgba(255,255,255,0)'); r.addColorStop(.72, 'rgba(255,255,255,1)'); r.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = r; c.fillRect(0, 0, w, w); });
   const haloM = reg(new THREE.MeshBasicMaterial({ map: texRing, color: '#9fe3ff', transparent: true, opacity: .6, depthWrite: false, fog: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }));
   const halo = new THREE.Mesh(gQuad, haloM); halo.rotation.y = Math.PI / 2; halo.position.x = -.06; halo.scale.set(1.7, 1.7, 1); halo.renderOrder = 5; face.add(halo);
