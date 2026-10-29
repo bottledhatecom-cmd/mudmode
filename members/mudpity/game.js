@@ -43,8 +43,32 @@ const TUNE = {
     totem: 2.0, shockwave: 1.0, totemBall: 0.9      // boss 3 (MUDTOTEM)
   },
   GLOW_MIN: 0.08,              // shield glow brightness at empty stamina
-  GLOW_MAX: 1.0                // shield glow brightness at full stamina
+  GLOW_MAX: 1.0,               // shield glow brightness at full stamina
+  /* grappling hook (Michael t28u-t32u): left click or the phone hook button fires it; tap = zip to the anchor, hold = swing on the
+     rope; it grabs any wall or ledge and pulls loot and mobs. Free to use, no stamina; the cooldown is the reel-in: he can fire again once the hook is back in his hand (Michael t39u). PLAYTEST DEFAULTS until Michael sets them. */
+  HOOK: {
+    RANGE: 130,                // px: furthest the hook reaches
+    FLY_SPEED: 650,            // px/s the hook head flies out
+    REEL_SPEED: 200,           // px/s he reels the hook back in after a zip, a swing let-go, a pull or a miss (that is the cooldown)
+    TAP_TIME: 0.2,             // seconds: let go before this = tap (zip); still held at this point = hold (swing)
+    ZIP_SPEED: 260,            // px/s he zips to the anchor
+    ZIP_EXIT: 40,              // px/s he carries on with at the end of a zip
+    ZIP_MAX_T: 1.2,            // a zip never lasts longer than this (seconds)
+    ROPE_MIN: 24,              // px: shortest rope while swinging
+    ROPE_MAX: 110,             // px: longest rope while swinging
+    ROPE_REEL: 0.9,            // the rope reels in to this x the distance when the swing starts (lifts him off the ground)
+    SWING_PUMP: 140,           // px/s^2 left / right push while swinging
+    SWING_MAX: 230,            // px/s top speed on the rope
+    PULL_LOOT_SPEED: 170,      // px/s loot is reeled in to him
+    PULL_MOB_SPEED: 90,        // px/s a mob is dragged toward him
+    PULL_MOB_T: 0.9,           // seconds a mob drag lasts at most
+    MOB_STOP: 18,              // px: a dragged mob stops this far from him (so the pull itself never bites)
+    AIM_UP: 55,                // degrees above his facing direction for a plain shot (walls, canopy)
+    CONE: 60,                  // degrees: loot and mobs inside this cone in front of him get the hook first
+    CEIL_Y: 28                 // px: the canopy branches overhead (where the vines hang) count as a ledge
+  }
 };
+const HK = TUNE.HOOK;
 const STAM_MAX = TUNE.STAM_MAX, FORCE = TUNE.FORCE;
 const BLOCK_MODE_KEY = 'mudpity-block-mode';   // the player's press / hold choice, stored on this device only
 const BEST_KEY = s => 'mudpity-best-v2:' + s;   // new best-score key: the shield changes scoring, so old bests stay under their old key
@@ -109,7 +133,7 @@ const qs=new URLSearchParams(location.search);
 const G={state:'title', seed:(qs.get('seed')||'mud').slice(0,24), world:null, t:0, timeLeft:TIME, lives:LIVES, score:0,
   got:new Set(), bosses:{}, burst:[], winT:0, drop:null, blocks:0, lastBlock:null, allGems:false, room:0, p:null, rs:null, result:'', msg:'', msgT:0, best:0};
 try{ G.best=+localStorage.getItem(BEST_KEY(G.seed))||0; }catch(e){}
-const keys={left:false,right:false,jump:false,block:false}; let jumpQ=0;
+const keys={left:false,right:false,jump:false,block:false,hook:false}; let jumpQ=0;
 /* block input: 'press' toggles the block on and off, 'hold' blocks while the key / button is down */
 let blockMode=TUNE.BLOCK_MODE_DEFAULT, blockLatch=false;
 try{ const m=localStorage.getItem(BLOCK_MODE_KEY); if(m==='press'||m==='hold') blockMode=m; }catch(e){}
@@ -118,14 +142,14 @@ function blockInput(down){ if(blockMode==='hold') keys.block=!!down; else if(dow
 const wantBlock=()=>blockMode==='hold'?keys.block:blockLatch;
 G.world=genWorld(G.seed);
 
-function newPlayer(x){return {x,y:GY,vx:0,vy:0,face:1,onGround:true,coyote:0,vine:null,vs:1,grabCd:0,kick:0,inv:0,dead:0,step:0,stam:STAM_MAX,react:0,binv:0,shield:true,blocking:false,blk:0,chip:0,regenT:0};}
+function newPlayer(x){return {x,y:GY,vx:0,vy:0,face:1,onGround:true,coyote:0,vine:null,vs:1,grabCd:0,kick:0,inv:0,dead:0,step:0,stam:STAM_MAX,react:0,binv:0,shield:true,blocking:false,blk:0,chip:0,regenT:0,hook:null};}
 function startRun(){
   G.world=genWorld(G.seed); G.t=0; G.timeLeft=TIME; G.lives=LIVES; G.score=0; G.got=new Set(); G.result='';
   G.bosses={}; G.winT=0; G.burst=[]; G.allGems=false; G.drop=null; G.blocks=0; G.lastBlock=null; blockLatch=false; keys.block=false;
   G.state='play'; enterRoom(0,null); sfx(520,.08);
 }
 function enterRoom(i,from){
-  G.room=i; const room=G.world.rooms[i];
+  G.room=i; const room=G.world.rooms[i]; if(G.p) hookClear(G.p);
   const sx = from==='L'?14 : from==='R'?W-14 : 22;
   G.rs={spawn:sx, logs:[], logT:1.2, rng:mulberry(hash(G.seed+'|run|'+i)), crawlers:room.crawlers.map((c,k)=>({x:c.cx,d:k%2?1:-1}))};
   G.burst=[]; rs_boss();
@@ -149,7 +173,7 @@ function sfx(f,d,type){ try{ if(!ac){ac=new (window.AudioContext||window.webkitA
 
 function loseLife(why){
   const p=G.p; if(p.dead>0) return;
-  p.dead=0.8; p.vine=null; p.chip=0; G.lives--; G.msg=why; G.msgT=1.2; sfx(110,.35,'sawtooth');
+  p.dead=0.8; p.vine=null; hookClear(p); p.chip=0; G.lives--; G.msg=why; G.msgT=1.2; sfx(110,.35,'sawtooth');
 }
 /* shield (plan items 3-10). A hit from a projectile, a physical attack or a log:
    - blocking with the shield in front: stamina drops by force x BLOCK_COST_PER_FORCE and he is shoved by the force of the hit;
@@ -162,7 +186,7 @@ function harm(why,sx,force){
   const f=force===undefined?1:Math.max(0,force);
   if(!blockReady(p)){ loseLife(why); return; }
   const d=(sx===undefined||sx===p.x)?-p.face:(p.x<sx?-1:1);
-  p.vine=null; p.grabCd=0.3; p.kick=0; p.vx=d*TUNE.REACT_VX_PER_FORCE*f; p.vy=-TUNE.REACT_VY_PER_FORCE*f; if(p.vy<0) p.onGround=false; p.coyote=0;
+  p.vine=null; hookClear(p); p.grabCd=0.3; p.kick=0; p.vx=d*TUNE.REACT_VX_PER_FORCE*f; p.vy=-TUNE.REACT_VY_PER_FORCE*f; if(p.vy<0) p.onGround=false; p.coyote=0;
   p.react=Math.min(TUNE.REACT_T_MAX,TUNE.REACT_T_PER_FORCE*f); p.binv=TUNE.BLOCK_INV; jumpQ=0;
   G.blocks++; G.lastBlock={why,force:f,hand:!p.shield,cost:p.shield?f*TUNE.BLOCK_COST_PER_FORCE:0};
   if(p.shield){
@@ -200,7 +224,7 @@ function update(dt){
   // stamina refills slowly on its own (a short pause after each block)
   if(p.regenT>0) p.regenT-=dt; else p.stam=Math.min(STAM_MAX,p.stam+TUNE.REGEN_PER_SEC*dt);
   // block input: blk counts how long the block has been up (the shield has to come round from his back first)
-  p.blocking=wantBlock()&&!p.vine&&p.dead<=0; p.blk=p.blocking?p.blk+dt:0;
+  p.blocking=wantBlock()&&!p.vine&&!hookRiding(p)&&p.dead<=0; p.blk=p.blocking?p.blk+dt:0;
   if(G.winT>0){ G.winT-=dt; if(G.winT<=0){ endRun('win'); return; } }
 
   // dying: wait then respawn or end
@@ -214,6 +238,7 @@ function update(dt){
   }
 
   const ax=(keys.right?1:0)-(keys.left?1:0);
+  hookStep(p,room,dt);
   if(p.vine){
     const v=p.vine, pt=vinePt(v,G.t,p.vs);
     p.x=pt.x; p.y=pt.y+14; p.vx=0; p.vy=0; p.onGround=false;
@@ -223,6 +248,8 @@ function update(dt){
       p.vx=Math.max(-150,Math.min(150,r*w*Math.cos(a)))+ax*15; p.vy=-r*w*Math.sin(a)-70;
       p.vine=null; p.grabCd=0.35; p.kick=0.8; sfx(660,.07);
     }
+  } else if(hookRide(p,room,dt,ax)){
+    // on the hook rope: hookRide moved him (zip or swing)
   } else {
     if(p.onGround) p.coyote=0.08; else if(p.coyote>0) p.coyote-=dt;
     if(ax) p.face=ax;
@@ -285,10 +312,110 @@ function stepWorld(room,rs,dt){
   }
   for(let i=rs.logs.length-1;i>=0;i--){ const l=rs.logs[i]; l.x-=l.sp*dt; l.rot+=dt*l.sp/7;
     if(l.x<-10 || holeAt(room,l.x)) rs.logs.splice(i,1); }
-  room.crawlers.forEach((cr,k)=>{ const s=rs.crawlers[k]; s.x+=s.d*cr.sp*dt;
+  room.crawlers.forEach((cr,k)=>{ const s=rs.crawlers[k];
+    if(s.drag) return;                                                        // being dragged by the hook
+    if(s.off){ const lo=cr.cx-cr.range, hi=cr.cx+cr.range; s.d=s.x>hi?-1:s.x<lo?1:s.d; s.x+=s.d*cr.sp*dt; if(s.x>=lo&&s.x<=hi) s.off=false; return; }   // walks back to its beat after a drag
+    s.x+=s.d*cr.sp*dt;
     if(s.x>cr.cx+cr.range){s.x=cr.cx+cr.range;s.d=-1;} if(s.x<cr.cx-cr.range){s.x=cr.cx-cr.range;s.d=1;} });
 }
 
+
+/* ---------- grappling hook (Michael t28u-t32u; numbers in TUNE.HOOK) ----------
+   Aim: the game aims by facing (no mouse aim), so the hook goes out in front of him. First choice: a mob or loot inside the cone
+   in front; then the far ledge of a pit ahead; then a wall ahead (the outer trunks, or a locked boss arena's sides); then the
+   canopy branches overhead along an AIM_UP shot. Nothing in range = a miss (the hook flies out and he reels it back in, so a miss still costs the reel-in).
+   Bosses are too heavy: the hook clinks off them. Phases: fly -> latch (wall / ledge) -> zip or swing; fly -> reel (loot);
+   fly -> drag (mob); back = coming home. */
+const hookRiding=p=>!!(p.hook&&(p.hook.ph==='zip'||p.hook.ph==='swing'));
+function hookClear(p){ const h=p.hook; if(h&&h.ref&&h.ref.drag){ h.ref.drag=false; h.ref.off=true; } p.hook=null; }
+function hookAim(p,room,rs){
+  const hx=p.x, hy=p.y-14, f=p.face, R=HK.RANGE, cone=HK.CONE*Math.PI/180;
+  const inCone=(x,y)=>{ const dx=(x-hx)*f, dy=y-hy, d=Math.hypot(dx,dy); return (dx>2&&d<=R&&Math.abs(Math.atan2(dy,dx))<=cone)?d:-1; };
+  let best=null, bd=1e9; const take=(d,o)=>{ if(d>=0&&d<bd){ bd=d; best=o; } };
+  rs.crawlers.forEach(c=>take(inCone(c.x,GY-4),{kind:'mob',ref:c,x:c.x,y:GY-4}));
+  const b=rs.boss; if(b&&!b.dead){ const by=b.kind==='boss2'?b.y:GY-20; take(inCone(b.x,by),{kind:'boss',ref:b,x:b.x,y:by}); }
+  if(best) return best;
+  const tr=room.treasure; if(tr&&!G.got.has(gid(room.i))) take(inCone(tr.x,tr.y),{kind:'loot',ref:tr,x:tr.x,y:tr.y});
+  for(const g of G.burst) take(inCone(g.x,g.y),{kind:'loot',ref:g,x:g.x,y:g.y});
+  if(best) return best;
+  for(const h of room.holes){ const lx=f>0?h.x1:h.x0, dx=(lx-hx)*f, d=Math.hypot(lx-hx,GY-hy); if(dx>2&&d<=R) take(d,{kind:'ledge',x:lx,y:GY}); }
+  if(best) return best;
+  const lock=isLocked(), wx=f>0?((lock||G.room===ROOMS-1)?W:null):((lock||G.room===0)?0:null);
+  if(wx!==null&&Math.abs(wx-hx)<=R) return {kind:'wall',x:wx,y:Math.max(HK.CEIL_Y+4,Math.min(GY-6,hy-10))};
+  const a=HK.AIM_UP*Math.PI/180, up=hy-HK.CEIL_Y, dc=up/Math.sin(a);
+  if(up>0&&dc<=R) return {kind:'ceil',x:hx+f*up/Math.tan(a),y:HK.CEIL_Y};
+  return {kind:'miss',x:hx+f*Math.cos(a)*R,y:hy-Math.sin(a)*R};
+}
+function hookInput(down){
+  keys.hook=!!down; const p=G.p;
+  if(!down){ if(p&&p.hook) p.hook.held=false; return; }
+  if(G.state!=='play'||!p||p.dead>0||p.vine||p.hook||p.react>0){ G.hookNo=(G.hookNo||0)+1; return; }
+  const a=hookAim(p,G.world.rooms[G.room],G.rs); G.hookShots=(G.hookShots||0)+1;
+  p.hook={ph:'fly',kind:a.kind,ref:a.ref||null,tx:a.x,ty:a.y,hx:p.x,hy:p.y-14,held:true,ht:0,t:0,f:p.face,L:0}; sfx(820,.05,'triangle');
+}
+function hookBack(h){ h.ph='back'; h.held=false; h.d0=null; h.bt=0; sfx(1100,.03,'square'); }   // the reel-in starts: no new shot until the head is back in his hand
+function hookMoveHead(h,x,y,sp,dt){ const dx=x-h.hx, dy=y-h.hy, d=Math.hypot(dx,dy), st=sp*dt; if(d<=st){ h.hx=x; h.hy=y; return true; } h.hx+=dx/d*st; h.hy+=dy/d*st; return false; }
+function hookStep(p,room,dt){
+  const h=p.hook; if(!h) return; h.t+=dt; if(h.held) h.ht+=dt; h.ox=h.hx; h.oy=h.hy;
+  const hx=p.x, hy=p.y-14;
+  if(h.ph==='fly'){
+    if(h.kind==='mob'){ h.tx=h.ref.x; }
+    if(h.kind==='loot'){ h.tx=h.ref.x; h.ty=h.ref.y; }
+    if(!hookMoveHead(h,h.tx,h.ty,HK.FLY_SPEED,dt)) return;
+    if(h.kind==='miss'){ hookBack(h); }
+    else if(h.kind==='boss'){ hookBack(h); G.msg='too heavy to pull'; G.msgT=.7; sfx(240,.06,'square'); }
+    else if(h.kind==='loot'){ h.ph='reel'; sfx(900,.05,'triangle'); }
+    else if(h.kind==='mob'){ h.ph='drag'; h.t=0; h.ref.drag=true; sfx(300,.08,'sawtooth'); }
+    else { h.ph='latch'; sfx(520,.05,'square'); }
+  }
+  if(h.ph==='latch'){
+    if(!h.held){   // tap: zip to the anchor (feet target)
+      h.ph='zip'; h.t=0;
+      if(h.kind==='ledge'){ h.zx=h.tx+h.f*6; h.zy=GY; } else if(h.kind==='wall'){ h.zx=h.tx-h.f*6; h.zy=Math.min(GY,h.ty+14); } else { h.zx=h.tx; h.zy=h.ty+20; }
+    } else if(h.ht>=HK.TAP_TIME){   // hold: swing on the rope
+      h.ph='swing'; h.L=Math.max(HK.ROPE_MIN,Math.min(HK.ROPE_MAX,Math.hypot(hx-h.tx,hy-h.ty)*HK.ROPE_REEL)); p.onGround=false;
+    }
+    return;
+  }
+  if(h.ph==='reel'){
+    const g=h.ref, gone=g===room.treasure?G.got.has(gid(room.i)):!G.burst.includes(g);
+    if(gone){ hookBack(h); return; }
+    const home=hookMoveHead(h,hx,hy,HK.PULL_LOOT_SPEED,dt); g.x=h.hx; g.y=h.hy;
+    if(home||Math.hypot(h.hx-hx,h.hy-hy)<8){ g.x=p.x; g.y=p.y-12; p.hook=null; G.hookBacks=(G.hookBacks||0)+1; sfx(1400,.04,'square'); }   // lands on him: the normal pickup takes it
+    return;
+  }
+  if(h.ph==='drag'){
+    const c=h.ref, dx=p.x-c.x;
+    if(Math.abs(dx)<=HK.MOB_STOP||h.t>HK.PULL_MOB_T){ c.drag=false; c.off=true; hookBack(h); return; }
+    c.x+=Math.sign(dx)*Math.min(Math.abs(dx)-HK.MOB_STOP,HK.PULL_MOB_SPEED*dt); h.hx=c.x; h.hy=GY-4; return;
+  }
+  if(h.ph==='back'){ if(h.d0==null) h.d0=Math.max(1,Math.hypot(h.hx-hx,h.hy-hy)); h.bt+=dt; if(hookMoveHead(h,hx,hy,HK.REEL_SPEED,dt)){ p.hook=null; G.hookBacks=(G.hookBacks||0)+1; sfx(1400,.04,'square'); } }   // clank: back in his hand
+}
+/* zip and swing move him (in place of running); returns false when he is not on the rope */
+function hookRide(p,room,dt,ax){
+  const h=p.hook; if(!hookRiding(p)) return false;
+  if(jumpQ>0){ jumpQ=0; hookBack(h); p.grabCd=0.35; if(h.ph==='swing') p.vy-=70; sfx(660,.07); return true; }   // jump lets go too
+  if(h.ph==='zip'){
+    const dx=h.zx-p.x, dy=h.zy-p.y, d=Math.hypot(dx,dy)||1, st=HK.ZIP_SPEED*dt, ux=dx/d, uy=dy/d;
+    if(d<=st||h.t>HK.ZIP_MAX_T){
+      if(d<=st){ p.x=h.zx; p.y=h.zy; }
+      p.vx=ux*HK.ZIP_EXIT; p.vy=uy*HK.ZIP_EXIT; hookBack(h); p.grabCd=0.3;
+      if(h.kind==='ledge'&&!holeAt(room,p.x)){ p.y=GY; p.vy=0; p.vx=0; p.onGround=true; } else p.onGround=false;
+      G.hookZips=(G.hookZips||0)+1;
+    } else { p.x+=ux*st; p.y+=uy*st; p.vx=ux*HK.ZIP_SPEED; p.vy=uy*HK.ZIP_SPEED; p.onGround=false; }
+    return true;
+  }
+  // swing: gravity + a little push, then the rope keeps his hand point within L of the anchor (it can pull, never push)
+  if(!h.held){ hookBack(h); p.grabCd=0.35; return true; }   // let go: keeps his momentum
+  p.vy+=GRAV*dt; if(ax){ p.vx+=ax*HK.SWING_PUMP*dt; p.face=ax; }
+  p.x+=p.vx*dt; p.y+=p.vy*dt;
+  const dx=p.x-h.tx, dy=(p.y-14)-h.ty, d=Math.hypot(dx,dy)||1;
+  if(d>h.L){ const nx=dx/d, ny=dy/d, vr=p.vx*nx+p.vy*ny; p.x=h.tx+nx*h.L; p.y=h.ty+ny*h.L+14; if(vr>0){ p.vx-=vr*nx; p.vy-=vr*ny; } }
+  const sp=Math.hypot(p.vx,p.vy); if(sp>HK.SWING_MAX){ p.vx*=HK.SWING_MAX/sp; p.vy*=HK.SWING_MAX/sp; }
+  if(p.y>=GY&&!holeAt(room,p.x)){ p.y=GY; if(p.vy>0) p.vy=0; p.onGround=true; } else p.onGround=false;
+  if(p.y>H+8){ loseLife('into the pit'); }
+  return true;
+}
 
 /* ---------- bosses (logic, logical px space; rooms 4, 8 and 12 are locked arenas) ---------- */
 const BOSS_DEF = {
@@ -744,7 +871,8 @@ function buildHero() {   // robot hero (approved design, adapted to low-poly 3D 
     const pipe = mk(gCyl, steel, 0, -.33, z > 0 ? .04 : -.04, .1, .42, .1, sp);                                      // longer steel pipe; telescopes out on a vine (syncHero)
     const ext = new THREE.Group(); sp.add(ext);
     mk(gCyl, copper, 0, -.56, z > 0 ? .05 : -.05, .2, .1, .2, ext); line(mk(gSph, copper, 0, -.74, z > 0 ? .05 : -.05, .42, .42, .42, ext), .07);
-    j.userData.sp = sp; j.userData.pipe = pipe; j.userData.ext = ext; return j; };
+    const hand = new THREE.Object3D(); hand.position.set(0, -.74, z > 0 ? .05 : -.05); ext.add(hand);   // the rope leaves from here
+    j.userData.sp = sp; j.userData.pipe = pipe; j.userData.ext = ext; j.userData.hand = hand; return j; };
   h.armR = arm(.72); h.armL = arm(-.72); h.splR = h.armR.userData.sp; h.splL = h.armL.userData.sp;
   // head: wide teal band, rivet rows, side bolt caps, two big glowing lenses with steel bezels and teal lids
   const head = new THREE.Group(); head.position.set(0, 2.1, 0); bod.add(head); h.head = head;
@@ -1711,6 +1839,8 @@ function drawUI() {
   { const sp = G.p ? Math.max(0, G.p.stam) : STAM_MAX, pct = 100 * sp / STAM_MAX, has = !G.p || G.p.shield, sk = Math.round(pct) + '|' + has;   // stamina meter next to the hearts
     if (cache.stam !== sk) { cache.stam = sk; $('h-sfill').style.width = pct + '%'; $('h-stam').className = (pct <= 0 ? 'out' : '') + (has ? '' : ' noshield');
       $('h-stam').title = 'Stamina ' + Math.round(pct) + '%' + (has ? '' : ' (shield on the ground: walk over it)'); } }
+  { const p = G.p, h = p && p.hook, out = !!h, rdy = !h ? 100 : h.ph === 'back' && h.d0 ? Math.round(100 * Math.max(0, 1 - Math.hypot(h.hx - p.x, h.hy - p.y + 14) / h.d0)) : 0, hk = rdy + '|' + out, cd = out;   // hook meter: empty while it is out, fills as it reels back in
+    if (cache.hook !== hk) { cache.hook = hk; $('h-hfill').style.width = rdy + '%'; $('h-hook').className = cd > 0 ? 'cd' : ''; $('h-hook').title = cd > 0 ? 'Hook out (reeling back in)' : 'Hook ready'; tbEls.hook.style.setProperty('--cd', (100 - rdy) + '%'); } }
   syncTouchDim(st);
   sysb.style.display = (st === 'play' || st === 'paused') ? 'flex' : 'none'; setTxt('h-room', 'ROOM ' + (G.room + 1) + '/' + ROOMS); setTxt('h-score', String(G.score));
   const bb = G.rs && G.rs.boss, showBar = bb && !bb.dead && (st === 'play' || st === 'paused');
@@ -1734,7 +1864,8 @@ function drawUI() {
             '<b>Jump</b><span>' + (tch ? 'jump button' : 'Space, W or Up') + '</span>' +
             '<b>Vines</b><span>hit one mid-air to grab it; jump to let go</span>' +
             '<b>Bosses</b><span>weak spots glow: jump on them, kick with a vine release, or roll a log in</span>' +
-            '<b>Block</b><span>' + (tch ? 'shield button' : 'S or Down') + ': swing the shield off your back to stop logs, mud and boss hits. Each block costs stamina (bigger hits cost more) and it refills slowly. Out of stamina = the shield drops: walk over it to pick it up. No shield: block with your hands (' + Math.round((1 - TUNE.HAND_BLOCK_DAMAGE) * 100) + '% less damage). Unblocked hits cost a heart</span>' +
+            '<b>Hook</b><span>' + (tch ? 'hook button' : 'left click') + ': tap to zip to a wall or ledge, hold to swing on the rope (let go to fly on). Hook loot or a mob to pull it to you. Free: fire again once he has reeled it back in</span>' +
+            '<b>Block</b><span>' + (tch ? 'shield button' : 'Right click, S or Down') + ': swing the shield off your back to stop logs, mud and boss hits. Each block costs stamina (bigger hits cost more) and it refills slowly. Out of stamina = the shield drops: walk over it to pick it up. No shield: block with your hands (' + Math.round((1 - TUNE.HAND_BLOCK_DAMAGE) * 100) + '% less damage). Unblocked hits cost a heart</span>' +
           '</div>' +
           '<div class="setb" id="set-block">Block button: <b' + (blockMode === 'press' ? ' class="sel"' : '') + '>PRESS</b> / <b' + (blockMode === 'hold' ? ' class="sel"' : '') + '>HOLD</b> &nbsp;<small>' + (tch ? 'tap here to change' : '[B] or click to change') + '</small></div>' +
           '<div class="seedbox">Seed <b>' + esc(G.seed) + '</b> &nbsp; best <b>' + G.best + '</b><br><small>' + (tch ? 'add ?seed=name to the address for a set world' : '[N] random seed &nbsp; [D] daily seed &nbsp; or add ?seed=name to the address') + '</small></div>' +
@@ -1747,10 +1878,10 @@ function drawUI() {
   } else panel.style.display = 'none';
 }
 /* touch buttons dim when their action can't do anything right now (menus, pause, falling, staggered by a blocked hit, between lives) */
-const tbEls = { left: $('bl'), right: $('br'), jump: $('bj'), block: $('bk') };
+const tbEls = { left: $('bl'), right: $('br'), jump: $('bj'), block: $('bk'), hook: $('bh') };
 function syncTouchDim(st) {
   const p = G.p, live = st === 'play' && p && p.dead <= 0, free = live && p.react <= 0;
-  const on = { left: !!free, right: !!free, jump: (st === 'title' || st === 'end') || !!(free && (p.onGround || p.coyote > 0 || p.vine)), block: !!(live && !p.vine) };
+  const on = { left: !!free, right: !!free, jump: (st === 'title' || st === 'end') || !!(free && (p.onGround || p.coyote > 0 || p.vine)), block: !!(live && !p.vine), hook: !!(free && !p.vine && !p.hook) };
   for (const k in tbEls) { const d = !on[k], ck = 'dim' + k; if (cache[ck] !== d) { cache[ck] = d; tbEls[k].classList.toggle('dim', d); } }
   const bo = st === 'play' && wantBlock(); if (cache.bkon !== bo) { cache.bkon = bo; tbEls.block.classList.toggle('on', bo); }   // lit while the block is up (press mode stays lit)
 }
@@ -1795,6 +1926,77 @@ function syncShield(p, dt) {
     if (here) { sh.root.position.set(X(d.x), .1 + Math.max(0, Math.sin(VT * 3)) * .04, .2); sh.root.rotation.set(0, .3, Math.PI / 2); sh.root.scale.setScalar(HS); }
   }
 }
+/* hook view (Michael t40u, very smooth and detailed): the rope is one tube mesh rebuilt each frame (sag and slack, a wave that runs out on the throw
+   and back on the reel, a tension snap when it goes taut); the head is one merged mesh (shank, eye, tip, three barbs) that spins in flight.
+   Bite sparks and dust use the shared particle pools. 2 draw calls in all, hidden when unused. Every value eases; the head is interpolated per frame. */
+const RP_N = 24, RP_S = 6, RP_R = .045;
+const gRope = (() => { const g = new THREE.BufferGeometry(), nv = (RP_N + 1) * RP_S, idx = [];
+  for (let i = 0; i < RP_N; i++) for (let k = 0; k < RP_S; k++) { const a = i * RP_S + k, b = i * RP_S + (k + 1) % RP_S, c = a + RP_S, d = b + RP_S; idx.push(a, b, c, b, d, c); }
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(nv * 3), 3).setUsage(THREE.DynamicDrawUsage || 35048));
+  g.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(nv * 3), 3).setUsage(THREE.DynamicDrawUsage || 35048)); g.setIndex(idx); return g; })();
+const gHookHead = (() => { const parts = [], m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler();
+  const add = (geo, x, y, z, rx, rz, sx, sy, sz) => { e.set(rx || 0, 0, rz || 0); q.setFromEuler(e); m4.compose(new THREE.Vector3(x, y, z), q, new THREE.Vector3(sx || 1, sy || 1, sz || 1)); parts.push(geo.toNonIndexed().applyMatrix4(m4)); geo.dispose(); };
+  add(new THREE.CylinderGeometry(.05, .06, .55, 6), 0, -.05, 0);                        // shank
+  add(new THREE.TorusGeometry(.09, .03, 4, 8), 0, -.37, 0, 0, 0);                       // eye the rope ties to
+  add(new THREE.ConeGeometry(.08, .22, 6), 0, .33, 0);                                  // tip
+  for (let i = 0; i < 3; i++) { const a = i / 3 * Math.PI * 2, c = Math.cos(a), sn = Math.sin(a);   // three barbs swept back
+    const g = new THREE.ConeGeometry(.04, .3, 4); g.rotateX(Math.PI); g.rotateZ(-.7); g.rotateY(a); g.translate(c * .1, .12, -sn * .1); parts.push(g.toNonIndexed()); g.dispose(); }
+  let n = 0; for (const p of parts) n += p.attributes.position.count;
+  const P = new Float32Array(n * 3), N = new Float32Array(n * 3); let o = 0;
+  for (const p of parts) { p.computeVertexNormals(); P.set(p.attributes.position.array, o * 3); N.set(p.attributes.normal.array, o * 3); o += p.attributes.position.count; p.dispose(); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setAttribute('normal', new THREE.BufferAttribute(N, 3)); return g; })();
+const hookV = { rope: mk(gRope, M('#7a6242'), 0, 0, 0, 1, 1, 1, scene, true), head: mk(gHookHead, MS('#a4a49a', .35, .85), 0, 0, 0, 1, 1, 1, scene, true),
+  ph: null, slack: 1, wA: 0, wPh: 0, wDir: 1, snap: 0, spin: 0, spinV: 0, sc: 0, impacts: 0, snaps: 0, maxSag: 0 };
+hookV.rope.visible = hookV.head.visible = false; hookV.rope.frustumCulled = false;
+const _hA = new THREE.Vector3(), _hB = new THREE.Vector3(), _hT = new THREE.Vector3(), _hQ = new THREE.Quaternion(), _hS = new THREE.Quaternion(), _hP = [];
+for (let i = 0; i <= RP_N; i++) _hP.push(new THREE.Vector3());
+function hookImpact(h, x, y) {   // the bite: sparks + a little dust (shared pools: no extra draw calls)
+  hookV.impacts++;
+  if (h.kind === 'boss') { fxSpark(x, y, 12, '#fff1c0', 4.5); return; }
+  if (h.kind === 'mob') { fxSpark(x, y, 6, '#ffb35a', 3); fxDust(x, y - .2, 3, .8, .6, '#8a6a4a'); return; }
+  if (h.kind === 'loot') { fxSpark(x, y, 5, '#bff6ff', 2.5); return; }
+  fxSpark(x, y, 9, '#ffd690', 3.5); fxDust(x, y - .1, 5, 1, .8, h.kind === 'ceil' ? '#7d8f55' : '#a88a62'); addShake(.06);
+}
+function syncHook(p, dt) {
+  const V = hookV, h = p && G.state !== 'title' && p.dead <= 0 ? p.hook : null;
+  V.rope.visible = V.head.visible = !!h; if (!h) { V.ph = null; V.sc = 0; return; }
+  // head, interpolated between the last two logic steps
+  const al = Math.max(0, Math.min(1, acc / STEP)), hx = h.ox === undefined ? h.hx : h.ox + (h.hx - h.ox) * al, hy = h.oy === undefined ? h.hy : h.oy + (h.hy - h.oy) * al;
+  const hand = pl.armR.userData.hand; hand.updateWorldMatrix(true, false); hand.getWorldPosition(_hA); _hA.z = Math.min(_hA.z, .9);
+  _hB.set(X(hx), Y(hy), .25);
+  // phase changes drive the one-shot moves
+  if (V.ph !== h.ph) {
+    if (h.ph === 'fly' && V.ph === null) { V.slack = .9; V.wA = 1; V.wDir = 1; V.spinV = 30; V.sc = .35; }
+    if (V.ph === 'fly' && h.kind !== 'miss') hookImpact(h, _hB.x, _hB.y);
+    if (h.ph === 'latch' || h.ph === 'drag' || h.ph === 'reel' || h.ph === 'swing' || (h.ph === 'zip' && V.ph === 'fly')) { V.snap = 1; V.snaps++; }   // goes taut
+    if (h.ph === 'back') { V.wA = Math.max(V.wA, .75); V.wDir = -1; V.spinV = -14; if (V.ph && V.ph !== 'fly') fxSpark(_hB.x, _hB.y, 3, '#e8e0c8', 1.6); }   // lets go with a clank
+    V.ph = h.ph;
+  }
+  const taut = h.ph === 'swing' || h.ph === 'zip' || h.ph === 'drag' || h.ph === 'latch' || h.ph === 'reel';
+  V.slack = hold(V.slack, h.ph === 'fly' ? .45 : h.ph === 'back' ? .6 : h.ph === 'reel' ? .12 : 0, dt, taut ? 14 : 6);
+  V.wA = hold(V.wA, h.ph === 'back' ? .3 : 0, dt, 3.2); V.wPh += dt * 16 * V.wDir;
+  V.snap *= Math.exp(-dt * 7);
+  V.spinV = hold(V.spinV, h.ph === 'fly' ? 30 : h.ph === 'back' ? -10 : 0, dt, 5); V.spin += V.spinV * dt;
+  V.sc = hold(V.sc, 1, dt, 18);
+  // rope curve
+  _hT.subVectors(_hB, _hA); const L = _hT.length(), sag = V.slack * Math.min(2.4, L * .22), wAmp = V.wA * Math.min(.45, .08 + L * .05), sAmp = V.snap * Math.min(.22, L * .03) * Math.sin(VT * 58);
+  const ux = L > 1e-4 ? _hT.x / L : 1, uy = L > 1e-4 ? _hT.y / L : 0, px = -uy, py = ux;   // along / across the rope (screen plane)
+  V.maxSag = Math.max(V.maxSag * .98, sag);
+  for (let i = 0; i <= RP_N; i++) { const t = i / RP_N, env = Math.sin(Math.PI * t), w = wAmp * env * Math.sin(t * L * 1.7 - V.wPh) + sAmp * env;
+    _hP[i].set(_hA.x + _hT.x * t + px * w, _hA.y + _hT.y * t + py * w - sag * env * env * (1.2 - .2 * env), _hA.z + _hT.z * t); }
+  const pos = gRope.attributes.position.array, nor = gRope.attributes.normal.array;
+  for (let i = 0; i <= RP_N; i++) { const a = _hP[Math.max(0, i - 1)], b = _hP[Math.min(RP_N, i + 1)]; let tx = b.x - a.x, ty = b.y - a.y; const tl = Math.hypot(tx, ty) || 1; tx /= tl; ty /= tl;
+    const nx = -ty, ny = tx, r = RP_R * (i === RP_N ? .7 : 1);
+    for (let k = 0; k < RP_S; k++) { const th = k / RP_S * Math.PI * 2, c = Math.cos(th), sn = Math.sin(th), o = (i * RP_S + k) * 3, ex = c * nx, ey = c * ny, ez = sn;
+      pos[o] = _hP[i].x + ex * r; pos[o + 1] = _hP[i].y + ey * r; pos[o + 2] = _hP[i].z + ez * r; nor[o] = ex; nor[o + 1] = ey; nor[o + 2] = ez; } }
+  gRope.attributes.position.needsUpdate = gRope.attributes.normal.needsUpdate = true;
+  // head: points along its flight, then along the rope end; spins in flight; eased (slerp), never snaps
+  const e0 = _hP[RP_N - 2], dX = _hB.x - e0.x, dY = _hB.y - e0.y, dl = Math.hypot(dX, dY);
+  if (dl > 1e-4) _vD.set(dX / dl, dY / dl, 0); else _vD.set(ux, uy, 0);
+  if (h.ph === 'back') _vD.negate();   // it trails back to the hand barbs first
+  _hQ.setFromUnitVectors(_up, _vD); _hS.setFromAxisAngle(_up, V.spin); _hQ.multiply(_hS);
+  V.head.position.copy(_hB); V.head.quaternion.slerp(_hQ, h.ph === 'fly' && h.t < STEP * 2 ? 1 : 1 - Math.exp(-dt * 22)); V.head.scale.setScalar(V.sc);
+}
 function syncHero(room, p, dt) {
   const g = pl.root, bod = pl.bod;
   if (!p || G.state === 'title') { g.visible = false; pl.shadow.visible = false; pl.lastLives = -1; return; }
@@ -1834,6 +2036,15 @@ function syncHero(room, p, dt) {
   if (p.blocking && !vine && p.dead <= 0) {
     if (p.shield) { if (pl.shE < .55) { ar = -1.35; sr = .35; } else { ar = 1.45; al = 1.1; sr = .45; sl = .25; } lean = Math.min(lean, -.06); }
     else { al = ar = 1.75; sl = sr = -.25; lean = -.1; }
+  }
+  if (p.hook && p.dead <= 0) {   // hook (Michael t40u): the right arm throws, braces and reels; the body leans into it. R() eases every angle, so nothing pops
+    const h = p.hook, dx = (h.hx - p.x) * p.face, dy = (p.y - 14) - h.hy, aim = Math.max(.2, Math.min(3.05, Math.PI / 2 + Math.atan2(dy, Math.max(.5, dx))));
+    if (h.ph === 'fly') { const wind = h.t < .06; ar = wind ? -.7 : aim + .25; sr = wind ? .05 : .3; lean = wind ? .1 : -.14; }                          // wind up behind, then throw through
+    else if (h.ph === 'back') { const c = Math.sin(VT * 17); ar = aim * .75 + c * .22; sr = .22 + Math.cos(VT * 17) * .14; al = Math.max(al, .9); lean = .07; }   // crank it back in
+    else if (h.ph === 'swing') { const sw = Math.max(-1, Math.min(1, p.vx * p.face / HK.SWING_MAX)); ar = aim; al = aim - .25; sr = .12; sl = .18; lean = -.34 * sw; ll = .5 - sw * .4; lr = -.2 - sw * .5; ka = -ll * .5; kr = -lr * .5; }
+    else if (h.ph === 'zip') { ar = aim; al = 1.2; sr = .1; lean = -.28; ll = .7; lr = -.4; ka = -.4; kr = .3; }
+    else if (h.ph === 'drag' || h.ph === 'reel') { ar = aim + .1; al = 1.3; sr = .15; lean = .22; }                                                      // heels in, leaning back on the rope
+    else { ar = aim; sr = .15; lean = -.05; }                                                                                                        // latched: brace, waiting for tap or hold
   }
   const R = (o, k, v, r) => { o.rotation[k] = hold(o.rotation[k], v, dt, r || 30); };
   R(pl.legL, 'z', ll); R(pl.legR, 'z', lr); R(pl.ankL, 'z', ka); R(pl.ankR, 'z', kr);
@@ -1897,6 +2108,7 @@ function render(dtReal) {
     cr.legs.forEach(l => { l.p.rotation.z = Math.sin(VT * 14 + l.ph) * .5; }); cr.ant.forEach((a, i) => { a.rotation.z = Math.sin(VT * 4 + i) * .2; }); });
   syncBoss();
   syncHero(room, p, dt);
+  syncHook(p, dt);
   syncBuddy(p, dt);
   // ambient: god-rays + motes follow the camera, camera shake, sky + sun follow
   for (const r of view.rays) { const u = r.userData; r.position.set(cam.x + u.ox * .85, 9, u.oz); r.scale.set(u.w, 26, 1); r.rotation.z = .42; r.material.opacity = u.base * (.65 + .35 * Math.sin(VT * .5 + u.ph)); }
@@ -1946,13 +2158,16 @@ syncSnd();
 addEventListener('keyup', e => { const k = keyMap[e.code]; if (k) keys[k] = false; if (e.code === 'ArrowDown' || e.code === 'KeyS') blockInput(false); });
 // leaving the tab / window: drop held input and pause (the existing P pause, so the timer stops); a pause made this way resumes on return
 let autoPaused = false;
-function pauseOnLeave() { keys.left = keys.right = keys.jump = keys.block = false; blockLatch = false; jumpQ = 0; if (G.state === 'play') { G.state = 'paused'; autoPaused = true; } }
+function pauseOnLeave() { keys.left = keys.right = keys.jump = keys.block = false; blockLatch = false; jumpQ = 0; hookInput(false); mouseL = mouseR = false; if (G.state === 'play') { G.state = 'paused'; autoPaused = true; } }
 function resumeOnReturn() { if (autoPaused && G.state === 'paused') G.state = 'play'; autoPaused = false; }
 addEventListener('blur', pauseOnLeave);
 addEventListener('focus', () => { if (!document.hidden) resumeOnReturn(); });
 document.addEventListener('visibilitychange', () => { if (document.hidden) pauseOnLeave(); else if (document.hasFocus()) resumeOnReturn(); });
 if ('ontouchstart' in window || matchMedia('(pointer: coarse)').matches) document.body.classList.add('touch');
 document.querySelectorAll('.tb').forEach(b => { const k = b.dataset.k;
+  if (k === 'hook') {    // hook button: down fires it, up lets go (tap = zip, hold = swing); dims while the hook is out and fills back up as he reels it in
+    const hd = e => { e.preventDefault(); if (G.state === 'play') hookInput(true); try { b.setPointerCapture(e.pointerId); } catch (_) {} }, hu = e => { e.preventDefault(); hookInput(false); };
+    b.addEventListener('pointerdown', hd); b.addEventListener('pointerup', hu); b.addEventListener('pointercancel', hu); b.addEventListener('lostpointercapture', hu); return; }
   if (k === 'block') {   // block button: press mode toggles, hold mode blocks while the finger is down (lit state set in syncTouchDim)
     const bd = e => { e.preventDefault(); if (G.state === 'play') blockInput(true); try { b.setPointerCapture(e.pointerId); } catch (_) {} }, bu = e => { e.preventDefault(); blockInput(false); };
     b.addEventListener('pointerdown', bd); b.addEventListener('pointerup', bu); b.addEventListener('pointercancel', bu); b.addEventListener('lostpointercapture', bu); return; }
@@ -1961,6 +2176,18 @@ document.querySelectorAll('.tb').forEach(b => { const k = b.dataset.k;
   b.addEventListener('pointerdown', down); b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); b.addEventListener('lostpointercapture', up);
 });
 cv.addEventListener('pointerdown', () => { startOrRestart(); });
+/* mouse (Michael t31u-t37u): left button = hook, right button = shield (works like S / Down, PRESS or HOLD; S / Down stay as backups).
+   Read from e.buttons so a second button pressed while the first is down (a chord, which sends pointermove, not pointerdown) still counts.
+   A press only counts on the game canvas; a release counts anywhere. Touch has its own buttons. */
+let mouseL = false, mouseR = false;
+function mouseButtons(e) {
+  if (e.pointerType === 'touch') return;
+  const onCv = e.target === cv, l = !!(e.buttons & 1), r = !!(e.buttons & 2);
+  if (l !== mouseL && (!l || onCv)) { mouseL = l; hookInput(l); }
+  if (r !== mouseR && (!r || onCv)) { mouseR = r; if (r) { e.preventDefault(); if (G.state === 'play') blockInput(true); } else blockInput(false); }
+}
+['pointerdown', 'pointermove', 'pointerup'].forEach(t => addEventListener(t, mouseButtons));
+cv.addEventListener('contextmenu', e => e.preventDefault());   // right click is the shield, so no browser menu over the game
 panel.addEventListener('pointerdown', e => { e.preventDefault(); if (e.target && e.target.id === 'e-home') { goHome(); return; } if (e.target && e.target.closest && e.target.closest('#set-block')) { setBlockMode(blockMode === 'press' ? 'hold' : 'press'); return; } startOrRestart(); });
 
 /* ---------- loop ---------- */
@@ -1976,7 +2203,9 @@ requestAnimationFrame(frame);
 // test hook (read/steer only; no network)
 window.__jr = { G, keys, genWorld, update, render, press(k, d) { if (k === 'block') { blockInput(d); return; } keys[k] = d; if (k === 'jump' && d) jumpQ = 0.12; },
   fingerprint(seed) { return JSON.stringify(genWorld(seed).rooms); }, startRun, setSeed, ROOMS, TREASURES, GY, enterRoom, hurtBoss, isLocked, nextBoss, BOSS_ROOMS, BOSS_DEF,
-  setQuality, quality: () => QL().name, harm, BEST_KEY, STAM_MAX, TUNE, setBlockMode, blockMode: () => blockMode, wantBlock, blockReady: () => !!(G.p && blockReady(G.p)),
+  setQuality, quality: () => QL().name, harm, HOOK: HK, hookInput, hookView: hookV, hookAim: () => G.p && hookAim(G.p, G.world.rooms[G.room], G.rs),
+  hook: () => { const p = G.p, h = p && p.hook; return { out: !!h, backs: G.hookBacks || 0, shots: G.hookShots || 0, no: G.hookNo || 0, zips: G.hookZips || 0, h: h ? { ph: h.ph, kind: h.kind, tx: h.tx, ty: h.ty, hx: h.hx, hy: h.hy, held: h.held, L: h.L } : null,
+    rope: hookV.rope.visible, head: hookV.head.visible, vis: { ph: hookV.ph, slack: +hookV.slack.toFixed(3), wave: +hookV.wA.toFixed(3), snap: +hookV.snap.toFixed(3), spin: +hookV.spinV.toFixed(2), impacts: hookV.impacts, snaps: hookV.snaps, maxSag: +hookV.maxSag.toFixed(3), ropeTris: gRope.index.count / 3, headTris: gHookHead.attributes.position.count / 3, hand: _hA.toArray().map(v => +v.toFixed(2)), headAt: hookV.head.position.toArray().map(v => +v.toFixed(2)), hero: pl.root.visible ? pl.root.position.toArray().map(v => +v.toFixed(2)) : null, heroScale: +pl.root.scale.x.toFixed(3), cam: camera.position.toArray().map(v => +v.toFixed(2)) } }; }, BEST_KEY, STAM_MAX, TUNE, setBlockMode, blockMode: () => blockMode, wantBlock, blockReady: () => !!(G.p && blockReady(G.p)),
   shieldView: () => { const w = shield.root.getWorldPosition(new THREE.Vector3()); return { parent: shield.root.parent === pl.bod ? 'hero' : 'ground', visible: shield.root.visible, e: pl.shE || 0, x: w.x, y: w.y, z: w.z, heroX: G.p ? X(G.p.x) : null, glow: shield.glowM.emissiveIntensity, halo: shield.haloM.opacity }; },
   buddy: () => { let meshes = 0; buddy.root.traverse(o => { if (o.isMesh) meshes++; }); const j = buddy.j;
     return { on: buddy.on, visible: buddy.root.visible, x: buddy.root.position.x, y: buddy.root.position.y, face: buddy.face, heroX: G.p ? X(G.p.x) : null,
