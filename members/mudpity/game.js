@@ -867,6 +867,26 @@ const pl = buildHero(); pl.root.visible = false; scene.add(pl.root);
 // stamina shield bubble: a plain translucent sphere drawn in code (no art file); fades with stamina, swells on a push
 const shieldMat = reg(new THREE.MeshBasicMaterial({ color: '#9fe3ff', transparent: true, opacity: .2, depthWrite: false, fog: false }));
 const shieldMesh = new THREE.Mesh(gSph, shieldMat); shieldMesh.renderOrder = 5; shieldMesh.visible = false; shieldMesh.position.y = 1.25; pl.root.add(shieldMesh);
+// buddy companion: the picked buddy drawing (art/buddy.webp) on an upright quad that turns to the camera and trails the hero.
+// Visual only (no gameplay effect). Not shown when the page is opened from file://, where browsers block image upload to WebGL.
+const BUDDY_H = 1.9, BUDDY_W = BUDDY_H * 247 / 320, BUDDY_ART_FACE = -1;   // the drawing's 3/4 view looks to the viewer's left
+const buddyGeo = new THREE.PlaneGeometry(1, 1); buddyGeo.translate(0, .5, 0);   // origin at the feet
+const buddyMat = reg(new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, alphaTest: .5, side: THREE.DoubleSide, fog: false, toneMapped: false }));
+const buddy = { root: new THREE.Group(), mesh: new THREE.Mesh(buddyGeo, buddyMat), on: false, init: false, x: 0, y: 0, face: 1, ph: 0 };
+buddy.root.add(buddy.mesh); buddy.root.visible = false; scene.add(buddy.root);
+if (location.protocol !== 'file:') { const im = new Image(); im.onload = () => { const t = new THREE.CanvasTexture(im); t.colorSpace = THREE.SRGBColorSpace; buddyMat.map = t; buddyMat.needsUpdate = true; buddy.on = true; }; im.src = 'art/buddy.webp'; }
+function syncBuddy(p, dt) {
+  const b = buddy; if (!b.on || !p || G.state === 'title') { b.root.visible = false; b.init = false; return; }
+  const tx = X(p.x) - p.face * 1.9, ty = Math.max(0, Y(p.y)) * .55;   // a step behind the hero; half-height hops when the hero jumps
+  if (!b.init || Math.abs(tx - b.x) > 8) { b.x = tx; b.y = ty; b.init = true; }   // first frame, respawn or room change: appear in place
+  b.x = hold(b.x, tx, dt, 3.2); b.y = hold(b.y, ty, dt, 5);
+  const gap = Math.abs(tx - b.x); b.ph += dt * (5 + gap * 4);
+  if (gap > .25) b.face = tx > b.x ? 1 : -1; else b.face = p.face;
+  const hop = b.y < .05 ? Math.abs(Math.sin(b.ph)) * Math.min(.3, gap * .3) : 0, br = 1 + Math.sin(VT * 2.6) * .025;
+  b.root.visible = true; b.root.position.set(b.x, b.y + hop, -.7);
+  b.root.rotation.y = Math.atan2(camera.position.x - b.x, camera.position.z + .7);
+  b.mesh.scale.set(BUDDY_W * b.face * BUDDY_ART_FACE, BUDDY_H * br, 1);
+}
 pl.sq = 0; pl.tailB = 0; pl.dustT = 0; pl.wasAir = false; pl.wasGround = true; pl.vyMax = 0; pl.wasDead = false; pl.lastInv = 0; pl.lastLives = -1; pl.lastRoom = -1; pl.runPh = 0; pl.hurtT = 0; pl.smokeT = 0; pl.lid = .13; pl.slant = 0;
 const Z_BACK = -6, Z_FRONT = 9;
 const frontH = (x, z) => { const m = z >= 0 ? sstep(2.4, 4.4, z) * (1 - sstep(7.4, Z_FRONT, z)) : sstep(2.4, 4.4, -z) * (1 - sstep(4.2, -Z_BACK, -z)); return m * (.15 + fbm(x * .33, z * .33) * .75); };
@@ -1308,6 +1328,7 @@ function render(dtReal) {
     cr.legs.forEach(l => { l.p.rotation.z = Math.sin(VT * 14 + l.ph) * .5; }); cr.ant.forEach((a, i) => { a.rotation.z = Math.sin(VT * 4 + i) * .2; }); });
   syncBoss(T);
   syncHero(room, p, dt);
+  syncBuddy(p, dt);
   // ambient: god-rays + motes follow the camera, camera shake, sky + sun follow
   const cx = camera.position.x;
   for (const r of view.rays) { const u = r.userData, d = G.state === 'title' ? 0 : 0; r.position.set(cam.x + u.ox * .85, 9, u.oz); r.scale.set(u.w, 26, 1); r.rotation.z = .42; r.material.opacity = u.base * (.65 + .35 * Math.sin(VT * .5 + u.ph)); }
@@ -1372,6 +1393,6 @@ requestAnimationFrame(frame);
 // test hook (read/steer only; no network)
 window.__jr = { G, keys, genWorld, update, render, press(k, d) { keys[k] = d; if (k === 'jump' && d) jumpQ = 0.12; },
   fingerprint(seed) { return JSON.stringify(genWorld(seed).rooms); }, startRun, setSeed, ROOMS, TREASURES, GY, enterRoom, hurtBoss, isLocked, nextBoss, BOSS_ROOMS, BOSS_DEF,
-  setQuality, quality: () => QL().name, harm, BEST_KEY, STAM_MAX, photo(o) { photoCam = o || null; },
+  setQuality, quality: () => QL().name, harm, BEST_KEY, STAM_MAX, buddy: () => ({ on: buddy.on, visible: buddy.root.visible, x: buddy.root.position.x, y: buddy.root.position.y, face: buddy.face, heroX: G.p ? X(G.p.x) : null }), photo(o) { photoCam = o || null; },
   info: () => renderer ? { calls: renderer.info.render.calls, tris: renderer.info.render.triangles, fps, rev: THREE.REVISION, quality: QL().name } : null };
 })();
