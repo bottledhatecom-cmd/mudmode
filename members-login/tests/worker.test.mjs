@@ -1,6 +1,6 @@
-// Local test: plain node, mocked fetch. No network, no secrets. Run: node tests/worker.test.mjs
+// Local test: plain node, mocked fetch + mocked RATE_LIMITER. No network, no secrets. Run: node tests/worker.test.mjs
 import assert from "node:assert/strict";
-import worker, { readToken } from "../worker/worker.js";
+import worker, { readToken, purchaseStanding } from "../worker/worker.js";
 
 const env = {
   ALLOWED_ORIGIN: "https://mudmodecrew.com",
@@ -8,7 +8,10 @@ const env = {
   MEMBERS_LINK: "https://app.gumroad.com/library",
   SESSION_TTL_SECONDS: "3600",
   MEMBERS_SESSION_SECRET: "test-only-not-a-real-secret-0123456789abcdef",
+  RATE_LIMITER: { limit: async () => ({ success: true }) }, // permissive for the base tests
 };
+// Mock of the Cloudflare rate limiting binding: fixed window counter per key.
+const makeLimiter = (limit) => { const seen = new Map(); const keys = []; return { keys, limit: async ({ key }) => { keys.push(key); const c = (seen.get(key) || 0) + 1; seen.set(key, c); return { success: c <= limit }; } }; };
 const EMAIL = "buyer@example.com";
 const purchase = (extra = {}) => ({ email: EMAIL, full_name: "Buyer Name", sale_id: "S1", order_number: 1, license_key: "", refunded: false, disputed: false, dispute_won: false, chargebacked: false, subscription_ended_at: null, subscription_cancelled_at: null, subscription_failed_at: null, ...extra });
 const KEYS = { // key -> {product_id: purchase}
@@ -19,18 +22,22 @@ const KEYS = { // key -> {product_id: purchase}
   "DISPUTE-KEY-005": { PID_FULL: purchase({ disputed: true }) },
 };
 const calls = [];
+let override = null; // per-test gumroad behavior: (form, init) => Response | Promise
 globalThis.fetch = async (url, init) => {
   assert.equal(url, "https://api.gumroad.com/v2/licenses/verify");
   const f = new URLSearchParams(init.body);
   calls.push(Object.fromEntries(f));
   assert.equal(f.get("increment_uses_count"), "false");
+  assert.ok(init.signal, "gumroad fetch must carry an AbortSignal");
+  if (override) return override(f, init);
   const p = (KEYS[f.get("license_key")] || {})[f.get("product_id")];
   if (!p) return new Response(JSON.stringify({ success: false, message: "That license does not exist for the provided product." }), { status: 404 });
   return new Response(JSON.stringify({ success: true, uses: 0, purchase: { ...p, license_key: f.get("license_key"), product_id: f.get("product_id") } }), { status: 200 });
 };
 
 const W = "https://worker.test";
-const post = (key, origin = env.ALLOWED_ORIGIN) => worker.fetch(new Request(W + "/verify", { method: "POST", headers: { Origin: origin, "Content-Type": "application/json" }, body: JSON.stringify({ license_key: key }) }), env);
+const post = (key, origin = env.ALLOWED_ORIGIN, e = env, ip = "203.0.113.7") => worker.fetch(new Request(W + "/verify", { method: "POST", headers: { Origin: origin, "Content-Type": "application/json", "CF-Connecting-IP": ip }, body: JSON.stringify({ license_key: key }) }), e);
+const NOT_ACCEPTED = JSON.stringify({ ok: false, error: "not accepted" });
 const get = (path, token, origin = env.ALLOWED_ORIGIN) => worker.fetch(new Request(W + path, { headers: { Origin: origin, ...(token ? { Authorization: "Bearer " + token } : {}) } }), env);
 let n = 0; const t = async (name, fn) => { await fn(); n++; console.log("PASS", name); };
 const noLeak = (txt) => { assert.ok(!txt.includes(EMAIL), "email leaked"); assert.ok(!txt.includes("Buyer Name")); assert.ok(!txt.includes("S1\"")); };
@@ -45,16 +52,16 @@ await t("valid full kit key -> ok + token, no email", async () => {
 await t("valid founders key -> ok, product founders", async () => {
   const d = await (await post("GOOD-FOUND-0002")).json(); assert.equal(d.ok, true); assert.equal(d.product, "founders");
 });
-await t("invalid key -> 404, no token", async () => {
-  const r = await post("NOPE-NOPE-0000"); const d = await r.json(); assert.equal(r.status, 404); assert.equal(d.ok, false); assert.equal(d.token, undefined);
+await t("invalid key -> generic 403, no token", async () => {
+  const r = await post("NOPE-NOPE-0000"); const txt = await r.text(); assert.equal(r.status, 403); assert.equal(txt, NOT_ACCEPTED);
 });
 await t("bad key format -> 400, gumroad not called", async () => {
   const before = calls.length; const r = await post("<script>"); assert.equal(r.status, 400); assert.equal(calls.length, before);
 });
 for (const [k, field] of [["REFUND-KEY-0003", "refunded"], ["CHARGEBK-KEY-04", "chargebacked"], ["DISPUTE-KEY-005", "disputed"]]) {
-  await t(`${field} key -> 403 denied, flag set, no token, no email`, async () => {
-    const r = await post(k); const txt = await r.text(); noLeak(txt); const d = JSON.parse(txt);
-    assert.equal(r.status, 403); assert.equal(d.ok, false); assert.equal(d[field], true); assert.equal(d.token, undefined);
+  await t(`${field} key -> 403 denied, same body as an unknown key (no oracle, no product), no email`, async () => {
+    const r = await post(k); const txt = await r.text(); noLeak(txt);
+    assert.equal(r.status, 403); assert.equal(txt, NOT_ACCEPTED); assert.ok(!txt.includes("full-kit"));
   });
 }
 await t("CORS: allowed origin gets ACAO; other origin gets 403 and no ACAO", async () => {
@@ -73,4 +80,95 @@ await t("session: missing, tampered, expired tokens -> 401", async () => {
   const old = Date.now; Date.now = () => old() + 2 * 3600 * 1000; try { assert.equal(await readToken(env, d.token), null); } finally { Date.now = old; }
 });
 await t("never increments uses", async () => { assert.ok(calls.length > 0 && calls.every(c => c.increment_uses_count === "false")); });
+
+// ---- redteam verdict fixes (VERDICT-redteam-members-login.md, ebdeb65) ----
+const ok200 = (f, purchaseExtra = {}, top = {}) => new Response(JSON.stringify({ success: true, uses: 0, purchase: { ...purchase(), product_id: f.get("product_id"), ...purchaseExtra }, ...top }), { status: 200 });
+const withOverride = async (fn, body) => { override = fn; try { await body(); } finally { override = null; } };
+
+await t("M1: rate limit -> 429 after 10 tries per IP, no gumroad call once limited", async () => {
+  const rl = makeLimiter(10); const e = { ...env, RATE_LIMITER: rl };
+  for (let i = 0; i < 10; i++) assert.equal((await post("NOPE-NOPE-" + String(1000 + i), env.ALLOWED_ORIGIN, e)).status, 403);
+  const before = calls.length; const r = await post("NOPE-NOPE-2000", env.ALLOWED_ORIGIN, e);
+  assert.equal(r.status, 429); assert.equal((await r.json()).ok, false); assert.equal(calls.length, before, "gumroad called after limit");
+  assert.ok(rl.keys.every(k => !k.includes("NOPE")), "raw key sent to limiter");
+  assert.equal((await post("NOPE-NOPE-2001", env.ALLOWED_ORIGIN, e, "198.51.100.9")).status, 403, "other IP still served");
+});
+await t("M1: per-key limit too (same key from many IPs -> 429)", async () => {
+  const e = { ...env, RATE_LIMITER: makeLimiter(10) }; let last;
+  for (let i = 0; i < 11; i++) last = await post("NOPE-SAME-KEY1", env.ALLOWED_ORIGIN, e, "192.0.2." + i);
+  assert.equal(last.status, 429);
+});
+await t("M1: missing RATE_LIMITER binding -> 503, no gumroad call", async () => {
+  const e = { ...env }; delete e.RATE_LIMITER; const before = calls.length;
+  const r = await post("GOOD-FULL-0001", env.ALLOWED_ORIGIN, e); assert.equal(r.status, 503); const d = await r.json();
+  assert.equal(d.ok, false); assert.equal(d.token, undefined); assert.equal(calls.length, before);
+  assert.equal(r.headers.get("Access-Control-Allow-Origin"), env.ALLOWED_ORIGIN, "503 keeps CORS so the page can show it");
+});
+await t("M1: limiter throws -> 503, no gumroad call", async () => {
+  const e = { ...env, RATE_LIMITER: { limit: async () => { throw new Error("binding down"); } } }; const before = calls.length;
+  assert.equal((await post("GOOD-FULL-0001", env.ALLOWED_ORIGIN, e)).status, 503); assert.equal(calls.length, before);
+});
+await t("M1: spoofed Origin (non-browser script) and bad Origin are still counted", async () => {
+  const rl = makeLimiter(10); const e = { ...env, RATE_LIMITER: rl };
+  for (let i = 0; i < 5; i++) await post("NOPE-NOPE-" + String(3000 + i), "https://evil.example", e);
+  for (let i = 0; i < 5; i++) await post("NOPE-NOPE-" + String(3100 + i), env.ALLOWED_ORIGIN, e); // script sending the right Origin
+  const before = calls.length; const r = await post("GOOD-FULL-0001", env.ALLOWED_ORIGIN, e);
+  assert.equal(r.status, 429); assert.equal(calls.length, before);
+  assert.equal(rl.keys.filter(k => k === "verify-ip:203.0.113.7").length, 11);
+});
+await t("L1: success !== true is rejected (string \"false\", 1, missing)", async () => {
+  for (const top of [{ success: "false" }, { success: 1 }, { success: undefined }]) {
+    await withOverride((f) => ok200(f, {}, top), async () => { const r = await post("GOOD-FULL-0001"); assert.equal(r.status, 403); assert.equal((await r.json()).token, undefined); });
+  }
+});
+await t("L1: purchase.product_id mismatch is rejected", async () => {
+  await withOverride((f) => ok200(f, { product_id: "SOME_OTHER_PRODUCT" }), async () => {
+    const r = await post("GOOD-FULL-0001"); assert.equal(r.status, 403); assert.equal((await r.json()).token, undefined);
+  });
+});
+await t("L1: missing purchase object or non-boolean flags are rejected", async () => {
+  await withOverride(() => new Response(JSON.stringify({ success: true }), { status: 200 }), async () => assert.equal((await post("GOOD-FULL-0001")).status, 403));
+  await withOverride((f) => new Response(JSON.stringify({ success: true, purchase: { product_id: f.get("product_id") } }), { status: 200 }), async () => assert.equal((await post("GOOD-FULL-0001")).status, 403));
+  await withOverride((f) => ok200(f, { refunded: "false" }), async () => assert.equal((await post("GOOD-FULL-0001")).status, 403));
+  assert.equal(purchaseStanding({}).good, false); assert.equal(purchaseStanding(null).good, false);
+  assert.equal(purchaseStanding(purchase({ disputed: true, dispute_won: true })).good, true);
+});
+await t("L6: oversized chunked body with no Content-Length -> 413, no gumroad call", async () => {
+  const chunk = new TextEncoder().encode("x".repeat(512)); let sent = 0;
+  const stream = new ReadableStream({ pull(c) { if (sent++ < 10000) c.enqueue(chunk); else c.close(); } }); // up to ~5 MB
+  const req = new Request(W + "/verify", { method: "POST", headers: { Origin: env.ALLOWED_ORIGIN, "Content-Type": "application/json" }, body: stream, duplex: "half" });
+  assert.equal(req.headers.get("Content-Length"), null);
+  const before = calls.length; const r = await worker.fetch(req, env);
+  assert.equal(r.status, 413); assert.equal(calls.length, before); assert.ok(sent < 10, "read the whole stream instead of stopping at the cap");
+  const big = await worker.fetch(new Request(W + "/verify", { method: "POST", headers: { Origin: env.ALLOWED_ORIGIN, "Content-Length": "5000" }, body: "x".repeat(5000) }), env);
+  assert.equal(big.status, 413);
+});
+await t("L5: gumroad hang -> aborted by timeout -> 502 quickly", async () => {
+  const e = { ...env, GUMROAD_TIMEOUT_MS: "50" }; let aborted = 0;
+  await withOverride((f, init) => new Promise((_, rej) => init.signal.addEventListener("abort", () => { aborted++; rej(init.signal.reason || new Error("aborted")); })), async () => {
+    const t0 = Date.now(); const r = await post("GOOD-FULL-0001", env.ALLOWED_ORIGIN, e);
+    assert.equal(r.status, 502); assert.ok(Date.now() - t0 < 1000, "took too long"); assert.equal(aborted, 2);
+  });
+});
+await t("L5: 5xx on the first product still lets a founders key through", async () => {
+  await withOverride((f) => f.get("product_id") === "PID_FULL" ? new Response("oops", { status: 500 }) : ok200(f), async () => {
+    const r = await post("GOOD-FOUND-0002"); const d = await r.json(); assert.equal(r.status, 200); assert.equal(d.product, "founders");
+  });
+});
+await t("L4: missing or short MEMBERS_SESSION_SECRET -> 503 before gumroad; readToken rejects short secret", async () => {
+  const good = await (await post("GOOD-FULL-0001")).json();
+  for (const sec of [undefined, "short-secret"]) {
+    const e = { ...env, MEMBERS_SESSION_SECRET: sec }; const before = calls.length;
+    const r = await post("GOOD-FULL-0001", env.ALLOWED_ORIGIN, e); assert.equal(r.status, 503); assert.equal(calls.length, before);
+    assert.equal(r.headers.get("Access-Control-Allow-Origin"), env.ALLOWED_ORIGIN);
+    assert.equal((await get("/session", good.token, env.ALLOWED_ORIGIN)).status, 200);
+    assert.equal(await readToken(e, good.token), null);
+  }
+  // a token signed with a 5-char secret must not verify when the env secret is that short
+  const weak = { ...env, MEMBERS_SESSION_SECRET: "abcde" };
+  const body = Buffer.from(JSON.stringify({ p: "full-kit", exp: 9999999999 })).toString("base64url");
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode("abcde"), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const sig = Buffer.from(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(body))).toString("base64url");
+  assert.equal(await readToken(weak, body + "." + sig), null);
+});
 console.log(`\n${n} tests passed`);

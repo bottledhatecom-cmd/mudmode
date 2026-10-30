@@ -1,6 +1,6 @@
 # members login: gumroad license key + cloudflare worker (DRAFT)
 
-Status: draft from wk2pg4 (Grok house), 2026-10-29. Not deployed. Brief wording review and redteam review are still pending.
+Status: draft from wk2pg4 (Grok house), 2026-10-29. Not deployed. Brief wording review is still pending. Redteam verdict FLAG 0H/1M/9L on ebdeb65 (hub jobs\proof-pack\verdicts\VERDICT-redteam-members-login.md); fixes are in the commit after ebdeb65 and need a redteam recheck.
 Design choice: Michael, card t6s3 ("go with license key + cloudflare worker"). Prices: Michael, t7u ("Yeh price should be 29 and 15 for founders first 200").
 
 ## How it works
@@ -8,8 +8,8 @@ Design choice: Michael, card t6s3 ("go with license key + cloudflare worker"). P
 2. members-login.js sends `POST {license_key}` to the worker (`/verify`). The site makes no other calls.
 3. The worker calls `POST https://api.gumroad.com/v2/licenses/verify` with `product_id`, `license_key`, `increment_uses_count=false`, once for each member product.
    Source: https://gumroad.com/help/article/76-license-keys (products made on or after Jan 9, 2023 need `product_id`, not `product_permalink`; a failed verify returns 404).
-4. The key is denied if it is refunded, chargebacked, disputed (and the dispute was not won), or if a subscription ended, was cancelled or failed.
-5. On success the worker returns only `{ok, product, refunded, chargebacked, disputed, ended, token, expires}`. It never returns the email, name, sale id or the key itself.
+4. The key is denied if it is refunded, chargebacked, disputed (and the dispute was not won), or if a subscription ended, was cancelled or failed. Gumroad's answer is allow-listed: `success` must be exactly `true`, `purchase` must be an object whose `product_id` equals the product asked about, and the refunded/chargebacked/disputed flags must be real booleans. Anything else denies.
+5. On success the worker returns only `{ok, product, refunded, chargebacked, disputed, ended, token, expires}`. It never returns the email, name, sale id or the key itself. An unknown key and a key that is not in good standing get the same answer, `403 {ok:false, error:"not accepted"}`, with no product label, so /verify does not confirm which keys are real.
 6. The token is HMAC-SHA256 signed with `MEMBERS_SESSION_SECRET`, and it lasts 1 hour by default. The page keeps it in sessionStorage, which is cleared when the tab closes. There are no cookies.
 7. `GET /session` checks a token. `GET /download` returns the members link, which is the Gumroad library (https://app.gumroad.com/library). The worker never returns a public exe URL.
 8. **The reveal on the page is cosmetic.** Anyone can unhide the div. The real gate is the worker plus Gumroad's own library login. Nothing secret is in the page HTML.
@@ -23,9 +23,25 @@ Members are buyers of both of these products:
 2. Gumroad: set the founders product price to $15 and **limit it to 200 sales** (max purchase count = 200). The cap lives on Gumroad, not in the worker. Then re-publish it; it is unpublished today (ijfhue). Note the license still says "Founding 100 ($19, first 100)".
 3. Cloudflare: free account signup, then `npx wrangler login`.
 4. Secret, by name only: `wrangler secret put MEMBERS_SESSION_SECRET`, with 32+ random characters → [SECRET OMITTED]. No other secrets are needed, because the verify API needs no OAuth.
-5. Rate limit: add the `[[ratelimits]]` binding `RATE_LIMITER` (about 10 per minute per IP, commented in wrangler.toml), or a WAF rate-limit rule. Without it the worker runs unlimited (TODO).
+5. Rate limit (deploy blocker, redteam M1): the `[[ratelimits]]` binding `RATE_LIMITER` is on in wrangler.toml (namespace_id "20261029", 10 per 60 s). /verify counts every call per client IP (`CF-Connecting-IP`) before the origin check, the body read and any gumroad call, then counts per hashed key too. If the binding is missing or `limit()` throws, /verify returns 503 and makes no gumroad call (fails closed). Origin is not auth: any script can send `Origin: https://mudmodecrew.com`. Limits are per Cloudflare location and approximate (Cloudflare docs).
 6. Worker origin chosen (t23u b): `https://mudmode-members.bottledhate-com.workers.dev` (worker `mudmode-members` on account subdomain `bottledhate-com.workers.dev`). Set in members.html (CSP) and members-login.js.
 7. `wrangler deploy`, then merge the site PR.
+
+## Hardening done after the redteam verdict (ebdeb65 -> next commit)
+- M1 rate limit required + fail closed (above).
+- L1 allow-list on gumroad fields (success === true, purchase object, product_id match, boolean flags).
+- L2 one generic 403 for unknown and inactive keys; no product label.
+- L4 `MEMBERS_SESSION_SECRET` checked up front (503 + CORS before any gumroad call) and in readToken (missing or under 32 chars -> no token accepted).
+- L5 gumroad fetch timeout (AbortController, 5 s); an error on one product still tries the others, 502 only if none matched.
+- L6 the body is read with a 1024-byte cap whether or not Content-Length is sent (413).
+- L7 page shows "Could not reach the check" for 5xx; refunded/ended keys get the generic message (the worker no longer says which).
+- L8 file paths and the PRODUCTS comment fixed.
+- L9 framing: members-login.js refuses to run inside a frame and tries to break out (a meta CSP can't set frame-ancestors on GitHub Pages). `'unsafe-inline'` removed from members.html style-src (code review: no inline styles on the page; giscus-client sets styles through the CSSOM, which CSP allows). Needs a browser check before merge. The giscus-client.js same-page exposure of the sessionStorage token is unchanged (see Known lows).
+
+## Known lows (accepted for now)
+- L3 the token is stateless. It keeps working until it expires (1 hour by default) after a refund or after sign-out (sign-out only clears sessionStorage), and gumroad `uses` are never counted, so one key can be shared. Low today because MEMBERS_LINK is the public Gumroad library URL and Gumroad's own login is the real gate. Revisit (re-verify on /download, or a small revocation list) if MEMBERS_LINK ever points at real content.
+- L9 giscus-client.js runs same-origin on members.html, so a compromise of that pinned file could read the token. Moving sign-in to a page without giscus would remove this.
+- Timing: an inactive key can answer a little faster than an unknown one (it stops at the first matching product). Low.
 
 ## Redteam scope (hand to the redteam bot with a scope card)
 - In scope: the worker endpoints /verify, /session and /download, plus members.html and members-login.js on a preview.
@@ -72,7 +88,7 @@ Live repo (not hub, needs a site PR and the Brief + license OK):
 
 ## Ordered named OKs still needed
 1. ok: brief wording for the members sign-in strings (the `<!-- brief-review -->` lines)
-2. ok: redteam pass on the worker (a PASS is not an OK)
+2. ok: redteam pass on the worker (a PASS is not an OK). First verdict FLAG 0H/1M/9L on ebdeb65; recheck needed on the fix commit.
 3. ok: add license keys to the full kit + founders gumroad products (and the 200 cap, if not done under t9u (a))
 4. ok: sign up for cloudflare (free) and deploy the worker
 5. ok: set worker origin / dns
@@ -82,5 +98,5 @@ Live repo (not hub, needs a site PR and the Brief + license OK):
 
 ## Files
 - `worker/worker.js`, `worker/wrangler.toml`
-- `site/members.html` (only this page's CSP changed: `connect-src 'self' https://mudmode-members.bottledhate-com.workers.dev`), `site/members-login.js`
-- `tests/worker.test.mjs`: run with `node tests/worker.test.mjs` (plain node, mocked fetch)
+- `members.html` (repo root; this page's CSP changed: `connect-src 'self' https://mudmode-members.bottledhate-com.workers.dev`, and `'unsafe-inline'` dropped from style-src), `members-login.js` (repo root)
+- `tests/worker.test.mjs`: run with `node tests/worker.test.mjs` from `members-login/` (plain node, mocked fetch and a mocked RATE_LIMITER)
