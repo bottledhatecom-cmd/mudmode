@@ -25,7 +25,8 @@ Members are buyers of both of these products:
 4. Secret, by name only: `wrangler secret put MEMBERS_SESSION_SECRET`, with 32+ random characters → [SECRET OMITTED]. No other secrets are needed, because the verify API needs no OAuth.
 5. Rate limit (deploy blocker, redteam M1): the `[[ratelimits]]` binding `RATE_LIMITER` is on in wrangler.toml (namespace_id "20261029", 10 per 60 s). /verify counts every call per client IP (`CF-Connecting-IP`) before the body read and any gumroad call, then counts per hashed key too. N1 (redteam/overwatch): a call with a wrong or missing Origin is counted under its own `badorigin:<ip>` key and gets 403, so another site can't use up a visitor's real `verify-ip:<ip>` budget; both counters fail closed. If the binding is missing or `limit()` throws, /verify returns 503 and makes no gumroad call (fails closed). Origin is not auth: any script can send `Origin: https://mudmodecrew.com`. Limits are per Cloudflare location and approximate (Cloudflare docs).
 6. Worker origin chosen (t23u b): `https://mudmode-members.bottledhate-com.workers.dev` (worker `mudmode-members` on account subdomain `bottledhate-com.workers.dev`). Set in members.html (CSP) and members-login.js.
-7. `wrangler deploy`, then merge the site PR.
+7. Dashboard checks before go-live (G3 N-3, N-12): confirm rate-limit namespace_id "20261029" is not used by any other ratelimit binding on the account, and after deploy confirm Workers Logs (observability) shows off for `mudmode-members`. privacy.html's "logs off" sentence must not go live until that is seen in the dashboard.
+8. `wrangler deploy` (own ok), run the probes, then merge the site PR (own ok). At merge: set privacy.html "Updated" to the merge date (CT); whichever of PR #25 / PR #29 lands second also carries the other's privacy.html change (#29: the line 40 installer sentence; #25: the member sign-in block).
 
 ## Hardening done after the redteam verdict (ebdeb65 -> next commit)
 - M1 rate limit required + fail closed (above).
@@ -87,12 +88,12 @@ Live repo (not hub, needs a site PR and the Brief + license OK):
 - filler-art.css:12 (comment)
 
 ## Ordered named OKs still needed
-1. ok: brief wording for the members sign-in strings (the `<!-- brief-review -->` lines)
+1. done: brief wording for the members sign-in strings (owner wording ok, OK-LEDGER 1139/1141; applied at d572ccc)
 2. ok: redteam pass on the worker (a PASS is not an OK). First verdict FLAG 0H/1M/9L on ebdeb65; recheck needed on the fix commit.
 3. ok: add license keys to the full kit + founders gumroad products (and the 200 cap, if not done under t9u (a))
 4. ok: sign up for cloudflare (free) and deploy the worker
 5. ok: set worker origin / dns
-6. ok: privacy page wording change (Brief)
+6. done (wording only): privacy page member sign-in block (owner wording ok, OK-LEDGER 1140; committed on top of d572ccc). Still needs: merge date, dashboard logs-off check (step 7)
 7. ok: merge the members login PR (after 1-6)
 8. later: license v1.6 for the founders $15 / first 200 terms
 
