@@ -5,7 +5,7 @@
  /* redteam L9: a meta CSP can't set frame-ancestors on GitHub Pages, so refuse to run the sign-in form inside a frame. */
  if(window.top!==window.self){ f.hidden=true; try{ window.top.location=window.self.location.href; }catch(e){} return; }
  var st=document.getElementById('ml-status'), box=document.getElementById('ml-members'), link=document.getElementById('ml-link');
- var MSG={ok:'Signed in.',bad:'That key did not unlock members. Check it and try again. Refunded, disputed or ended purchases no longer unlock members.',busy:'Too many tries. Wait a minute.',err:'Could not reach the check. Try again soon.'}; /* brief-review */
+ var MSG={ok:'Signed in.',bad:'That key did not unlock members. Check it and try again. Refunded, disputed or ended purchases no longer unlock members.',busy:'Too many tries. Wait a minute.',err:'Could not reach the check. Try again soon.'};
  function show(t){ fetch(API+'/download',{headers:{Authorization:'Bearer '+t}}).then(function(r){return r.json();}).then(function(d){
    if(d&&d.ok&&d.link){ link.href=d.link; box.hidden=false; f.hidden=true; } else { sessionStorage.removeItem('mm_t'); box.hidden=true; f.hidden=false; }
  }).catch(function(){ st.textContent=MSG.err; }); }

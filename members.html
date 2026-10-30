@@ -55,19 +55,19 @@
 
 <!-- DRAFT wk2pg4 t6s3: member sign in. The reveal below is cosmetic only; real gating is the worker (/download needs a valid signed token). -->
 <section id="member-sign-in"><div class="wrap">
-<h2>Member sign in</h2><!-- brief-review -->
-<p class="sub">Paste the license key from your Gumroad receipt. We check it with Gumroad and don't keep it.</p><!-- brief-review -->
+<h2>Member sign in</h2>
+<p class="sub">Paste the license key from your Gumroad receipt. Our sign-in checker sends it to Gumroad to confirm your purchase and doesn't save it; see the <a href="privacy.html#member-sign-in">privacy note</a>.</p>
 <form id="ml-form" autocomplete="off" novalidate>
-<label for="ml-key">License key</label><!-- brief-review -->
+<label for="ml-key">License key</label>
 <input id="ml-key" name="license_key" type="text" inputmode="text" spellcheck="false" maxlength="64" required>
-<button class="btn" type="submit">Sign in</button><!-- brief-review -->
+<button class="btn" type="submit">Sign in</button>
 </form>
 <p id="ml-status" class="fine" role="status" aria-live="polite"></p>
 <div id="ml-members" hidden>
-<h3>You're in</h3><!-- brief-review -->
-<p>Your kit and updates are in your Gumroad library.</p><!-- brief-review -->
-<a id="ml-link" class="btn o" href="#" target="_blank" rel="noopener">Open my Gumroad library</a><!-- brief-review -->
-<button id="ml-out" class="btn o" type="button">Sign out</button><!-- brief-review -->
+<h3>You're in</h3>
+<p>Your kit is in your Gumroad library, and kit updates land there too.</p>
+<a id="ml-link" class="btn o" href="#" target="_blank" rel="noopener">Open my Gumroad library</a>
+<button id="ml-out" class="btn o" type="button">Sign out</button>
 </div>
 <script src="members-login.js?v=draft2"></script>
 </div></section>

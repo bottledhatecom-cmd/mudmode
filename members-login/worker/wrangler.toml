@@ -6,6 +6,10 @@ main = "worker.js"
 compatibility_date = "2026-10-01"
 # Origin: https://mudmode-members.bottledhate-com.workers.dev (workers.dev). No custom route.
 
+# Workers Logs off (Brief pr25 verdict C1 / F13: new Workers default to observability on). Check the dashboard after deploy that Workers Logs is off.
+[observability]
+enabled = false
+
 [vars]
 ALLOWED_ORIGIN = "https://mudmodecrew.com"
 # label -> Gumroad product_id (from the License key block on the product's content page).
