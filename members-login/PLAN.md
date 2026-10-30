@@ -1,6 +1,6 @@
 # members login: gumroad license key + cloudflare worker (DRAFT)
 
-Status: draft from wk2pg4 (Grok house), 2026-10-29. Not deployed. Brief wording review is still pending. Redteam verdict FLAG 0H/1M/9L on ebdeb65 (hub jobs\proof-pack\verdicts\VERDICT-redteam-members-login.md); fixes are in the commit after ebdeb65 and need a redteam recheck. N1 fix (bad-origin calls counted separately) is in the commit after 572eba9, local only until Michael oks a push.
+Status: draft from wk2pg4 (Grok house), updated 2026-10-30. Not deployed. PR #25 is pushed (head d572ccc before this commit); later commits stay local until Michael oks a push of the named sha. Brief wording is done: members.html strings applied at d572ccc (owner wording ok, OK-LEDGER rows 1139/1141); privacy.html #member-sign-in block committed on top (row 1140). Wording oks are wording only, not push/merge/go-live. Redteam: first verdict FLAG 0H/1M/9L on ebdeb65 (hub jobs\proof-pack\verdicts\VERDICT-redteam-members-login.md); fixes landed after it and still need a redteam recheck on the current head. Claude-house G3 on d572ccc: FAIL for go-live, code passes (B1 privacy block now committed; B2 worker not deployed).
 Design choice: Michael, card t6s3 ("go with license key + cloudflare worker"). Prices: Michael, t7u ("Yeh price should be 29 and 15 for founders first 200").
 
 ## How it works
