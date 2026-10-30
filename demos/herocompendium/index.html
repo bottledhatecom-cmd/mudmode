@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: file:; connect-src 'none'; form-action mailto:">
+<link rel="icon" href="data:,">
+<title>HeroCompendium - mock 3D test world</title>
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<a class="skip" href="#mw-stage">Skip to the demo</a>
+<div class="banner" role="note"><span class="sigil" aria-hidden="true"></span>mock world - not the real WoW Forever client - results UNPROVEN</div>
+
+<header class="hero">
+  <h1>HeroCompendium <span>mock 3D test world</span></h1>
+  <p class="approach"><strong>Approach:</strong> real Lua 5.1.5 (compiled to WebAssembly) running the real HeroCompendium addon code against our own stub of the WoW API. The world, robot and UI frame around it are placeholders we made. Build <code id="mw-build">?</code></p>
+</header>
+
+<main>
+<p id="mw-note-mobile" class="note" hidden>Heads up: this demo is built for a desktop browser with a keyboard and mouse (it mirrors a PC game UI). On a phone or tablet it may be slow or hard to use, but you are welcome to look around.</p>
+<p id="mw-note-webgl" class="note" hidden>Your browser has WebGL turned off or unavailable, so the 3D meadow is replaced by a flat backdrop. The addon itself still runs and can be tested. For the full scene, try a current Chrome, Edge or Firefox with hardware acceleration on.</p>
+<noscript><p class="note">This demo needs JavaScript. Nothing is sent anywhere; it all runs in your browser.</p></noscript>
+<section class="stage-wrap" aria-label="Demo">
+  <div id="mw-stage">
+    <div id="mw-game" tabindex="0" aria-label="Mock game view. Click to focus, WASD to walk, drag to orbit, Enter for chat, F1 for test tools.">
+      <canvas id="mw-world"></canvas>
+      <div class="hud" aria-hidden="false">
+        <div id="mw-minimap" class="minimap"><div class="mm-ring"></div><span class="mm-n">N</span>
+          <button id="mw-compartment" class="mm-btn" title="Addon compartment: HeroCompendium" aria-label="Open HeroCompendium (addon compartment)"><span class="mm-glyph" aria-hidden="true"></span></button>
+        </div>
+        <div class="chatbox"><div id="mw-chat-lines" class="chat-lines" aria-live="polite"></div>
+          <input id="mw-chat-input" class="chat-input" hidden placeholder="/hcomp" aria-label="Chat or slash command" autocomplete="off" spellcheck="false"></div>
+        <div class="actionbar" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="xpbar" aria-hidden="true"><b></b></div>
+        <div class="unitframe" aria-hidden="true"><span class="uf-port"></span><span class="uf-name">Testbot</span><span class="uf-hp"></span><span class="uf-mp"></span></div>
+      </div>
+      <canvas id="mw-ui"></canvas>
+      <div class="hud-tag" aria-hidden="true">MOCK UI &middot; placeholders</div>
+    </div>
+  </div>
+  <div class="stage-bar">
+    <span id="mw-res"></span>
+    <span class="keys"><kbd>click</kbd> focus &middot; <kbd>WASD</kbd> walk &middot; <kbd>drag</kbd> orbit &middot; <kbd>wheel</kbd> zoom &middot; <kbd>Enter</kbd> chat &middot; <kbd>/hcomp</kbd> book &middot; <kbd>F1</kbd> tools</span>
+    <button id="mw-tools-btn" class="arc-btn" aria-expanded="false" aria-controls="mw-tools">Test toolbar (F1)</button>
+  </div>
+</section>
+
+<aside id="mw-tools" class="panel tools" hidden aria-label="Test toolbar">
+  <div class="tools-head"><h2>Test toolbar</h2><span class="errs">Lua errors: <b id="mw-errcount">0</b></span><button id="mw-tools-close" class="arc-btn small" aria-label="Close test toolbar">Close</button></div>
+  <div class="tools-grid">
+    <div class="tool-col">
+      <h3>Performance</h3>
+      <canvas id="mw-meter" width="300" height="70" aria-hidden="true"></canvas>
+      <p id="mw-fps" class="mono">-</p>
+      <h3>Command</h3>
+      <form id="mw-cmd-form" class="row"><label class="sr" for="mw-cmd">Slash command</label><input id="mw-cmd" value="/hcomp " autocomplete="off" spellcheck="false"><button class="arc-btn small">Run</button></form>
+      <h3>Book</h3>
+      <div class="btns">
+        <button class="arc-btn small" data-act="toggle">/hcomp (toggle)</button><button class="arc-btn small" data-act="open">open book</button><button class="arc-btn small" data-act="hide">hide book</button>
+        <button class="arc-btn small" data-act="close">close (idle)</button><button class="arc-btn small" data-act="reopen">reopen</button>
+        <button class="arc-btn small" data-act="turn:-1">&larr; page</button><button class="arc-btn small" data-act="turn:1">page &rarr;</button>
+        <button class="arc-btn small" data-act="yaw:-">yaw &minus;</button><button class="arc-btn small" data-act="yaw:+">yaw +</button>
+        <button class="arc-btn small" data-act="tilt:0">tilt 0</button><button class="arc-btn small" data-act="tilt:1">tilt 1</button><button class="arc-btn small" data-act="tilt:2">tilt 2</button><button class="arc-btn small" data-act="tilt:3">tilt 3</button>
+      </div>
+      <h3>Chapters</h3>
+      <div id="mw-chapters" class="btns"></div>
+    </div>
+    <div class="tool-col">
+      <h3>Settings</h3>
+      <label class="chk"><input type="checkbox" id="mw-reduce"> Reduce Motion</label>
+      <label class="fld">UI scale <select id="mw-scale"><option>0.64</option><option>0.75</option><option>0.85</option><option>1</option><option>1.15</option></select></label>
+      <label class="fld">Window <select id="mw-size"><option value="1280x800">1280&times;800</option><option value="1920x1080">1920&times;1080</option><option value="ultrawide">ultrawide 2560&times;1080</option></select></label>
+      <h3>Fake character <small>(reloads the addon)</small></h3>
+      <div class="row wrap">
+        <label class="fld">Level <select id="mw-level"><option>1</option><option>10</option><option>20</option><option>30</option><option>40</option><option>50</option><option>60</option></select></label>
+        <label class="fld">Class <select id="mw-class"><option>Hunter</option><option>Mage</option><option>Priest</option></select></label>
+        <label class="fld">Faction <select id="mw-faction"><option>Alliance</option><option>Horde</option></select></label>
+      </div>
+      <div class="btns"><button id="mw-fake" class="arc-btn small">apply + reload</button><button id="mw-clear" class="arc-btn small warn">clear saved data</button></div>
+      <h3>Overlays</h3>
+      <label class="chk"><input type="checkbox" id="mw-hit"> hit boxes</label>
+      <label class="chk"><input type="checkbox" id="mw-safe"> text-safe areas</label>
+      <h3>Break it</h3>
+      <div class="btns"><button id="mw-stress" class="arc-btn small">stress: 40 flips + random clicks</button></div>
+      <p id="mw-stress-out" class="mono" aria-live="polite">not run</p>
+      <div class="btns"><button id="mw-bug" class="arc-btn glow">bug report</button><span id="mw-copied" class="mono" aria-live="polite"></span></div>
+      <p class="hint">Saves a .json (screenshot, last 50 log lines, settings, build) and copies a short summary to the clipboard. Nothing is uploaded.</p>
+    </div>
+    <div class="tool-col log-col">
+      <h3>Event log <button id="mw-logclear" class="arc-btn tiny">clear</button></h3>
+      <ol id="mw-log" class="log" aria-live="off"></ol>
+    </div>
+  </div>
+</aside>
+
+<section class="panel about" aria-labelledby="about-h">
+<h2 id="about-h">HeroCompendium: a living grimoire for WoW Forever</h2>
+<p>this isn't a menu. it's a spellbook that breathes. it floats over your game on arcane tentacles, and its pages turn, glow and settle. you jump between chapters with living badges on a velvet ribbon. close it and it rests, swelling and rippling while its tentacles curl over the cover.</p>
+<p>inside are 13 chapters: training, bestiary with a catch-'em-all pet tracker, buffs, gathering, quests, talents, recipes, gear and more. there are 2,000+ records, and every game-data record is cited to a real source. nothing is guessed. anything not yet proven for forever is labelled that way.</p>
+<p>how it came about: one player, mud, describing what he wanted in plain words, and the mudmode crew of ai helpers building it with him overnight. every art pass, every fix and every feature came from his direction. it's backed by 98 automated tests, and all of them pass.</p>
+<p>we need testers. this is a mock world running the addon in your browser, not the real game yet. click everything, spam it, turn it, close it and try to break it. open the test toolbar with F1, and when something breaks, hit "bug report" and send it to us with the comment box.</p>
+</section>
+
+<section class="panel feedback" aria-labelledby="fb-h">
+<h2 id="fb-h">Tester comments</h2>
+<form id="fb-form">
+  <label class="fld block">Name <small>(optional)</small><input id="fb-name" maxlength="60" autocomplete="nickname"></label>
+  <label class="fld block">What you tried<textarea id="fb-tried" rows="3" maxlength="700" required></textarea></label>
+  <label class="fld block">What happened<textarea id="fb-happened" rows="3" maxlength="700" required></textarea></label>
+  <label class="chk"><input type="checkbox" id="fb-info" checked> include bug info (window, settings, error count, last log lines)</label>
+  <div class="btns"><button class="arc-btn glow" type="submit">Submit (opens your email app)</button></div>
+  <p class="hint">This page sends nothing by itself: Submit opens an email to <a id="fb-mailto" href="mailto:reports@mudmodecrew.com">reports@mudmodecrew.com</a> in your own mail app. You can also email that address by hand. Attach the bug report .json if you saved one.</p>
+  <p id="fb-status" class="mono" aria-live="polite"></p>
+  <pre id="fb-preview" class="preview"></pre>
+</form>
+</section>
+
+<footer class="panel licenses">
+<h2>Credits and licenses</h2>
+<ul>
+<li>HeroCompendium addon by mud. The book art shown here is the addon's own media.</li>
+<li>Lua 5.1.5 &copy; 1994-2012 Lua.org, PUC-Rio, MIT license (compiled to WebAssembly with Emscripten).</li>
+<li>three.js &copy; 2010-2026 three.js authors, MIT license (see js/LICENSE-three.txt).</li>
+<li>Fonts: Lato (Copyright 2010-2014 tyPoland Lukasz Dziedzic) and Alegreya SC (Copyright 2011 The Alegreya Project Authors), SIL Open Font License 1.1, subset and bundled locally (see fonts/OFL-*.txt).</li>
+<li>Meadow, robot, sky and page chrome: procedural, made for this demo. No game-client art.</li>
+<li>World of Warcraft is a trademark of Blizzard Entertainment. This is an unofficial fan test page, not affiliated with or endorsed by Blizzard.</li>
+</ul>
+</footer>
+</main>
+<script src="js/build_info.js"></script>
+<script src="js/lua51.js"></script>
+<script src="js/media_manifest.js"></script>
+<script src="js/hc_src.js"></script>
+<script src="js/mw_vm.js"></script>
+<script src="js/world.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
