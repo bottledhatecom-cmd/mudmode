@@ -1,0 +1,1 @@
+window.MW_BUILD = {"sha": "78829eb1862f", "files": 195, "addonZipSha256": "5433e6e51bb8f41b17e0c533d58d3b203dfb72e8291fb56b8854bf40bbc4c7b7", "built": "2026-10-30 08:17 CDT", "lua": "Lua 5.1.5 wasm", "mock": true};
