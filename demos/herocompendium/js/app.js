@@ -83,9 +83,12 @@
     for (const rec of L) {
       const f = rec.split('\x1f'); const x1 = +f[1] * k, x2 = +f[3] * k, y1 = (uh - +f[4]) * k, y2 = (uh - +f[2]) * k, a = +f[5];
       const w = x2 - x1, h = y2 - y1; if (w < 0.5 || h < 0.5 || w > 4 * W || h > 4 * H) continue;
+      const at = f[0].indexOf('@'); let clipBox = null;   // testerfix: 'T@l,b,r,t' = clipped by a ScrollFrame / clipping parent
+      if (at > 0) { const q = f[0].slice(at + 1).split(',').map(Number); f[0] = f[0].slice(0, at); clipBox = [q[0] * k, (uh - q[3]) * k, (q[2] - q[0]) * k, (q[3] - q[1]) * k]; }
+      const clipIt = () => { if (clipBox) { c.beginPath(); c.rect(clipBox[0], clipBox[1], clipBox[2], clipBox[3]); c.clip(); } };
       if (f[0] === 'T') {
         const file = f[6], col = nums(f[7]), vc = nums(f[8]) || [1, 1, 1, 1], blend = f[9], rot = +f[10], tc = nums(f[11]), desat = f[12] === '1';
-        c.save(); c.globalAlpha = Math.max(0, Math.min(1, a * vc[3]));
+        c.save(); clipIt(); c.globalAlpha = Math.max(0, Math.min(1, a * vc[3]));
         c.globalCompositeOperation = blend === 'ADD' ? 'lighter' : (blend === 'MOD' ? 'multiply' : 'source-over');
         c.translate(x1 + w / 2, y1 + h / 2); if (rot) c.rotate(-rot);
         if (file) {
@@ -113,7 +116,7 @@
         if (!isE && !text) continue;
         const jh = isE ? 'LEFT' : f[8], jv = isE ? 'MIDDLE' : f[9], font = isE ? '' : f[10], col = isE ? [1, 0.96, 0.85, 1] : (nums(f[11]) || [1, 1, 1, 1]);
         const shadow = isE ? null : nums(f[12]), wrap = isE ? false : f[13] === '1', flags = isE ? '' : (f[14] || '');
-        c.save(); c.globalAlpha = Math.max(0, Math.min(1, a)); c.font = fontFor(font, size * 0.95, flags); c.textBaseline = 'middle';
+        c.save(); clipIt(); c.globalAlpha = Math.max(0, Math.min(1, a)); c.font = fontFor(font, size * 0.95, flags); c.textBaseline = 'middle';
         const base = rgba(col, 1); const R = runs(isE ? text.replace(/\|/g, '||') : text, base);
         // lines: explicit \n, plus word wrap when the region is taller than one line and the text is wider than it
         const full = R.map((r) => r[0]).join('');
