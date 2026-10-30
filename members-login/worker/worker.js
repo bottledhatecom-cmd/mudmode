@@ -137,12 +137,19 @@ async function rateLimit(env, origin, key) {
 }
 
 async function handleVerify(req, env, origin) {
-  // Count every /verify call per client IP first, before the origin check (Origin can be spoofed by any script)
-  // and before reading the body or calling gumroad.
+  // Count every /verify call per client IP, before reading the body or calling gumroad.
+  // redteam/overwatch N1: a bad-origin call is counted under its own "badorigin:" key, so another site
+  // (which makes the visitor's browser send its own Origin) can't use up that visitor's real per-IP budget.
+  // A script that spoofs the right Origin is still counted under "verify-ip:" for its own IP.
+  // Both paths still fail closed: missing binding or a limiter error -> 503.
   const ip = req.headers.get("CF-Connecting-IP") || "unknown";
+  if (origin !== env.ALLOWED_ORIGIN) {
+    const badLimited = await rateLimit(env, origin, "badorigin:" + ip);
+    if (badLimited) return badLimited;
+    return json(env, origin, 403, { ok: false, error: "origin" });
+  }
   const ipLimited = await rateLimit(env, origin, "verify-ip:" + ip);
   if (ipLimited) return ipLimited;
-  if (origin !== env.ALLOWED_ORIGIN) return json(env, origin, 403, { ok: false, error: "origin" });
   const { tooBig, text } = await readCapped(req);
   if (tooBig) return json(env, origin, 413, { ok: false, error: "too big" });
   let body; try { body = JSON.parse(text); } catch { return json(env, origin, 400, { ok: false, error: "bad request" }); }
