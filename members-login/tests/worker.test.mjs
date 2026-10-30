@@ -108,13 +108,40 @@ await t("M1: limiter throws -> 503, no gumroad call", async () => {
   const e = { ...env, RATE_LIMITER: { limit: async () => { throw new Error("binding down"); } } }; const before = calls.length;
   assert.equal((await post("GOOD-FULL-0001", env.ALLOWED_ORIGIN, e)).status, 503); assert.equal(calls.length, before);
 });
-await t("M1: spoofed Origin (non-browser script) and bad Origin are still counted", async () => {
+await t("M1: script spoofing the right Origin is still counted per IP", async () => {
   const rl = makeLimiter(10); const e = { ...env, RATE_LIMITER: rl };
-  for (let i = 0; i < 5; i++) await post("NOPE-NOPE-" + String(3000 + i), "https://evil.example", e);
-  for (let i = 0; i < 5; i++) await post("NOPE-NOPE-" + String(3100 + i), env.ALLOWED_ORIGIN, e); // script sending the right Origin
+  for (let i = 0; i < 10; i++) await post("NOPE-NOPE-" + String(3100 + i), env.ALLOWED_ORIGIN, e); // script sending the right Origin
   const before = calls.length; const r = await post("GOOD-FULL-0001", env.ALLOWED_ORIGIN, e);
   assert.equal(r.status, 429); assert.equal(calls.length, before);
   assert.equal(rl.keys.filter(k => k === "verify-ip:203.0.113.7").length, 11);
+});
+await t("N1: bad-origin calls don't use up the visitor's real per-IP budget", async () => {
+  const rl = makeLimiter(10); const e = { ...env, RATE_LIMITER: rl }; const before = calls.length;
+  for (let i = 0; i < 50; i++) assert.equal((await post("NOPE-NOPE-" + String(4000 + i), "https://evil.example", e)).status, i < 10 ? 403 : 429);
+  assert.equal(calls.length, before, "gumroad called for a bad origin");
+  const r = await post("GOOD-FULL-0001", env.ALLOWED_ORIGIN, e); assert.equal(r.status, 200, "real visitor locked out by another site");
+  assert.equal((await r.json()).ok, true);
+  assert.equal(rl.keys.filter(k => k === "badorigin:203.0.113.7").length, 50);
+  assert.equal(rl.keys.filter(k => k === "verify-ip:203.0.113.7").length, 1);
+});
+await t("N1: bad-origin calls are still rate limited (429 after 10), no gumroad call, no ACAO", async () => {
+  const rl = makeLimiter(10); const e = { ...env, RATE_LIMITER: rl }; const before = calls.length;
+  for (let i = 0; i < 10; i++) assert.equal((await post("NOPE-NOPE-" + String(5000 + i), "https://evil.example", e)).status, 403);
+  const r = await post("NOPE-NOPE-5100", "https://evil.example", e);
+  assert.equal(r.status, 429); assert.equal(r.headers.get("Access-Control-Allow-Origin"), null); assert.equal(calls.length, before);
+});
+await t("N1: missing Origin header counts as a bad origin", async () => {
+  const rl = makeLimiter(10); const e = { ...env, RATE_LIMITER: rl };
+  const r = await worker.fetch(new Request(W + "/verify", { method: "POST", headers: { "Content-Type": "application/json", "CF-Connecting-IP": "203.0.113.7" }, body: JSON.stringify({ license_key: "GOOD-FULL-0001" }) }), e);
+  assert.equal(r.status, 403); assert.deepEqual(rl.keys, ["badorigin:203.0.113.7"]);
+});
+await t("N1: bad-origin path still fails closed (missing binding or limiter error -> 503)", async () => {
+  const before = calls.length;
+  const e1 = { ...env }; delete e1.RATE_LIMITER;
+  assert.equal((await post("GOOD-FULL-0001", "https://evil.example", e1)).status, 503);
+  const e2 = { ...env, RATE_LIMITER: { limit: async () => { throw new Error("binding down"); } } };
+  assert.equal((await post("GOOD-FULL-0001", "https://evil.example", e2)).status, 503);
+  assert.equal(calls.length, before);
 });
 await t("L1: success !== true is rejected (string \"false\", 1, missing)", async () => {
   for (const top of [{ success: "false" }, { success: 1 }, { success: undefined }]) {

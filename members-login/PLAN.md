@@ -1,6 +1,6 @@
 # members login: gumroad license key + cloudflare worker (DRAFT)
 
-Status: draft from wk2pg4 (Grok house), 2026-10-29. Not deployed. Brief wording review is still pending. Redteam verdict FLAG 0H/1M/9L on ebdeb65 (hub jobs\proof-pack\verdicts\VERDICT-redteam-members-login.md); fixes are in the commit after ebdeb65 and need a redteam recheck.
+Status: draft from wk2pg4 (Grok house), 2026-10-29. Not deployed. Brief wording review is still pending. Redteam verdict FLAG 0H/1M/9L on ebdeb65 (hub jobs\proof-pack\verdicts\VERDICT-redteam-members-login.md); fixes are in the commit after ebdeb65 and need a redteam recheck. N1 fix (bad-origin calls counted separately) is in the commit after 572eba9, local only until Michael oks a push.
 Design choice: Michael, card t6s3 ("go with license key + cloudflare worker"). Prices: Michael, t7u ("Yeh price should be 29 and 15 for founders first 200").
 
 ## How it works
@@ -23,7 +23,7 @@ Members are buyers of both of these products:
 2. Gumroad: set the founders product price to $15 and **limit it to 200 sales** (max purchase count = 200). The cap lives on Gumroad, not in the worker. Then re-publish it; it is unpublished today (ijfhue). Note the license still says "Founding 100 ($19, first 100)".
 3. Cloudflare: free account signup, then `npx wrangler login`.
 4. Secret, by name only: `wrangler secret put MEMBERS_SESSION_SECRET`, with 32+ random characters → [SECRET OMITTED]. No other secrets are needed, because the verify API needs no OAuth.
-5. Rate limit (deploy blocker, redteam M1): the `[[ratelimits]]` binding `RATE_LIMITER` is on in wrangler.toml (namespace_id "20261029", 10 per 60 s). /verify counts every call per client IP (`CF-Connecting-IP`) before the origin check, the body read and any gumroad call, then counts per hashed key too. If the binding is missing or `limit()` throws, /verify returns 503 and makes no gumroad call (fails closed). Origin is not auth: any script can send `Origin: https://mudmodecrew.com`. Limits are per Cloudflare location and approximate (Cloudflare docs).
+5. Rate limit (deploy blocker, redteam M1): the `[[ratelimits]]` binding `RATE_LIMITER` is on in wrangler.toml (namespace_id "20261029", 10 per 60 s). /verify counts every call per client IP (`CF-Connecting-IP`) before the body read and any gumroad call, then counts per hashed key too. N1 (redteam/overwatch): a call with a wrong or missing Origin is counted under its own `badorigin:<ip>` key and gets 403, so another site can't use up a visitor's real `verify-ip:<ip>` budget; both counters fail closed. If the binding is missing or `limit()` throws, /verify returns 503 and makes no gumroad call (fails closed). Origin is not auth: any script can send `Origin: https://mudmodecrew.com`. Limits are per Cloudflare location and approximate (Cloudflare docs).
 6. Worker origin chosen (t23u b): `https://mudmode-members.bottledhate-com.workers.dev` (worker `mudmode-members` on account subdomain `bottledhate-com.workers.dev`). Set in members.html (CSP) and members-login.js.
 7. `wrangler deploy`, then merge the site PR.
 
