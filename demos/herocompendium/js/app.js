@@ -74,12 +74,30 @@
   }
 
   // ------------------------------------------------------------ UI renderer (port of grimoire3d/tools/v6_2_render.py, + rotation, texcoords, tint, wrap)
+  const BOOK_ART = /gr3d[78][a-z]?-(open|idle|turn|view|settle|shut)/i;   // partD: the book body sheets
   const ui = { canvas: null, ctx: null, k: 1, uw: 0, uh: 0, cursor: [0, 0], focus: '', overlay: { hit: false, safe: false }, hitCache: '', safeCache: '', n: 0 };
+  // partD (t136u blink): a book sheet that is not decoded yet used to draw NOTHING for that frame (the book blinked out on
+  // first open / first page turn / first yaw / close). Now: every book sheet is preloaded after boot (MW.preloadBook), and
+  // if a frame still needs one that is not ready, the last complete frame is held (max HOLD_MAX frames) instead of a gap.
+  const HOLD_MAX = 45; let holdN = 0, lastDrawn = 0;
+  function bookMissing(L) {
+    for (const rec of L) { if (rec.charCodeAt(0) !== 84) continue; const f = rec.split('\x1f'); const file = f[6];
+      if (file && BOOK_ART.test(file) && getImg(file) === null) return true; }
+    return false;
+  }
+  MW.preloadBook = function () {
+    const keys = Object.keys(window.MW_MEDIA || {}).filter((k) => BOOK_ART.test(k) || /gr3d7c-tentacles/i.test(k));
+    let i = 0; const next = () => { if (i >= keys.length) { MW.preloaded = keys.length; return; } getImg(keys[i++]); setTimeout(next, 40); }; next();
+  };
   function drawUI(head, list) {
-    const c = ui.ctx; c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, W, H);
+    const c = ui.ctx; c.setTransform(1, 0, 0, 1, 0, 0);
+    const L0 = list ? list.split('\x1e') : null;
+    if (L0 && bookMissing(L0) && holdN < HOLD_MAX && ui.n > 1) { holdN++; MW.holds = (MW.holds || 0) + 1; if (MW.bookVis) MW.bookVis.held = true; return lastDrawn; }
+    holdN = 0; c.clearRect(0, 0, W, H);
     const hp = head.split('\x1f'); ui.uw = +hp[0]; ui.uh = +hp[1]; ui.focus = hp[2]; ui.k = H / ui.uh;
     const k = ui.k, uh = ui.uh;
-    if (!list) return 0; const L = list.split('\x1e'); let drawn = 0;
+    if (!list) return 0; const L = L0; let drawn = 0;
+    let bkA = 0, bkMiss = 0, bkN = 0, bkSig = 0;   // partD: book-art coverage this frame (test hook: MW.bookVis)
     for (const rec of L) {
       const f = rec.split('\x1f'); const x1 = +f[1] * k, x2 = +f[3] * k, y1 = (uh - +f[4]) * k, y2 = (uh - +f[2]) * k, a = +f[5];
       const w = x2 - x1, h = y2 - y1; if (w < 0.5 || h < 0.5 || w > 4 * W || h > 4 * H) continue;
@@ -88,6 +106,9 @@
       const clipIt = () => { if (clipBox) { c.beginPath(); c.rect(clipBox[0], clipBox[1], clipBox[2], clipBox[3]); c.clip(); } };
       if (f[0] === 'T') {
         const file = f[6], col = nums(f[7]), vc = nums(f[8]) || [1, 1, 1, 1], blend = f[9], rot = +f[10], tc = nums(f[11]), desat = f[12] === '1';
+        if (file && MW.debugBook && /grimoire/i.test(file)) (MW._recs = MW._recs || []).push([file.replace(/.*[\\/]/, ''), Math.round(x1), Math.round(y1), Math.round(x2), Math.round(y2), +(a * vc[3]).toFixed(2)].join(' '));
+        if (file && /grimoire/i.test(file)) bkSig = (bkSig * 31 + Math.round(x1) * 7 + Math.round(y1) * 13 + Math.round(a * vc[3] * 100) + file.length) % 1000000007;
+        if (file && BOOK_ART.test(file)) { bkN++; const e = getImg(file); if (e) bkA = 1 - (1 - bkA) * (1 - Math.max(0, Math.min(1, a * vc[3]))); else bkMiss++; }
         c.save(); clipIt(); c.globalAlpha = Math.max(0, Math.min(1, a * vc[3]));
         c.globalCompositeOperation = blend === 'ADD' ? 'lighter' : (blend === 'MOD' ? 'multiply' : 'source-over');
         c.translate(x1 + w / 2, y1 + h / 2); if (rot) c.rotate(-rot);
@@ -145,7 +166,8 @@
         c.restore(); drawn++;
       }
     }
-    return drawn;
+    MW.bookVis = { a: bkA, miss: bkMiss, n: bkN, sig: bkSig }; if (MW.debugBook) { MW.bookRecs = MW._recs || []; MW._recs = []; }
+    lastDrawn = drawn; return drawn;
   }
   function drawOverlays() {
     const c = ui.ctx, k = ui.k, uh = ui.uh;
@@ -420,7 +442,7 @@
     if (narrow) $('#mw-note-mobile').hidden = false;
     layout(); bindInput(); bindTools(); bindFeedback(); MW.toggleTools(cfg.tools);
     addLog('info', 'mock world - not the real WoW Forever client - results UNPROVEN');
-    window.Lua51().then((m) => { luaMod = m; try { boot(); } catch (e) { addLog('error', 'boot: ' + e.message); } MW.booted = true; chatLine('Welcome to the mock meadow. Type /hcomp, click the minimap compartment, or press F1 for the test tools.', true); });
+    window.Lua51().then((m) => { luaMod = m; try { boot(); } catch (e) { addLog('error', 'boot: ' + e.message); } MW.booted = true; if (!window.MW_NO_PRELOAD) MW.preloadBook(); chatLine('Welcome to the mock meadow. Type /hcomp, click the minimap compartment, or press F1 for the test tools.', true); });
     requestAnimationFrame(loop);
   });
 })();
