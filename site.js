@@ -3,8 +3,8 @@
  document.documentElement.className+=' js';
  document.querySelectorAll('[data-copy]').forEach(function(b){
   b.addEventListener('click',function(){
-   var src=document.getElementById(b.getAttribute('data-copy')),s=b.parentNode.querySelector('.copied'),t=src.textContent;
-   function ok(){s.textContent='Copied. Paste it into your AI and send.';b.textContent='Copied';setTimeout(function(){b.textContent='Copy'},2500)}
+   var src=document.getElementById(b.getAttribute('data-copy')),s=b.parentNode.querySelector('.copied'),t=src.textContent,lb=b.textContent;
+   function ok(){s.textContent='Copied. Paste it into your AI and send.';b.textContent='Copied';setTimeout(function(){b.textContent=lb},2500)}
    function pick(){var r=document.createRange();r.selectNodeContents(src);var w=getSelection();w.removeAllRanges();w.addRange(r);s.textContent='Selected. Press Ctrl+C or Cmd+C.'}
    if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(ok,pick)}else{pick()}
   });

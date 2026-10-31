@@ -85,6 +85,10 @@
     if (!src) return; // not a Gumroad product link: let it navigate normally
     e.preventDefault();
     if (!dlg) build();
+    // Every buy button acts the same; the dialog names the product the tapped button names (data-gd-name), Full Kit by default.
+    var name = a.getAttribute('data-gd-name') || 'mudmode Full Kit';
+    dlg.setAttribute('aria-label', 'Gumroad: ' + name);
+    frame.title = 'Gumroad product page: ' + name;
     opener = a;
     loaded = false;
     frame.style.height = '';
