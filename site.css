@@ -331,3 +331,6 @@ html:not(.tk-on) .tk-run{width:100%}html:not(.tk-on) .tk-list{flex:0 1 auto;min-
 #w-price .tier{display:flex;flex-direction:column;align-items:flex-start}
 #w-price .tier>.btn{margin-top:auto}
 #w-price .tier>p:last-of-type{margin-bottom:16px}
+/* Flare Tyler's credit (his yes 2026-10-31 3:51 AM; Brief's final line): page text, small print under the flare, shown only when the flare shows (1240px and wider). */
+#start .tb-flare-credit{display:none}
+@media (min-width:1240px){#start .tb-flare-credit{display:block;position:absolute;top:calc(64px + clamp(150px,calc((100vw - 860px)/2 - 56px),210px) * 1.0667 + 10px);left:calc(100% + 28px);width:clamp(150px,calc((100vw - 860px)/2 - 56px),210px);margin:0;font-size:12px;line-height:1.45;color:var(--soft)}}
