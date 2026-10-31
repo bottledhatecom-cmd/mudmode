@@ -1,3 +1,5 @@
 # The mudpity build under members/mudpity is checked in byte for byte.
 # -text stops Git from rewriting line endings (core.autocrlf included).
 members/mudpity/** -text
+# The installer exe is served byte for byte; its sha256 is published on index.html.
+*.exe -text

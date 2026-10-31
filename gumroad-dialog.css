@@ -1,0 +1,9 @@
+/* mudmode: Full Kit checkout dialog (see gumroad-dialog.js) */
+.gd-dialog{width:min(960px,96vw);max-width:none;height:92vh;max-height:none;padding:0;border:0;border-radius:8px;background:#fff;color:#111;overflow:auto}
+.gd-dialog::backdrop{background:rgba(0,0,0,.72)}
+.gd-close{position:sticky;top:8px;float:right;margin:8px;z-index:2;width:44px;height:44px;border-radius:50%;border:2px solid #111;background:#fff;color:#111;font:700 26px/1 system-ui,sans-serif;cursor:pointer}
+.gd-close:focus-visible{outline:3px solid #0a66ff;outline-offset:2px}
+.gd-status{margin:16px;font:16px/1.4 system-ui,sans-serif}
+.gd-ready .gd-status{display:none}
+.gd-frame{display:block;width:100%;height:calc(92vh - 70px);border:0}
+.gd-trap{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
