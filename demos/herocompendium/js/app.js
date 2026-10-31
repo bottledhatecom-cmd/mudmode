@@ -70,7 +70,7 @@
   const nums = (s) => s ? s.split(',').map(Number) : null;
   function fontFor(path, px, flags) {
     const p = (path || '').toLowerCase(); const serif = p.includes('morpheus') || p.includes('skurri');
-    return (serif ? '700 ' : '400 ') + px.toFixed(1) + 'px ' + (serif ? '"Alegreya SC", Georgia, serif' : 'Lato, "Segoe UI", sans-serif');
+    return (serif ? '700 ' : '400 ') + px.toFixed(1) + 'px ' + (serif ? '"Alegreya SC", Georgia, serif' : '"HC Sans", "Segoe UI", sans-serif');
   }
 
   // ------------------------------------------------------------ UI renderer (port of grimoire3d/tools/v6_2_render.py, + rotation, texcoords, tint, wrap)
@@ -116,7 +116,7 @@
           let img = getImg(file);
           if (img === undefined) {   // not in the addon's Media (game icons / file IDs): honest mock placeholder
             c.fillStyle = 'rgba(58,40,90,0.9)'; c.fillRect(-w / 2, -h / 2, w, h); c.strokeStyle = 'rgba(255,214,150,0.7)'; c.lineWidth = 1; c.strokeRect(-w / 2 + 0.5, -h / 2 + 0.5, w - 1, h - 1);
-            if (w > 10) { c.fillStyle = 'rgba(255,230,190,0.9)'; c.font = `700 ${Math.min(w, h) * 0.55}px Lato, sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('?', 0, 1); }
+            if (w > 10) { c.fillStyle = 'rgba(255,230,190,0.9)'; c.font = `700 ${Math.min(w, h) * 0.55}px "HC Sans", sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('?', 0, 1); }
             c.restore(); drawn++; continue;
           }
           if (!img) { c.restore(); continue; }
@@ -179,7 +179,7 @@
     }
     if (ui.overlay.hit) {
       if (ui.n % 6 === 0) ui.hitCache = vm.run('return MW.hitBoxes()');
-      c.save(); c.lineWidth = 1; c.font = '11px Lato, sans-serif';
+      c.save(); c.lineWidth = 1; c.font = '11px "HC Sans", sans-serif';
       for (const b of ui.hitCache.split(';').filter(Boolean)) { const p = b.split(','); const X = +p[0] * k, Y = (uh - +p[3]) * k, Wd = (+p[2] - +p[0]) * k, Hd = (+p[3] - +p[1]) * k;
         const over = ui.cursor[0] >= +p[0] && ui.cursor[0] <= +p[2] && ui.cursor[1] >= +p[1] && ui.cursor[1] <= +p[3];
         c.strokeStyle = over ? 'rgba(255,220,120,1)' : 'rgba(80,220,255,0.8)'; c.fillStyle = over ? 'rgba(255,220,120,0.18)' : 'rgba(80,220,255,0.06)'; c.fillRect(X, Y, Wd, Hd); c.strokeRect(X + 0.5, Y + 0.5, Wd - 1, Hd - 1);

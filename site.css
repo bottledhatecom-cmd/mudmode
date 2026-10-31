@@ -301,3 +301,33 @@ footer p{margin:0 0 8px}
 }
 /* RC11b: reduced motion shows one static bubble line (the visit's first line), so the bubble stays short and on screen at every width; normal motion still cycles all 6 lines. */
 @media (prefers-reduced-motion:reduce){.say .ln:not(:first-child){display:none}}
+/* 0w.1 hero (One mind, many AI), variant B (owner 2026-10-31 1:36 AM): one centred axis for the headline group (robot + h1, sub-line, motto), the lede and the young-and-growing line. The picker below stays left-aligned. text-wrap balances lines where supported; a no-break space before each last word is the fallback against orphans. Under 520px the h1 breaks after "One mind," so it sits as two even lines beside the robot. */
+#start .hero-head{justify-content:center;align-items:center;gap:16px;margin-bottom:0}
+#start .hero-head h1{margin:0;text-wrap:balance}
+#start .h1-br{display:none}
+#start .hero-sub,#start .hero-motto,#start .lede,#start .hero-fine{text-align:center;margin-left:auto;margin-right:auto}
+#start .hero-sub{max-width:28em;margin-top:14px;margin-bottom:0;font-family:var(--font-head);font-size:clamp(19px,2.6vw,23px);font-weight:500;line-height:1.35;color:var(--text);text-wrap:balance}
+#start .hero-motto{margin-top:6px;margin-bottom:0;font-family:var(--font-head);font-size:17px;font-weight:600;line-height:1.4;letter-spacing:.02em;color:var(--mud2)}
+#start .lede{max-width:34em;margin-top:22px;margin-bottom:0;text-wrap:balance}
+#start .hero-fine{max-width:43em;margin-top:14px;margin-bottom:24px;text-wrap:pretty}
+#start .hero-q{color:var(--text)}
+@media (max-width:520px){#start .h1-br{display:inline}#start .hero-head{gap:12px}#start .lede{margin-top:18px}}
+/* 0w.1 top bar: when the line stands still (reduced motion, or no script), let it wrap inside the bar beside the buttons instead of being cut off on phones. */
+@media (prefers-reduced-motion:reduce){.tk-run{width:100%}.tk-list{flex:0 1 auto;min-width:0}.tk-list li:first-child{text-wrap:balance}}
+html:not(.tk-on) .tk-run{width:100%}html:not(.tk-on) .tk-list{flex:0 1 auto;min-width:0}html:not(.tk-on) .tk-list li:first-child{text-wrap:balance}
+/* Tylerbot (his poses, moved in code): plays once (3-4 s, no loop) and rests on its last frame, which is the still. Reduce motion: no source matches, so the video never starts, and the still image shows instead. Decorative: aria-hidden, no controls. point = beside the start button; flare = the hero's side space on wide screens only. */
+.tylerbot{display:block;flex:none}
+.tylerbot video,.tylerbot img{display:block;width:100%;height:auto}
+.tylerbot img{display:none}
+@media (prefers-reduced-motion:reduce){.tylerbot video{display:none}.tylerbot img{display:block}}
+#start .tb-point{width:96px;border-radius:14px;overflow:hidden;background:#121110;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+#start .tb-row{flex-wrap:nowrap;gap:14px}
+#start .tb-credit{margin-top:8px;font-size:13px}
+#start{position:relative}
+#start .tb-flare{display:none}
+@media (min-width:1240px){#start .tb-flare{display:block;position:absolute;top:64px;left:calc(100% + 28px);width:clamp(150px,calc((100vw - 860px)/2 - 56px),210px);pointer-events:none}}
+@media (max-width:700px){#start .tb-point{width:76px;border-radius:12px}#start .tb-row{gap:10px}}
+/* Pricing buy buttons: the Founding 200 and Full Kit buttons are the same .btn and sit on one line at the foot of their cards on wide screens, so they look and act alike (gumroad-dialog.js opens both). */
+#w-price .tier{display:flex;flex-direction:column;align-items:flex-start}
+#w-price .tier>.btn{margin-top:auto}
+#w-price .tier>p:last-of-type{margin-bottom:16px}
