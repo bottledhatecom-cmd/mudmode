@@ -1,0 +1,35 @@
+# DRAFT, not deployed. Placeholder names only. No secrets in this file.
+name = "mudmode-members"
+workers_dev = true
+# account_id is not stored here; wrangler login picks the account.
+main = "worker.js"
+compatibility_date = "2026-10-01"
+# Origin: https://mudmode-members.bottledhate-com.workers.dev (workers.dev). No custom route.
+
+# Workers Logs off (Brief pr25 verdict C1 / F13: new Workers default to observability on). Check the dashboard after deploy that Workers Logs is off.
+[observability]
+enabled = false
+
+[vars]
+ALLOWED_ORIGIN = "https://mudmodecrew.com"
+# label -> Gumroad product_id (from the License key block on the product's content page).
+# Set in ebdeb65 from the gumroad listings (full-kit = attal, founders = ijfhue); Michael to confirm before deploy.
+PRODUCTS = '{"full-kit":"05FGDo7lnZE1PgdkNSVpzg==","founders":"NV8iGAa2QvvRPRcfQNjVLg=="}'
+# full-kit = $29 Full Kit; founders = $15 founders edition, first 200 (cap set on Gumroad, not here). Both count as members.
+# Where a verified member is sent for downloads (Gumroad library). Not the exe.
+MEMBERS_LINK = "https://app.gumroad.com/library"
+SESSION_TTL_SECONDS = "3600"
+
+# Secret (set with: wrangler secret put MEMBERS_SESSION_SECRET) -> [SECRET OMITTED]
+
+# Rate limit binding (REQUIRED; redteam M1). Docs: https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
+# Needs wrangler 4.36.0+. The worker returns 503 on /verify if this binding is missing (fails closed).
+# namespace_id: a positive integer as a string, unique to this worker on the account (not the docs example 1001, to avoid sharing counters with hh-ai-server or any other worker).
+# 10 calls per 60 s per Cloudflare location, counted per client IP (CF-Connecting-IP) and separately per hashed key.
+[[ratelimits]]
+name = "RATE_LIMITER"
+namespace_id = "20261029"
+
+  [ratelimits.simple]
+  limit = 10
+  period = 60

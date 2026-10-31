@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://giscus.app; img-src 'self' data:; frame-src https://giscus.app; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' https://giscus.app; img-src 'self' data:; frame-src https://giscus.app; connect-src 'self' https://mudmode-members.bottledhate-com.workers.dev; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noai, noimageai">
@@ -51,6 +51,25 @@
 <div class="filler-art" aria-hidden="true"><picture><source srcset="img/filler/napping-crew-hands5-480.webp" type="image/webp"><img src="img/filler/napping-crew-hands5-480.jpg" width="480" height="640" alt="" loading="lazy" decoding="async"></picture></div>
 </div>
 <script src="chat.js?v=rc11"></script>
+</div></section>
+
+<!-- DRAFT wk2pg4 t6s3: member sign in. The reveal below is cosmetic only; real gating is the worker (/download needs a valid signed token). -->
+<section id="member-sign-in"><div class="wrap">
+<h2>Member sign in</h2>
+<p class="sub">Paste the license key from your Gumroad receipt. Our sign-in checker sends it to Gumroad to confirm your purchase and doesn't save it; see the <a href="privacy.html#member-sign-in">privacy note</a>.</p>
+<form id="ml-form" autocomplete="off" novalidate>
+<label for="ml-key">License key</label>
+<input id="ml-key" name="license_key" type="text" inputmode="text" spellcheck="false" maxlength="64" required>
+<button class="btn" type="submit">Sign in</button>
+</form>
+<p id="ml-status" class="fine" role="status" aria-live="polite"></p>
+<div id="ml-members" hidden>
+<h3>You're in</h3>
+<p>Your kit is in your Gumroad library, and kit updates land there too.</p>
+<a id="ml-link" class="btn o" href="#" target="_blank" rel="noopener">Open my Gumroad library</a>
+<button id="ml-out" class="btn o" type="button">Sign out</button>
+</div>
+<script src="members-login.js?v=draft2"></script>
 </div></section>
 
 <section id="more"><div class="wrap">
