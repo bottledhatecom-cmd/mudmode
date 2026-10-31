@@ -321,6 +321,7 @@ html:not(.tk-on) .tk-run{width:100%}html:not(.tk-on) .tk-list{flex:0 1 auto;min-
 .tylerbot img{display:none}
 @media (prefers-reduced-motion:reduce){.tylerbot video{display:none}.tylerbot img{display:block}}
 #start .tb-point{width:96px;border-radius:14px;overflow:hidden;background:#121110;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+#start .tb-point img{display:block;width:100%;height:auto}
 #start .tb-row{flex-wrap:nowrap;gap:14px}
 #start .tb-credit{margin-top:8px;font-size:13px}
 #start{position:relative}

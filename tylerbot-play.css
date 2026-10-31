@@ -1,0 +1,9 @@
+/* tylerbot-play: the grab spot over the hero Tyler's body and the play canvas (DESIGN.md §5-§7). */
+[data-tyler-play] .tb-grab{position:absolute;left:27%;top:23%;width:46%;height:58%;border-radius:50%;touch-action:none;cursor:grab;pointer-events:auto;z-index:1;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+[data-tyler-play][data-tb-state=held] .tb-grab{cursor:grabbing}
+[data-tyler-play]:not([data-tb-state=rest]):not([data-tb-state=held]) .tb-grab{pointer-events:none}
+[data-tyler-play].tb-away>:not(.tb-grab){visibility:hidden}
+.tb-canvas{position:fixed;left:0;top:0;z-index:40;display:none;pointer-events:none;will-change:transform}
+[data-tyler-play].tb-land>:not(.tb-grab){transform-origin:50% 96%;animation:tb-land .3s ease-out}
+@keyframes tb-land{0%{transform:scale(1.06,.92)}55%{transform:scale(.98,1.03)}100%{transform:none}}
+@media (prefers-reduced-motion:reduce){[data-tyler-play] .tb-grab,.tb-canvas{display:none}[data-tyler-play].tb-land>*{animation:none}}
