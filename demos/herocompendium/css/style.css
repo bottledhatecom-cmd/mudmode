@@ -3,7 +3,7 @@
   --ink: #1b1027; --ink2: #2a1840; --violet: #9b6bff; --violet2: #c9a6ff; --glow: rgba(155, 107, 255, .55);
   --gold: #f2c77a; --gold2: #ffe3a8; --parch: #f1e2c2; --parch2: #e4cc9c; --parch-ink: #2b1a10; --red: #c8433a; --green: #4fd18b;
   --ease: cubic-bezier(.2, .8, .2, 1); --t: 180ms;
-  --serif: "Alegreya SC", Georgia, serif; --sans: Lato, "Segoe UI", system-ui, sans-serif;
+  --serif: "Alegreya SC", Georgia, serif; --sans: "HC Sans", "Segoe UI", system-ui, sans-serif;
 }
 * { box-sizing: border-box; }
 html { background: var(--ink); }

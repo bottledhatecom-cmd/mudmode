@@ -1,0 +1,84 @@
+/* members home layout (site pass 10-30). Loaded only by members.html, after glow.css + filler-art.css.
+   Layout only: no new colors beyond glow.css tokens, no fonts, no images, no scripts. */
+.mh-hero{padding:44px 0 40px}
+.mh-hero .hero-icon{width:150px;height:150px}
+.mh-hero .lead{max-width:640px}
+.mh-hero .chips{margin-top:20px}
+.mh-eyebrow{margin:0 0 6px;font-family:var(--font-head);font-size:15px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+
+/* home tiles: one row of doors into the page */
+.mh-tiles-wrap{padding:22px 0;border-bottom:1px solid var(--line);background:rgba(12,11,10,.55)}
+.mh-tiles{list-style:none;margin:0;padding:0;display:grid;gap:10px;grid-template-columns:repeat(6,minmax(0,1fr))}
+.mh-tile{display:flex;flex-direction:column;gap:6px;height:100%;padding:14px 14px 12px;border:1px solid var(--line2);border-radius:14px;background:linear-gradient(180deg,var(--panel2),var(--panel));text-decoration:none;color:var(--ink);transition:border-color .2s,box-shadow .2s}
+.mh-tile b{font-family:var(--font-head);font-size:16.5px;line-height:1.25;color:#fff7ea}
+.mh-tile:hover,.mh-tile:focus-visible{border-color:var(--gold);box-shadow:var(--glow)}
+.mh-state{align-self:flex-start;font-size:12.5px;font-weight:700;padding:1px 9px;border-radius:99px;border:1px solid var(--line);color:var(--dim)}
+.mh-state.on{color:var(--on-gold);background:var(--gold);border-color:var(--gold)}
+.mh-tile.off{border-style:dashed;border-color:var(--line);background:transparent}
+.mh-tile.off b{color:var(--muted)}
+
+/* sections: a bit tighter than the long pages */
+.mh-sec{padding:56px 0}
+.mh-sec h2{font-size:clamp(26px,3.2vw,34px)}
+.mh-sec p.sub{font-size:17.5px;margin-bottom:22px}
+
+/* members chat: steps in one row on top, chat full width, art beside it */
+.mh-how{margin:0 0 22px}
+.mh-how h3{margin-bottom:10px}
+.mh-how ol.steps{grid-template-columns:repeat(3,minmax(0,1fr))}
+.mh-how ol.steps li{font-size:15.5px}
+.mh-chat-row{display:grid;gap:24px;grid-template-columns:minmax(0,1fr) 260px;align-items:stretch}
+.mh-chat-row .sl-chat{margin:0;max-width:none}
+.mh-chat-row>.filler-art{align-self:stretch;min-height:240px}
+.mh-chat-row>.filler-art img{height:calc(100% - 14px);object-fit:cover;object-position:50% 52%}
+#chat .sl-open{margin:14px auto 18px}
+.mh-community{margin-top:22px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 22px}
+.mh-community h3{flex:1 1 100%}
+.mh-community p{flex:1 1 380px;margin:0!important}
+.mh-community .btn{flex:none}
+
+/* your stuff + games: wide single cards */
+.mh-wide{max-width:none}
+.mh-dl{list-style:none;margin:0;padding:0;display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.mh-dl li{padding:10px 14px 10px 36px;border-radius:10px;background:rgba(243,201,105,.06);border:1px solid var(--line);color:var(--ink);font-size:15px;position:relative}
+.mh-dl li::before{content:"";position:absolute;left:14px;top:50%;width:10px;height:11px;margin-top:-5.5px;background:var(--gold);clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
+.mh-game{display:flex;flex-wrap:wrap;align-items:center;gap:6px 22px}
+.mh-game h3{flex:1 1 100%}
+.mh-game p{flex:1 1 380px;margin:0!important}
+
+/* not open yet: muted, dashed, no buttons, so nothing looks clickable or working */
+.mh-later{background:rgba(12,11,10,.35)}
+.mh-soon{border-style:dashed;background:transparent;box-shadow:none}
+.mh-soon:hover{border-color:var(--line);box-shadow:none}
+.mh-soon h3{color:var(--muted)}
+.mh-soon h3::before{background:var(--dim);box-shadow:none}
+.mh-chip-off{background:transparent;color:var(--dim);border-color:var(--line)}
+
+@media (max-width:980px){.mh-tiles{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:860px){.mh-chat-row{grid-template-columns:1fr}.mh-chat-row>.filler-art{display:none}.mh-how ol.steps{grid-template-columns:1fr}.mh-hero .hero-icon{width:110px;height:110px}}
+@media (max-width:520px){
+  .mh-hero{padding:26px 0 30px}
+  .mh-tiles-wrap{padding:16px 0}
+  .mh-tiles{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .mh-tile{padding:11px 12px 10px}
+  .mh-sec{padding:40px 0}
+  .mh-how ol.steps li{padding:12px 14px 12px 58px}
+  .mh-hero .hero-icon{width:88px;height:88px}
+}
+/* phones: the chat comes first, the 3 steps right under it */
+@media (max-width:860px){
+  #members-chat .wrap{display:flex;flex-direction:column}
+  #members-chat .mh-how{order:3;margin:22px 0 0}
+  #members-chat .mh-community{order:4}
+}
+@media (max-width:520px){.mh-hero .hero-icon{width:64px;height:64px}.mh-hero .wrap{gap:14px}}
+/* Member sign in (PR #25 markup and members-login.js unchanged): the form styled like the rest of the members home; the Sign in button matches the gold .btn.p. */
+#member-sign-in form{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;max-width:640px;margin:14px 0 0}
+#member-sign-in label{flex:1 1 100%;font-family:var(--font-head);font-weight:700;color:#fff7ea}
+#ml-key{flex:1 1 260px;min-width:0;min-height:46px;padding:10px 14px;border:1.5px solid var(--line2);border-radius:12px;background:rgba(12,11,10,.7);color:var(--ink);font:inherit;letter-spacing:.02em}
+#ml-key:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-color:var(--gold)}
+#ml-form .btn{border:0;cursor:pointer;font-size:16px;background:linear-gradient(180deg,#f7d27e,var(--amber));color:var(--on-gold);box-shadow:0 0 0 1px rgba(243,201,105,.6),0 6px 22px rgba(230,166,56,.28)}
+#ml-form .btn:hover{box-shadow:0 0 0 1px #ffe09a,var(--glow-strong)}
+#ml-form .btn:focus-visible,#ml-members .btn:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+#ml-members{margin-top:14px}#ml-members .btn{margin:6px 10px 0 0;cursor:pointer;font:inherit;font-family:var(--font-head);font-weight:700}
+@media (forced-colors:active){#ml-form .btn{border:1px solid ButtonText}}

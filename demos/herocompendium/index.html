@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: file:; connect-src 'none'; form-action mailto:">
 <link rel="icon" href="data:,">
-<title>HeroCompendium - mock 3D test world</title>
+<title>Hero's Compendium - mock 3D test world</title>
 <link rel="stylesheet" href="css/fonts.css">
 <link rel="stylesheet" href="css/style.css">
 </head>
@@ -14,8 +14,8 @@
 <div class="banner" role="note"><span class="sigil" aria-hidden="true"></span>mock world - not the real WoW Forever client - results UNPROVEN</div>
 
 <header class="hero">
-  <h1>HeroCompendium <span>mock 3D test world</span></h1>
-  <p class="approach"><strong>Approach:</strong> real Lua 5.1.5 (compiled to WebAssembly) running the real HeroCompendium addon code against our own stub of the WoW API. The world, robot and UI frame around it are placeholders we made. Build <code id="mw-build">?</code></p>
+  <h1>Hero's Compendium <span>mock 3D test world</span></h1>
+  <p class="approach"><strong>Approach:</strong> real Lua 5.1.5 (compiled to WebAssembly) running the real Hero's Compendium addon code against our own stub of the WoW API. The world, robot and UI frame around it are placeholders we made. Build <code id="mw-build">?</code></p>
 </header>
 
 <main>
@@ -28,7 +28,7 @@
       <canvas id="mw-world"></canvas>
       <div class="hud" aria-hidden="false">
         <div id="mw-minimap" class="minimap"><div class="mm-ring"></div><span class="mm-n">N</span>
-          <button id="mw-compartment" class="mm-btn" title="Addon compartment: HeroCompendium" aria-label="Open HeroCompendium (addon compartment)"><span class="mm-glyph" aria-hidden="true"></span></button>
+          <button id="mw-compartment" class="mm-btn" title="Addon compartment: Hero's Compendium" aria-label="Open Hero's Compendium (addon compartment)"><span class="mm-glyph" aria-hidden="true"></span></button>
         </div>
         <div class="chatbox"><div id="mw-chat-lines" class="chat-lines" aria-live="polite"></div>
           <input id="mw-chat-input" class="chat-input" hidden placeholder="/hcomp" aria-label="Chat or slash command" autocomplete="off" spellcheck="false"></div>
@@ -96,10 +96,10 @@
 </aside>
 
 <section class="panel about" aria-labelledby="about-h">
-<h2 id="about-h">HeroCompendium: a living grimoire for WoW Forever</h2>
+<h2 id="about-h">Hero's Compendium: a living grimoire for WoW Forever</h2>
 <p>this isn't a menu. it's a spellbook that breathes. it floats over your game on arcane tentacles, and its pages turn, glow and settle. you jump between chapters with living badges on a velvet ribbon. close it and it rests, swelling and rippling while its tentacles curl over the cover.</p>
-<p>inside are 13 chapters: training, bestiary with a catch-'em-all pet tracker, buffs, gathering, quests, talents, recipes, gear and more. there are 2,000+ records, and every game-data record is cited to a real source. nothing is guessed. anything not yet proven for forever is labelled that way.</p>
-<p>how it came about: one player, mud, describing what he wanted in plain words, and the mudmode crew of ai helpers building it with him overnight. every art pass, every fix and every feature came from his direction. it's backed by 98 automated tests, and all of them pass.</p>
+<p>inside are 13 chapters: training, bestiary with a catch-'em-all pet tracker, buffs, gathering, quests, talents, recipes, gear and more. there are 2,000+ records, and every game fact links to the public page it came from. anything not yet proven for forever is labelled that way.</p>
+<p>how it came about: one player, mud, describing what he wanted in plain words, and the mudmode crew of ai helpers building it with him overnight. every art pass, every fix and every feature came from his direction. it has 98 automated tests. they run on a stand-in for the game, not the real client, and all of them passed for this build.</p>
 <p>we need testers. this is a mock world running the addon in your browser, not the real game yet. click everything, spam it, turn it, close it and try to break it. open the test toolbar with F1, and when something breaks, hit "bug report" and send it to us with the comment box.</p>
 </section>
 
@@ -120,12 +120,13 @@
 <footer class="panel licenses">
 <h2>Credits and licenses</h2>
 <ul>
-<li>HeroCompendium addon by mud. The book art shown here is the addon's own media.</li>
+<li>Hero's Compendium addon by mud, MIT license. The book art shown here is the addon's own media.</li>
 <li>Lua 5.1.5 &copy; 1994-2012 Lua.org, PUC-Rio, MIT license (compiled to WebAssembly with Emscripten).</li>
 <li>three.js &copy; 2010-2026 three.js authors, MIT license (see js/LICENSE-three.txt).</li>
-<li>Fonts: Lato (Copyright 2010-2014 tyPoland Lukasz Dziedzic) and Alegreya SC (Copyright 2011 The Alegreya Project Authors), SIL Open Font License 1.1, subset and bundled locally (see fonts/OFL-*.txt).</li>
+<li>Fonts: Lato (Copyright 2010-2014 tyPoland Lukasz Dziedzic), subset and renamed (shown here as HC Sans), and Alegreya SC (Copyright 2011 The Alegreya Project Authors), subset; both SIL Open Font License 1.1, bundled locally (see fonts/OFL-*.txt).</li>
 <li>Meadow, robot, sky and page chrome: procedural, made for this demo. No game-client art.</li>
-<li>World of Warcraft is a trademark of Blizzard Entertainment. This is an unofficial fan test page, not affiliated with or endorsed by Blizzard.</li>
+<li>Game facts were checked against public pages (Wowhead, warcraft.wiki.gg, wowcalc, Bluetracker); each game fact links its source. Not affiliated with those sites.</li>
+<li>World of Warcraft and WoW are trademarks of Blizzard Entertainment, Inc. This is an unofficial fan test page, not affiliated with or endorsed by Blizzard.</li>
 </ul>
 </footer>
 </main>
