@@ -16,30 +16,38 @@
 <link rel="apple-touch-icon" sizes="180x180" href="img/mudmode-icon-180.png">
 <link rel="stylesheet" href="glow.css?v=rc11">
 <link rel="stylesheet" href="filler-art.css?v=rc11">
+<link rel="stylesheet" href="members.css?v=gl137v">
 </head>
 <body class="members-page">
 <nav aria-label="Site"><div class="wrap"><a class="brand" href="index.html" aria-label="mudmode home"><img src="img/mudmode-icon-32.png" srcset="img/mudmode-icon-32.png 1x, img/mudmode-icon-64.png 2x" width="32" height="32" alt=""><b>mudmode</b></a><a href="index.html">Home</a><a href="index.html#w-price">Pricing</a><span>Community</span><a href="members.html" aria-current="page">Members</a></div></nav>
 
-<header class="hero hero-sm"><div class="wrap">
+<header class="hero hero-sm mh-hero"><div class="wrap">
 <div class="hero-text">
+<p class="mh-eyebrow">welcome home</p>
 <h1>mudmode <span>members</span></h1>
 <p class="lead">Your home for the mudmode community: talk with the owner and other members, and get member downloads as they land.</p>
 <div class="btns"><a class="btn p" href="#members-chat">Go to the members chat</a><a class="btn s" href="#how">How signing in works</a></div>
-<ul class="chips"><li>Chat right on this page</li><li>Sign in with GitHub inside the chat</li><li>Nothing loads until you click</li><li>No trackers</li></ul>
+<ul class="chips"><li>Chat right on this page</li><li>Start sign-in from inside the chat</li><li>Nothing loads until you click</li><li>No trackers of our own</li></ul>
 </div>
 <img class="hero-icon" src="img/mudmode-icon-hero-280.webp" srcset="img/mudmode-icon-hero-280.webp 1x, img/mudmode-icon-hero-560.webp 2x" width="280" height="280" alt="">
 </div></header>
 
 <main>
-<section id="members-chat"><div class="wrap">
+<div class="mh-tiles-wrap" role="navigation" aria-label="Members home"><div class="wrap">
+<ul class="mh-tiles">
+<li><a class="mh-tile" href="#members-chat"><b>Members chat</b><span class="mh-state on">Open</span></a></li>
+<li><a class="mh-tile" href="#your-stuff"><b>Downloads</b><span class="mh-state on">Open</span></a></li>
+<li><a class="mh-tile" href="#games"><b>Games</b><span class="mh-state on">Open</span></a></li>
+<li><a class="mh-tile off" href="#later"><b>AI rooms</b><span class="mh-state">Not open yet</span></a></li>
+<li><a class="mh-tile off" href="#later"><b>Rankings</b><span class="mh-state">Not open yet</span></a></li>
+<li><a class="mh-tile off" href="#later"><b>Trading</b><span class="mh-state">Not open yet</span></a></li>
+</ul>
+</div></div>
+
+<section id="members-chat" class="mh-sec"><div class="wrap">
 <h2>Members chat</h2>
-<p class="sub">One open thread for the whole crew. Open it here, read along, and sign in with GitHub inside the chat when you want to post. You stay on mudmodecrew.com.</p>
-<div class="chat-grid">
-<div class="sl-chat" aria-labelledby="chat-title">
-<div class="sl-head"><span class="sl-round" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5h16v11H8l-4 4z"/></svg></span><div class="sl-title"><b id="chat-title">Members chat</b><span>Open thread · GitHub Discussions</span></div></div>
-<div class="sl-body" id="chat"><p class="sl-grant" id="chat-grant"><b>Before you post:</b> by posting in the members chat or Discussions, you agree to the <a href="https://github.com/bottledhatecom-cmd/mudmode/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">mudmode contributor terms</a>. You keep ownership of your post, and you give Michael J Hester and Hestertainment LLC a permanent, worldwide, non-exclusive, royalty-free license to use, edit, publish and sell it in free and paid mudmode materials, with or without credit. Posts are public on GitHub and subject to GitHub's Terms. Never post secrets or private details.</p><p id="chat-note">The members chat is not loaded yet. Only when you click the button does your browser load giscus (giscus.app) and GitHub; to post, you sign in with GitHub inside the chat, and giscus keeps a sign-in token in your browser. See the <a href="privacy.html">privacy note</a>.</p><button class="sl-open" id="chat-load" type="button">Open the members chat</button></div>
-</div>
-<div class="aside" id="how">
+<p class="sub">One open thread for everyone. Open it here, read along, and sign in with GitHub inside the chat when you want to post. You read and post right on this page; signing in takes a quick trip to GitHub and back.</p>
+<div class="aside mh-how" id="how">
 <h3>How it works</h3>
 <ol class="steps">
 <li><b>Open the chat</b>Click "Open the members chat". Nothing from giscus or GitHub loads before that.</li>
@@ -48,13 +56,23 @@
 </ol>
 <p class="small">No GitHub account yet? <a href="https://github.com/signup" target="_blank" rel="noopener">Make a free one on GitHub</a> (opens in a new tab), then come back here.</p>
 </div>
+<div class="mh-chat-row">
+<div class="sl-chat" aria-labelledby="chat-title">
+<div class="sl-head"><span class="sl-round" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5h16v11H8l-4 4z"/></svg></span><div class="sl-title"><b id="chat-title">Members chat</b><span>Open thread · GitHub Discussions</span></div></div>
+<div class="sl-body" id="chat"><p id="chat-note">The members chat is not loaded yet. Only when you click the button does your browser load giscus (giscus.app) and GitHub; to post, you sign in with GitHub inside the chat, and giscus keeps a sign-in token in your browser. See the <a href="privacy.html">privacy note</a>.</p><button class="sl-open" id="chat-load" type="button">Open the members chat</button><p class="sl-grant" id="chat-grant"><b>Before you post:</b> by posting in the members chat or Discussions, you agree to the <a href="https://github.com/bottledhatecom-cmd/mudmode/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">mudmode contributor terms</a>. You keep ownership of your post, and you give Michael J Hester and Hestertainment LLC a permanent, worldwide, non-exclusive, royalty-free license to use, edit, publish and sell it in free and paid mudmode materials, with or without credit. Posts are public on GitHub and subject to GitHub's Terms. Never post secrets or private details.</p></div>
+</div>
 <div class="filler-art" aria-hidden="true"><picture><source srcset="img/filler/napping-crew-hands5-480.webp" type="image/webp"><img src="img/filler/napping-crew-hands5-480.jpg" width="480" height="640" alt="" loading="lazy" decoding="async"></picture></div>
 </div>
 <script src="chat.js?v=rc11"></script>
+<div class="card mh-community" aria-labelledby="s3">
+<h3 id="s3">Community on GitHub</h3>
+<p>Share wins, ask questions and trade ideas with other members. The community lives on GitHub Discussions, so this link opens GitHub in a new tab.</p>
+<a class="btn o" href="https://github.com/bottledhatecom-cmd/mudmode/discussions" target="_blank" rel="noopener"><svg class="gh" width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>Open the community on GitHub</a>
+</div>
 </div></section>
 
 <!-- DRAFT wk2pg4 t6s3: member sign in. The reveal below is cosmetic only; real gating is the worker (/download needs a valid signed token). -->
-<section id="member-sign-in"><div class="wrap">
+<section id="member-sign-in" class="mh-sec"><div class="wrap">
 <h2>Member sign in</h2>
 <p class="sub">Paste the license key from your Gumroad receipt. Our sign-in checker sends it to Gumroad to confirm your purchase and doesn't save it; see the <a href="privacy.html#member-sign-in">privacy note</a>.</p>
 <form id="ml-form" autocomplete="off" novalidate>
@@ -72,29 +90,35 @@
 <script src="members-login.js?v=draft2"></script>
 </div></section>
 
-<section id="more"><div class="wrap">
-<h2>More for members</h2>
-<p class="sub">Longer threads, ideas and Q&amp;A live in the community, and your kit lives in your Gumroad library.</p>
-<div class="grid">
-<div class="card" aria-labelledby="s3">
-<h3 id="s3">Community on GitHub</h3>
-<p>Share wins, ask questions and trade ideas with other members. The community lives on GitHub Discussions, so this link opens GitHub in a new tab.</p>
-<a class="btn o" href="https://github.com/bottledhatecom-cmd/mudmode/discussions" target="_blank" rel="noopener"><svg class="gh" width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>Open the community on GitHub</a>
+<section id="your-stuff" class="mh-sec"><div class="wrap">
+<h2>Downloads</h2>
+<div class="card mh-wide" aria-labelledby="s4">
+<h3 id="s4">Member downloads <span class="chip">Full Kit out now</span></h3>
+<p>Full Kit buyers get the kit in their Gumroad library (see <a href="index.html#w-price">pricing</a>); kit updates land there too during your update period; check there for new ones. The first update pack hasn't gone out yet. The free kit is also on <a href="https://github.com/bottledhatecom-cmd/mudmode/tree/main/starter-kit" target="_blank" rel="noopener">GitHub</a>, no email needed.</p>
+<ul class="mh-dl"><li>Full kit: in your Gumroad library</li><li>Updates: in your Gumroad library, once the first one is out</li></ul>
 </div>
-<div class="card" aria-labelledby="s4">
-<h3 id="s4">Member downloads <span class="chip">Out now</span></h3>
-<p>Full Kit buyers get the kit in their Gumroad library (see <a href="index.html#w-price">pricing</a>); kit updates land there too during your update period; check there for new ones. The first update pack hasn't gone out yet. The free Crew kit is also on <a href="https://github.com/bottledhatecom-cmd/mudmode/tree/main/starter-kit" target="_blank" rel="noopener">GitHub</a>, no email needed.</p>
-<div class="dl"><div>Full kit: in your Gumroad library</div><div>Updates: in your Gumroad library when each one lands</div></div>
-</div>
-<div class="card" aria-labelledby="s5">
+</div></section>
+
+<section id="games" class="mh-sec"><div class="wrap">
+<h2>Games</h2>
+<div class="card mh-wide mh-game" aria-labelledby="s5">
 <h3 id="s5">mudpity <span class="chip">Play now</span></h3>
 <p>mudpity is a small 3D game that runs right in your browser. No download, no sign-up, nothing leaves your device.</p>
 <a class="btn o" href="members/mudpity/">Play mudpity</a>
 </div>
+</div></section>
+
+<section id="later" class="mh-sec mh-later"><div class="wrap">
+<h2>Not open yet</h2>
+<p class="sub">Planned. Not working yet.</p>
+<div class="grid">
+<div class="card mh-soon" aria-labelledby="l1"><h3 id="l1">AI rooms <span class="chip mh-chip-off">Not open yet</span></h3><p>An idea: a room where AIs take turns on a goal you set, and you can join in.</p></div>
+<div class="card mh-soon" aria-labelledby="l2"><h3 id="l2">Rankings <span class="chip mh-chip-off">Not open yet</span></h3><p>An idea: a mudpity high-score list. Just for fun; scores aren't checked.</p></div>
+<div class="card mh-soon" aria-labelledby="l3"><h3 id="l3">Trading <span class="chip mh-chip-off">Not open yet</span></h3><p>An idea: collect and swap cards of the mudmode robot crew. Just for fun: no money, no real items.</p></div>
 </div>
 </div></section>
 </main>
 
-<footer><div class="wrap"><p>Like every website, our host (GitHub Pages, run by GitHub, Inc.) receives standard request data such as your IP address. No analytics, no trackers, no cookies on this page. The robot crew picture on this page was made with an AI image tool (Created with Grok). <a href="privacy.html">Privacy note</a> · <a href="terms.html">Terms of use</a> · <a href="full-kit-license.html">Full Kit License</a></p><p>Website © 2026 Hestertainment LLC, which runs mudmodecrew.com. mudmode © 2026 Michael J Hester. All rights reserved. <a href="https://github.com/bottledhatecom-cmd/mudmode/blob/main/LICENSE" target="_blank" rel="noopener">mudmode Personal Use License v1.3</a> · <a href="index.html">Back to home</a></p><p>Contact: see our <a href="privacy.html#contact">contact details</a>, or ask in <a href="https://github.com/bottledhatecom-cmd/mudmode/discussions" target="_blank" rel="noopener">GitHub Discussions</a>.</p><p>Follow mudmode: <a href="https://x.com/mudmodecrew" target="_blank" rel="noopener">X</a> · <a href="https://bsky.app/profile/mudmodecrew.bsky.social" target="_blank" rel="noopener">Bluesky</a> · <a href="https://www.threads.com/@mudmodecrew" target="_blank" rel="noopener">Threads</a></p></div></footer>
+<footer><div class="wrap"><p>Like every website, our host (GitHub Pages, run by GitHub, Inc.) receives standard request data such as your IP address. No analytics, trackers or cookies of our own on this page. The robot crew picture on this page was made with an AI image tool (Created with Grok). <a href="privacy.html">Privacy note</a> · <a href="terms.html">Terms of use</a> · <a href="full-kit-license.html">Full Kit License</a></p><p>Website © 2026 Hestertainment LLC, which runs mudmodecrew.com. mudmode © 2026 Michael J Hester. All rights reserved. <a href="https://github.com/bottledhatecom-cmd/mudmode/blob/main/LICENSE" target="_blank" rel="noopener">mudmode Personal Use License v1.3</a> · <a href="index.html">Back to home</a></p><p>Contact: see our <a href="privacy.html#contact">contact details</a>, or ask in <a href="https://github.com/bottledhatecom-cmd/mudmode/discussions" target="_blank" rel="noopener">GitHub Discussions</a>.</p><p>Follow mudmode: <a href="https://x.com/mudmodecrew" target="_blank" rel="noopener">X</a> · <a href="https://bsky.app/profile/mudmodecrew.bsky.social" target="_blank" rel="noopener">Bluesky</a> · <a href="https://www.threads.com/@mudmodecrew" target="_blank" rel="noopener">Threads</a></p></div></footer>
 </body>
 </html>

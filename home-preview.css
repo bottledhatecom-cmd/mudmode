@@ -38,7 +38,7 @@ nav.nav-short a:focus-visible{outline:3px solid var(--gold);outline-offset:2px;b
 .kit-det .kit-inside{margin:8px 0 4px;padding-left:18px;font-size:15px;line-height:1.45}
 .kit-det .kit-inside li{margin:4px 0}
 
-/* Pricing: free column with two small cards under the free Crew card */
+/* Pricing: free column with two small cards under the free kit card */
 #pricing .price-col{display:flex;flex-direction:column;gap:16px}
 #pricing .mini-card{padding-top:16px;padding-bottom:16px}
 #pricing .mini-card h3{font-size:16px;margin-bottom:8px}

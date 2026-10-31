@@ -38,7 +38,7 @@ No fallback re-implementation is used.
 
 ## Limits (honest)
 - **Stub, not the client.** The stub is not the WoW client. Layout, fonts and timing are approximations, so every result is UNPROVEN until it is checked in the real WoW Forever client.
-- **Font substitution.** Game fonts are replaced: FRIZQT/ARIALN → Lato, MORPHEUS/SKURRI → Alegreya SC.
+- **Font substitution.** Game fonts are replaced: FRIZQT/ARIALN → HC Sans (a subset of Lato, renamed because Lato is a Reserved Font Name), MORPHEUS/SKURRI → Alegreya SC.
 - **Game icons.** Game-client icons (Interface\Icons, file IDs) are not bundled and show as `?` placeholder squares. Only the addon's own media is drawn.
 - **No tooltips.** GameTooltip is not drawn.
 - **Fake game data.** Game data (character "Testbot", group, spells, pets) is a small mock.
@@ -47,6 +47,6 @@ No fallback re-implementation is used.
 ## Licenses
 - three.js: MIT (`js/LICENSE-three.txt`).
 - Lua 5.1.5: MIT (`js/LICENSE-lua.txt`).
-- Lato and Alegreya SC: SIL OFL 1.1 (`fonts/OFL-*.txt`).
+- Lato (subset, renamed HC Sans) and Alegreya SC (subset): SIL OFL 1.1 (`fonts/OFL-*.txt`). Addon code: MIT (`js/LICENSE-addon.txt`).
 - The addon and its media are by mud.
 - The world, robot and page chrome are procedural and made for this demo.
