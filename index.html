@@ -12,10 +12,12 @@
 <meta name="theme-color" content="#121110">
 <link rel="icon" type="image/png" sizes="32x32" href="img/mudmode-icon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="img/mudmode-icon-192.png">
-<link rel="stylesheet" href="site.css?v=gl137w">
+<link rel="stylesheet" href="site.css?v=tb1">
 <script src="site.js?v=rc11" defer></script>
 <script src="mascot.js?v=rc11" defer></script>
 <script src="alive.js?v=rc11" defer></script>
+<link rel="stylesheet" href="tylerbot-play.css?v=tb1">
+<script src="tylerbot-play.js?v=tb1" defer></script>
 <link rel="stylesheet" href="gumroad-dialog.css?v=rc11">
 <script src="gumroad-dialog.js?v=gl137v" defer></script>
 </head>
@@ -68,7 +70,7 @@
 
  <section class="win" aria-labelledby="h-main" id="start" tabindex="-1">
   <div class="tb" aria-hidden="true"><span class="dots"><i></i><i></i><i></i></span>mudmode</div>
-  <div class="tylerbot tb-flare" aria-hidden="true"><video autoplay muted playsinline preload="auto" poster="img/tylerbot/tylerbot-flare-still.webp" width="450" height="480"><source src="img/tylerbot/tylerbot-flare.webm" type="video/webm" media="(min-width: 1240px) and (prefers-reduced-motion: no-preference)"><source src="img/tylerbot/tylerbot-flare.mp4" type="video/mp4" media="(min-width: 1240px) and (prefers-reduced-motion: no-preference)"></video><img src="img/tylerbot/tylerbot-flare-still.webp" width="450" height="480" alt="" loading="lazy" decoding="async"></div>
+  <div class="tylerbot tb-flare" aria-hidden="true" data-tyler-play="img/tylerbot/"><video autoplay muted playsinline preload="auto" poster="img/tylerbot/tylerbot-flare-still.webp" width="450" height="480"><source src="img/tylerbot/tylerbot-flare.webm" type="video/webm" media="(min-width: 1240px) and (prefers-reduced-motion: no-preference)"><source src="img/tylerbot/tylerbot-flare.mp4" type="video/mp4" media="(min-width: 1240px) and (prefers-reduced-motion: no-preference)"></video><img src="img/tylerbot/tylerbot-flare-still.webp" width="450" height="480" alt="" loading="lazy" decoding="async"></div>
   <div class="body">
    <div class="hello hero-head">
     <button type="button" class="mascot" aria-label="mudmode mascot" aria-describedby="mascot-say">
@@ -228,9 +230,9 @@ Written &lt;H:MM AM/PM zone, from the clock&gt; by &lt;AI&gt;. About 10 lines. H
 If the instructions (or, in a plain chat, this chat) already hold "My mudmode settings", setup is done: don't run it again unless the owner asks ("change my mudmode settings").
 </pre>
        <p class="fine">It's one text file (16 KB) from the free kit. <a href="starter-kit/FOR-CHAT-APPS/mudmode-chat-lite.md" target="_blank" rel="noopener">Read it first</a>.</p>
-       <div class="row tb-row"><span class="tylerbot tb-point" aria-hidden="true"><video autoplay muted playsinline preload="auto" poster="img/tylerbot/tylerbot-point-still.webp" width="450" height="480"><source src="img/tylerbot/tylerbot-point.webm" type="video/webm" media="(prefers-reduced-motion: no-preference)"><source src="img/tylerbot/tylerbot-point.mp4" type="video/mp4" media="(prefers-reduced-motion: no-preference)"></video><img src="img/tylerbot/tylerbot-point-still.webp" width="450" height="480" alt="" loading="lazy" decoding="async"></span><button class="btn js-only" type="button" data-copy="p-chat">Copy the setup</button><span class="copied" aria-live="polite"></span></div>
+       <div class="row tb-row"><span class="startbot tb-point" aria-hidden="true"><img src="img/startbot/startbot-owl-96.webp" srcset="img/startbot/startbot-owl-96.webp 1x, img/startbot/startbot-owl-192.webp 2x" width="96" height="96" alt="" decoding="async"></span><button class="btn js-only" type="button" data-copy="p-chat">Copy the setup</button><span class="copied" aria-live="polite"></span></div>
        <p class="fine">Nothing is installed. It lasts for that chat. To keep it in every chat: <a href="starter-kit/FOR-CHAT-APPS/mudmode-chat-lite.md" download>download the one file</a>, add it to a Project, type <b>Read mudmode-chat-lite.md and set me up.</b>, then paste the short block it gives you into the Project's instructions. <a href="start-here/#step-4">Pictures for each app</a>.</p>
-       <p class="fine tb-credit">Tyler, the robot guide in the start box, was drawn on our own computer, mudai, with an AI image tool.</p>
+       <p class="fine tb-credit">The owl robot in the start box was drawn on our own computer, mudai, with an AI image tool.</p>
       </div>
 
       <div class="step s-comp" role="group" aria-label="On my computer">
