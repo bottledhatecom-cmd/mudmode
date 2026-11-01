@@ -12,3 +12,4 @@
 .tb-m{position:fixed;left:0;top:0;z-index:41;width:20px;height:20px;margin:0;border-radius:5px;pointer-events:none;will-change:transform}
 .bar .brand.tb-lent img{visibility:hidden}
 @media (prefers-reduced-motion:reduce){[data-tyler-play] .tb-grab,.tb-canvas,.tb-grab-fly,.tb-m{display:none}[data-tyler-play].tb-land>*{animation:none}.bar .brand.tb-lent img{visibility:visible}}
+@media print{.tb-canvas,.tb-m,.tb-grab-fly{display:none!important}.bar .brand.tb-lent img,[data-tyler-play].tb-away>:not(.tb-grab){visibility:visible}}
