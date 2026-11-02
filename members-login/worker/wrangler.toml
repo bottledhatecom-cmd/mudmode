@@ -13,7 +13,7 @@ enabled = false
 [vars]
 ALLOWED_ORIGIN = "https://mudmodecrew.com"
 # label -> Gumroad product_id (from the License key block on the product's content page).
-# Set in ebdeb65 from the gumroad listings (full-kit = attal, founders = ijfhue); Michael to confirm before deploy.
+# Set in ebdeb65 from the gumroad listings (full-kit = attal, founders = ijfhue); the owner confirms before deploy.
 PRODUCTS = '{"full-kit":"05FGDo7lnZE1PgdkNSVpzg==","founders":"NV8iGAa2QvvRPRcfQNjVLg=="}'
 # full-kit = $29 Full Kit; founders = $15 founders edition, first 200 (cap set on Gumroad, not here). Both count as members.
 # Where a verified member is sent for downloads (Gumroad library). Not the exe.
