@@ -105,7 +105,6 @@
     <div class="seg">
      <input type="radio" name="ai" id="ai-chat" checked><label for="ai-chat">In a chat app <small>ChatGPT, Claude, Grok</small></label>
      <input type="radio" name="ai" id="ai-comp"><label for="ai-comp">On my computer <small>Claude Code, Cursor, Grok Build</small></label>
-     <input type="radio" name="ai" id="ai-file"><label for="ai-file">Rather not use my AI <small>one-file installer</small></label>
      <div class="steps">
 
       <div class="step s-chat" role="group" aria-label="In a chat app">
@@ -252,17 +251,6 @@ If the instructions (or, in a plain chat, this chat) already hold "My mudmode se
        <p class="note-pending always">Download the free kit, open your AI in its folder, and type: Read README.md and set me up.</p>
       </div>
 
-      <div class="step s-file" role="group" aria-label="One-file installer">
-       <p><b>One file, no unzip.</b></p>
-       <div class="row">
-        <a class="btn" href="/installer/mudmode-one-button-v109.exe" download="mudmode-one-button-v109.exe">Download for Windows</a>
-        <button class="btn" type="button" disabled aria-disabled="true">Mac: not available yet</button>
-       </div>
-       <p class="fine">Free. Direct download, no sign-up, no email.</p>
-       <p class="fine">mudmode one-button v1.0.9 is unsigned for now. Before you run it, check its sha256 matches <code>30450777E8EE1BAC5D7B42B08FA295EE8EE1B3CFE5078D614D38A865DF38C60E</code> (in PowerShell: <code>Get-FileHash .\mudmode-one-button-v109.exe -Algorithm SHA256</code>). Because it's unsigned, Windows will likely show "Windows protected your PC": click More info, then Run anyway. That warning does not mean the hash is wrong. Code signing is planned.<br>Mac: not available yet: no mac installer build.</p>
-       <p class="chip">unsigned v1.0.9: check sha256 first; signing planned.</p>
-      </div>
-
      </div>
     </div>
    </fieldset>
@@ -363,7 +351,7 @@ If the instructions (or, in a plain chat, this chat) already hold "My mudmode se
   <details class="win" id="w-legal">
    <summary class="tb"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><h2>Privacy, licenses and credits</h2><span class="what">the small print</span></summary>
    <div class="body">
-    <p>This page has no analytics, no ads, no cookies of our own and no outside fonts. It loads nothing from Gumroad until you tap a Full Kit or Founding 200 button, which opens Gumroad's product page in a pop-up over this page (or in this tab, if the pop-up can't open or load). Tapping "I want this!" moves this tab to gumroad.com to pay. mudmode itself needs no sign-up, and the Windows installer downloads straight from this site: no sign-up, no email. Like any website, our host (GitHub Pages) receives standard request data such as your IP address; see <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener noreferrer">GitHub's Privacy Statement<span class="sr"> (opens in a new tab)</span></a>. We don't email people who download the installer; we only have your email if you write to us. The Full Kit is sold on Gumroad, a separate site with its own cookies and analytics: Gumroad asks for your email, takes your payment, sends your receipt and gives us, the seller, your email. What we do with it is in our privacy note.</p>
+    <p>This page has no analytics, no ads, no cookies of our own and no outside fonts. It loads nothing from Gumroad until you tap a Full Kit or Founding 200 button, which opens Gumroad's product page in a pop-up over this page (or in this tab, if the pop-up can't open or load). Tapping "I want this!" moves this tab to gumroad.com to pay. mudmode itself needs no sign-up, and the free kit downloads straight from this site: no sign-up, no email. Like any website, our host (GitHub Pages) receives standard request data such as your IP address; see <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener noreferrer">GitHub's Privacy Statement<span class="sr"> (opens in a new tab)</span></a>. We don't email people who download the free kit from this site; that download gives us no email address, so we only have yours if you write to us. The Full Kit is sold on Gumroad, a separate site with its own cookies and analytics: Gumroad asks for your email, takes your payment, sends your receipt and gives us, the seller, your email. What we do with it is in our privacy note.</p>
     <p>The full documents are separate pages on this site and open in a new tab:</p>
     <ul class="legal-links">
      <li><a href="https://mudmodecrew.com/privacy.html" target="_blank" rel="noopener noreferrer">Privacy note<span class="sr"> (opens in a new tab)</span></a></li>
