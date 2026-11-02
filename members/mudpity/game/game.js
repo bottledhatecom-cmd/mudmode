@@ -15,7 +15,7 @@ const SPEED = 70, JUMP_V = 190, GRAV = 520, STEP = 1 / 60;
 const VINE_L = 78, VINE_A = 0.85, VINE_W = 2.1, VINE_Y = 28;
 const SNAP_C = 2.8;
 /* ======================= TUNING (shield + stamina) =======================
-   Every shield and stamina number lives here. These are DEFAULTS for Michael to set in playtest; nothing else in the file
+   Every shield and stamina number lives here. These are DEFAULTS for the owner to set in playtest; nothing else in the file
    hard-codes them. Units: stamina 0..STAM_MAX; force 1 = an ordinary rolling log; speeds in logical px/s (a room is 320 px
    wide, the hero runs at 70); times in seconds. */
 const TUNE = {
@@ -44,8 +44,8 @@ const TUNE = {
   },
   GLOW_MIN: 0.08,              // shield glow brightness at empty stamina
   GLOW_MAX: 1.0,               // shield glow brightness at full stamina
-  /* grappling hook (Michael t28u-t32u): left click or the phone hook button fires it; tap = zip to the anchor, hold = swing on the
-     rope; it grabs any wall or ledge and pulls loot and mobs. Free to use, no stamina; the cooldown is the reel-in: he can fire again once the hook is back in his hand (Michael t39u). PLAYTEST DEFAULTS until Michael sets them. */
+  /* grappling hook (owner t28u-t32u): left click or the phone hook button fires it; tap = zip to the anchor, hold = swing on the
+     rope; it grabs any wall or ledge and pulls loot and mobs. Free to use, no stamina; the cooldown is the reel-in: he can fire again once the hook is back in his hand (owner t39u). PLAYTEST DEFAULTS until the owner sets them. */
   HOOK: {
     RANGE: 130,                // px: furthest the hook reaches
     FLY_SPEED: 650,            // px/s the hook head flies out
@@ -320,7 +320,7 @@ function stepWorld(room,rs,dt){
 }
 
 
-/* ---------- grappling hook (Michael t28u-t32u; numbers in TUNE.HOOK) ----------
+/* ---------- grappling hook (owner t28u-t32u; numbers in TUNE.HOOK) ----------
    Aim: the game aims by facing (no mouse aim), so the hook goes out in front of him. First choice: a mob or loot inside the cone
    in front; then the far ledge of a pit ahead; then a wall ahead (the outer trunks, or a locked boss arena's sides); then the
    canopy branches overhead along an AIM_UP shot. Nothing in range = a miss (the hook flies out and he reels it back in, so a miss still costs the reel-in).
@@ -954,7 +954,7 @@ function buildGem(kind) {
 }
 
 /* ---- BOSSES: 1 BOGJAW (mire beast, faces +x), 2 GLOOMWING (canopy flyer, faces +x), 3 MUDTOTEM (mud golem, faces -x). ----
-   Art redo to the hero's quality, in code (Michael t32u/t45u). Layout, colours (the approved swatch hex values) and every animated handle
+   Art redo to the hero's quality, in code (owner t32u/t45u). Layout, colours (the approved swatch hex values) and every animated handle
    are kept; the look is new: hero-style ink outline, Standard shading with soft self-light and a rim light, procedural textures.
    How: parts are still placed with mk(), but with a paint BP(hex, layer, ink) instead of a material. bossBake() then merges every static
    part under one pivot into ONE vertex-coloured mesh plus ONE inverted-hull ink mesh (the hero's outline, baked: each part pushed out
@@ -1011,7 +1011,7 @@ function bossMat(key, layers, o) {   // layers: [{ t: canvas texture or art key,
   m.customProgramCacheKey = () => 'boss:' + key; return m;
 }
 const _bkM = new THREE.Matrix4(), _bkI = new THREE.Matrix4(), _bkC = new THREE.Color(), _bkV = new THREE.Vector3(), _bkW = new THREE.Vector3();
-// ---- depth + character pass (Michael t53u): sculpted forms (vertex displacement on denser shapes), bevelled stone, contact shading baked
+// ---- depth + character pass (owner t53u): sculpted forms (vertex displacement on denser shapes), bevelled stone, contact shading baked
 // into the vertex colour, varied ink weight, and idle face animation done in the vertex shader. Everything still bakes to the same meshes,
 // so the draw calls stay as they were; the extra cost is triangles. ----
 const gSphH = new THREE.SphereGeometry(.5, 28, 18), gSphM = new THREE.SphereGeometry(.5, 18, 12), gHalfL = new THREE.SphereGeometry(.5, 9, 3, 0, Math.PI * 2, 0, Math.PI / 2), gConeH = new THREE.ConeGeometry(.5, 1, 14, 4);
@@ -1338,7 +1338,7 @@ function buildBoss3(g, skins, own) {   // stacked stone golem: head slab with a 
    Room geometry: ground plane (vertex colours + gentle displacement outside the lane), strata dirt box, back bank with hills, instanced foliage. */
 const roomGroup = new THREE.Group(); scene.add(roomGroup);
 const pl = buildHero(); pl.root.visible = false; scene.add(pl.root);
-// physical shield (plan items 1-3, 8, 9). Look (Michael t31u): something a robot would build from scrap. Built in code (no art file):
+// physical shield (plan items 1-3, 8, 9). Look (owner t31u): something a robot would build from scrap. Built in code (no art file):
 // mismatched steel / rust / galvanized plates (one instanced mesh), hex bolts, a bent uneven hoop, a pipe-cap boss and weld beads.
 // It hangs on the hero's back, swings round his right side to the front when he blocks, and lies on the ground when dropped.
 // A tight cool glow runs along the bent hoop and the weld beads, plus a ring card behind; its brightness follows his stamina
@@ -1389,7 +1389,7 @@ function buildShield() {
   return { root, face, glowM, haloM, halo };
 }
 const shield = buildShield(); pl.bod.add(shield.root);
-// buddy companion (Michael t57u): the picked buddy drawing (art/buddy.webp, kept in the repo as the reference) rebuilt as a rigged 3D model
+// buddy companion (owner t57u): the picked buddy drawing (art/buddy.webp, kept in the repo as the reference) rebuilt as a rigged 3D model
 // in code, the hero's way (simple shapes, bold swatch colours, ink hull) at the bosses' finish (sculpt, contact shading, pencil texture).
 // Every part bakes into ONE mesh + ONE ink hull. Each vertex carries a joint id; the joints are plain groups (hips, torso, head, eyes, lids,
 // brows, ears, mustache, arms, forearms, legs, feet) posed on the CPU each frame and sent to the shader as matrices, so the vertex shader
@@ -1888,7 +1888,7 @@ function syncTouchDim(st) {
 }
 function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 
-/* ---- quality toggle (title settings menu or the small button; not on a key, Q is kept free for the super move, Michael t46u): LOW = no shadow maps, fewer instances, lower pixel ratio ---- */
+/* ---- quality toggle (title settings menu or the small button; not on a key, Q is kept free for the super move, owner t46u): LOW = no shadow maps, fewer instances, lower pixel ratio ---- */
 function applyQuality() {
   const q = QL();
   if (renderer) { renderer.shadowMap.enabled = q.shadows; sun.castShadow = q.shadows; allMats.forEach(m => { m.needsUpdate = true; }); resize(); }
@@ -1927,7 +1927,7 @@ function syncShield(p, dt) {
     if (here) { sh.root.position.set(X(d.x), .1 + Math.max(0, Math.sin(VT * 3)) * .04, .2); sh.root.rotation.set(0, .3, Math.PI / 2); sh.root.scale.setScalar(HS); }
   }
 }
-/* hook view (Michael t40u, very smooth and detailed): the rope is one tube mesh rebuilt each frame (sag and slack, a wave that runs out on the throw
+/* hook view (owner t40u, very smooth and detailed): the rope is one tube mesh rebuilt each frame (sag and slack, a wave that runs out on the throw
    and back on the reel, a tension snap when it goes taut); the head is one merged mesh (shank, eye, tip, three barbs) that spins in flight.
    Bite sparks and dust use the shared particle pools. 2 draw calls in all, hidden when unused. Every value eases; the head is interpolated per frame. */
 const RP_N = 24, RP_S = 6, RP_R = .045;
@@ -2038,7 +2038,7 @@ function syncHero(room, p, dt) {
     if (p.shield) { if (pl.shE < .55) { ar = -1.35; sr = .35; } else { ar = 1.45; al = 1.1; sr = .45; sl = .25; } lean = Math.min(lean, -.06); }
     else { al = ar = 1.75; sl = sr = -.25; lean = -.1; }
   }
-  if (p.hook && p.dead <= 0) {   // hook (Michael t40u): the right arm throws, braces and reels; the body leans into it. R() eases every angle, so nothing pops
+  if (p.hook && p.dead <= 0) {   // hook (owner t40u): the right arm throws, braces and reels; the body leans into it. R() eases every angle, so nothing pops
     const h = p.hook, dx = (h.hx - p.x) * p.face, dy = (p.y - 14) - h.hy, aim = Math.max(.2, Math.min(3.05, Math.PI / 2 + Math.atan2(dy, Math.max(.5, dx))));
     if (h.ph === 'fly') { const wind = h.t < .06; ar = wind ? -.7 : aim + .25; sr = wind ? .05 : .3; lean = wind ? .1 : -.14; }                          // wind up behind, then throw through
     else if (h.ph === 'back') { const c = Math.sin(VT * 17); ar = aim * .75 + c * .22; sr = .22 + Math.cos(VT * 17) * .14; al = Math.max(al, .9); lean = .07; }   // crank it back in
@@ -2176,7 +2176,7 @@ document.querySelectorAll('.tb').forEach(b => { const k = b.dataset.k;
   b.addEventListener('pointerdown', down); b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); b.addEventListener('lostpointercapture', up);
 });
 cv.addEventListener('pointerdown', () => { startOrRestart(); });
-/* mouse (Michael t31u-t37u): left button = hook, right button = shield (works like S / Down, PRESS or HOLD; S / Down stay as backups).
+/* mouse (owner t31u-t37u): left button = hook, right button = shield (works like S / Down, PRESS or HOLD; S / Down stay as backups).
    Read from e.buttons so a second button pressed while the first is down (a chord, which sends pointermove, not pointerdown) still counts.
    A press only counts on the game canvas; a release counts anywhere. Touch has its own buttons. */
 let mouseL = false, mouseR = false;
