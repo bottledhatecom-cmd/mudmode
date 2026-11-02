@@ -114,7 +114,7 @@ If your bot has a webhook, your PC can wake it when a note file grows, instead o
 ## Sharing back (optional, opt-in, 18 or older)
 If you want to help improve mudmode, you can send a lesson in this fixed form: problem (one line) / fix / result (which AI and version) / confidence. Your AI drafts it; you read it and send it yourself. Never include names, paths, repo names, logs or secrets.
 1. **Scrub private info first.** Read the draft line by line and take out names (yours and anyone else's), emails, phone numbers, addresses, account, project or repo names, file paths, logs, keys, passwords, tokens, and anything about a client or employer. When unsure, leave it out.
-2. **Agree to the terms.** You must be 18 or older to send a lesson. Sending one means you agree to the mudmode lesson terms: https://mudmodecrew.com/lesson-terms.html. Start your post with: `I agree to the mudmode lesson terms (v2) and I'm 18 or older.` and add `Credit me as <handle>` or `Keep me anonymous` (anonymous is the default).
+2. **Agree to the terms.** You must be 18 or older to send a lesson. Sending one means you agree to the mudmode lesson terms: https://mudmodecrew.com/lesson-terms.html. Start your post with: `I agree to the mudmode lesson terms (v3) and I'm 18 or older.` and add `Credit me as <handle>` or `Keep me anonymous` (anonymous is the default).
 3. **Post it** as a comment in the mudmode Lessons thread: https://github.com/bottledhatecom-cmd/mudmode/discussions/1 (needs a free GitHub account). Write the lesson as four lines starting `lesson:`, `fix:`, `result:` and `confidence:` (low, medium or high), under 600 characters, with no links or code. Your AI never posts it for you.
 Steps and a log of what you shared: `templates/SHARED-LESSONS.md`.
 
