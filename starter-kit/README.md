@@ -119,4 +119,4 @@ If you want to help improve mudmode, you can send a lesson in this fixed form: p
 Steps and a log of what you shared: `templates/SHARED-LESSONS.md`.
 
 ## License and warranty
-License: mudmode Personal Use License v1.3, © 2026 Michael J Hester, licensed by Hestertainment LLC (full text: `LICENSE` in this folder). Provided as is, no warranty; you decide what your AI tools do and review their work. Not legal, tax or financial advice.
+License: mudmode Personal Use License v1.3, © 2026 mudmode, licensed by mudmode (full text: `LICENSE` in this folder). Provided as is, no warranty; you decide what your AI tools do and review their work. Not legal, tax or financial advice.
