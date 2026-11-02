@@ -12,6 +12,7 @@
 - `setup/AI-SETUP.md`: downloading the kit itself (when you asked your AI to, with the hash to check) is the one exception to "don't go online".
 - Setup now also counts an unedited 1.3.4 `CORE.md` and connector file as stock, so updating from 1.3.4 refreshes them the same way as before (backup first).
 - The safety rules are unchanged; only the Version lines moved to 1.3.5. The connector files gain one line for "mudmode" and "mudhelp".
+- Sharing a lesson: the agreement line is now `I agree to the mudmode lesson terms (v3) and I'm 18 or older.`, for the mudmode lesson terms v3 (November 2, 2026).
 
 ## v1.3.4 (2026-10-23)
 - License update: `LICENSE` is now the mudmode Personal Use License v1.3, effective October 23, 2026 (it replaces v1.2). Please read the new text.
