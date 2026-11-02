@@ -1,99 +1,122 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>mudpity</title>
-<style>
-  html,body{margin:0;height:100%;background:#1b1410;overflow:hidden;overscroll-behavior:none;
-    font-family:ui-monospace,Menlo,Consolas,monospace;color:#f3e6c4;
-    -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
-  canvas{position:fixed;left:0;top:0;width:100%;height:100%;display:block;touch-action:none;outline:none}
-  #hud{position:fixed;left:0;right:0;top:0;display:none;gap:3vmin;align-items:center;padding:1vmin 2vmin;font-weight:bold;
-    font-size:max(13px,2.4vmin);background:rgba(31,20,14,.72);text-shadow:1px 1px 0 #3f2616;pointer-events:none}
-  #hud span{white-space:nowrap;display:inline-flex;align-items:center;gap:.25em} #h-score{margin-left:auto;color:#e8c14a}
-  .ic{width:1.55em;height:1.55em;margin:-.3em 0;vertical-align:middle} .ic.lost{opacity:.28;filter:grayscale(1)} #h-lives{gap:0}
-  #h-time.warn{color:#ff8a70} #h-next{color:#e8c14a;opacity:.9;font-size:.85em}
-  #hud{flex-wrap:wrap}
-  #bosshud{position:fixed;left:50%;top:max(34px,7.5vmin);transform:translateX(-50%);width:min(70vw,520px);display:none;text-align:center;
-    font-weight:bold;font-size:max(12px,2.2vmin);text-shadow:1px 1px 0 #3f2616;pointer-events:none}
-  #bbar{margin-top:3px;height:max(10px,1.8vmin);background:rgba(31,20,14,.8);border:2px solid #3f2616}
-  #bfill{height:100%;width:100%;background:#d9534f;transition:width .25s}
-  #msg{position:fixed;left:0;right:0;top:22%;text-align:center;font-weight:bold;font-size:max(18px,4vmin);display:none;
-    text-shadow:2px 2px 0 #3f2616;pointer-events:none}
-  #panel{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(88vw,560px);box-sizing:border-box;
-    background:#f3e6c4;color:#3f2616;border:4px solid #3f2616;border-radius:6px;padding:2.2vmin 3vmin;text-align:center;
-    font-size:max(12px,2.2vmin);line-height:1.5;display:none;box-shadow:0 0 0 6px rgba(31,92,88,.8)}
-  #panel h1{margin:.1em 0;font-size:max(22px,5.2vmin);color:#5a3a22;letter-spacing:.04em}
-  #panel .sub{font-size:.8em;color:#3f2616;opacity:.8}
-  #panel p{margin:.6em 0} #panel small{opacity:.75}
-  #panel .go{margin-top:.4em;font-weight:bold;color:#d9894a;animation:bl 1s steps(2) infinite}
-  @keyframes bl{50%{opacity:.25}}
-  #panel{--u:min(.94vw,6.4px,1.55vh)}
-  #panel.endp{width:calc(var(--u)*100);height:calc(var(--u)*56.25);padding:calc(var(--u)*1.4) 3%;border-radius:8px;
-    background:#1b1410 center/cover no-repeat;font-size:max(10px,calc(var(--u)*2.3));line-height:1.35;color:#fff7e6;box-shadow:0 0 0 5px rgba(31,92,88,.8)}
-  #panel.endp.win{background-image:linear-gradient(rgba(27,20,16,.6),rgba(27,20,16,.35) 30%,rgba(27,20,16,0) 42%),url(art/end_win.jpg)} #panel.endp.over{background-image:linear-gradient(rgba(27,20,16,.6),rgba(27,20,16,.35) 30%,rgba(27,20,16,0) 42%),url(art/end_gameover.jpg)}
-  #panel.endp .top{height:33.3%;display:flex;flex-direction:column;justify-content:center;
-    text-shadow:0 0 6px #1b1410,1px 1px 0 #1b1410,-1px -1px 0 #1b1410,1px -1px 0 #1b1410,-1px 1px 0 #1b1410}
-  #panel.endp h1{margin:0;font-size:max(18px,calc(var(--u)*5.4));color:#ffd37a;text-shadow:inherit}
-  #panel.endp p{margin:.15em 0} #panel.endp .go{margin-top:.15em;color:#ffb347}
-  #badge{position:absolute;right:-1.2%;bottom:-3%;width:max(84px,calc(var(--u)*20));height:auto;pointer-events:none;
-    filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
-  #panel.title{padding-bottom:max(26px,calc(var(--u)*7))} #panel.title #badge{width:max(84px,calc(var(--u)*17));right:1%;bottom:1%}
-  .ib{position:absolute;bottom:3%;width:max(36px,calc(var(--u)*8.5));height:max(36px,calc(var(--u)*8.5));cursor:pointer;touch-action:none;
-    filter:drop-shadow(0 2px 2px rgba(0,0,0,.45))} #e-restart{left:3%} #e-home{left:calc(5% + max(36px,calc(var(--u)*8.5)))}
-  #sysb{position:fixed;left:6px;top:max(40px,8vmin);display:none;gap:6px;z-index:5}
-  #sysb img{width:max(34px,6.5vmin);height:max(34px,6.5vmin);cursor:pointer;touch-action:none;opacity:.92;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
-  #err{position:fixed;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:6vmin;
-    background:#1b1410;font-size:max(16px,3vmin)}
-  #fps{position:fixed;right:6px;bottom:6px;display:none;font-size:12px;background:rgba(0,0,0,.5);padding:2px 6px}
-  .tb{position:fixed;bottom:4vmin;width:16vmin;height:16vmin;border-radius:50%;box-sizing:border-box;border:2px solid rgba(63,38,22,.55);
-    background:rgba(243,230,196,.32) center/86% no-repeat;display:none;touch-action:none;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
-  .tb.on{background-color:rgba(255,179,71,.6);transform:scale(.94)}
-  #bl{background-image:url(art/icons/left.png)} #br{background-image:url(art/icons/right.png)} #bj{background-image:url(art/icons/jump.png);background-size:auto 92%;border-radius:40%}
-  #bl{left:3vmin} #br{left:21vmin} #bj{right:3vmin;width:22vmin}
-  body.touch .tb{display:flex}
-  .tb.dim{opacity:.35;filter:grayscale(1)}
-  #h-vit{gap:.45em} .hc{position:relative;display:inline-flex} .hc .hf{position:absolute;left:0;top:0}
-  #h-stam .sbar{display:inline-block;width:4.6em;height:.62em;border:2px solid #3f2616;background:rgba(31,20,14,.8);vertical-align:middle}
-  #h-sfill{display:block;height:100%;width:100%;background:#9fe3ff;box-shadow:0 0 4px #9fe3ff;transition:width .2s} #h-stam.out .sbar{opacity:.5}
-  #h-stam.noshield .sbar{border-style:dashed;border-color:#d9894a}
-  #h-hook{font-size:.7em;gap:.3em;color:#e8c14a} #h-hook .hbar{display:inline-block;width:2.6em;height:.7em;border:2px solid #3f2616;background:rgba(31,20,14,.8)}
-  #h-hfill{display:block;height:100%;width:100%;background:#e8c14a} #h-hook.cd{color:#a89a7a} #h-hook.cd #h-hfill{background:#a89a7a}
-  #bh{right:27vmin;bottom:22vmin;--cd:0%;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 6V40a10 10 0 0 1-20 0' fill='none' stroke='%233f2616' stroke-width='6' stroke-linecap='round'/%3E%3Cpath d='M32 6V40a10 10 0 0 0 20 0' fill='none' stroke='%239a9a92' stroke-width='5' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='8' r='5' fill='%23e8c14a'/%3E%3C/svg%3E");background-size:62%}
-  #bh::after{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(rgba(31,20,14,.6) var(--cd),transparent 0);pointer-events:none}
-  #bk{right:27vmin;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='24' fill='%237a5233' stroke='%239fe3ff' stroke-width='5'/%3E%3Cpath d='M32 9V55M9 32H55' stroke='%23bf5c40' stroke-width='5'/%3E%3Ccircle cx='32' cy='32' r='6' fill='%239a9a92'/%3E%3C/svg%3E");background-size:66%}
-  #panel.title .setb{margin:.2em auto .1em;font-size:.9em;cursor:pointer} #panel.title .setb b{padding:0 .3em;border-radius:3px;opacity:.55} #panel.title .setb b.sel{opacity:1;background:#d9894a;color:#f3e6c4}
-  #panel.title .goal{font-weight:bold;margin:.4em 0}
-  #panel.title .how{display:grid;grid-template-columns:auto 1fr;gap:.15em .8em;text-align:left;margin:.5em auto;max-width:34em;font-size:.92em;line-height:1.35}
-  #panel.title .how b{color:#5a3a22;white-space:nowrap}
-  #panel.title .seedbox{margin:.5em auto;padding:.3em .6em;border:2px dashed rgba(63,38,22,.45);border-radius:4px;display:inline-block}
-  #vig{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 46%,rgba(0,0,0,0) 52%,rgba(18,22,10,.38) 100%)}
-  #qbtn{position:fixed;right:6px;top:auto;bottom:30px;z-index:5;padding:3px 8px;font:bold 11px ui-monospace,Menlo,Consolas,monospace;
-    color:#f3e6c4;background:rgba(31,20,14,.62);border:1px solid rgba(243,230,196,.4);border-radius:4px;cursor:pointer;opacity:.75;touch-action:none}
-  #qbtn:hover{opacity:1} #qbtn.lo{color:#e8c14a}
-  body.touch #qbtn{bottom:auto;top:max(46px,9vmin);right:6px}
-</style>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; frame-src 'self'; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noai, noimageai">
+<meta name="tdm-reservation" content="1">
+<title>mudpity · mudmode members</title>
+<meta name="description" content="mudpity: a 3D jungle runner built by an AI crew running on mudmode. Play it right in your browser.">
+<meta name="theme-color" content="#121110">
+<link rel="icon" href="../../favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="../../img/mudmode-icon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="../../img/mudmode-icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="../../img/mudmode-icon-180.png">
+<link rel="stylesheet" href="../../glow.css?v=rc11">
+<link rel="stylesheet" href="mudpity.css">
 </head>
-<body>
-<canvas id="c" tabindex="0"></canvas>
-<div id="vig"></div>
-<div id="qbtn" title="Toggle graphics quality (also in the title settings)">QUALITY</div>
-<div id="hud"><span id="h-time"></span><span id="h-vit"><span id="h-lives"></span><span id="h-stam" title="Stamina"><span class="sbar"><span id="h-sfill"></span></span></span><span id="h-hook" title="Hook ready">HOOK<span class="hbar"><span id="h-hfill"></span></span></span></span><span id="h-gems"></span><span id="h-room"></span><span id="h-next"></span><span id="h-score"></span></div>
-<div id="bosshud"><div id="bname"></div><div id="bbar"><div id="bfill"></div></div></div>
-<div id="msg"></div>
-<div id="panel"></div>
-<div id="sysb"><img id="b-pause" src="art/icons/pause.png" alt="Pause" title="Pause (P)"><img id="b-snd" src="art/icons/sound_on.png" alt="Sound" title="Sound on/off (M)"></div>
-<div class="tb" id="bl" data-k="left" aria-label="Left"></div>
-<div class="tb" id="br" data-k="right" aria-label="Right"></div>
-<div class="tb" id="bj" data-k="jump" aria-label="Jump"></div>
-<div class="tb" id="bk" data-k="block" aria-label="Block"></div>
-<div class="tb" id="bh" data-k="hook" aria-label="Hook"></div>
-<div id="err">This browser could not start WebGL, so the 3D view cannot run here.</div>
-<div id="fps"></div>
-<script src="vendor/three.min.js"></script>
-<script src="art/tex.js"></script>
-<script src="game.js"></script>
+<body class="members-page mudpity-page">
+<nav aria-label="Site"><div class="wrap"><a class="brand" href="../../index.html" aria-label="mudmode home"><img src="../../img/mudmode-icon-32.png" srcset="../../img/mudmode-icon-32.png 1x, ../../img/mudmode-icon-64.png 2x" width="32" height="32" alt=""><b>mudmode</b></a><a href="../../index.html">Home</a><a href="../../index.html#w-price">Pricing</a><span>Community</span><a href="../../members.html">Members</a></div></nav>
+
+<main>
+<div class="mp-play">
+<div class="mp-bar">
+<div class="mp-title"><h1>mud<span>pity</span></h1><p class="mp-tag">A 3D jungle runner for mudmode members. <a href="../../members.html">Back to members</a></p></div>
+<div class="mp-btns"><button class="btn p" id="mp-fs" type="button">Fullscreen</button><a class="btn s" id="mp-new" href="game/index.html" target="_blank" rel="noopener">Open in new tab</a></div>
+</div>
+
+<div class="mp-stage" id="mp-stage">
+<iframe id="mp-game" src="game/index.html" title="mudpity game" tabindex="0" allow="fullscreen; autoplay" allowfullscreen></iframe>
+</div>
+
+<div class="mp-how">
+<p class="mp-keys"><b>How to play:</b> Arrows or A / D to move. Space, W or Up to jump (it also lets go of a vine). Enter starts a run, P pauses, M toggles sound. <span class="mp-touch">On phones and tablets, tap the game to start and use the on-screen left, right and jump buttons.</span></p>
+<p class="mp-credit">Made with <span class="brandword">mudmode</span></p>
+</div>
+</div>
+
+<!-- MUDPITY-COPY-START -->
+<section class="mp-made" id="how-made" aria-labelledby="mp-made-h"><div class="wrap">
+<h2 id="mp-made-h">How mudpity was made</h2>
+<!-- MUDPITY-MEDIA-START -->
+<div class="mp-media" role="group" aria-label="Build slideshow and finished title screen"><figure class="wide"><video width="1280" height="720" controls muted playsinline preload="none" poster="media/14-final-title-screen-v2.webp"><source src="media/build-slideshow-real-screenshots-v2.webm" type="video/webm"></video><figcaption>Slideshow of real build screenshots, not gameplay footage.</figcaption></figure><figure><img src="media/14-final-title-screen-v2.webp" width="960" height="540" alt="The finished title screen, now named mudpity." loading="lazy" decoding="async"><figcaption>The finished title screen, now named mudpity.</figcaption></figure></div>
+<!-- MUDPITY-MEDIA-END -->
+<p class="sub">mudpity is a 3D jungle runner that plays in your browser. Run, swing on vines, dodge the mud and tar pits, and beat three bosses before the 3:00 timer runs out.</p>
+<!-- MUDPITY-MEDIA-START -->
+<div class="mp-media" role="group" aria-label="Screenshots"><figure><img src="media/04-bosses-arrive-croc.webp" width="960" height="540" alt="Bosses arrive: BOGJAW, the mud croc, guards room 4." loading="lazy" decoding="async"><figcaption>Bosses arrive: BOGJAW, the mud croc, guards room 4.</figcaption></figure><figure><img src="media/05-bosses-arrive-golem.webp" width="960" height="540" alt="MUDTOTEM, the stone golem final boss, waits in room 12." loading="lazy" decoding="async"><figcaption>MUDTOTEM, the stone golem final boss, waits in room 12.</figcaption></figure></div>
+<!-- MUDPITY-MEDIA-END -->
+<p>It was built by a crew of AI helpers working together on <b>mudmode</b>, the working system that lets your own AI do real projects safely.</p>
+<h3>A game developer, made to a rule set</h3>
+<p>The crew's game developer bot was created by the crew's reviewer, using mudmode's startup routine for new bots. Before writing any code, it had to:</p>
+<ul class="mp-list">
+<li><b>Learn:</b> read the crew's manual, the current state of the project, and the standing working rules.</li>
+<li><b>Adapt:</b> pick up the crew's naming, time stamps and way of logging work.</li>
+<li><b>Protect:</b> take on the hard limits. No going live, spending, sending or deleting without the owner's own yes; secrets never shared in chat; slow down when usage runs high.</li>
+<li><b>Help:</b> join the crew roster, report every finished change for review, and start on probation.</li>
+<li><b>Study the craft:</b> learn how games are made only from sources the owner approved, and put it in its own words, never copying.</li>
+<li><b>Stamp:</b> write down who created it, when, and under what rules, before starting work.</li>
+</ul>
+<h3>The crew, each with a job</h3>
+<ul class="mp-list">
+<li><b>The builder</b> made the first playable version, from a 2D first build to the 3D game.
+<!-- MUDPITY-MEDIA-START -->
+<div class="mp-media" role="group" aria-label="Screenshots"><figure><img src="media/01-2d-first-build.webp" width="960" height="540" alt="The first playable version: a simple 2D jungle build." loading="lazy" decoding="async"><figcaption>The first playable version: a simple 2D jungle build.</figcaption></figure><figure><img src="media/02-first-3d-build.webp" width="960" height="540" alt="First 3D build: same idea, now a 3D jungle path." loading="lazy" decoding="async"><figcaption>First 3D build: same idea, now a 3D jungle path.</figcaption></figure><figure><img src="media/03-first-3d-vine-swing.webp" width="960" height="540" alt="First 3D build: swinging on a vine over a pit." loading="lazy" decoding="async"><figcaption>First 3D build: swinging on a vine over a pit.</figcaption></figure><figure><img src="media/06-look-pass.webp" width="800" height="450" alt="The look pass: a fuller jungle with light, ferns and grass." loading="lazy" decoding="async"><figcaption>The look pass: a fuller jungle with light, ferns and grass.</figcaption></figure><figure><img src="media/07-hero.webp" width="720" height="405" alt="The hero: a copper robot with a sprout under its dome." loading="lazy" decoding="async"><figcaption>The hero: a copper robot with a sprout under its dome.</figcaption></figure></div>
+<!-- MUDPITY-MEDIA-END --></li>
+<li><b>The game developer</b> took it over and fixed the rough spots, with before-and-after screenshots and full retests.
+<!-- MUDPITY-MEDIA-START -->
+<div class="mp-media" role="group" aria-label="Screenshots"><figure class="wide"><img src="media/10-fix-tar-before-after.webp" width="1280" height="420" alt="Tar pit fix: white streaks before (left), clean after (right)." loading="lazy" decoding="async"><figcaption>Tar pit fix: white streaks before (left), clean after (right).</figcaption></figure></div>
+<!-- MUDPITY-MEDIA-END --></li>
+<li><b>The art helper</b> drew every texture and boss fresh, in the owner's own style, with no stock or borrowed art.
+<!-- MUDPITY-MEDIA-START -->
+<div class="mp-media" role="group" aria-label="Screenshots"><figure class="wide"><img src="media/08-art-textures.webp" width="1280" height="219" alt="Six hand-drawn jungle textures, made fresh for this game." loading="lazy" decoding="async"><figcaption>Six hand-drawn jungle textures, made fresh for this game.</figcaption></figure><figure class="wide"><img src="media/09-art-bosses.webp" width="1235" height="460" alt="The three bosses, drawn fresh for the game: croc, bird, golem." loading="lazy" decoding="async"><figcaption>The three bosses, drawn fresh for the game: croc, bird, golem.</figcaption></figure><figure><img src="media/12-final-art-boss-fight.webp" width="960" height="540" alt="Final art in game: fighting GLOOMWING, the canopy bird." loading="lazy" decoding="async"><figcaption>Final art in game: fighting GLOOMWING, the canopy bird.</figcaption></figure></div>
+<!-- MUDPITY-MEDIA-END --></li>
+<li><b>The reviewer</b> checked every finished change, line by line, before anything moved forward.</li>
+<li><b>The site helper</b> built this page and put the game live.</li>
+<li><b>The owner</b> made every real call: what to fix, which name to use, and when to go live.</li>
+</ul>
+<h3>About the game developer</h3>
+<ul class="mp-list">
+<li><b>Created:</b> October 27, 2026, as a brand-new bot set up by the crew's reviewer, with the owner's go-ahead.</li>
+<li><b>Builds so far:</b> one game, mudpity. On its first day it shipped three rounds of changes: a pit-surface fix, a tar-pit and keyboard fix, and the rename to mudpity, plus six name checks. Every round was tested and reviewed before it moved on.
+<!-- MUDPITY-MEDIA-START -->
+<div class="mp-media" role="group" aria-label="Screenshots"><figure class="wide"><img src="media/11-fix-mire-before-after.webp" width="1160" height="440" alt="Mud pit fix: glare lines before (top), clean surface after (bottom)." loading="lazy" decoding="async"><figcaption>Mud pit fix: glare lines before (top), clean surface after (bottom).</figcaption></figure></div>
+<!-- MUDPITY-MEDIA-END --></li>
+<li><b>How it keeps growing:</b> every week it studies how games are made, using only sources the owner approved, and writes what it learns in its own words. Every lesson from real work goes into the crew's shared lessons log, so the next bot starts with it too. Ideas for doing better become written proposals, and they only take effect after the owner says yes.</li>
+<li><b>Why it only gets smarter with mudmode:</b> nothing it learns is lost between chats or bots. The manual, the lessons log and the review records stay put, so every job starts from everything the crew already knows, and the owner's yes keeps each improvement honest.</li>
+</ul>
+<h3>How the game developer grew (Oct 27, 2026, Central time)</h3>
+<ol class="mp-timeline">
+<li><b>2:25 PM: Created.</b> A new game-developer assistant is set up inside mudmode with a written rule set. It may not publish, spend or delete anything without the owner's yes. Every finished change goes to a reviewer, and it starts on a three-day trial. It reads the crew's manual before doing any work.</li>
+<li><b>3:30 PM: First job, first lesson.</b> It gets a list of five rough spots in the game. Before touching anything, it checks which files it's allowed to edit. Two of the five are outside its folders, so it reports them instead of changing them. That habit is written into the crew's lessons log.</li>
+<li><b>3:37 PM: Round 1 fixed.</b> The swamp water showed stripes that looked like wooden slats. It traces them to the shader, not the art, and fixes them in code. The lesson it logs: turn effects off one at a time before asking for new art. All four test suites pass with zero errors.</li>
+<li><b>3:46 PM: Round 2.</b> The tar pits had the same stripes, so it uses the lesson it just learned and fixes them in minutes. It also fixes a broken key in the early 2D first build. The new lesson: use no shine streaks on any dark liquid.</li>
+<li><b>4:00 to 4:30 PM: Six name checks.</b> It tests each name idea against domain records, game stores and public trademark searches, and logs how to check without a browser. Three names are dropped for being too close to existing marks or games. The owner picks <b>mudpity</b>.</li>
+<li><b>4:54 PM: The game gets its name.</b> It renames the game, reruns every test and seals the files with checksums.</li>
+<li><b>9:20 PM: Showing the work.</b> It turns real screenshots and test results from the build into the write-up's 14 images and a short slideshow. Nothing is staged or invented.</li>
+<li><b>9:26 PM: A clean public copy.</b> It makes a public copy with the behind-the-scenes notes taken out. The boss-test results are identical to the reviewed build, so the copy plays exactly like the reviewed build.</li>
+<li><b>9:30 PM: Ready to grow past one account.</b> It writes a sealed handoff packet so a second helper account can pick up the work without losing a rule or a decision.</li>
+</ol>
+<p class="mp-carry"><b>What carries forward:</b> Every lesson above lives in the crew's shared log, so the next assistant starts out knowing it, and, if the owner chooses to share, other mudmode users' assistants can too. That's the point: with mudmode, each build teaches the system something, and the system keeps it.</p>
+<h3>How the work stayed safe</h3>
+<ul class="mp-list">
+<li><b>Every OK is logged.</b> Each go-ahead was written down with the owner's exact words before anyone acted on it, and approvals passed along by another bot didn't count.</li>
+<li><b>Tested every time.</b> Automated checks play through the mechanics, the touch controls and all three boss fights after every change.
+<!-- MUDPITY-MEDIA-START -->
+<div class="mp-media" role="group" aria-label="Screenshots"><figure class="wide"><img src="media/13-boss-test-results.webp" width="1200" height="520" alt="Automated test: every boss beaten on all five seeds." loading="lazy" decoding="async"><figcaption>Automated test: every boss beaten on all five seeds.</figcaption></figure></div>
+<!-- MUDPITY-MEDIA-END --></li>
+<li><b>Names checked first.</b> Every name idea was screened against existing games, trademarks and domains, and the ones too close to existing games were dropped.</li>
+<li><b>Nothing deleted.</b> Every file was backed up before an edit, and checksums proved the live game is the exact build that was reviewed.</li>
+<li><b>Small and fast.</b> The whole game is under 1 MB and loads straight in your browser.</li>
+</ul>
+<p class="mp-use"><b>The use case:</b> you bring the idea and make the calls. mudmode turns your AI into a crew that researches, builds, tests, reviews and ships for you, without you losing control.</p>
+<p class="mp-cta"><a class="btn p" href="https://bottledhate.gumroad.com/l/attal" target="_blank" rel="noopener noreferrer">Get mudmode<span class="mp-sr"> (opens Gumroad in a new tab)</span></a> · <span class="mp-credit">Made with <span class="brandword">mudmode</span></span></p>
+</div></section>
+<!-- MUDPITY-COPY-END -->
+</main>
+
+<footer><div class="wrap"><p>Like every website, our host (GitHub Pages, run by GitHub, Inc.) receives standard request data such as your IP address. No analytics, no trackers, no cookies on this page. The game may keep your best score and its sound and quality settings in your browser's local storage; that never leaves your device. <a href="../../privacy.html">Privacy note</a> · <a href="../../terms.html">Terms of use</a> · <a href="../../full-kit-license.html">Full Kit License</a></p><p>© 2026 mudmode · Made with mudmode · <a href="https://github.com/bottledhatecom-cmd/mudmode/blob/main/LICENSE" target="_blank" rel="noopener">mudmode Personal Use License v1.3</a> · <a href="../../members.html">Back to members</a></p><p>The game uses three.js (MIT License); see the game's <a href="game/CREDITS.txt">credits</a>.</p></div></footer>
+<script src="mudpity.js"></script>
 </body>
 </html>
