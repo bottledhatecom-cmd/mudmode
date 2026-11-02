@@ -82,3 +82,5 @@
 #ml-form .btn:focus-visible,#ml-members .btn:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 #ml-members{margin-top:14px}#ml-members .btn{margin:6px 10px 0 0;cursor:pointer;font:inherit;font-family:var(--font-head);font-weight:700}
 @media (forced-colors:active){#ml-form .btn{border:1px solid ButtonText}}
+/* MEMBERS PHONE NAV (members.html only): the nav links ran off the right edge at 390px. On phones, brand on row 1, links on row 2 so all links show. */
+@media (max-width:640px){body.members-page nav .wrap{flex-wrap:wrap;height:auto;overflow:visible;padding:6px 14px;gap:2px 16px}body.members-page nav .brand{flex:1 0 100%;margin-right:0}body.members-page nav .wrap>a:not(.brand),body.members-page nav .wrap>span{min-height:44px;display:inline-flex;align-items:center}}
