@@ -1,4 +1,4 @@
-/* tylerbot-play: the grab spot over the hero Tyler's body and the play canvas (DESIGN.md §5-§7); idle play's moving grab
+/* tylerbot-play: the grab spot over the hero Tylerbot's body and the play canvas (DESIGN.md §5-§7); idle play's moving grab
    target, the header icon's flying copy and the real icon's hide class (idle-play DESIGN.md §3.2, §5.1). */
 [data-tyler-play] .tb-grab{position:absolute;left:27%;top:23%;width:46%;height:58%;border-radius:50%;touch-action:none;cursor:grab;pointer-events:auto;z-index:1;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 [data-tyler-play][data-tb-state=held] .tb-grab{cursor:grabbing}
