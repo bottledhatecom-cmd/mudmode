@@ -1,9 +1,12 @@
-mudmode Personal Use License, version 1.3 (2026), effective October 23, 2026
+mudmode Personal Use License, version 1.4 (2026), effective November 2, 2026
 
-Copyright (c) 2026 Michael J Hester (the "Copyright Owner"). All rights reserved.
+Copyright (c) 2026 mudmode. All rights reserved. "mudmode" is the trade name
+of its owner, who holds the copyright (the "Copyright Owner").
 Licensor: Hestertainment LLC, an Illinois limited liability company
 ("Licensor", "we", "us"), which licenses the mudmode Materials under an
 exclusive license from the Copyright Owner.
+What changed from version 1.3: the Copyright Owner is now named only by the
+trade name "mudmode"; the rest of the terms are unchanged.
 Contact: bottledhate.com@gmail.com (also listed at
 mudmodecrew.com/privacy.html#contact; the same page is privacy.html in this
 repository).
@@ -74,8 +77,8 @@ mudmode is listed and delivered), and each of their successors.
        other than the allowed uses above.
    Text-and-data-mining rights are expressly reserved, including under
    Article 4(3) of EU Directive 2019/790.
-5. Names and marks. "mudmode" is a trademark of Michael J Hester, used under
-   license by the Licensor. This license grants no trademark rights; do not use
+5. Names and marks. "mudmode" and its marks are trademarks of mudmode, used
+   under license by the Licensor. This license grants no trademark rights; do not use
    the name or marks for other products or in a way that suggests endorsement.
 6. Contributions. Lessons, ideas and other contributions are covered by
    CONTRIBUTING.md (and the mudmode lesson terms, where they apply:
@@ -167,5 +170,5 @@ mudmode is listed and delivered), and each of their successors.
    (mudmodecrew.com/full-kit-license.html).
    Infringement reports and permission requests: see the contact above.
 
-(c) 2026 Michael J Hester. Licensed by Hestertainment LLC (Illinois) under
-license from the copyright owner. mudmode is a trademark of Michael J Hester.
+(c) 2026 mudmode. Licensed by Hestertainment LLC (Illinois) under an exclusive
+license from the copyright owner. mudmode and its marks are trademarks of mudmode.
