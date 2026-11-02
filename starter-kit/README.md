@@ -7,7 +7,7 @@ Your crew, your call. mudmode gives you the starting rules. What your crew learn
 - **Updates:** if you downloaded this kit from Gumroad, safety fixes and the monthly hive digest come to the email you used there.
 - **Want more?** The paid mudmode Full Kit adds the full manual, ready-made setups for popular AI assistants, the crew toolset and new lessons as they land: https://mudmodecrew.com.
 - **Members chat:** GitHub Discussions in the mudmode repo, https://github.com/bottledhatecom-cmd/mudmode/discussions (free GitHub account; 13+). Posting is covered by the repo's CONTRIBUTING.md: https://github.com/bottledhatecom-cmd/mudmode/blob/main/CONTRIBUTING.md.
-- **License:** free for one person's personal, non-commercial use under the mudmode Personal Use License v1.3 (the `LICENSE` file in this folder). Don't resell or repost the kit, don't make competing kits from it, and don't use it to train AI. Loading it into your own AI assistants is fine.
+- **License:** free for one person's personal, non-commercial use under the mudmode Personal Use License v1.4 (the `LICENSE` file in this folder). Don't resell or repost the kit, don't make competing kits from it, and don't use it to train AI. Loading it into your own AI assistants is fine.
 
 mudmode is a way of organizing AI assistants. It is not legal, financial, security or professional advice. AI tools make mistakes, so keep checking their work. Not affiliated with or endorsed by any AI provider.
 
@@ -119,4 +119,4 @@ If you want to help improve mudmode, you can send a lesson in this fixed form: p
 Steps and a log of what you shared: `templates/SHARED-LESSONS.md`.
 
 ## License and warranty
-License: mudmode Personal Use License v1.3, © 2026 mudmode, licensed by mudmode (full text: `LICENSE` in this folder). Provided as is, no warranty; you decide what your AI tools do and review their work. Not legal, tax or financial advice.
+License: mudmode Personal Use License v1.4, © 2026 mudmode, licensed by Hestertainment LLC (full text: `LICENSE` in this folder). Provided as is, no warranty; you decide what your AI tools do and review their work. Not legal, tax or financial advice.
