@@ -1,0 +1,23 @@
+mudpity - credits and third-party notices
+==================================================
+
+Game code, 3D models (built procedurally in game.js) and design
+  mudmode. Original work; no third-party game code, art or names.
+
+Art (textures, HUD and button icons, end screens, "Made with mudmode" badge, boss sheets)
+  Art by mudmode - drawn in-house for this game. Approved final set (approved Oct 27 2026).
+  Files in art/ are re-encoded / resized copies of that set.
+
+three.js (vendor/three.min.js)
+  three.js r186 (npm three@0.186.1)
+  Copyright (c) 2010-2026 three.js authors
+  License: MIT. Full text: vendor/LICENSE-three.txt
+
+Badge lettering font: Chewy
+  The "Made with mudmode" badge (art/badge.png) has lettering set in the Chewy typeface.
+  The font file itself is NOT included in this game; only the lettering baked into the image.
+  Chewy - Copyright (c) 2010 by Font Diner, Inc DBA Sideshow. All rights reserved.
+  Designed by Squid (Sideshow). "Chewy" is a trademark of Font Diner, Inc DBA Sideshow.
+  License: Apache License, Version 2.0 - https://www.apache.org/licenses/LICENSE-2.0
+  (Chewy is distributed by Google Fonts under Apache-2.0, not the SIL Open Font License;
+   see https://github.com/google/fonts/tree/main/apache/chewy)
