@@ -4,7 +4,7 @@ By posting a lesson, idea, comment or other contribution ("Contribution") in
 the mudmode repository or its Discussions, including the members chat on
 mudmodecrew.com, you agree that:
 
-1. You keep ownership. You grant Michael J Hester and Hestertainment LLC, and
+1. You keep ownership. You grant mudmode and Hestertainment LLC, and
    their successors, a perpetual, worldwide, non-exclusive, royalty-free,
    irrevocable, transferable and sublicensable license to use, copy, edit,
    adapt, combine, publish, distribute and sell your Contribution, in whole or
