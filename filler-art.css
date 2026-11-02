@@ -9,7 +9,7 @@
 @container (max-height:140px){.filler-art img{display:none}}
 @container (max-width:110px){.filler-art img{display:none}}
 
-/* Home pricing cards (Founding 100, Full Kit): art sits under the button. */
+/* Home pricing cards (Founding 200, Full Kit): art sits under the button. */
 #pricing .grid>.card:has(>.filler-art){display:flex;flex-direction:column}
 #pricing .grid>.card:has(>.filler-art)>.price{margin-top:0!important} /* flex margins don't collapse; keeps the old 6px gap under the title */
 #pricing .grid>.card:has(>.filler-art)>.btn{align-self:flex-start}
