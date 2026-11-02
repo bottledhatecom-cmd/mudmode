@@ -43,7 +43,7 @@ legend{font-weight:600;margin-bottom:10px;padding:0}
 .seg input:focus-visible+label{outline:3px solid var(--mud2);outline-offset:3px}
 .steps{flex-basis:100%}
 .step{display:none;background:#151311;border:1px solid var(--line);border-radius:12px;padding:18px 20px}
-#ai-chat:checked~.steps .s-chat,#ai-comp:checked~.steps .s-comp,#ai-file:checked~.steps .s-file{display:block;animation:fade .25s ease}
+#ai-chat:checked~.steps .s-chat,#ai-comp:checked~.steps .s-comp{display:block;animation:fade .25s ease}
 @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 .step p{margin:0 0 10px}
 pre.say{white-space:pre-wrap;word-break:break-word;margin:0 0 12px;padding:14px 16px;border-radius:10px;background:#0e0d0c;border:1px solid #2c2824;font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#efe6dc}
