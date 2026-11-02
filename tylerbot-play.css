@@ -14,3 +14,19 @@
 .bar .brand.tb-lent img{visibility:hidden}
 @media (prefers-reduced-motion:reduce){[data-tyler-play] .tb-grab,.tb-canvas,.tb-grab-fly,.tb-m{display:none}[data-tyler-play].tb-land>*{animation:none}.bar .brand.tb-lent img{visibility:visible}}
 @media print{.tb-canvas,.tb-m,.tb-grab-fly{display:none!important}.bar .brand.tb-lent img,[data-tyler-play].tb-away>:not(.tb-grab){visibility:visible}}
+/* phase 2: the drawn ring he "shows" a line or a title bar with (never the real element; gone when the bit ends) */
+.tb-hl{position:fixed;z-index:39;box-sizing:border-box;border:2px solid #f3c969;border-radius:12px;box-shadow:0 0 0 1px rgba(26,18,11,.55),0 0 16px rgba(243,201,105,.45);pointer-events:none;opacity:0;will-change:transform,opacity}
+/* phase 1b: his speech bubble (DESIGN-1b §2.2); aria-hidden, no pointer events, only at rest */
+.tb-say{position:absolute;z-index:3;box-sizing:border-box;width:max-content;max-width:min(16.25rem,var(--tb-say-max,16.25rem));margin:0;padding:.45em .8em .5em;font:700 .9375rem/1.25 var(--font-head);letter-spacing:.01em;text-wrap:balance;overflow-wrap:break-word;background:#f1ece6;color:#1a120b;border:2.5px solid #1a120b;border-radius:18px 15px 19px 14px;box-shadow:0 3px 0 #7a4a22,0 9px 16px rgba(0,0,0,.38),0 0 18px rgba(243,201,105,.28);pointer-events:none;transform-origin:var(--tb-say-o,50% 100%)}
+.tb-say.tb-say-f{font-family:"Comic Relief",var(--font-head)}
+.tb-say-t{margin:0}
+.tb-say-tail{position:absolute;overflow:visible;transform-origin:15px 0;pointer-events:none}
+.tb-say-tail .f{fill:#f1ece6}
+.tb-say-tail .s{fill:none;stroke:#1a120b;stroke-width:2.5;stroke-linejoin:round}
+.tb-say-in{animation:tbsay-in .22s cubic-bezier(.2,.9,.3,1.2) both}
+.tb-say-out{animation:tbsay-out .16s ease-in both}
+@keyframes tbsay-in{0%{opacity:0;transform:scale(.6)}70%{opacity:1;transform:scale(1.06)}100%{opacity:1;transform:scale(1)}}
+@keyframes tbsay-out{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.9)}}
+@media (prefers-reduced-motion:reduce){.tb-say,.tb-hl{display:none}}
+@media (forced-colors:active){.tb-say{background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none}.tb-say-tail .f{fill:Canvas}.tb-say-tail .s{stroke:CanvasText}.tb-hl{border-color:Highlight;box-shadow:none}}
+@media print{.tb-say,.tb-hl{display:none!important}}
