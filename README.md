@@ -2,13 +2,13 @@
 
 mudmode gives a group of AI assistants one rulebook you own: handoffs so the next chat picks up where the last one stopped, a lessons book you can turn on, and rules that tell them to ask you before anything risky.
 
-- Website: https://mudmodecrew.com (run by mudmode)
+- Website: https://mudmodecrew.com (run by Hestertainment LLC)
 - Full Kit: out now, see [pricing](https://mudmodecrew.com/#w-price) (free kit: [free kit folder](starter-kit/))
 - Community and members chat: GitHub Discussions on this repo. Posting is covered by [CONTRIBUTING.md](CONTRIBUTING.md) (the contributor terms).
 - Privacy note: https://mudmodecrew.com/privacy.html · Terms of use: https://mudmodecrew.com/terms.html
 - Contact (rights, permissions, licensing, privacy): see the contact details in the [privacy note](privacy.html#contact)
 
 ## NOTICE
-mudmode is © 2026 mudmode. All rights reserved. It is licensed by mudmode under the **mudmode Personal Use License v1.3** (see [LICENSE](LICENSE)): free for your own personal, non-commercial setup; no resale, redistribution, rebranding or competing kits, templates or courses; commercial or team use needs a paid license (see the contact above). mudmode and its marks are trademarks of mudmode. The mudmodecrew.com website is © 2026 mudmode. Not affiliated with or endorsed by any AI provider.
+mudmode is © 2026 mudmode. All rights reserved. "mudmode" is the trade name of its owner and is used by Hestertainment LLC under an exclusive license. It is licensed by Hestertainment LLC under the **mudmode Personal Use License v1.4** (see [LICENSE](LICENSE)): free for your own personal, non-commercial setup; no resale, redistribution, rebranding or competing kits, templates or courses; commercial or team use needs a paid license (see the contact above). mudmode and its marks are trademarks of mudmode, used under license by Hestertainment LLC. The mudmodecrew.com website is © 2026 Hestertainment LLC. Not affiliated with or endorsed by any AI provider.
 
 **No AI training or scraping.** Text and data mining rights are reserved (see `/.well-known/tdmrep.json`, `ai.txt`, `robots.txt`). Do not use this content to train, fine-tune or evaluate AI models, to feed AI agents building competing products, or for automated scraping.
