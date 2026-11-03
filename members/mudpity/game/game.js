@@ -1825,7 +1825,7 @@ const hudEl = $('hud'), panel = $('panel'), msgEl = $('msg'), bossHud = $('bossh
 const cache = {};
 const setTxt = (id, s) => { if (cache[id] !== s) { cache[id] = s; $(id).textContent = s; } };
 const setHTML = (id, s) => { if (cache[id] !== s) { cache[id] = s; $(id).innerHTML = s; } };
-const ICON = n => '<img class="ic" src="art/icons/' + n + '.png" alt="">', sysb = $('sysb');
+const ICON = n => { const src = n === 'gem' ? 'art/icons/gem.png' : n === 'heart' ? 'art/icons/heart.png' : ''; return src ? '<img class="ic" src="' + src + '" alt="">' : ''; }, sysb = $('sysb');
 const BADGE = '<img id="badge" src="art/badge.png" alt="Made with mudmode">';
 function drawUI() {
   const st = G.state;
@@ -2150,7 +2150,7 @@ addEventListener('keydown', e => {
 let muted = false; try { muted = localStorage.getItem('jr3d-mute') === '1'; } catch (e) {}
 { const _sfx = sfx; sfx = function () { if (!muted) _sfx.apply(null, arguments); }; }
 function toggleMute() { muted = !muted; try { localStorage.setItem('jr3d-mute', muted ? '1' : '0'); } catch (e) {} syncSnd(); }
-function syncSnd() { const b = $('b-snd'); b.src = 'art/icons/' + (muted ? 'sound_off' : 'sound_on') + '.png'; b.alt = muted ? 'Sound off' : 'Sound on'; }
+function syncSnd() { const b = $('b-snd'); b.src = muted ? 'art/icons/sound_off.png' : 'art/icons/sound_on.png'; b.alt = muted ? 'Sound off' : 'Sound on'; }
 function togglePause() { if (G.state === 'play' || G.state === 'paused') G.state = G.state === 'play' ? 'paused' : 'play'; }
 function goHome() { if (G.state === 'end') { G.state = 'title'; } }
 syncSnd();
