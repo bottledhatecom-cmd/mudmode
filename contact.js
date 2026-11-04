@@ -3,7 +3,7 @@
 // read the raw HTML don't pick it up. Without JavaScript, people see the
 // "[at] / [dot]" text that is already in the page.
 (function(){
- var u='bottledhate'+'.'+'com', d='gmail'+'.'+'com';
+ var u='mudmodecrew', d='gmail'+'.'+'com';
  var els=document.querySelectorAll('.js-email');
  for(var i=0;i<els.length;i++){
   var a=document.createElement('a'), m=u+'@'+d;
