@@ -291,12 +291,12 @@ function runFiddleUnit() {
   const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
   check(
     "cache-bumps",
-    html.includes("site.css?v=tb3") && html.includes("alive.js?v=rc12") && html.includes("tylerbot-play.css?v=tb7") &&
-      html.includes("tylerbot-play.js?v=tb9") && html.includes("tylerbot-fiddle.js?v=f1"),
+    html.includes("site.css?v=tb4") && html.includes("alive.js?v=rc12") && html.includes("mascot.js?v=rc12") && html.includes("tylerbot-play.css?v=tb8") &&
+      html.includes("tylerbot-play.js?v=tb10") && html.includes("tylerbot-fiddle.js?v=f2"),
     "query strings",
   );
   const css = fs.readFileSync(path.join(root, "tylerbot-play.css"), "utf8");
-  check("css-reactions", css.includes("@keyframes tb-poke") && css.includes("prefers-reduced-motion") && css.includes(".tb-say-tail.has-g .f"), "fiddle + bubble");
+  check("css-reactions", css.includes("@keyframes tb-poke") && css.includes("prefers-reduced-motion") && css.includes(".tb-say-tail .sh") && css.includes("stroke-width:3.5px"), "fiddle + bubble");
   const site = fs.readFileSync(path.join(root, "site.css"), "utf8");
   const alive = fs.readFileSync(path.join(root, "alive.js"), "utf8");
   check("stagger", site.includes("var(--fx-i,0)") && alive.includes("--fx-i") && site.includes("tb-downhint"), "fade stagger and arrow");

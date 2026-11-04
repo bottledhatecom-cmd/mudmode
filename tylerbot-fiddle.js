@@ -454,9 +454,9 @@
   }
 
   function bubbleParts(w, h) {
-    var R = Math.max(10, Math.min(16, Math.round(Math.min(w, h) / 2) - 6));
-    var bw = 9, tl = 16, ax = Math.round(w / 2);
-    var path = "M" + R + " 0H" + (w - R) + "A" + R + " " + R + " 0 0 1 " + w + " " + R + "V" + (h - R) + "A" + R + " " + R + " 0 0 1 " + (w - R) + " " + h + "H" + (ax + bw) + "L" + ax + " " + (h + tl) + "L" + (ax - bw) + " " + h + "H" + R + "A" + R + " " + R + " 0 0 1 0 " + (h - R) + "V" + R + "A" + R + " " + R + " 0 0 1 " + R + " 0Z";
+    var R = Math.max(12, Math.min(18, Math.round(Math.min(w, h) / 2) - 8));
+    var bw = 11, tl = 16, ax = Math.max(R + bw, Math.min(w - R - bw, Math.round(w / 2)));
+    var path = "M" + R + " 0H" + (w - R) + "A" + R + " " + R + " 0 0 1 " + w + " " + R + "V" + (h - R) + "A" + R + " " + R + " 0 0 1 " + (w - R) + " " + h + "H" + (ax + bw) + "Q" + (ax + bw * 0.2) + " " + (h + tl * 0.42) + " " + ax + " " + (h + tl) + "Q" + (ax - bw * 0.2) + " " + (h + tl * 0.42) + " " + (ax - bw) + " " + h + "H" + R + "A" + R + " " + R + " 0 0 1 0 " + (h - R) + "V" + R + "A" + R + " " + R + " 0 0 1 " + R + " 0Z";
     return { path: path, vb: "0 0 " + w + " " + (h + tl), th: h + tl };
   }
 
@@ -493,32 +493,50 @@
     g.setAttribute("y1", "0");
     g.setAttribute("x2", "0.12");
     g.setAttribute("y2", "1");
-    [["0%", "#ffffff"], ["36%", "#fff1dc"], ["100%", "#e2be96"]].forEach(function (st) {
-      var stop = doc.createElementNS(NS, "stop");
-      stop.setAttribute("offset", st[0]);
-      stop.setAttribute("stop-color", st[1]);
-      g.appendChild(stop);
-    });
+    function addStops(node, list) {
+      list.forEach(function (st) {
+        var stop = doc.createElementNS(NS, "stop");
+        stop.setAttribute("offset", st[0]);
+        stop.setAttribute("stop-color", st[1]);
+        if (st.length > 2) stop.setAttribute("stop-opacity", st[2]);
+        node.appendChild(stop);
+      });
+    }
+    addStops(g, [["0%", "#ffffff"], ["28%", "#ffe6c4"], ["100%", "#e4ae62"]]);
+    var shade = doc.createElementNS(NS, "linearGradient");
+    shade.setAttribute("id", "tb-say-shade");
+    shade.setAttribute("gradientUnits", "objectBoundingBox");
+    shade.setAttribute("x1", "0"); shade.setAttribute("y1", "0"); shade.setAttribute("x2", "0"); shade.setAttribute("y2", "1");
+    addStops(shade, [["0%", "#7a3e10", "0"], ["58%", "#7a3e10", "0"], ["100%", "#6a320c", "0.42"]]);
+    var sheen = doc.createElementNS(NS, "linearGradient");
+    sheen.setAttribute("id", "tb-say-sheen");
+    sheen.setAttribute("gradientUnits", "objectBoundingBox");
+    sheen.setAttribute("x1", "0"); sheen.setAttribute("y1", "0"); sheen.setAttribute("x2", "0.2"); sheen.setAttribute("y2", "1");
+    addStops(sheen, [["0%", "#ffffff", "0.95"], ["20%", "#ffffff", "0.42"], ["46%", "#ffffff", "0"]]);
     var cp = doc.createElementNS(NS, "clipPath");
     cp.setAttribute("id", "tb-say-clip");
     var cpath = doc.createElementNS(NS, "path");
     cpath.setAttribute("d", shape.path);
     cp.appendChild(cpath);
     defs.appendChild(g);
+    defs.appendChild(shade);
+    defs.appendChild(sheen);
     defs.appendChild(cp);
-    var fill = doc.createElementNS(NS, "path");
-    fill.setAttribute("class", "f");
-    fill.setAttribute("d", shape.path);
-    var hi = doc.createElementNS(NS, "path");
-    hi.setAttribute("class", "h");
-    hi.setAttribute("d", shape.path);
-    var stroke = doc.createElementNS(NS, "path");
-    stroke.setAttribute("class", "s");
-    stroke.setAttribute("d", shape.path);
+    function layer(cls, fill) {
+      var node = doc.createElementNS(NS, "path");
+      node.setAttribute("class", cls);
+      node.setAttribute("d", shape.path);
+      if (fill) node.style.fill = fill;
+      return node;
+    }
     s.appendChild(defs);
-    s.appendChild(fill);
+    s.appendChild(layer("f", "url(#tb-say-g)"));
+    s.appendChild(layer("sd", "url(#tb-say-shade)"));
+    s.appendChild(layer("sh", "url(#tb-say-sheen)"));
+    var hi = layer("h");
+    hi.style.clipPath = "url(#tb-say-clip)";
     s.appendChild(hi);
-    s.appendChild(stroke);
+    s.appendChild(layer("s"));
     o.appendChild(s);
     var br = bot.getBoundingClientRect();
     var hr = host.getBoundingClientRect();

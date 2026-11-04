@@ -17,20 +17,21 @@
 /* phase 2: the drawn ring he "shows" a line or a title bar with (never the real element; gone when the bit ends) */
 .tb-hl{position:fixed;z-index:39;box-sizing:border-box;border:2px solid #f3c969;border-radius:12px;box-shadow:0 0 0 1px rgba(26,18,11,.55),0 0 16px rgba(243,201,105,.45);pointer-events:none;opacity:0;will-change:transform,opacity}
 /* phase 1b: his speech bubble. One outline for the balloon and the tail, text stacked. aria-hidden, no pointer events, only at rest */
-.tb-say{position:absolute;z-index:3;box-sizing:border-box;width:max-content;max-width:min(10.25rem,var(--tb-say-max,10.25rem));margin:0;padding:.5em .75em .52em;overflow:visible;font:700 .9375rem/1.28 var(--font-head);letter-spacing:.01em;text-align:center;text-wrap:balance;overflow-wrap:break-word;background:transparent;color:#1a120b;border:0;pointer-events:none;transform-origin:var(--tb-say-o,50% 100%)}
+.tb-say{position:absolute;z-index:3;box-sizing:border-box;width:max-content;max-width:min(10.25rem,var(--tb-say-max,10.25rem));margin:0;padding:.62em .9em .66em;overflow:visible;font:700 .9375rem/1.28 var(--font-head);letter-spacing:.01em;text-align:center;text-wrap:balance;overflow-wrap:break-word;background:transparent;color:#1a120b;border:0;pointer-events:none;transform-origin:var(--tb-say-o,50% 100%)}
 .tb-say.tb-say-f{font-family:"Bubblegum Sans",var(--font-head);font-weight:400}
 .tb-say-t{position:relative;z-index:1;margin:0}
-.tb-say-tail{position:absolute;z-index:0;overflow:visible;pointer-events:none;filter:drop-shadow(0 1px 0 rgba(255,248,236,.8)) drop-shadow(0 2px 0 rgba(70,40,14,.45)) drop-shadow(0 12px 16px rgba(0,0,0,.55)) drop-shadow(0 0 14px rgba(243,201,105,.2))}
-.tb-say-tail .f{fill:#f6e4cc}
-.tb-say-tail.has-g .f{fill:#fffdf8;fill:url(#tb-say-g) #f6e4cc}
-.tb-say-tail .h{fill:none;stroke:rgba(255,255,255,.95);stroke-width:3px;stroke-linejoin:round;stroke-linecap:round;clip-path:url(#tb-say-clip)}
-.tb-say-tail .s{fill:none;stroke:#1a120b;stroke-width:2.5px;stroke-linejoin:round;stroke-linecap:round}
+.tb-say-tail{position:absolute;z-index:0;overflow:visible;pointer-events:none;filter:drop-shadow(0 1px 0 rgba(255,252,246,.7)) drop-shadow(0 3px 0 rgba(42,22,8,.55)) drop-shadow(0 10px 14px rgba(0,0,0,.48)) drop-shadow(0 22px 32px rgba(0,0,0,.32))}
+.tb-say-tail .f{fill:#f0c48a}
+.tb-say-tail .sd{fill:url(#tb-say-shade);pointer-events:none}
+.tb-say-tail .sh{fill:url(#tb-say-sheen);pointer-events:none}
+.tb-say-tail .h{fill:none;stroke:rgba(255,255,255,.96);stroke-width:5.5px;stroke-linejoin:round;stroke-linecap:round;clip-path:url(#tb-say-clip)}
+.tb-say-tail .s{fill:none;stroke:#140e09;stroke-width:3.5px;stroke-linejoin:round;stroke-linecap:round}
 .tb-say-in{animation:tbsay-in .22s cubic-bezier(.2,.9,.3,1.2) both}
 .tb-say-out{animation:tbsay-out .16s ease-in both}
 @keyframes tbsay-in{0%{opacity:0;transform:scale(.6)}70%{opacity:1;transform:scale(1.06)}100%{opacity:1;transform:scale(1)}}
 @keyframes tbsay-out{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.9)}}
 @media (prefers-reduced-motion:reduce){.tb-say,.tb-hl{display:none}}
-@media (forced-colors:active){.tb-say{background:transparent;color:CanvasText;filter:none}.tb-say-tail{filter:none}.tb-say-tail .f{fill:Canvas}.tb-say-tail.has-g .f{fill:Canvas}.tb-say-tail .h{stroke:none}.tb-say-tail .s{stroke:CanvasText}.tb-hl{border-color:Highlight;box-shadow:none}}
+@media (forced-colors:active){.tb-say{background:transparent;color:CanvasText;filter:none}.tb-say-tail{filter:none!important}.tb-say-tail .f,.tb-say-tail .sd,.tb-say-tail .sh{fill:Canvas!important}.tb-say-tail .h{stroke:none!important}.tb-say-tail .s{stroke:CanvasText!important}.tb-hl{border-color:Highlight;box-shadow:none}}
 @media print{.tb-say,.tb-hl{display:none!important}}
 /* idle fiddle: transient transform / opacity / filter only. Removed when the animation ends. */
 [data-tyler-play].tb-dodge{transition:transform .25s cubic-bezier(.2,.85,.2,1.05);transform:translate3d(var(--dx,0),var(--dy,0),0)}
