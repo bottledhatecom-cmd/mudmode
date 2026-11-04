@@ -13,6 +13,7 @@
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
+import vm from "node:vm";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
@@ -54,8 +55,8 @@ function hookSource() {
     'state:function(){return d},' +
     'ready:function(){return{y:!!y,d:d,gl:!!(p&&p.isContextLost&&!p.isContextLost())}},' +
     'hl:function(){if(!Gt||!Gt.parentNode)return null;var cs=n.getComputedStyle(Gt);return{aria:Gt.getAttribute("aria-hidden"),pe:cs.pointerEvents,cls:Gt.className}},' +
-    'quiet:function(){At.on=!1;At.instant=!1;At.fake=null;At.nat=!1;At.says=3;Ze();Vn()},' +
-    'simVisit:function(){At.instant=!0;At.log=[];At.gF=0;At.gP=0;At.n=0;At.last="";At.lent=!1;At.on=!0;At.vis=!0;At.paused=!1;At.trip=!1;At.down=!1;At.hold=0;At.back=!1;At.lastIn=-1e9;At.lastSc=-1e9;At.says=3;At.t0=At.t0||0;At.due=At.t0+15e3;At.fake=At.t0+16e3;Ze();var end=At.t0+36e5,guard=0;while(At.n<4&&At.fake<end&&guard++<12){At.fake=Math.max(At.fake,an());ln();if(At.due>At.fake)At.fake=At.due;else At.fake+=12e4}var out={n:At.n,free:At.gF,price:At.gP,log:At.log.map(function(row){return[row[1],row[3]||""]}),why:At.n?0:un(),y:!!y,d:d};Ze();At.on=!1;At.instant=!1;At.fake=null;At.nat=!1;return out}' +
+    'quiet:function(){At.on=!1;At.instant=!1;At.fake=null;At.nat=!1;At.says=6;n.__tbBusy=0;Ze();Vn()},' +
+    'simVisit:function(){n.__tbBusy=0;At.instant=!0;At.log=[];At.gF=0;At.gP=0;At.n=0;At.last="";At.lent=0;At.on=!0;At.vis=!0;At.paused=!1;At.trip=!1;At.down=!1;At.hold=0;At.back=!1;At.lastIn=-1e9;At.lastSc=-1e9;At.says=6;At.t0=At.t0||0;At.due=At.t0+10e3;At.fake=At.t0+11e3;Ze();var end=At.t0+36e5,guard=0;while(At.n<12&&At.fake<end&&guard++<40){At.fake=Math.max(At.fake,an());ln();if(At.due>At.fake)At.fake=At.due;else At.fake+=12e4}var out={n:At.n,free:At.gF,price:At.gP,log:At.log.map(function(row){return[row[1],row[3]||""]}),why:At.n?0:un(),y:!!y,d:d};Ze();At.on=!1;At.instant=!1;At.fake=null;At.nat=!1;return out}' +
     '};'
   );
 }
@@ -157,7 +158,157 @@ async function snap(page) {
   }));
 }
 
+function loadFiddle() {
+  const src = fs.readFileSync(path.join(root, "tylerbot-fiddle.js"), "utf8");
+  const sandbox = { window: {}, console, Math, Date };
+  vm.createContext(sandbox);
+  vm.runInContext(src, sandbox, { filename: "tylerbot-fiddle.js" });
+  return sandbox.window.TbFiddle;
+}
+
+function baseEnv(now, extra) {
+  return Object.assign({
+    now: now,
+    reduced: false,
+    saveData: false,
+    paused: false,
+    hidden: false,
+    vis: true,
+    tkOn: true,
+    width: 1440,
+    bit: false,
+    bubble: false,
+    fiddle: false,
+    has: function () { return true; },
+  }, extra || {});
+}
+
+function runFiddleUnit() {
+  const F = loadFiddle();
+  const ids = F.PLAYS.map((p) => p.id);
+  check("fiddle-catalog", ids.length >= 34 && new Set(ids).size === ids.length, ids.length + " plays");
+  const fams = Object.keys(F.FAM).sort().join(",");
+  check(
+    "fiddle-weights",
+    fams === ["BUTTONS", "DESK", "FOLDS", "LOGO", "PEEK", "SELF", "TEXT", "TICKER"].join(",") &&
+      F.FAM.SELF === 25 && F.FAM.PEEK === 15 && F.FAM.LOGO === 12 && F.FAM.TICKER === 12 &&
+      F.FAM.BUTTONS === 10 && F.FAM.TEXT === 10 && F.FAM.FOLDS === 8 && F.FAM.DESK === 8,
+    fams,
+  );
+
+  const gates = [
+    ["paused", { paused: true }],
+    ["reduced", { reduced: true }],
+    ["hidden", { hidden: true }],
+    ["save-data", { saveData: true }],
+    ["narrow", { width: 1099 }],
+    ["out-of-view", { vis: false }],
+    ["tk-off", { tkOn: false }],
+    ["big-bit", { bit: true }],
+    ["bubble", { bubble: true }],
+    ["fiddle", { fiddle: true }],
+  ];
+  gates.forEach(function (row) {
+    check("gate-" + row[0], F.allow(baseEnv(0, row[1])) === false, "stopped");
+  });
+  check("gate-open", F.allow(baseEnv(0)) === true, "idle desktop");
+
+  const seq = F.createState();
+  const seen = [];
+  let stuck = false;
+  for (let i = 0; i < 24; i++) {
+    const pick = F.choose(seq, baseEnv(i * 13000), function () { return 0.17; });
+    if (!pick) { stuck = true; break; }
+    if (seen.length && pick.fam === seen[seen.length - 1].fam) stuck = true;
+    if (seen.slice(-10).indexOf(pick.id) >= 0) stuck = true;
+    const window6 = seen.slice(-5);
+    if (window6.filter((id) => F.PLAYS.find((p) => p.id === id).fam === pick.fam).length >= 2) stuck = true;
+    seen.push(pick.id);
+    F.commit(seq, pick);
+  }
+  const famRun = seen.map((id) => F.PLAYS.find((p) => p.id === id).fam);
+  let famHot = false;
+  for (let i = 0; i < famRun.length; i++) {
+    const n = famRun.slice(Math.max(0, i - 5), i + 1).filter((f) => f === famRun[i]).length;
+    if (n > 2) famHot = true;
+  }
+  check(
+    "fiddle-variety",
+    !stuck && !famHot && seen.length === 24 && new Set(seen).size >= 12,
+    seen.slice(0, 8).join(" ") || "none",
+  );
+
+  const cool = F.createState();
+  const first = F.choose(cool, baseEnv(0), function () { return 0.2; });
+  F.commit(cool, first);
+  const again = F.choose(cool, baseEnv(1000, { has: function (id) { return id === first.id; } }), function () { return 0.2; });
+  const later = F.choose(cool, baseEnv(91000, { has: function (id) { return id === first.id; } }), function () { return 0.2; });
+  check("fiddle-cooldown", !!first && again == null && later == null, first && first.id);
+
+  check("gap-fast", F.gapFor(0, function () { return 0; }) === 4000 && F.gapFor(1000, function () { return 1; }) === 9000, "4-9s");
+  check("gap-slow", F.gapFor(180000, function () { return 0; }) === 15000 && F.gapFor(180000, function () { return 1; }) === 25000, "15-25s");
+
+  function dodge(st, extra, roll) {
+    const env = Object.assign({
+      pointer: "mouse", reduced: false, paused: false, hidden: false, vis: true,
+      saveData: false, tkOn: true, width: 1440, rest: true, bit: false, fiddle: false, drag: false, now: 100000,
+    }, extra || {});
+    return F.decideDodge(st, env, function () { return roll == null ? 0 : roll; });
+  }
+  const fresh = { dodges: 0, grabs: 0, lastDodge: false, dodgeAt: 0, catchAt: 0 };
+  check("dodge-first", dodge(fresh, {}, 0.49).dodge === true && dodge(fresh, {}, 0.5).dodge === false, "50%");
+  check("dodge-later", dodge(Object.assign({}, fresh, { grabs: 1 }), {}, 0.34).dodge === true && dodge(Object.assign({}, fresh, { grabs: 1 }), {}, 0.35).dodge === false, "35%");
+  check("dodge-cap", dodge(Object.assign({}, fresh, { dodges: 3, grabs: 4 }), {}, 0).dodge === false, "max 3");
+  check("dodge-row", dodge(Object.assign({}, fresh, { grabs: 1, lastDodge: true, dodgeAt: 1000 }), {}, 0).dodge === false, "no back to back");
+  check("dodge-touch", dodge(fresh, { pointer: "touch" }, 0).dodge === false, "touch");
+  check("dodge-pen", dodge(fresh, { pointer: "pen" }, 0).dodge === true, "pen");
+  check("dodge-key", dodge(fresh, { pointer: "" }, 0).dodge === false, "not a pointer");
+  check("dodge-reduced", dodge(fresh, { reduced: true }, 0).dodge === false, "reduced");
+  check("dodge-paused", dodge(fresh, { paused: true }, 0).dodge === false, "paused");
+  check("dodge-busy", dodge(fresh, { bit: true }, 0).dodge === false && dodge(fresh, { fiddle: true }, 0).dodge === false && dodge(fresh, { drag: true }, 0).dodge === false, "bit fiddle drag");
+  check("dodge-grace", dodge(Object.assign({}, fresh, { grabs: 1, dodgeAt: 96000, catchAt: 0 }), { now: 100000 }, 0).reason === "grace", "6s");
+  check(
+    "dodge-catch-resets-grace",
+    dodge(Object.assign({}, fresh, { grabs: 2, lastDodge: false, dodgeAt: 96000, catchAt: 97000 }), { now: 100000 }, 0).reason === "cool",
+    "within 6s of a dodge, a catch skips the grace block",
+  );
+  check(
+    "dodge-after-cooldown",
+    dodge(Object.assign({}, fresh, { grabs: 2, lastDodge: false, dodgeAt: 70000, catchAt: 80000 }), { now: 91000 }, 0).dodge === true,
+    "21s and a catch",
+  );
+  const walked = { dodges: 0, grabs: 0, lastDodge: false, dodgeAt: 0, catchAt: 0 };
+  F.noteGrab(walked, true, 1000);
+  const blocked = dodge(walked, { now: 30000 }, 0);
+  F.noteGrab(walked, false, 30000);
+  const open = dodge(walked, { now: 30000 }, 0);
+  check("dodge-note", walked.dodges === 1 && blocked.dodge === false && open.reason !== "row", "catch clears the row");
+
+  const playSrc = fs.readFileSync(path.join(root, "tylerbot-play.js"), "utf8");
+  check("constants-rn", playSrc.includes("function rn(){return 4e4+3e4*Math.random()}"), "40-70s");
+  check("constants-cap", playSrc.includes("Mt=12,") && playSrc.includes("mt=10e3,pt=10e3") && playSrc.includes("At.says>=6") && playSrc.includes("At.lent<3"), "bits, says, toss");
+  check("hook-export", playSrc.includes("n.__tb=function()") && !playSrc.includes("__tbIdle"), "read hook");
+  const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
+  check(
+    "cache-bumps",
+    html.includes("site.css?v=tb4") && html.includes("alive.js?v=rc12") && html.includes("mascot.js?v=rc12") && html.includes("tylerbot-play.css?v=tb8") &&
+      html.includes("tylerbot-play.js?v=tb10") && html.includes("tylerbot-fiddle.js?v=f2"),
+    "query strings",
+  );
+  const css = fs.readFileSync(path.join(root, "tylerbot-play.css"), "utf8");
+  check("css-reactions", css.includes("@keyframes tb-poke") && css.includes("prefers-reduced-motion") && css.includes(".tb-say-tail .sh") && css.includes("stroke-width:3.5px"), "fiddle + bubble");
+  const site = fs.readFileSync(path.join(root, "site.css"), "utf8");
+  const alive = fs.readFileSync(path.join(root, "alive.js"), "utf8");
+  check("stagger", site.includes("var(--fx-i,0)") && alive.includes("--fx-i") && site.includes("tb-downhint"), "fade stagger and arrow");
+}
+
 async function main() {
+  runFiddleUnit();
+  if (process.env.SKIP_BROWSER === "1") {
+    const failed = results.filter((r) => !r.ok);
+    console.log(failed.length ? failed.length + " failed" : "logic passed");
+    process.exit(failed.length ? 1 : 0);
+  }
   const puppeteer = loadPuppeteer();
   const shipped = fs.readFileSync(path.join(root, "tylerbot-play.js"), "utf8");
   check(
@@ -498,7 +649,7 @@ async function main() {
     window.__tbIdle.quiet();
     return out;
   });
-  const visitBad = visits.filter((v) => v.price > v.free || v.n > 4);
+  const visitBad = visits.filter((v) => v.price > v.free || v.n > 12);
   const visitPlayed = visits.filter((v) => v.n > 0);
   const firstOk = visitPlayed.every((v) => v.log[0] && (v.log[0][0] === "B1" || v.log[0][0] === "B2"));
   const noRepeat = visitPlayed.every((v) => v.log.every((row, i) => i === 0 || row[0] !== v.log[i - 1][0]));
