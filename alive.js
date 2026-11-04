@@ -24,8 +24,9 @@
     });
   }, { rootMargin: '0px 0px -6% 0px', threshold: 0.04 });
   h.classList.add('fx-on');
-  Array.prototype.forEach.call(els, function (el) {
+  Array.prototype.forEach.call(els, function (el, i) {
     el.classList.add('fx');
+    el.style.setProperty('--fx-i', String(i));
     if (el.getBoundingClientRect().top < vh * 0.94) el.classList.add('in'); else io.observe(el);
   });
 }());
