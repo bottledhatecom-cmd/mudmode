@@ -171,14 +171,14 @@ a.hl:focus-visible{outline:3px solid var(--mud2);outline-offset:2px;background:r
 .mascot.zz{animation:none}
 .mascot.zz>img{opacity:.55;animation:hexglow 9s ease-in-out infinite,sway 7s ease-in-out infinite;transform-origin:50% 90%}
 .mascot.zz::after{content:"z z";position:absolute;left:62px;top:-8px;font-size:14px;font-weight:700;color:var(--soft);letter-spacing:.2em;pointer-events:none}
-.mascot .say,.mascot .say-cheer{display:none;position:absolute;left:0;bottom:calc(100% + 12px);z-index:4;min-width:max-content;padding:10px 14px;border-radius:18px 16px 20px 14px;border:2px solid #1a120b;background:linear-gradient(180deg,rgba(255,255,255,.95) 0%,rgba(255,255,255,0) 42%),linear-gradient(180deg,#fffefb 0%,#fff3e2 34%,#f0d3b4 72%,#e2bc94 100%);color:#1a120b;font-size:14px;line-height:1.35;font-weight:600;text-align:left;pointer-events:none;box-shadow:inset 0 1px 0 #fff,inset 0 -18px 16px rgba(150,86,32,.18);filter:drop-shadow(0 1px 0 rgba(255,244,228,.45)) drop-shadow(0 2px 0 rgba(70,40,14,.4)) drop-shadow(0 14px 18px rgba(0,0,0,.55)) drop-shadow(0 0 16px rgba(243,201,105,.22))}
-.mascot .say::before,.mascot .say-cheer::before{content:"";position:absolute;z-index:2;left:28px;bottom:-1px;width:16px;height:16px;background:linear-gradient(#f0d3b4,#e2bc94);transform:rotate(45deg)}
-.mascot .say::after,.mascot .say-cheer::after{content:"";position:absolute;z-index:1;left:24px;top:auto;bottom:-5px;width:16px;height:16px;margin:0;border:0;border-right:2px solid #1a120b;border-bottom:2px solid #1a120b;background:#e2bc94;background:linear-gradient(135deg,#f0d3b4,#e2bc94);transform:rotate(45deg)}
+.mascot .say,.mascot .say-cheer{display:none;position:absolute;left:0;bottom:calc(100% + 14px);z-index:4;min-width:max-content;padding:13px 16px 14px;border-radius:18px;border:3.5px solid #140e09;background:linear-gradient(165deg,#ffffff 0%,#fff4e2 18%,#f6d3a4 46%,#e7b56d 78%,#d4924f 100%);color:#1a120b;font-size:14px;line-height:1.35;font-weight:600;text-align:left;pointer-events:none;box-shadow:inset 0 2px 0 rgba(255,255,255,.95),inset 0 -16px 18px rgba(120,62,16,.28),0 3px 0 rgba(42,22,8,.35),0 12px 18px rgba(0,0,0,.4)}
+.mascot .say.has-shell,.mascot .say-cheer.has-shell{background:transparent;border-color:transparent;box-shadow:none;border-radius:0;filter:none}
+.mascot .mascot-shell{z-index:-1}
 .mascot:hover .say,.mascot:focus .say,.mascot:focus-visible .say,.mascot:active .say{display:grid}
 .mascot.is-cheer .say-cheer{display:block}
 .mascot.is-cheer .say{display:none!important}
 .say .ln{grid-area:1/1;opacity:0;animation:sayln 18s linear infinite}
-.say .ln:nth-child(1){animation-delay:0s}.say .ln:nth-child(2){animation-delay:3s}.say .ln:nth-child(3){animation-delay:6s}.say .ln:nth-child(4){animation-delay:9s}.say .ln:nth-child(5){animation-delay:12s}.say .ln:nth-child(6){animation-delay:15s}
+.say .ln:nth-of-type(1){animation-delay:0s}.say .ln:nth-of-type(2){animation-delay:3s}.say .ln:nth-of-type(3){animation-delay:6s}.say .ln:nth-of-type(4){animation-delay:9s}.say .ln:nth-of-type(5){animation-delay:12s}.say .ln:nth-of-type(6){animation-delay:15s}
 @keyframes sayln{0%{opacity:0}2%,15%{opacity:1}17%,100%{opacity:0}}
 @media (max-width:700px){.mascot{width:56px;height:56px}.mascot.zz::after{left:48px}}
 @media (prefers-reduced-motion:reduce){
@@ -266,7 +266,7 @@ a:not(.btn):hover,a:not(.btn):focus-visible{text-shadow:0 0 10px rgba(243,201,10
  .fx-on .fx{opacity:1;transform:none;transition:none}
  .btn:hover,.btn:active,.seg label:hover,.seg label:active,.tkbar .btn:hover,.dock button:hover{transform:none}
 }
-@media (forced-colors:active){body::before,body::after{display:none}h1#h-main,h2,.btn .px{background:none;-webkit-text-fill-color:currentColor;forced-color-adjust:auto}.mascot .say,.mascot .say-cheer{background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none}.mascot .say::after,.mascot .say-cheer::after{background:Canvas;border-color:CanvasText;box-shadow:none}}
+@media (forced-colors:active){body::before,body::after{display:none}h1#h-main,h2,.btn .px{background:none;-webkit-text-fill-color:currentColor;forced-color-adjust:auto}.mascot .say,.mascot .say-cheer{background:Canvas;color:CanvasText;border:2px solid CanvasText;box-shadow:none}.mascot .say.has-shell,.mascot .say-cheer.has-shell{background:transparent;border-color:transparent}}
 @media print{body::before,body::after{display:none}.fx-on .fx{opacity:1;transform:none}h1#h-main,h2,.btn .px{background:none;-webkit-text-fill-color:#000;animation:none;filter:none}#start.tb-downhint::after{display:none!important}}
 
 /* RC10d: ticker pause/play button (WCAG 2.2.2), header note back, ticker static unless the pause button is live */
@@ -297,12 +297,10 @@ footer p{margin:0 0 8px}
 .mascot .say,.mascot .say-cheer{min-width:0;width:max-content;max-width:min(280px,calc(100vw - 48px));left:0;bottom:calc(100% + 10px)}
 @media (min-width:1300px){
  .hello{align-items:center}
- .mascot .say,.mascot .say-cheer{left:auto;right:calc(100% + 16px);bottom:auto;top:50%;translate:0 -50%;max-width:min(280px,calc((100vw - 860px)/2 + 4px))}
- .mascot .say::before,.mascot .say-cheer::before{left:auto;right:1px;bottom:auto;top:50%;margin-top:-8px;background:linear-gradient(180deg,#fffefb,#fff3e2 70%,#f0d3b4)}
- .mascot .say::after,.mascot .say-cheer::after{left:auto;right:-5px;top:50%;bottom:auto;margin-top:-8px;border:0;border-top:2px solid #1a120b;border-right:2px solid #1a120b;background:#fff6e8;background:linear-gradient(135deg,#fffefb,#fff3e2);transform:rotate(45deg)}
+ .mascot .say,.mascot .say-cheer{left:auto;right:calc(100% + 22px);bottom:auto;top:50%;translate:0 -50%;max-width:min(280px,calc((100vw - 860px)/2 + 4px))}
 }
 /* RC11b: reduced motion shows one static bubble line (the visit's first line), so the bubble stays short and on screen at every width; normal motion still cycles all 6 lines. */
-@media (prefers-reduced-motion:reduce){.say .ln:not(:first-child){display:none}}
+@media (prefers-reduced-motion:reduce){.say .ln:not(:first-of-type){display:none}}
 /* 0w.1 hero (One mind, many AI), variant B (owner 2026-10-31 1:36 AM): one centred axis for the headline group (robot + h1, sub-line, motto), the lede and the young-and-growing line. The picker below stays left-aligned. text-wrap balances lines where supported; a no-break space before each last word is the fallback against orphans. Under 520px the h1 breaks after "One mind," so it sits as two even lines beside the robot. */
 #start .hero-head{justify-content:center;align-items:center;gap:16px;margin-bottom:0}
 #start .hero-head h1{margin:0;text-wrap:balance}
