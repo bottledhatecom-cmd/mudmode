@@ -171,8 +171,9 @@ a.hl:focus-visible{outline:3px solid var(--mud2);outline-offset:2px;background:r
 .mascot.zz{animation:none}
 .mascot.zz>img{opacity:.55;animation:hexglow 9s ease-in-out infinite,sway 7s ease-in-out infinite;transform-origin:50% 90%}
 .mascot.zz::after{content:"z z";position:absolute;left:62px;top:-8px;font-size:14px;font-weight:700;color:var(--soft);letter-spacing:.2em;pointer-events:none}
-.mascot .say,.mascot .say-cheer{display:none;position:absolute;left:0;bottom:calc(100% + 10px);z-index:4;min-width:max-content;padding:8px 12px;border-radius:12px;background:#f1ece6;color:#1a120b;font-size:14px;line-height:1.35;font-weight:600;text-align:left;pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.4)}
-.mascot .say::after,.mascot .say-cheer::after{content:"";position:absolute;left:26px;top:100%;border:7px solid transparent;border-top-color:#f1ece6}
+.mascot .say,.mascot .say-cheer{display:none;position:absolute;left:0;bottom:calc(100% + 12px);z-index:4;min-width:max-content;padding:10px 14px;border-radius:18px 16px 20px 14px;border:2px solid #1a120b;background:linear-gradient(180deg,rgba(255,255,255,.95) 0%,rgba(255,255,255,0) 42%),linear-gradient(180deg,#fffefb 0%,#fff3e2 34%,#f0d3b4 72%,#e2bc94 100%);color:#1a120b;font-size:14px;line-height:1.35;font-weight:600;text-align:left;pointer-events:none;box-shadow:inset 0 1px 0 #fff,inset 0 -18px 16px rgba(150,86,32,.18);filter:drop-shadow(0 1px 0 rgba(255,244,228,.45)) drop-shadow(0 2px 0 rgba(70,40,14,.4)) drop-shadow(0 14px 18px rgba(0,0,0,.55)) drop-shadow(0 0 16px rgba(243,201,105,.22))}
+.mascot .say::before,.mascot .say-cheer::before{content:"";position:absolute;z-index:2;left:28px;bottom:-1px;width:16px;height:16px;background:linear-gradient(#f0d3b4,#e2bc94);transform:rotate(45deg)}
+.mascot .say::after,.mascot .say-cheer::after{content:"";position:absolute;z-index:1;left:24px;top:auto;bottom:-5px;width:16px;height:16px;margin:0;border:0;border-right:2px solid #1a120b;border-bottom:2px solid #1a120b;background:#e2bc94;background:linear-gradient(135deg,#f0d3b4,#e2bc94);transform:rotate(45deg)}
 .mascot:hover .say,.mascot:focus .say,.mascot:focus-visible .say,.mascot:active .say{display:grid}
 .mascot.is-cheer .say-cheer{display:block}
 .mascot.is-cheer .say{display:none!important}
@@ -245,7 +246,7 @@ h1#h-main{color:var(--text);filter:drop-shadow(0 0 6px rgba(243,201,105,.18));an
 .btn .px{font-variant-numeric:tabular-nums}
 /* alive text: fade-up as sections enter view (alive.js adds the classes; with JS off everything stays visible), soft glow on link hover */
 .fx-on .fx{opacity:0;transform:translateY(18px)}
-.fx-on .fx.in{opacity:1;transform:none;transition:opacity .8s ease,transform .8s cubic-bezier(.2,.7,.2,1)}
+.fx-on .fx.in{opacity:1;transform:none;transition:opacity .8s ease,transform .8s cubic-bezier(.2,.7,.2,1);transition-delay:calc(var(--fx-i,0)*55ms)}
 a:not(.btn){transition:color .15s ease,text-shadow .15s ease,background-color .15s ease}
 a:not(.btn):hover,a:not(.btn):focus-visible{text-shadow:0 0 10px rgba(243,201,105,.6),0 0 2px rgba(243,201,105,.35)}
 @media (max-width:700px){
@@ -265,8 +266,8 @@ a:not(.btn):hover,a:not(.btn):focus-visible{text-shadow:0 0 10px rgba(243,201,10
  .fx-on .fx{opacity:1;transform:none;transition:none}
  .btn:hover,.btn:active,.seg label:hover,.seg label:active,.tkbar .btn:hover,.dock button:hover{transform:none}
 }
-@media (forced-colors:active){body::before,body::after{display:none}h1#h-main,h2,.btn .px{background:none;-webkit-text-fill-color:currentColor;forced-color-adjust:auto}}
-@media print{body::before,body::after{display:none}.fx-on .fx{opacity:1;transform:none}h1#h-main,h2,.btn .px{background:none;-webkit-text-fill-color:#000;animation:none;filter:none}}
+@media (forced-colors:active){body::before,body::after{display:none}h1#h-main,h2,.btn .px{background:none;-webkit-text-fill-color:currentColor;forced-color-adjust:auto}.mascot .say,.mascot .say-cheer{background:Canvas;color:CanvasText;border-color:CanvasText;box-shadow:none}.mascot .say::after,.mascot .say-cheer::after{background:Canvas;border-color:CanvasText;box-shadow:none}}
+@media print{body::before,body::after{display:none}.fx-on .fx{opacity:1;transform:none}h1#h-main,h2,.btn .px{background:none;-webkit-text-fill-color:#000;animation:none;filter:none}#start.tb-downhint::after{display:none!important}}
 
 /* RC10d: ticker pause/play button (WCAG 2.2.2), header note back, ticker static unless the pause button is live */
 .tk-pause{display:none;flex:none;align-items:center;justify-content:center;width:44px;min-width:44px;height:44px;margin:0;padding:0;border:1px solid var(--mud2);border-radius:12px;background:#1b1917;color:var(--text);cursor:pointer;touch-action:manipulation;font:inherit}
@@ -297,7 +298,8 @@ footer p{margin:0 0 8px}
 @media (min-width:1300px){
  .hello{align-items:center}
  .mascot .say,.mascot .say-cheer{left:auto;right:calc(100% + 16px);bottom:auto;top:50%;translate:0 -50%;max-width:min(280px,calc((100vw - 860px)/2 + 4px))}
- .mascot .say::after,.mascot .say-cheer::after{left:100%;top:50%;margin-top:-7px;border-top-color:transparent;border-left-color:#f1ece6}
+ .mascot .say::before,.mascot .say-cheer::before{left:auto;right:1px;bottom:auto;top:50%;margin-top:-8px;background:linear-gradient(180deg,#fffefb,#fff3e2 70%,#f0d3b4)}
+ .mascot .say::after,.mascot .say-cheer::after{left:auto;right:-5px;top:50%;bottom:auto;margin-top:-8px;border:0;border-top:2px solid #1a120b;border-right:2px solid #1a120b;background:#fff6e8;background:linear-gradient(135deg,#fffefb,#fff3e2);transform:rotate(45deg)}
 }
 /* RC11b: reduced motion shows one static bubble line (the visit's first line), so the bubble stays short and on screen at every width; normal motion still cycles all 6 lines. */
 @media (prefers-reduced-motion:reduce){.say .ln:not(:first-child){display:none}}
@@ -319,12 +321,14 @@ html:not(.tk-on) .tk-run{width:100%}html:not(.tk-on) .tk-list{flex:0 1 auto;min-
 .tylerbot{display:block;flex:none}
 .tylerbot video,.tylerbot img{display:block;width:100%;height:auto}
 .tylerbot img{display:none}
-@media (prefers-reduced-motion:reduce){.tylerbot video{display:none}.tylerbot img{display:block}}
+@media (prefers-reduced-motion:reduce){.tylerbot video{display:none}.tylerbot img{display:block}#start.tb-downhint::after{display:none!important;animation:none!important}}
 #start .tb-point{width:96px;border-radius:14px;overflow:hidden;background:#121110;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
 #start .tb-point img{display:block;width:100%;height:auto}
 #start .tb-row{flex-wrap:nowrap;gap:14px}
 #start .tb-credit{margin-top:8px;font-size:13px}
 #start{position:relative}
+#start.tb-downhint::after{content:"";position:absolute;z-index:2;left:50%;bottom:8px;width:10px;height:10px;margin-left:-6px;border-right:2px solid #e3a768;border-bottom:2px solid #e3a768;pointer-events:none;animation:tb-down 1.1s ease-in-out 1}
+@keyframes tb-down{0%{opacity:0;transform:rotate(45deg) translate3d(0,-4px,0)}28%{opacity:.95}100%{opacity:0;transform:rotate(45deg) translate3d(0,10px,0)}}
 #start .tb-flare{display:none}
 @media (min-width:1100px){#start .tb-flare{display:block;position:absolute;top:64px;left:calc(100% + 16px);width:clamp(96px,calc((100vw - 860px)/2 - 32px),150px);pointer-events:none}}
 @media (min-width:1240px){#start .tb-flare{left:calc(100% + 28px);width:clamp(150px,calc((100vw - 860px)/2 - 56px),210px)}}
