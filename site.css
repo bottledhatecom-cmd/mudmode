@@ -316,11 +316,20 @@ footer p{margin:0 0 8px}
 /* 0w.1 top bar: when the line stands still (reduced motion, or no script), let it wrap inside the bar beside the buttons instead of being cut off on phones. */
 @media (prefers-reduced-motion:reduce){.tk-run{width:100%}.tk-list{flex:0 1 auto;min-width:0}.tk-list li:first-child{text-wrap:balance}}
 html:not(.tk-on) .tk-run{width:100%}html:not(.tk-on) .tk-list{flex:0 1 auto;min-width:0}html:not(.tk-on) .tk-list li:first-child{text-wrap:balance}
-/* Tylerbot (his poses, moved in code): plays once (3-4 s, no loop) and rests on its last frame, which is the still. Reduce motion: no source matches, so the video never starts, and the still image shows instead. Decorative: aria-hidden, no controls. point = beside the start button; flare = the hero's side space from 1100px up. */
+/* Tylerbot (his poses, moved in code). Flare: the still covers the video until tylerbot-play.js has seen an alpha frame 0, then the two crossfade. Only the webm is a source — the h264 mp4 has no alpha. Reduce motion: no source matches, the video stays hidden, and the still shows. Decorative: aria-hidden, no controls. point = beside the start button; flare = the hero's side space from 1100px up. */
 .tylerbot{display:block;flex:none}
 .tylerbot video,.tylerbot img{display:block;width:100%;height:auto}
 .tylerbot img{display:none}
-@media (prefers-reduced-motion:reduce){.tylerbot video{display:none}.tylerbot img{display:block}#start.tb-downhint::after{display:none!important;animation:none!important}}
+.tb-flare{isolation:isolate}
+.tb-flare img{display:block;position:absolute;left:0;top:0;z-index:1;width:100%;height:100%;object-fit:fill;opacity:1;pointer-events:none;transition:opacity .6s linear}
+.tb-flare video{opacity:0;transition:opacity .6s linear}
+.tb-flare.tb-live:not(.tb-away) img{opacity:0}
+.tb-flare.tb-live:not(.tb-away) video{opacity:1}
+.tb-flare.tb-away img,.tb-flare.tb-away video{opacity:0}
+.tb-flare.tb-fast img,.tb-flare.tb-fast video{transition-duration:.22s}
+.tb-flare.tb-still img{position:static;width:100%;height:auto;opacity:1}
+.tb-flare.tb-still video{display:none}
+@media (prefers-reduced-motion:reduce){.tylerbot video,.tb-flare video{display:none!important}.tylerbot img,.tb-flare img,.tb-flare.tb-live img,.tb-flare.tb-away img{display:block;position:static;width:100%;height:auto;opacity:1!important;transition:none!important}#start.tb-downhint::after{display:none!important;animation:none!important}}
 #start .tb-point{width:96px;border-radius:14px;overflow:hidden;background:#121110;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
 #start .tb-point img{display:block;width:100%;height:auto}
 #start .tb-row{flex-wrap:nowrap;gap:14px}

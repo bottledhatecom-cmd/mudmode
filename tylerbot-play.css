@@ -3,17 +3,18 @@
 [data-tyler-play] .tb-grab{position:absolute;left:27%;top:23%;width:46%;height:58%;border-radius:50%;touch-action:none;cursor:grab;pointer-events:auto;z-index:1;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 [data-tyler-play][data-tb-state=held] .tb-grab{cursor:grabbing}
 [data-tyler-play]:not([data-tb-state=rest]):not([data-tb-state=held]) .tb-grab{pointer-events:none}
-[data-tyler-play].tb-away>:not(.tb-grab){visibility:hidden}
+/* Still and video fade with the canvas (site.css). No visibility cut, no land squash. */
 .tb-canvas{position:fixed;left:0;top:0;z-index:40;display:none;pointer-events:none;will-change:transform}
+.tb-canvas.tb-fade{transition:opacity .6s linear}
+.tb-canvas.tb-fade.tb-fast{transition-duration:.22s}
 .tb-canvas.tb-under,.tb-grab-fly.tb-under{z-index:4}
-[data-tyler-play].tb-land>:not(.tb-grab){transform-origin:50% 96%;animation:tb-land .3s ease-out}
-@keyframes tb-land{0%{transform:scale(1.06,.92)}55%{transform:scale(.98,1.03)}100%{transform:none}}
+[data-tyler-play].tb-land>:not(.tb-grab){transform:none;animation:none}
 .tb-grab-fly{position:fixed;left:0;top:0;z-index:42;border-radius:50%;touch-action:none;cursor:grab;pointer-events:auto;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;will-change:transform}
 .tb-grab-fly.tb-held{cursor:grabbing}
 .tb-m{position:fixed;left:0;top:0;z-index:41;width:20px;height:20px;margin:0;border-radius:5px;pointer-events:none;will-change:transform}
 .bar .brand.tb-lent img{visibility:hidden}
-@media (prefers-reduced-motion:reduce){[data-tyler-play] .tb-grab,.tb-canvas,.tb-grab-fly,.tb-m{display:none}[data-tyler-play].tb-land>*{animation:none}.bar .brand.tb-lent img{visibility:visible}}
-@media print{.tb-canvas,.tb-m,.tb-grab-fly{display:none!important}.bar .brand.tb-lent img,[data-tyler-play].tb-away>:not(.tb-grab){visibility:visible}}
+@media (prefers-reduced-motion:reduce){[data-tyler-play] .tb-grab,.tb-canvas,.tb-grab-fly,.tb-m{display:none}[data-tyler-play].tb-land>*{animation:none}.tb-canvas{transition:none}.bar .brand.tb-lent img{visibility:visible}}
+@media print{.tb-canvas,.tb-m,.tb-grab-fly{display:none!important}.bar .brand.tb-lent img,[data-tyler-play].tb-away>:not(.tb-grab){visibility:visible;opacity:1}}
 /* phase 2: the drawn ring he "shows" a line or a title bar with (never the real element; gone when the bit ends) */
 .tb-hl{position:fixed;z-index:39;box-sizing:border-box;border:2px solid #f3c969;border-radius:12px;box-shadow:0 0 0 1px rgba(26,18,11,.55),0 0 16px rgba(243,201,105,.45);pointer-events:none;opacity:0;will-change:transform,opacity}
 /* phase 1b: his speech bubble. One outline for the balloon and the tail, text stacked. aria-hidden, no pointer events, only at rest */
