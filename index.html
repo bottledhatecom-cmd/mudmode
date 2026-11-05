@@ -16,8 +16,8 @@
 <script src="site.js?v=rc11" defer></script>
 <script src="mascot.js?v=rc12" defer></script>
 <script src="alive.js?v=rc12" defer></script>
-<link rel="stylesheet" href="tylerbot-play.css?v=tb8">
-<script src="tylerbot-play.js?v=tb10" defer></script>
+<link rel="stylesheet" href="tylerbot-play.css?v=tb9">
+<script src="tylerbot-play.js?v=tb11" defer></script>
 <script src="tylerbot-fiddle.js?v=f2" defer></script>
 <link rel="stylesheet" href="gumroad-dialog.css?v=rc11">
 <script src="gumroad-dialog.js?v=gl137v" defer></script>
@@ -73,7 +73,8 @@
 
  <section class="win" aria-labelledby="h-main" id="start" tabindex="-1">
   <div class="tb" aria-hidden="true"><span class="dots"><i></i><i></i><i></i></span>mudmode</div>
-  <div class="tylerbot tb-flare" aria-hidden="true" data-tyler-play="img/tylerbot/"><video autoplay muted playsinline preload="auto" poster="img/tylerbot/tylerbot-flare-still.webp" width="450" height="480"><source src="img/tylerbot/tylerbot-flare.webm" type="video/webm" media="(min-width: 1100px) and (prefers-reduced-motion: no-preference)"><source src="img/tylerbot/tylerbot-flare.mp4" type="video/mp4" media="(min-width: 1100px) and (prefers-reduced-motion: no-preference)"></video><img src="img/tylerbot/tylerbot-flare-still.webp" width="450" height="480" alt="" loading="lazy" decoding="async"></div>
+  <!-- TODO(Graphite): still matches webm frame 0 at 468×480, including alpha. The 2026-11-05 reexport matched those color planes but had alpha off (clear areas were black); this file keeps that color and the frame-0 alpha. Do not put the h264 mp4 back. Safari still needs HEVC-with-alpha. The play-rig rest pose does not match this still (pointing hands, split feet, chest plate). -->
+  <div class="tylerbot tb-flare" aria-hidden="true" data-tyler-play="img/tylerbot/"><video muted playsinline preload="auto" poster="img/tylerbot/tylerbot-flare-still.webp?v=f468" width="450" height="480"><source src="img/tylerbot/tylerbot-flare.webm" type="video/webm" media="(min-width: 1100px) and (prefers-reduced-motion: no-preference)"></video><img src="img/tylerbot/tylerbot-flare-still.webp?v=f468" width="450" height="480" alt="" decoding="async"></div>
   <template id="tb-say" data-font="fonts/bubblegumsans-regular-latin.woff2">
    <!-- TYLERBOT LINES (edit here): only wording Brief checked and the owner ok'd -->
    <p data-id="K1a">Our crews built this site with mudmode!</p>
