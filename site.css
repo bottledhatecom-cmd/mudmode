@@ -94,8 +94,8 @@ footer a{color:var(--soft)}
 .js .dock{display:flex}
 .js .dock.on{opacity:1;pointer-events:auto}
 .js .dock:not(.on){visibility:hidden}
-.dock button{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;border:0;background:transparent;color:var(--text);font:inherit;font-size:13px;padding:8px 12px;border-radius:12px;cursor:pointer}
-.dock button:hover,.dock button[aria-expanded=true]{background:rgba(255,255,255,.08)}
+.dock button,.dock a{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;border:0;background:transparent;color:var(--text);font:inherit;font-size:13px;padding:8px 12px;border-radius:12px;cursor:pointer;text-decoration:none}
+.dock button:hover,.dock button[aria-expanded=true],.dock a:hover{background:rgba(255,255,255,.08)}
 .dock img{width:22px;height:22px;border-radius:6px}
 /* phones: plain, fast, no desktop chrome */
 @media (max-width:700px){
@@ -188,7 +188,7 @@ a.hl:focus-visible{outline:3px solid var(--mud2);outline-offset:2px;background:r
 
 /* RC10c-v3 (fonts since RC11: Outfit headings, buttons and ticker labels; Inter body): calmer type, more depth, living background, headline shimmer, fade-up, link glow. CSS only except alive.js (optional fade-up). No new art. Reduced motion turns every moving part static. */
 body{font-size:17px}
-h1,h2,h3,.bar .brand,.tier b,.tier .price,legend,.btn,.seg label,.tb,.off,.tag,.dock button,.tkbar,.every>summary,details.win>summary{font-family:var(--font-head)}
+h1,h2,h3,.bar .brand,.tier b,.tier .price,legend,.btn,.seg label,.tb,.off,.tag,.dock button,.dock a,.tkbar,.every>summary,details.win>summary{font-family:var(--font-head)}
 h1{font-size:clamp(36px,6.4vw,62px);font-weight:700;line-height:1.06;letter-spacing:-.01em}
 h2{font-size:26px;font-weight:700;line-height:1.2;letter-spacing:0}
 h3{font-size:20px;font-weight:600}
@@ -223,8 +223,8 @@ pre.say{font-size:15px}
 .seg label:hover{transform:translateY(-2px);border-color:var(--mud2);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 4px 0 #0a0908,0 12px 20px rgba(0,0,0,.36),0 0 18px rgba(227,167,104,.2)}
 .seg label:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 1px 0 #0a0908}
 .seg input:checked+label{background:linear-gradient(180deg,#eab57a,#c8874a);font-weight:600;text-shadow:0 1px 0 rgba(255,255,255,.25)}
-.dock button{font-size:14px}
-.dock button:hover{transform:translateY(-2px)}
+.dock button,.dock a{font-size:14px}
+.dock button:hover,.dock a:hover{transform:translateY(-2px)}
 /* living background: a fixed layer of warm glows that drifts and pulses (opacity and transform only, GPU-light), plus a faint CSS grain */
 body::before{content:"";position:fixed;inset:-20% -10%;z-index:0;pointer-events:none;background:radial-gradient(55% 45% at 18% 22%,rgba(200,135,74,.34),transparent 70%),radial-gradient(45% 40% at 82% 18%,rgba(243,201,105,.2),transparent 70%),radial-gradient(60% 50% at 60% 92%,rgba(176,112,58,.28),transparent 72%),radial-gradient(35% 35% at 6% 80%,rgba(120,90,60,.3),transparent 70%);will-change:opacity,transform;animation:bgpulse 10s ease-in-out infinite,bgdrift 14s ease-in-out infinite}
 body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.55;background:radial-gradient(rgba(255,255,255,.05) 1px,transparent 1.5px) 0 0/6px 6px,radial-gradient(rgba(0,0,0,.4) 1px,transparent 1.6px) 3px 2px/9px 9px,repeating-linear-gradient(115deg,rgba(255,255,255,.014) 0 2px,transparent 2px 5px)}
@@ -264,7 +264,7 @@ a:not(.btn):hover,a:not(.btn):focus-visible{text-shadow:0 0 10px rgba(243,201,10
  h2{animation:none!important;background-image:none;-webkit-text-fill-color:currentColor}
  .btn .px{animation:none!important;background-image:none;-webkit-text-fill-color:currentColor}
  .fx-on .fx{opacity:1;transform:none;transition:none}
- .btn:hover,.btn:active,.seg label:hover,.seg label:active,.tkbar .btn:hover,.dock button:hover{transform:none}
+ .btn:hover,.btn:active,.seg label:hover,.seg label:active,.tkbar .btn:hover,.dock button:hover,.dock a:hover{transform:none}
 }
 @media (forced-colors:active){body::before,body::after{display:none}h1#h-main,h2,.btn .px{background:none;-webkit-text-fill-color:currentColor;forced-color-adjust:auto}.mascot .say,.mascot .say-cheer{background:Canvas;color:CanvasText;border:2px solid CanvasText;box-shadow:none}.mascot .say.has-shell,.mascot .say-cheer.has-shell{background:transparent;border-color:transparent}}
 @media print{body::before,body::after{display:none}.fx-on .fx{opacity:1;transform:none}h1#h-main,h2,.btn .px{background:none;-webkit-text-fill-color:#000;animation:none;filter:none}#start.tb-downhint::after{display:none!important}}
