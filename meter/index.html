@@ -1,0 +1,136 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'sha256-5aPCWSNVLTBjytGMSvf7c7p2WY9T/yQaHyhFHXKrNc4='; script-src 'sha256-M5E4Zfsg2eq5IyzBzeOoZfjYuSmj+Cn4liTZJEZEdrE=' 'sha256-kjsEYOnuJluUMnfnTSKkLan68UaC+/Q2G9mfdRDdkZw='; img-src data:; form-action 'none'; base-uri 'none'; object-src 'none'">
+<link rel="icon" href="data:,">
+<title>mudmeter: see about how many tokens a chat used</title>
+<meta name="description" content="mudmeter: paste a chat and see about how many tokens it used and which parts used the most. Free, and it all stays in your browser.">
+<meta name="robots" content="noai, noimageai">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#121110">
+<style>
+body{font:15px/1.5 system-ui,sans-serif;max-width:760px;margin:1.5rem auto;padding:0 1rem;color:#222;background:#fafafa}
+h1{font-size:1.5rem;margin:.2rem 0}.sub{color:#666;margin:0 0 1rem}
+.card{background:#fff;border:1px solid #e3e3e3;border-radius:10px;padding:1rem;margin:0 0 1rem}
+textarea{width:100%;min-height:160px;box-sizing:border-box;font:13px ui-monospace,monospace;border:1px solid #ccc;border-radius:6px;padding:.5rem}
+button{background:#333;color:#fff;border:0;border-radius:6px;padding:.45rem .9rem;margin:.3rem .3rem 0 0;cursor:pointer}button.ghost{background:#eee;color:#333}
+table{width:100%;border-collapse:collapse}td,th{padding:.3rem;border-bottom:1px solid #eee;text-align:left}input{width:6rem}
+.est{font-size:.75rem;background:#fff3c4;padding:0 .35rem;border-radius:4px}.muted{color:#777;font-size:.85rem}
+#drop.over{outline:2px dashed #888}input.wide{width:12rem}.warn{background:#fff3c4;border-radius:6px;padding:.4rem .6rem}#prices select{max-width:100%}@media(max-width:480px){#prices input,#prices select{width:100%!important;box-sizing:border-box}}
+</style></head><body>
+<p class="muted"><a href="/">mudmode</a> · <a href="/start-here/">Start here</a> · <a href="/privacy">Privacy</a></p>
+<h1>mudmeter</h1>
+<p class="sub">See about how many tokens a chat used, and which parts used the most. Paste a chat, or open or drop a .txt or .md file. It all stays in this browser: the page makes no network calls and has no tracking.</p>
+<div class="card" id="drop">
+<textarea id="chat" placeholder="Paste a whole chat here (select all, copy, paste). The meter looks for labels like 'You said' or 'ChatGPT said'. No labels? Put 'You:' and 'AI:' at the start of each message."></textarea>
+<div>Chat name <input id="name" class="wide" maxlength="80" placeholder="e.g. bug fix"> Tool <input id="tool" maxlength="40" placeholder="ChatGPT"></div>
+<button id="go">Measure</button><button class="ghost" id="example">Try an example</button><button class="ghost" id="file">Open file…</button><input type="file" id="f" accept=".txt,.md" hidden>
+</div>
+<div class="card" id="out" hidden></div>
+<div class="card"><b>Prices</b> <span class="muted">(US$ per 1M tokens, API list prices, checked Oct 30, 2026.) Prices change, so check your provider's pricing page and change any number here. This browser keeps your changes for next time, unless you clear its data.</span>
+<table id="prices"><tr><th>Model</th><th>Input $/1M</th><th>Output $/1M</th></tr></table>
+<button class="ghost" id="addm">+ model</button></div>
+<div class="card"><b>History</b> <span class="muted">(only in this browser. Clearing your browser data clears it, so use Export CSV to keep a log.)</span><table id="hist"></table>
+<button id="csv">Export CSV</button><button class="ghost" id="clr">Clear history</button></div>
+<p class="muted"><b>How we count:</b> the meter splits the text into words, numbers, symbols and line breaks, and counts about 1 token per short word, more for long words, and less than 1 per symbol. That's a rule, not a real tokenizer. We checked it on Nov 4, 2026 against one real tokenizer (OpenAI's o200k) on 121 samples we hadn't tuned it on: on English text it was off by 4% on average (8 in 10 samples within 5% low to 6% high), and on code by 7% on average (8 in 10 within 8% low to 14% high). Claude, Grok and Gemini use their own tokenizers, so their counts can differ more, and it can be far off for non-English text and emoji. Each AI reply is counted as reading the whole chat before it, so input grows as the chat goes on. Very long chats can cost more per token. Every number here is an <span class="est">estimate</span>.</p>
+<div class="card">Want your AI to do these habits for you? Free mudmode hands you a short handoff to start a fresh chat (just say "handoff"), and "mudmode full" turns on all 25 rules. <a href="/start-here/">Get mudmode free</a>
+</div>
+<footer class="muted">mudmeter © 2026 mud. Free to use. You may link to it and share it unchanged. You may not sell it, or put it in anything you sell. It comes as is, with no warranty. Its numbers are estimates.<br><a href="/meter/cheat-sheet">Cheat sheet</a> · <a href="/privacy">Privacy</a> · <a href="/">mudmode home</a></footer><script id="core">
+// token rule v2 (Nov 4, 2026): split into words, numbers, symbols and spaces. 1 per word, +1 per 8 more letters; numbers 1 per 3 digits; 0.65 per ASCII symbol; 1 per line-break run; 1 per other character. Fit on a dev set, checked on a held-out set against o200k.
+var LAT="A-Za-z"+String.fromCharCode(192)+"-"+String.fromCharCode(591),RE_TOK=new RegExp("["+LAT+"]+|\\d+|\\s+|[^\\s"+LAT+"\\d]","g");
+function estTokens(s){s=s||"";if(!s.trim())return 0;var n=0,m;RE_TOK.lastIndex=0;while((m=RE_TOK.exec(s))){var x=m[0],c=x.charCodeAt(0);if((c>=65&&c<=90)||(c>=97&&c<=122)||(c>=192&&c<=591))n+=1+Math.floor((x.length-1)/8);else if(c>=48&&c<=57)n+=Math.ceil(x.length/3);else if(/\s/.test(x[0])){if(x.indexOf("\n")>=0)n+=1;}else n+=c<128?0.65:1;}return Math.ceil(n);}
+var MAX_CHARS=2000000,BIG_CTX=200000,LONG_PASTE=400;
+var STRONG="you|human|assistant|chatgpt|claude|grok|gemini|copilot",WEAK="user|me|ai|cursor|bot",WHO=STRONG+"|"+WEAK;
+var RE_SAID=new RegExp("^\\s*("+WHO+")\\s+(?:said|responded)\\s*(?::\\s?|$)","i"),RE_BARE=new RegExp("^\\s*("+STRONG+")\\s*(?::\\s*)?$","i"),RE_INLINE=new RegExp("^\\s*("+STRONG+"|user|ai)\\s*:\\s?(?=\\S)","i");
+function speaker(l,copy){var m=l.match(RE_SAID);if(m){m.how="said";return m;}m=l.match(RE_BARE);if(m){m.how="bare";return m;}if(copy)return null;m=l.match(RE_INLINE);if(m)m.how="inline";return m;}
+var RE_KEY=/^\s*(?:-\s*)?[A-Za-z_][\w.-]*:\s*(?:\S+\s*)?$/;
+function parseChat(t){var turns=[],cur=null;t=t||"";turns.keys=0;if(!t.trim())return turns;var L=t.split(/\r?\n/),copy=0;
+L.forEach(function(l){if(RE_SAID.test(l)||RE_BARE.test(l))copy++;});copy=copy>=2;
+L.forEach(function(l){var m=speaker(l,copy);if(m){cur={role:/^(you|user|me|human)$/i.test(m[1])?"user":"ai",text:l.slice(m[0].length),head:l.slice(m[0].length).trim(),label:m[1].toLowerCase()+"/"+m.how,word:m[1].toLowerCase()};turns.push(cur);}
+else{if(RE_KEY.test(l))turns.keys++;if(cur)cur.text+=(cur.text?"\n":"")+l;else{cur={role:"user",text:l};turns.push(cur);}}});return turns;}
+function measure(t){var turns=parseChat(t),ctx=0,inp=0,out=0,maxCtx=0;turns.forEach(function(x){x.tokens=estTokens(x.text);if(x.role==="ai"){inp+=ctx;out+=x.tokens;if(ctx>maxCtx)maxCtx=ctx;}ctx+=x.tokens;});
+var ai=turns.filter(function(x){return x.role==="ai"}),hasAI=ai.length>0;if(!hasAI)inp=ctx;
+return{turns:turns,inTok:inp,outTok:out,maxCtx:maxCtx,labeled:hasAI&&!unsureWhy(turns),unsure:hasAI&&!!unsureWhy(turns)};}
+// "unsure" = the labels look like a log, config or quote, not a chat. UNPROVEN heuristic, not tested on real exported chats.
+function dupShare(list,min){var seen={},d=0;list.forEach(function(x){var k=x.text.trim();if(k.length>=min&&seen[k])d++;seen[k]=1;});return{n:d,share:list.length?d/list.length:0};}
+function unsureWhy(turns){var ai=turns.filter(function(x){return x.role==="ai"}),usr=turns.filter(function(x){return x.role==="user"}),lab=turns.filter(function(x){return x.label});
+if(lab.length<2)return"one label";
+if(!lab.some(function(x){return x.role==="user"}))return"no user label";
+var sig={user:{},ai:{}},ns={user:0,ai:0};lab.forEach(function(x){if(!sig[x.role][x.label]){sig[x.role][x.label]=1;ns[x.role]++;}});if(ns.user>1||ns.ai>1)return"mixed labels";
+var same=0;for(var i=1;i<turns.length;i++)if(turns[i].role===turns[i-1].role)same++;if(turns.length>=4&&same/(turns.length-1)>0.5)return"same speaker";
+var dl=dupShare(ai,60);if(ai.length>=3&&dl.share>=0.5)return"repeated long replies";
+var da=dupShare(ai,1),du=dupShare(usr,1);if(da.n>=4&&da.share>=0.5&&du.share>=0.5)return"repeated pairs";
+var short=function(x){return x.head&&x.head.split(/\s+/).length<=2;};if(lab.length>=3&&!turns[0].label&&turns.keys>=1&&lab.filter(short).length/lab.length>=0.75)return"key: value";
+var one=function(x){var k=x.text.trim();return k.indexOf("\n")<0&&k.split(/\s+/).length<=12;};if(lab.some(function(x){return x.word==="user"})&&ai.length>=8&&lab.filter(one).length/lab.length>=0.9)return"user-label log";
+return"";}
+function price(v){if(v==null)return null;v=String(v).trim();if(v==="")return null;if(!/^(\d+(\.\d*)?|\.\d+)$/.test(v))return NaN;var n=+v;return isFinite(n)&&n>=0&&n<=1000?n:NaN;}
+function cost(m,p){var a=price(p.inp),b=price(p.out);if(a===null||b===null)return null;if(isNaN(a)||isNaN(b))return NaN;return(m.inTok*a+m.outTok*b)/1e6;}
+function hotspots(m){var r=[],seen={},rep={},grp=[],lp=null;m.turns.forEach(function(x,i){if(x.role==="user"&&x.tokens>=LONG_PASTE){if(!lp){lp={i:i,kind:"long paste",tokens:0,count:0,tip:"Trim it to the part that matters, like the error plus the few lines above it."};r.push(lp);}lp.count++;lp.last=i;lp.tokens+=x.tokens;}
+x.text.split(/\n{2,}/).forEach(function(b){b=b.trim();if(b.length<200)return;if(seen[b]!=null&&seen[b]!==i){var g=rep[b];if(!g){g=rep[b]={i:seen[b],kind:"repeated context",each:estTokens(b),times:1,tokens:0,tip:"Keep it in a notes file and paste it once per new chat."};grp.push(g);}g.times++;g.tokens=g.each*(g.times-1);}seen[b]=i;});});
+r=r.concat(grp);
+if(m.turns.length>=40)r.push({i:-1,kind:"long thread",tokens:m.inTok,tip:"Ask for a 5-line summary and start a new chat with it."});
+return r.sort(function(a,b){return b.tokens-a.tokens});}
+function nfkc(v){v=String(v==null?"":v);return v.normalize?v.normalize("NFKC"):v;}
+function csvCell(v){v=String(v==null?"":v);var n=nfkc(v);if(/^[\s\u200b-\u200f\u2060\ufeff]*[=+\-@\u2212]|^[\t\r]/.test(n))v="'"+v;return/[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+function toCSVRow(h){return[h.date,h.tool,h.model,h.task,h.messages,h.tokens_or_cost,h.notes].map(csvCell).join(",");}
+function cleanName(n){n=nfkc(n).replace(/\.(txt|md)$/i,"").replace(/[\u0000-\u001f\u007f]/g," ").replace(/^[\s\u200b-\u200f\u2060\ufeff=+\-@\u2212'"]+/,"").trim();return n.slice(0,80);}
+var CSV_HEADER="date,tool,model,task,messages,tokens_or_cost,notes";
+var CHECKED="Oct 30, 2026";
+// API list prices in US$ per 1M tokens, short-chat rate, checked Oct 30, 2026. [model, input, output, last day (YYYY-MM-DD), last day as shown]
+var APPS={chatgpt:{name:"ChatGPT",models:[["chat-latest",5,30],["gpt-6.1-sol",2,10],["gpt-6-luna",0.1,0.5]]},claude:{name:"Claude",models:[["Claude Sonnet 5.5",2,10],["Claude Opus 5.5",4,20],["Claude Haiku 5.5",0.1,0.5]]},grok:{name:"Grok",models:[["grok-4.7",2,6],["grok-4.3",1.25,2.5]]},gemini:{name:"Gemini",models:[["gemini-4-argon",2,10,"2026-11-30","Nov 30, 2026"],["gemini-3.8-flash",0.75,3.75,"2026-12-31","Dec 31, 2026"]]},copilot:{name:"Copilot",models:[]}};
+function hasApp(a){return typeof a==="string"&&Object.prototype.hasOwnProperty.call(APPS,a);}
+function official(app,pick,today){if(!hasApp(app))return null;var l=APPS[app].models;for(var i=0;i<l.length;i++){var m=l[i];if(m[0]===pick)return m[3]&&String(today)>m[3]?{inp:"",out:"",ended:m[4]}:{inp:String(m[1]),out:String(m[2]),until:m[4]||""};}return null;}
+function typed(v){return v!=null&&String(v).trim()!=="";}
+// official = both boxes untouched (app rows); own = both boxes typed; anything else is half: never costed, never called "your price"
+function priceKind(r){if(hasApp(r.app)&&r.inp==null&&r.out==null)return"official";return typed(r.inp)&&typed(r.out)?"own":"half";}
+function ownPrice(r){return priceKind(r)==="own";}
+function usePrice(r,today){return priceKind(r)==="half"?{inp:"",out:""}:rowPrice(r,today);}
+// the note follows the price in use: a typed price is the user's own; only an untouched official price shows its date, and it blanks after it
+function priceNote(r,today){if(!hasApp(r.app))return"";var k=priceKind(r);if(k==="own")return"your price";if(k==="half"){var h=official(r.app,r.pick,today),side=r.inp==null?"input":r.out==null?"output":"";return"add both your prices"+(side&&h&&!h.ended?" ("+side+" still shows the listed price"+(h.until?" through "+h.until:"")+", checked "+CHECKED+")":"");}if(r.app==="copilot")return"Microsoft sells Copilot as a plan, with no public per-token price. Add your own if you have one.";var o=official(r.app,r.pick,today);if(!o)return"";if(o.ended)return"The listed price ran through "+o.ended+". Set your price.";if(o.until)return"price through "+o.until+" (checked "+CHECKED+")";return"";}
+function rowPrice(r,today){var o=official(r.app,r.pick,today)||{inp:"",out:""};return{inp:r.inp==null?o.inp:r.inp,out:r.out==null?o.out:r.out};}
+if(typeof module!=="undefined")module.exports={WHO:WHO,nfkc:nfkc,unsureWhy:unsureWhy,MAX_CHARS:MAX_CHARS,BIG_CTX:BIG_CTX,LONG_PASTE:LONG_PASTE,estTokens:estTokens,parseChat:parseChat,measure:measure,price:price,cost:cost,hotspots:hotspots,csvCell:csvCell,toCSVRow:toCSVRow,cleanName:cleanName,CSV_HEADER:CSV_HEADER,CHECKED:CHECKED,APPS:APPS,hasApp:hasApp,official:official,rowPrice:rowPrice,ownPrice:ownPrice,priceNote:priceNote,priceKind:priceKind,usePrice:usePrice};
+</script>
+<script id="ui">
+if(window.top!==window.self){document.body.textContent="mudmeter only runs in its own tab.";throw new Error("framed");}
+var $=function(i){return document.getElementById(i)},K="mudmode-meter.v1.",esc=function(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})};
+function str(v,n){return typeof v==="string"?v.slice(0,n):(typeof v==="number"&&isFinite(v)?String(v).slice(0,n):"");}
+function obj(x){return x!==null&&typeof x==="object"&&!Array.isArray(x);}
+function readList(key,fix,max){var raw=null;try{raw=localStorage.getItem(K+key);}catch(e){return null;}if(raw==null)return null;
+try{var a=JSON.parse(raw);if(!Array.isArray(a))return null;return a.filter(obj).slice(0,max).map(fix);}catch(e){return null;}}
+function save(key,val){try{localStorage.setItem(K+key,JSON.stringify(val));}catch(e){}}
+function ymd(){var dt=new Date();return dt.getFullYear()+"-"+String(dt.getMonth()+1).padStart(2,"0")+"-"+String(dt.getDate()).padStart(2,"0");}
+function inList(app,pick){return hasApp(app)&&APPS[app].models.some(function(m){return m[0]===pick});}
+function fixP(p){var app=hasApp(p.app)?p.app:"",pick=inList(app,p.pick)?p.pick:"",num=function(v){return app&&v==null?null:str(v,12);};return{app:app,pick:pick,model:app?"":str(p.model,80),inp:num(p.inp),out:num(p.out),guess:!!(p.guess===true&&pick)};}
+var DEF=[["chatgpt","chat-latest"],["claude",""],["grok","grok-4.7"],["gemini",""],["copilot",""]].map(function(d){return{app:d[0],pick:d[1],model:"",inp:null,out:null,guess:!!d[1]};});
+var P=readList("prices",fixP,20);if(!P||!P.length)P=DEF;
+var H=readList("hist",function(h){var n=+h.messages;return{date:str(h.date,10),tool:str(h.tool,40),model:"",task:str(h.task,80),messages:isFinite(n)&&n>=0?Math.floor(n):0,tokens_or_cost:str(h.tokens_or_cost,60),notes:""}},500)||[];
+function modelCell(p,i){if(!p.app)return'<input class="wide" maxlength="80" data-i="'+i+'" data-k="model" value="'+esc(p.model)+'">';var a=APPS[p.app],h=esc(a.name)+" ";
+if(a.models.length){h+='<select data-i="'+i+'" data-k="pick"><option value="">pick your model</option>'+a.models.map(function(m){return'<option value="'+esc(m[0])+'"'+(m[0]===p.pick?" selected":"")+">"+esc(m[0])+(m[4]?" (price through "+esc(m[4])+")":"")+"</option>"}).join("")+"</select>";if(p.guess)h+=' <span class="muted">our guess, change it</span>';}
+else h+='<span class="muted">(no price)</span>';
+return h+'<div class="muted" data-n="'+i+'">'+esc(priceNote(p,ymd()))+"</div>";}
+function drawP(){var t=$("prices"),h="<tr><th>Model</th><th>Input $/1M</th><th>Output $/1M</th></tr>",td=ymd();P.forEach(function(p,i){var r=rowPrice(p,td);h+='<tr><td>'+modelCell(p,i)+'</td><td><input maxlength="12" inputmode="decimal" data-i="'+i+'" data-k="inp" placeholder="set your price" value="'+esc(r.inp)+'"></td><td><input maxlength="12" inputmode="decimal" data-i="'+i+'" data-k="out" placeholder="set your price" value="'+esc(r.out)+'"></td></tr>';});t.innerHTML=h;}
+$("prices").addEventListener("input",function(e){var d=e.target.dataset,i=parseInt(d.i,10);if(!(i>=0&&i<P.length))return;
+if(d.k==="pick"){var v=String(e.target.value);P[i].pick=inList(P[i].app,v)?v:"";P[i].inp=P[i].out=null;P[i].guess=false;save("prices",P);drawP();return;}
+if(d.k==="model"||d.k==="inp"||d.k==="out"){var v=String(e.target.value).slice(0,d.k==="model"?80:12);P[i][d.k]=(d.k!=="model"&&v.trim()==="")?null:v;save("prices",P);var n=$("prices").querySelector('[data-n="'+i+'"]');if(n)n.textContent=priceNote(P[i],ymd());}});
+$("addm").onclick=function(){if(P.length<20){P.push({app:"",pick:"",model:"",inp:"",out:"",guess:false});drawP();}};
+function drawH(){$("hist").innerHTML="<tr><th>Date</th><th>Chat</th><th>Msgs</th><th>Est. tokens in/out</th></tr>"+H.map(function(h){return"<tr><td>"+esc(h.date)+"</td><td>"+esc(h.task)+"</td><td>"+esc(h.messages)+"</td><td>"+esc(h.tokens_or_cost)+"</td></tr>"}).join("");}
+var PTR={"repeated context":'mudmode does this for you: say "handoff" and paste the block it gives you into your next chat. (free)',"long thread":"mudmode does this for you: when a chat gets long, it offers a handoff block to start a fresh chat. (free)"};
+function say(msg){var o=$("out");o.hidden=false;o.textContent=msg;}
+$("go").onclick=function(){var t=$("chat").value;if(!t.trim()){say("Paste a chat first.");return;}
+if(t.length>MAX_CHARS){say("That's more than 2 MB of text, too big to measure here. Paste a smaller part of the chat.");return;}
+var m=measure(t),o=$("out");o.hidden=false;
+var td=ymd(),rows=P.map(function(p){var c=cost(m,usePrice(p,td)),lab=p.app?APPS[p.app].name+(p.pick?" "+p.pick:""):(p.model||"?"),own=ownPrice(p),none=priceKind(p)==="half"?"add both your prices":p.app==="copilot"?"no public per-token price":p.app&&!p.pick?"pick your model":"set your price";return"<tr><td>"+esc(lab)+"</td><td>"+(c===null?'<span class="muted">'+esc(none)+'</span>':isNaN(c)?'<span class="muted">price must be a number from 0 to 1000</span>':"$"+esc(c.toFixed(4))+' <span class="est">estimate</span>'+(own?' <span class="muted">your price</span>':""))+"</td></tr>"}).join("");
+var hs=hotspots(m).slice(0,5).map(function(h){return"<li><b>"+esc(h.kind)+"</b> ("+(h.times?"first in message "+esc(h.i+1)+", seen "+esc(h.times)+" times, ~"+esc(h.each)+" tokens each, ~"+esc(h.tokens)+" tokens in the repeats":(h.i>=0?(h.count>1&&h.last>h.i?"messages "+esc(h.i+1)+"-"+esc(h.last+1):"message "+esc(h.i+1))+", ":"")+"~"+esc(h.tokens)+" tokens"+(h.count>1?" in "+esc(h.count)+" pastes":""))+"): "+esc(h.tip)+(PTR[h.kind]?'<div class="muted">'+esc(PTR[h.kind])+"</div>":"")+"</li>"}).join("")||"<li>No big hotspots found. Nice.</li>";
+var warn=m.labeled?"":'<p class="warn">Couldn\'t tell who said what'+(m.unsure?', because this paste looks more like a log, config or quote than a chat (a rough guess that can be wrong). The numbers may be wrong':', so the whole paste is counted as your input, and the numbers are likely too low')+'. Put "You:" and "AI:" at the start of each message, then measure again.</p>';
+var big=m.maxCtx>BIG_CTX?'<p class="warn">Some replies here would need over ~200k tokens of earlier chat. Many tools trim or refuse that much, so treat the input number as an upper bound.</p>':"";
+o.innerHTML='<b>This chat</b> <span class="est">estimate</span><br>'+esc(m.turns.length)+(m.turns.length===1?" message":" messages")+" · ~"+esc(m.inTok)+" tokens in · ~"+esc(m.outTok)+' tokens out<p class="muted">Cost is an estimate at API rates: what this chat would cost through the provider\'s API at its list price (checked '+esc(CHECKED)+'). Chat apps are billed differently (free, a monthly plan, or usage), so this isn\'t your bill.</p><table>'+rows+"</table>"+warn+big+"<p><b>What used the most</b></p><ul>"+hs+"</ul>";
+var ds=td;
+H.push({date:ds,tool:$("tool").value.slice(0,40),model:"",task:($("name").value||"chat").slice(0,80),messages:m.turns.length,tokens_or_cost:"~"+m.inTok+" in / ~"+m.outTok+" out (est.)",notes:""});if(H.length>500)H=H.slice(-500);save("hist",H);drawH();};
+$("csv").onclick=function(){var b=new Blob([CSV_HEADER+"\n"+H.map(toCSVRow).join("\n")+"\n"],{type:"text/csv"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="usage-log.csv";a.click();};
+$("clr").onclick=function(){if(confirm("Clear all saved history?")){H=[];try{localStorage.removeItem(K+"hist");}catch(e){}drawH();}};
+function load(f){if(f.size>MAX_CHARS){say("That file is more than 2 MB, too big to measure here. Open a smaller part of the chat.");return;}var r=new FileReader();r.onload=function(){$("chat").value=String(r.result);if(!$("name").value)$("name").value=cleanName(f.name);};r.readAsText(f);}
+$("file").onclick=function(){$("f").click()};$("f").onchange=function(){if(this.files[0])load(this.files[0])};
+document.addEventListener("dragover",function(e){e.preventDefault();});document.addEventListener("drop",function(e){e.preventDefault();});
+var d=$("drop");d.ondragover=function(e){e.preventDefault();d.classList.add("over")};d.ondragleave=function(){d.classList.remove("over")};d.ondrop=function(e){e.preventDefault();d.classList.remove("over");if(e.dataTransfer.files[0])load(e.dataTransfer.files[0]);};
+var EX="You said:\nHere is my whole error log, why is my app broken?\n"+Array(120).join("[09:14:02] ERROR db timeout after 30s in worker pool, retrying\n")+"ChatGPT said:\nThe database connection keeps timing out. Check the pool size and the database host.\nYou said:\nok what pool size should I use?\nChatGPT said:\nStart with one connection per worker, plus two spare.\n";
+$("example").onclick=function(){$("chat").value=EX;$("name").value="example: pasted a whole log";$("tool").value="ChatGPT";$("go").click();};
+drawP();drawH();
+</script></body></html>
