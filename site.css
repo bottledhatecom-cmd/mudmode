@@ -100,8 +100,9 @@ footer a{color:var(--soft)}
 /* phones: plain, fast, no desktop chrome */
 @media (max-width:700px){
  :root{--tk:48px}
- .desk{padding:calc(var(--tk) + 64px) 12px 40px;background:none}
- .bar{height:44px;padding:0 10px}
+ html{scroll-padding-top:calc(var(--tk) + 96px)}
+ .desk{padding:calc(var(--tk) + 96px) 12px 40px;background:none}
+ .bar{height:auto;min-height:44px;align-items:center;flex-wrap:wrap;gap:4px 10px;padding:6px 10px}
  .win{border-radius:12px;box-shadow:none}
  .tb .dots{display:none}
  .body{padding:20px 18px 22px}
@@ -285,7 +286,7 @@ html:not(.tk-on) .tk-list li:nth-child(n+2){position:absolute;width:1px;height:1
 @media (prefers-reduced-motion:reduce){html.tk-on .tk-pause{display:none}}
 .bar .note{margin-left:auto;color:var(--soft);white-space:nowrap}
 .bar .note a.hl{display:inline-block;padding:13px 4px;margin:0 -2px}
-@media (max-width:700px){.bar .note{font-size:12px;max-width:min(58vw,240px);overflow-x:auto;-webkit-overflow-scrolling:touch}.bar .note .nm{display:none}.bar .note a.hl{padding:10px 2px}}
+@media (max-width:700px){.bar .note{flex:1 1 160px;font-size:12px;line-height:1.35;white-space:normal;max-width:none;overflow:visible}.bar .note .nm{display:none}.bar .note a.hl{padding:4px 2px;margin:0}}
 footer p{margin:0 0 8px}
 @media (forced-colors:active){.tk-pause{border-color:ButtonText}.tk-pause .ic{forced-color-adjust:none;color:ButtonText}}
 @media (max-width:480px){.tkbar .btn{padding:0 9px;font-size:13px}}
