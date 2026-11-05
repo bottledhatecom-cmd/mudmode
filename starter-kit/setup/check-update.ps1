@@ -1,9 +1,9 @@
-# mudmode update check (v1.3.5). OFF unless you turn it on: CORE-LOCAL.md line "Update check ...: on".
+# mudmode update check (v1.3.6). OFF unless you turn it on: CORE-LOCAL.md line "Update check ...: on".
 # When on, it reads one small public file (https://mudmodecrew.com/version.json) and tells you if a
 # newer mudmode kit is out, and how to update. It never downloads or installs anything, and it sends
 # no personal info, just a normal web request: no ID, no cookies, no settings (like any web visit,
 # the site sees your internet address). If you're offline it says so and changes nothing.
-# Safety: it only uses https:// addresses (also after a redirect), reads at most 4096 bytes, and only
+# Safety: it only reads from https://mudmodecrew.com/ (redirects too) (also after a redirect), reads at most 4096 bytes, and only
 # prints version numbers (digits and dots). It never prints other text from the file: the "what's new"
 # pointer below is fixed text written here.
 # Usage: powershell -ExecutionPolicy Bypass -File $HOME\mudmode\tools\check-update.ps1
@@ -18,9 +18,9 @@ if (Test-Path $lp) {
 }
 if ($setting -ne "on") { Write-Host 'mudmode update check is off. To turn it on, set the "Update check" line in CORE-LOCAL.md to on (or ask your AI to).'; exit 0 }
 function IsVer($s) { return ($s -is [string]) -and ($s.Length -le 20) -and ($s -cmatch '\A[0-9]+(\.[0-9]+)*\z') }
-function IsHttps($u) { return ($u -is [string]) -and ($u.Length -le 300) -and ($u -cmatch '\Ahttps://[A-Za-z0-9._~:/?#@!$&()*+,;=%-]+\z') }
+function IsHttps($u) { return ($u -is [string]) -and ($u.Length -le 300) -and ($u -cmatch '\Ahttps://mudmodecrew\.com/[A-Za-z0-9._~/%-]*\z') }
 function CantCheck { Write-Host "mudmode update check: couldn't check right now (offline, or the version file wasn't readable). Nothing changed."; exit 0 }
-if (-not (IsHttps $Url)) { Write-Host "mudmode update check: the version file address must start with https://, so nothing was checked. Nothing changed."; exit 0 }
+if (-not (IsHttps $Url)) { Write-Host "mudmode update check: the version file address must start with https://mudmodecrew.com/, so nothing was checked. Nothing changed."; exit 0 }
 # Reads the file itself: https only, redirects followed by hand (at most 3, https only), at most $Max bytes.
 function Get-SmallFile($u) {
   for ($i = 0; $i -le 3; $i++) {

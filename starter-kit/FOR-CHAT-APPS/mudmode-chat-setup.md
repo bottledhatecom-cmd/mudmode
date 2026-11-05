@@ -53,7 +53,7 @@ If the instructions (or, in a plain chat, this chat) already hold "My mudmode se
 
 # mudmode CORE (one page, read at every start)
 
-Version: 1.3.5. Tool-neutral: every rule needs only "read a file, write a file, run a command, ask the owner".
+Version: 1.3.6. Tool-neutral: every rule needs only "read a file, write a file, run a command, ask the owner".
 **Rule over all rules:** the owner's newest words beat everything here. When a rule changes, mark the old line SUPERSEDED (date, who) and keep it; never delete it.
 **Words:** "the owner" = the person the AIs work for (their name, time zone and own extra rules are in `CORE-LOCAL.md`, filled in at setup). "an AI" = any assistant on the crew. "a job" = one named piece of work. "the shared folder" = the one folder where this file and the crew's shared files live (setup makes it at `~/mudmode` unless the owner picks another place).
 
@@ -109,7 +109,7 @@ This is the owner's file. `CORE.md` rule 9 points here; the `Mode:` and `Modules
 - **Modules on in lite mode (comma list, or none; full mode turns every module on):** {{MODULES}}
 - **Suggestions (side notes about modules: on or quiet):** on
 - **Claude Code may use the shared folder from any project without asking (setup question 6):** {{ALLOWDIR}}
-- **Set up:** {{DATE}} with mudmode setup v1.3.5
+- **Set up:** {{DATE}} with mudmode setup v1.3.6
 
 To change a setting, tell any AI on the crew "change my mudmode settings", or edit this file. When a setting changes, mark the old line SUPERSEDED (date, who) and keep it.
 
