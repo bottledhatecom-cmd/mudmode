@@ -1,4 +1,4 @@
-# mudmode free Crew kit, v1.3.5
+# mudmode free Crew kit, v1.3.6
 
 **Free.** This folder is the whole free mudmode Crew kit. Set it up with the steps just below.
 
@@ -17,7 +17,7 @@ Your AI does the setup. You answer a few short questions. Pick the AI you use:
 
 - **Claude Code** (the Code tab in the Claude desktop app, or `claude` in a terminal), **Grok Build, Codex, Cursor** or another AI that works with files on your computer:
   1. Unzip this download.
-  2. Open the AI in the unzipped folder `mudmode-starter-kit-v1.3.5`.
+  2. Open the AI in the unzipped folder `mudmode-starter-kit-v1.3.6`.
   3. Type: **Read README.md and set me up.** Answer its questions and say yes when it asks to run the setup.
 - **Claude on claude.ai, Grok on grok.com**, or another chat app with Projects:
   1. Unzip this download.
@@ -58,6 +58,10 @@ mudmode is a plain-file way to run one or more AI assistants as a steady crew: o
 
 ## What's in the kit
 ```
+AGENTS.md                the main file for AIs that work with files (Codex, Cursor, Grok Build; Claude Code reads it through CLAUDE.md)
+CLAUDE.md                points Claude Code to AGENTS.md
+.claude/agents/          Claude Code agents (mudmode-reviewer); each points to a kit file
+.claude/skills/          Claude Code skills (mudmode-handoff); each points to a kit file
 CORE.md                  the safety core, one page (read at every start, in every mode)
 modules/                 the 9 modules (lite reads the ones you turn on; full mode needs none of them); modules/README.md lists them
 cores/                   CORE-FULL.md (full mode's combined core = the v1.2.3 rules word for word) and CORE-LITE.md (the lite core)
@@ -78,6 +82,7 @@ templates/OK-LEDGER.md   record of the owner's OKs (one action, one time)
 templates/PROJECT-ADDON.md  extra rules for one project (+ fictional example)
 addons/LOCAL-HARDWARE.md optional: use a strong PC or GPU if you have one (skip otherwise)
 setup/                   the setup your AI runs (AI-SETUP.md, setup.sh, setup.ps1, templates/)
+tools/meter/             mudmode meter: open usage-meter.html in your browser to see about how many tokens a chat used (no network, no install; also at mudmodecrew.com/meter)
 tools/instant-wake/      optional, Windows: wake your bot when a note file grows (asks first; default No; see its README.md)
 FOR-CHAT-APPS/           mudmode-chat-lite.md (lite) or mudmode-chat-setup.md (full mode, all 25 rules): the one file for Claude, Grok and other chat-app Projects
 ```

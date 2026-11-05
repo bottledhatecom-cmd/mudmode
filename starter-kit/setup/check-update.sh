@@ -1,10 +1,10 @@
 #!/bin/sh
-# mudmode update check (v1.3.5). OFF unless you turn it on: CORE-LOCAL.md line "Update check ...: on".
+# mudmode update check (v1.3.6). OFF unless you turn it on: CORE-LOCAL.md line "Update check ...: on".
 # When on, it reads one small public file (https://mudmodecrew.com/version.json) and tells you if a
 # newer mudmode kit is out, and how to update. It never downloads or installs anything, and it sends
 # no personal info, just a normal web request: no ID, no cookies, no settings (like any web visit,
 # the site sees your internet address). If you're offline it says so and changes nothing.
-# Safety: it only uses https:// addresses (also after a redirect), reads at most 4096 bytes, and only
+# Safety: it only reads from https://mudmodecrew.com/ (redirects must stay https) (also after a redirect), reads at most 4096 bytes, and only
 # prints version numbers (digits and dots). It never prints other text from the file: the "what's new"
 # pointer below is fixed text written here.
 # Usage: sh ~/mudmode/tools/check-update.sh
@@ -19,8 +19,8 @@ if [ "$SETTING" != on ]; then
 fi
 cant() { echo "mudmode update check: couldn't check right now (offline, or the version file wasn't readable). Nothing changed."; exit 0; }
 isver() { [ ${#1} -le 20 ] && printf '%s\n' "$1" | grep -Eq '^[0-9]+(\.[0-9]+)*$'; }
-if [ ${#URL} -gt 300 ] || [ "$(printf '%s' "$URL" | wc -l | tr -d ' ')" != 0 ] || ! printf '%s\n' "$URL" | grep -Eq '^https://[A-Za-z0-9._~:/?#@!$&()*+,;=%-]+$'; then
-  echo "mudmode update check: the version file address must start with https://, so nothing was checked. Nothing changed."
+if [ ${#URL} -gt 300 ] || [ "$(printf '%s' "$URL" | wc -l | tr -d ' ')" != 0 ] || ! printf '%s\n' "$URL" | grep -Eq '^https://mudmodecrew\.com/[A-Za-z0-9._~/%-]*$'; then
+  echo "mudmode update check: the version file address must start with https://mudmodecrew.com/, so nothing was checked. Nothing changed."
   exit 0
 fi
 KIT=crew; NAME="free Crew kit"; [ -d "$DIR/full-kit" ] && KIT=full && NAME="Full Kit"
