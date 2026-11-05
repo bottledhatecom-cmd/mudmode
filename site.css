@@ -285,7 +285,7 @@ html:not(.tk-on) .tk-list li:nth-child(n+2){position:absolute;width:1px;height:1
 @media (prefers-reduced-motion:reduce){html.tk-on .tk-pause{display:none}}
 .bar .note{margin-left:auto;color:var(--soft);white-space:nowrap}
 .bar .note a.hl{display:inline-block;padding:13px 4px;margin:0 -2px}
-@media (max-width:700px){.bar .note{font-size:13px}.bar .note .nm{display:none}}
+@media (max-width:700px){.bar .note{font-size:12px;max-width:min(58vw,240px);overflow-x:auto;-webkit-overflow-scrolling:touch}.bar .note .nm{display:none}.bar .note a.hl{padding:10px 2px}}
 footer p{margin:0 0 8px}
 @media (forced-colors:active){.tk-pause{border-color:ButtonText}.tk-pause .ic{forced-color-adjust:none;color:ButtonText}}
 @media (max-width:480px){.tkbar .btn{padding:0 9px;font-size:13px}}
