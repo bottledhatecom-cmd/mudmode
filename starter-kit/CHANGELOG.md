@@ -2,6 +2,12 @@
 
 **How to update:** download the new kit, unzip it to a NEW folder (never over your old download or your `mudmode` folder), then say **Read README.md and set me up.** again or run the setup again. Your settings, handoff, lessons, jobs and OK ledger stay as they are; see "Updating to a new version" in `README.md`. Chat apps: see "Updating" in your `FOR-CHAT-APPS/` file.
 
+## v1.3.6 (2026-11-04)
+- New: the mudmode meter is in the kit, in `tools/meter/`. Open `usage-meter.html` in your browser to see about how many tokens a chat used and which parts used the most. It makes no network calls. Its token count now uses a closer rule (words, numbers and symbols instead of characters / 4); "How we count" on the page gives the measured error range.
+- New: `AGENTS.md` is the main file for AIs that work with files, and `CLAUDE.md` points Claude Code to it. New Claude Code folders: `.claude/agents/` (mudmode-reviewer) and `.claude/skills/` (mudmode-handoff). Each points to a kit file instead of copying it.
+- Setup now also counts an unedited 1.3.5 `CORE.md` and connector file as stock, so updating from 1.3.5 refreshes them the same way as before (backup first).
+- The safety rules are unchanged; only the Version lines moved to 1.3.6.
+
 ## v1.3.5 (2026-10-25)
 - New: say **mudhelp** (or "mudmode help") as the whole message, and your AI lists the things you can say, one short line each. Setup now also copies `WHAT-TO-SAY.md` into your `mudmode` folder, so Claude Code and other AIs that work with files can show it.
 - New: say just **mudmode**, and your AI answers "Woot! mudmode is on." and asks what you need.
