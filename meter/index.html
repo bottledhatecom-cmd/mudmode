@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'sha256-rRkrPyLhLsmWCCuMGu2ZuADoXtbFZuM73AumoAzSF2g='; script-src 'sha256-M5E4Zfsg2eq5IyzBzeOoZfjYuSmj+Cn4liTZJEZEdrE=' 'sha256-kjsEYOnuJluUMnfnTSKkLan68UaC+/Q2G9mfdRDdkZw=' 'sha256-9kzF5LLG9S7td+AV4X0LCNcw6RTfyI7uImjsA3AmbrA='; img-src data:; media-src 'self'; font-src data:; form-action 'none'; base-uri 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'sha256-rRkrPyLhLsmWCCuMGu2ZuADoXtbFZuM73AumoAzSF2g='; script-src 'sha256-M5E4Zfsg2eq5IyzBzeOoZfjYuSmj+Cn4liTZJEZEdrE=' 'sha256-kjsEYOnuJluUMnfnTSKkLan68UaC+/Q2G9mfdRDdkZw=' 'sha256-ssEwkiA9gr7AXwJkFtCm3PBJdR9ngpv40N/2bxT7+2M='; img-src data:; media-src 'self'; font-src data:; form-action 'none'; base-uri 'none'; object-src 'none'">
 <link rel="icon" href="data:,">
 <title>mudmode meter: see about how many tokens a chat used</title>
 <meta name="description" content="mudmeter: paste a chat and see about how many tokens it used and which parts used the most. Free, and it all stays in your browser.">
@@ -142,14 +142,14 @@ $("example").onclick=function(){$("chat").value=EX;$("name").value="example: pas
 drawP();drawH();
 </script><script id="anim">
 (function(){var v=document.getElementById("mmv"),b=document.getElementById("bot"),o=document.getElementById("out"),c=document.getElementById("chat");if(!v||!b)return;
-var mq=window.matchMedia?matchMedia("(prefers-reduced-motion: reduce)"):null,SRC={idle:"/meter/assets/mudmeter-c-idle.webm",count:"/meter/assets/mudmeter-c-count.webm",done:"/meter/assets/mudmeter-c-done.webm"},cur="",bad=false;
+var mq=window.matchMedia?matchMedia("(prefers-reduced-motion: reduce)"):null,SRC={idle:"/meter/assets/mudmeter-c-idle.webm",count:"/meter/assets/mudmeter-c-count.webm",done:"/meter/assets/mudmeter-c-done.webm"},cur="",bad=false,oops=false;
 function off(){b.classList.remove("vid");try{v.pause();}catch(e){}}
-function state(){if(o&&!o.hidden&&o.firstElementChild)return"done";if(c&&c.value.trim())return"count";return"idle";}
+function state(){if(o&&!o.hidden){if(o.firstElementChild)return"done";if(oops)return"idle";}if(c&&c.value.trim())return"count";return"idle";}
 function go(){if(bad||(mq&&mq.matches)){off();return;}var s=state();b.dataset.state=s;if(s!==cur){cur=s;v.src=SRC[s];}var p=v.play();if(p&&p.catch)p.catch(function(){off();});}
 v.addEventListener("playing",function(){if(!bad&&!(mq&&mq.matches))b.classList.add("vid");});
 v.addEventListener("error",function(){bad=true;off();});
-if(c)c.addEventListener("input",go);
-if(o&&window.MutationObserver)new MutationObserver(go).observe(o,{childList:true,attributes:true,attributeFilter:["hidden"]});
+if(c)c.addEventListener("input",function(){oops=false;go();});
+if(o&&window.MutationObserver)new MutationObserver(function(){oops=!o.hidden&&!o.firstElementChild&&!!o.textContent;go();}).observe(o,{childList:true,attributes:true,attributeFilter:["hidden"]});
 if(mq){if(mq.addEventListener)mq.addEventListener("change",go);else if(mq.addListener)mq.addListener(go);}
 go();})();
 </script></body></html>
