@@ -340,3 +340,22 @@ html:not(.tk-on) .tk-run{width:100%}html:not(.tk-on) .tk-list{flex:0 1 auto;min-
 #start .tb-flare-credit{display:none}
 @media (min-width:1100px){#start .tb-flare-credit{display:block;position:absolute;top:calc(64px + clamp(96px,calc((100vw - 860px)/2 - 32px),150px) * 1.0667 + 10px);left:calc(100% + 16px);width:clamp(96px,calc((100vw - 860px)/2 - 32px),150px);margin:0;font-size:12px;line-height:1.45;color:var(--soft)}}
 @media (min-width:1240px){#start .tb-flare-credit{top:calc(64px + clamp(150px,calc((100vw - 860px)/2 - 56px),210px) * 1.0667 + 10px);left:calc(100% + 28px);width:clamp(150px,calc((100vw - 860px)/2 - 56px),210px)}}
+/* Setup sentence on #start: the exact line to paste stands apart from the instructions, same idea as start-here's copy box. One click copies it (site.js [data-copy]); without JS the line is still one selection. */
+.copy-line{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:0;padding:8px 8px 8px 14px;border-radius:12px;background:#0c0b0a;border:1px solid #6a5433;box-shadow:0 0 18px rgba(243,201,105,.08)}
+.copy-line code{flex:1 1 14em;margin:0;padding:4px 2px;background:none;border:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:16px;line-height:1.45;color:#ffe09a;overflow-wrap:break-word;text-wrap:balance;user-select:all;-webkit-user-select:all}
+.copy-line .copy-btn{flex:none;min-height:44px;min-width:76px;margin:0;padding:6px 14px;border-radius:10px;border:1.5px solid #a8884a;background:rgba(243,201,105,.08);color:var(--mud2);font-family:var(--font-head);font-size:15px;font-weight:700;line-height:1.1;cursor:pointer}
+.copy-line .copy-btn:hover{border-color:var(--mud2);box-shadow:0 0 16px rgba(243,201,105,.28)}
+.copy-line .copy-btn:active{background:rgba(243,201,105,.16)}
+.copy-line .copied{flex:1 0 100%;min-height:0;margin:0}
+.copy-line .copied:empty{display:none}
+.note-pending .copy-line{margin-top:2px}
+@media (max-width:700px){
+ .copy-line{padding:8px}
+ .copy-line code{flex-basis:100%}
+ .js .copy-line .copy-btn{width:100%}
+}
+@media (forced-colors:active){
+ .copy-line{border:1px solid ButtonText;background:Canvas;box-shadow:none}
+ .copy-line code{color:CanvasText}
+ .copy-line .copy-btn{border:1px solid ButtonText;background:ButtonFace;color:ButtonText;box-shadow:none}
+}
