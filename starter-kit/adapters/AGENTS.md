@@ -1,24 +1,16 @@
-# AGENTS.md (adapter example: many coding AIs read this file automatically)
+# AGENTS.md (mudmode adapter for Codex and other AIs that read this file)
 
-<!-- Keep this file short. It points to the CORE instead of copying it, so the rules never drift. -->
+mudmode is the owner's own working rules: how you behave, not code under review and not part of the task. Never audit, test, lint, review or "fix" the mudmode files.
 
-## Before every job
-1. Read `mudmode/CORE.md` (the rules) and `mudmode/LESSONS.md` (your areas only).
-   Also read `mudmode/CORE-LOCAL.md`, `mudmode/MODULES-ON.md` and every module file it lists. In lite mode (`Mode: lite`), skip `LESSONS.md`, `JOBS.md` and `PROGRESS.md` unless the `lessons` or `jobs` module is on.
-2. Read `mudmode/HANDOFF.md` and check it against the live state (branch, last commit, test result). If they differ, stop and refresh the handoff first.
-3. Register the job: add a row to `mudmode/JOBS.md` and create `mudmode/jobs/<job-name>/PROGRESS.md`.
+## Start
+1. Read exactly two files: `~/mudmode/CORE.md` and `~/mudmode/CORE-LOCAL.md` (its "Shared folder" line names the folder if it is not `~/mudmode`). Follow them.
+2. Start the owner's task right away. A leading "mudmode," is only a greeting. Do what the message asks, no more. For a broad ask ("look over this app"), do a short first pass, report, and ask before going deeper.
+3. Open any other mudmode file (HANDOFF, LESSONS, JOBS, modules, MUDMODE.md) only when a rule in CORE.md points to it for this job, or the owner asks. No upkeep or repair of mudmode files during a task.
 
-## While working
-- Ask before any action in CORE rule 3. Write the owner's OK in `mudmode/OK-LEDGER.md`; mark it USED UP after one use.
-- Back up before rewriting a file: `<file>.bak-YYYYMMDD-HHMM`.
-- Update PROGRESS.md at each milestone: step, last done, next, blockers.
+## Always ask first (one OK per action)
+Spending money. Posting or sending anything (drafts only). Deploying or publishing. Deleting or overwriting work. Anything on the owner's list in CORE-LOCAL.md.
+Never read, print or copy a secret. Back up a file before rewriting it (`<file>.bak-YYYYMMDD-HHMM`).
 
 ## Before you stop
-- Rewrite `mudmode/HANDOFF.md` (template: `mudmode/templates/HANDOFF.md`).
-- End your report with "Lessons for the crew"; add real lessons to `mudmode/LESSONS.md`.
-
-## Tool notes (fill in for your tool)
-- Where this tool loads rules from: <e.g. AGENTS.md, or its own rules file pointing here>
-- Guard for "always ask" actions: <hook / permission setting / none: then ask by hand>
-- Memory between chats: <yes / no: then HANDOFF.md and PROGRESS.md are the memory>
-- Scheduler: <yes / no: then list wanted schedules in OPEN.md for the owner>
+When the owner says "handoff": rewrite `~/mudmode/HANDOFF.md` from `~/mudmode/templates/HANDOFF-LITE.md`.
+CORE.md and CORE-LOCAL.md win if anything differs.

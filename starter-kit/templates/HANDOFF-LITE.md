@@ -1,4 +1,4 @@
-# HANDOFF (lite: rewrite before you stop; the full form is templates/HANDOFF.md, module handoff-plus)
+# HANDOFF (everyday: rewrite before you stop; the full form is templates/HANDOFF.md, module handoff-plus)
 
 **Next single action:** <one line: the very first thing the next session does>
 
