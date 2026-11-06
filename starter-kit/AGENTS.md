@@ -1,4 +1,4 @@
-# AGENTS.md: mudmode free kit, v1.3.6
+# AGENTS.md: mudmode free kit, v1.4.0
 
 This folder is the mudmode free kit. This is the main file for AIs that work with files: Codex, Cursor, Grok Build and others read it on their own, and Claude Code reads it through `CLAUDE.md`.
 
