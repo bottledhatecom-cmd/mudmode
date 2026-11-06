@@ -8,7 +8,7 @@ Written <H:MM AM/PM zone, from the clock> by <AI>. About 10 lines. Honesty rules
 - Waiting on you: <numbered asks, recommendation first, or "nothing">
 
 **2. What it learned**
-- New or confirmed lessons today: <from LESSONS.md (lessons module), or "none" / "lessons are off in lite mode (turn on the lessons module to keep a lessons book)">
+- New or confirmed lessons today: <from LESSONS.md (lessons module), or "none" / "lessons are off (turn on the lessons module, or mudgo, to keep a lessons book)">
 - Hive lessons received: <approved lessons that arrived in a new kit version or digest you added, or "none">
 
 **3. What you contributed to the hive**
