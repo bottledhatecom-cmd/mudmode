@@ -3,7 +3,7 @@
 You need only three things: read and write files in the shared folder, run commands (or ask the owner to run them and paste the result), and read a clock. No special hardware is needed; local or GPU features are optional (`addons/LOCAL-HARDWARE.md`).
 
 - **At start:** read `CORE.md`, your inbox file, `JOBS.md` and `LESSONS.md`. Register your job and write `PROGRESS.md`.
-- **Modes:** also read `CORE-LOCAL.md` and `MODULES-ON.md` and every module file it lists. In lite mode (`Mode: lite` in `CORE-LOCAL.md`) skip the inbox file, `JOBS.md`, `LESSONS.md` and `PROGRESS.md` unless their module (`crew`, `jobs`, `lessons`) is on.
+- **Modes:** also read `CORE-LOCAL.md` and `MODULES-ON.md` and every module file it lists. While mudgo is not on (`mudgo:` in `CORE-LOCAL.md`; `CORE.md` Part 2 says when it turns on) skip the inbox file, `JOBS.md`, `LESSONS.md` and `PROGRESS.md` unless their module (`crew`, `jobs`, `lessons`) is on.
 - **No memory between chats?** The shared folder is your memory. Update `jobs/<name>/PROGRESS.md` at every milestone and `HANDOFF.md` before you stop.
 - **No guard?** Before any "always ask" action (CORE rule 3), write the request in `OK-LEDGER.md` and wait for the owner's own words.
 - **No scheduler?** Write the schedule you want in `OPEN.md` (the open-items list); the owner or an AI with a scheduler owns it.
