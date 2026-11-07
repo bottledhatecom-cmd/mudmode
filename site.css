@@ -369,16 +369,16 @@ html:not(.tk-on) .tk-run{width:100%}html:not(.tk-on) .tk-list{flex:0 1 auto;min-
  .copy-line .copy-btn{border:1px solid ButtonText;background:ButtonFace;color:ButtonText;box-shadow:none}
 }
 
-/* mudpity: the game's robot, a link in the empty left rail (mirrors tylerbot's flare on the right). Cut out of members/mudpity/media/07-hero.webp. Narrow screens: he sits under the hero card so the start box stays clear. */
+/* mudpity: the game's robot, a link in the empty left rail (mirrors tylerbot's flare on the right). Art is the quality pass from mud's own PC. Narrow screens: he sits under the hero card so the start box stays clear. */
 .mp-rail{display:flex;flex-direction:column;align-items:center;width:min(160px,52vw);margin:6px auto 22px;position:relative;z-index:2;text-decoration:none;color:var(--soft);text-align:center;transform-origin:50% 72%;transition:transform .12s ease;-webkit-tap-highlight-color:transparent}
 .mp-rail-fig{position:relative;display:block;width:100%;background:none}
 /* Round halo only. The circle fades to nothing inside its own box, so no rectangle shows. */
-.mp-rail-glow{position:absolute;z-index:0;left:50%;top:42%;width:130%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;background:radial-gradient(circle closest-side,rgba(243,201,105,.78) 0%,rgba(227,167,104,.42) 26%,rgba(200,135,74,.16) 48%,rgba(200,135,74,.05) 72%,rgba(200,135,74,0) 100%);animation:mp-rail-glow 5s ease-in-out infinite}
-@keyframes mp-rail-glow{0%,100%{opacity:.58}50%{opacity:1}}
+.mp-rail-glow{position:absolute;z-index:0;left:50%;top:34%;width:168%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;background:radial-gradient(circle closest-side,rgba(255,226,176,.95) 0%,rgba(243,201,105,.82) 20%,rgba(227,167,104,.5) 42%,rgba(200,135,74,.2) 64%,rgba(200,135,74,0) 86%);animation:mp-rail-glow 5s ease-in-out infinite}
+@keyframes mp-rail-glow{0%,100%{opacity:.88}50%{opacity:1}}
 .mp-rail img{position:relative;z-index:1;display:block;width:100%;height:auto;background:none;filter:drop-shadow(0 12px 7px rgba(0,0,0,.48));transition:filter .12s ease}
 .mp-rail-cap{position:relative;z-index:1;display:block;margin-top:10px;font-family:var(--font-body);font-size:13px;font-weight:500;line-height:1.35;color:var(--soft);text-wrap:balance}
 .mp-rail:hover{transform:translateY(-4px)}
-.mp-rail:hover .mp-rail-glow,.mp-rail:focus-visible .mp-rail-glow{animation:none;opacity:1;background:radial-gradient(circle closest-side,rgba(255,226,176,.92) 0%,rgba(243,201,105,.55) 24%,rgba(227,167,104,.2) 46%,rgba(200,135,74,.06) 70%,rgba(200,135,74,0) 100%)}
+.mp-rail:hover .mp-rail-glow,.mp-rail:focus-visible .mp-rail-glow{animation:none;opacity:1;background:radial-gradient(circle closest-side,rgba(255,236,200,1) 0%,rgba(243,201,105,.92) 22%,rgba(227,167,104,.58) 44%,rgba(200,135,74,.24) 66%,rgba(200,135,74,0) 86%)}
 .mp-rail:hover img,.mp-rail:focus-visible img{filter:drop-shadow(0 16px 8px rgba(0,0,0,.5))}
 .mp-rail:active,.mp-rail.is-down{transform:translateY(4px) scale(0.94)}
 .mp-rail:active .mp-rail-glow,.mp-rail.is-down .mp-rail-glow{animation:none;opacity:.5;background:radial-gradient(circle closest-side,rgba(243,201,105,.4) 0%,rgba(227,167,104,.14) 22%,rgba(200,135,74,0) 58%)}
@@ -386,20 +386,20 @@ html:not(.tk-on) .tk-run{width:100%}html:not(.tk-on) .tk-list{flex:0 1 auto;min-
 .mp-rail:focus-visible{outline:3px solid var(--mud2);outline-offset:4px;border-radius:16px}
 @media (min-width:1100px){
  .mp-rail{position:absolute;top:calc(var(--tk) + 72px + 64px);right:calc(50% + 430px + 16px);width:clamp(96px,calc((100vw - 860px)/2 - 32px),150px);margin:0}
- .mp-rail-glow{width:112%}
+ .mp-rail-glow{width:114%;top:34%}
  .mp-rail img,.mp-rail:hover img,.mp-rail:focus-visible img{filter:drop-shadow(0 8px 4px rgba(0,0,0,.45))}
  .mp-rail:active img,.mp-rail.is-down img{filter:drop-shadow(0 2px 1px rgba(0,0,0,.4))}
  .mp-rail-cap{font-size:12px;line-height:1.4}
 }
 @media (min-width:1240px){
  .mp-rail{right:calc(50% + 430px + 28px);width:clamp(150px,calc((100vw - 860px)/2 - 56px),210px)}
- .mp-rail-glow{width:134%}
+ .mp-rail-glow{width:136%;top:34%}
  .mp-rail img{filter:drop-shadow(0 12px 7px rgba(0,0,0,.48))}
  .mp-rail:hover img,.mp-rail:focus-visible img{filter:drop-shadow(0 16px 8px rgba(0,0,0,.5))}
  .mp-rail:active img,.mp-rail.is-down img{filter:drop-shadow(0 3px 2px rgba(0,0,0,.4))}
 }
 @media (prefers-reduced-motion:reduce){
- .mp-rail-glow{animation:none!important;opacity:.82}
+ .mp-rail-glow{animation:none!important;opacity:1}
  .mp-rail,.mp-rail:hover,.mp-rail:active,.mp-rail.is-down{transform:none}
  .mp-rail img{transition:none}
 }
