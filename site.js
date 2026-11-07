@@ -27,4 +27,19 @@
    new IntersectionObserver(function(es){var e=es[es.length-1];dock.classList.toggle('on',e.isIntersecting||e.boundingClientRect.top<0)},{rootMargin:'0px 0px -120px 0px'}).observe(more);
   }else{dock.classList.add('on')}
  }
+ /* mudpity rail: Space presses him like a button (Enter already follows the link). */
+ document.querySelectorAll('a.mp-rail').forEach(function(a){
+  a.addEventListener('keydown',function(e){
+   if(e.key!=='Enter'&&e.key!==' '&&e.key!=='Spacebar')return;
+   a.classList.add('is-down');
+   if(e.key===' '||e.key==='Spacebar')e.preventDefault();
+  });
+  a.addEventListener('keyup',function(e){
+   var space=e.key===' '||e.key==='Spacebar';
+   if(!a.classList.contains('is-down'))return;
+   a.classList.remove('is-down');
+   if(space)a.click();
+  });
+  a.addEventListener('blur',function(){a.classList.remove('is-down')});
+ });
 })();
