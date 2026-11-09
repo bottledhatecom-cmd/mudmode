@@ -195,6 +195,8 @@ export default {
     const origin = req.headers.get("Origin") || "";
     const url = new URL(req.url);
     if (req.method === "OPTIONS") return new Response(null, { status: origin === env.ALLOWED_ORIGIN ? 204 : 403, headers: cors(env, origin) });
+    // Health ping for the API base URL used by members-login.js. Sign-in uses POST /verify and GET /download.
+    if (req.method === "GET" && url.pathname === "/") return json(env, origin, 200, { ok: true });
     const route = (req.method === "POST" && url.pathname === "/verify") ? "verify"
       : (req.method === "GET" && url.pathname === "/session") ? "session"
       : (req.method === "GET" && url.pathname === "/download") ? "download" : null;
