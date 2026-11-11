@@ -1,0 +1,197 @@
+/* Homepage room ad + hero window shine for mudmodecrew.com.
+   Bubble pops in, fades, returns on hover. Shine is only on #start title-bar dots. */
+a.mascot.room-ad{text-decoration:none;color:inherit;text-shadow:none;z-index:6}
+/* Live site.css adds a gold text-shadow on hovered links. Keep the balloon flat. */
+a.mascot.room-ad:hover,a.mascot.room-ad:focus-visible{text-shadow:none}
+#start.win{overflow:visible}
+
+/* no layout shift — headline stays as on the live site; bubble floats over */
+a.mascot.room-ad .say{
+  display:grid !important;
+  box-sizing:border-box;
+  width:226px;
+  min-width:226px;
+  max-width:226px;
+  left:auto;
+  right:calc(100% + 14px);
+  top:50%;
+  bottom:auto;
+  translate:0 -50%;
+  padding:14px 16px 16px;
+  gap:0;
+  background:linear-gradient(165deg,#fff4e2 0%,#f6d3a4 42%,#e7b56d 78%,#c9843e 100%);
+  border:3px solid #140e09;
+  border-radius:18px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -12px 16px rgba(120,62,16,.22);
+  filter:drop-shadow(0 8px 16px rgba(0,0,0,.4));
+  z-index:6;
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition:opacity .4s ease, visibility .4s ease;
+}
+a.mascot.room-ad.is-shown .say,
+a.mascot.room-ad.is-holding .say{
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+}
+a.mascot.room-ad .mascot-shell,
+a.mascot.room-ad .tb-say-tail{display:none!important}
+
+/* two-layer tail on the right, pointing at the mascot — no pale fringe */
+a.mascot.room-ad .say::before,
+a.mascot.room-ad .say::after{
+  content:"";
+  position:absolute;
+  top:50%;
+  bottom:auto;
+  transform:translateY(-50%) rotate(45deg);
+  pointer-events:none;
+}
+a.mascot.room-ad .say::before{
+  right:-9px;
+  left:auto;
+  width:16px;height:16px;
+  background:#140e09;
+  z-index:0;
+}
+a.mascot.room-ad .say::after{
+  right:-6px;
+  left:auto;
+  width:12px;height:12px;
+  background:#c9843e;
+  z-index:1;
+}
+
+/* invisible path from the robot to the bubble, so a move or drag to Try the room stays open */
+a.mascot.room-ad .hover-bridge{
+  position:absolute;
+  right:100%;
+  top:50%;
+  transform:translateY(-50%);
+  width:22px;
+  height:0;
+  pointer-events:none;
+}
+a.mascot.room-ad.is-shown .hover-bridge,
+a.mascot.room-ad.is-holding .hover-bridge{
+  height:220px;
+  pointer-events:auto;
+}
+
+a.mascot.room-ad .ad-kicker,
+a.mascot.room-ad .ad-title,
+a.mascot.room-ad .ad-copy,
+a.mascot.room-ad .ad-cta{position:relative;z-index:1}
+a.mascot.room-ad .ad-kicker{
+  display:block;font-size:11px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:#5c2a14;opacity:.8;margin:0 0 4px
+}
+a.mascot.room-ad .ad-title{
+  display:block;font-size:17px;font-weight:800;line-height:1.15;
+  color:#1a120b;margin:0 0 6px
+}
+a.mascot.room-ad .ad-copy{
+  display:block;font-size:13px;font-weight:600;line-height:1.35;color:#1a120b
+}
+a.mascot.room-ad .ad-cta{
+  display:block;box-sizing:border-box;width:100%;margin-top:10px;
+  padding:7px 12px;border-radius:999px;text-align:center;
+  background:#1a120b;color:#fff4e2;font-size:13px;font-weight:700;line-height:1.2
+}
+a.mascot.room-ad:hover .ad-cta,a.mascot.room-ad:focus-visible .ad-cta{background:#3a2416}
+a.mascot.room-ad:focus-visible{outline:2px solid #f3c969;outline-offset:4px}
+
+@media (prefers-reduced-motion:reduce){
+  a.mascot.room-ad,a.mascot.room-ad>img{animation:none!important}
+  a.mascot.room-ad .say{transition:none}
+}
+
+/* Phones: the fixed ticker and header cover the space above the mascot.
+   Sit the balloon under the robot instead, so the headline stays put and the ad stays readable. */
+@media (max-width:700px){
+  a.mascot.room-ad .say{
+    left:50%;right:auto;top:calc(100% + 20px);bottom:auto;
+    translate:-20% 0
+  }
+  a.mascot.room-ad .say::before,a.mascot.room-ad .say::after{top:auto;bottom:auto;right:auto;left:28px;transform:rotate(45deg)}
+  a.mascot.room-ad .say::before{top:-9px}
+  a.mascot.room-ad .say::after{top:-6px;left:30px}
+  a.mascot.room-ad .hover-bridge{
+    right:auto;left:20%;top:100%;bottom:auto;width:80px;transform:none
+  }
+  a.mascot.room-ad.is-shown .hover-bridge,
+  a.mascot.room-ad.is-holding .hover-bridge{height:28px;width:80px}
+}
+
+
+/* Hero window traffic lights: glass depth + a soft professional sheen.
+   Only the main #start title bar. */
+#start > .tb .dots{
+  gap:8px;
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.28));
+}
+#start > .tb .dots i{
+  position:relative;
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  overflow:hidden;
+  display:block;
+  box-shadow:
+    inset 0 .6px 0 rgba(255,255,255,.7),
+    inset 0 -1.2px 1.5px rgba(0,0,0,.3),
+    0 0 0 1px rgba(20,14,9,.4);
+}
+#start > .tb .dots i:nth-child(1){
+  background:radial-gradient(circle at 32% 28%, #ffd4cc 0%, #ff8d7c 34%, #e0745f 62%, #b44436 100%);
+}
+#start > .tb .dots i:nth-child(2){
+  background:radial-gradient(circle at 32% 28%, #fff0c0 0%, #f3cc72 34%, #e3b452 62%, #b88628 100%);
+}
+#start > .tb .dots i:nth-child(3){
+  background:radial-gradient(circle at 32% 28%, #d4f0d4 0%, #98d098 34%, #7fbf7f 62%, #4c8c4c 100%);
+}
+/* always-on glass cap */
+#start > .tb .dots i::after{
+  content:"";
+  position:absolute;
+  left:2px;top:1px;
+  width:6px;height:4.5px;
+  border-radius:50%;
+  background:linear-gradient(180deg,rgba(255,255,255,.85),rgba(255,255,255,.18) 70%,transparent);
+  pointer-events:none;
+}
+/* slow specular sweep, staggered across the three lights */
+#start > .tb .dots i::before{
+  content:"";
+  position:absolute;
+  inset:-30%;
+  background:linear-gradient(115deg,
+    transparent 38%,
+    rgba(255,255,255,0) 44%,
+    rgba(255,255,255,.8) 50%,
+    rgba(255,255,255,0) 56%,
+    transparent 62%);
+  transform:translateX(-140%);
+  animation:mm-dot-shine 7s cubic-bezier(.4,0,.2,1) infinite;
+  pointer-events:none;
+}
+#start > .tb .dots i:nth-child(1)::before{animation-delay:0s}
+#start > .tb .dots i:nth-child(2)::before{animation-delay:.16s}
+#start > .tb .dots i:nth-child(3)::before{animation-delay:.32s}
+@keyframes mm-dot-shine{
+  0%, 64%{transform:translateX(-140%);opacity:0}
+  70%{opacity:1}
+  80%{transform:translateX(140%);opacity:.95}
+  86%, 100%{transform:translateX(140%);opacity:0}
+}
+html.shot-shine #start > .tb .dots i::before{
+  animation:none;
+  transform:translateX(8%);
+  opacity:1;
+}
+@media (prefers-reduced-motion:reduce){
+  #start > .tb .dots i::before{animation:none!important;transform:translateX(-140%);opacity:0}
+}
