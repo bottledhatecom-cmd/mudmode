@@ -1,11 +1,12 @@
 (function(){
  /* Mascot extras (optional): the page and the mascot's bubble work with this file turned off. No storage, no cookies, no network. */
  var m=document.querySelector('.mascot');if(!m)return;
+ var roomAd=m.classList.contains('room-ad');
  var rm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
  var fine=!(window.matchMedia&&matchMedia('(hover: none)').matches);
  var say=m.querySelector('.say'),T;
- /* 6: a different friendly line first on each visit (random, nothing stored) */
- if(say&&say.children.length>1){var k=Math.floor(Math.random()*say.children.length);while(k--)say.appendChild(say.firstElementChild)}
+ /* Room ad owns its bubble. Do not rotate those lines or build the SVG balloon over them. */
+ if(!roomAd&&say&&say.children.length>1){var k=Math.floor(Math.random()*say.children.length);while(k--)say.appendChild(say.firstElementChild)}
  function once(c,ms){m.classList.remove(c);void m.offsetWidth;m.classList.add(c);setTimeout(function(){m.classList.remove(c)},ms)}
  /* 5: dozes after 60 s without movement, key or touch; wakes on any of them */
  var idle;function wake(){if(m.classList.contains('zz'))m.classList.remove('zz');clearTimeout(idle);idle=setTimeout(function(){m.classList.add('zz')},60000)}
@@ -76,10 +77,15 @@
   svg.style.left="0";svg.style.top="0";svg.style.width=shape.sw+"px";svg.style.height=shape.sh+"px";
   svg.querySelectorAll("path").forEach(function(p){if(p.getAttribute("class")!=="clip"||true)p.setAttribute("d",shape.path);});
  }
- function shells(){shell(say,"ms-say");shell(m.querySelector(".say-cheer"),"ms-cheer");}
- shells();
- if(document.fonts&&document.fonts.ready)document.fonts.ready.then(shells);
- addEventListener("resize",shells,{passive:true});
- m.addEventListener("mouseenter",function(){requestAnimationFrame(shells);});
- m.addEventListener("focus",function(){requestAnimationFrame(shells);});
+ function shells(){
+  if(roomAd)return;
+  shell(say,"ms-say");shell(m.querySelector(".say-cheer"),"ms-cheer");
+ }
+ if(!roomAd){
+  shells();
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(shells);
+  addEventListener("resize",shells,{passive:true});
+  m.addEventListener("mouseenter",function(){requestAnimationFrame(shells);});
+  m.addEventListener("focus",function(){requestAnimationFrame(shells);});
+ }
 })();

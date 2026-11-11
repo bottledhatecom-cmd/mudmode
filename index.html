@@ -13,8 +13,10 @@
 <link rel="icon" type="image/png" sizes="32x32" href="img/mudmode-icon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="img/mudmode-icon-192.png">
 <link rel="stylesheet" href="site.css?v=mp3">
+<link rel="stylesheet" href="room-ad.css?v=room1">
 <script src="site.js?v=mp1" defer></script>
-<script src="mascot.js?v=rc12" defer></script>
+<script src="mascot.js?v=rc13" defer></script>
+<script src="room-ad.js?v=room1" defer></script>
 <script src="alive.js?v=rc12" defer></script>
 <link rel="stylesheet" href="tylerbot-play.css?v=tb9">
 <script src="tylerbot-play.js?v=tb12" defer></script>
@@ -88,11 +90,16 @@
   </template>
   <div class="body">
    <div class="hello hero-head">
-    <button type="button" class="mascot" aria-label="mudmode mascot" aria-describedby="mascot-say">
+    <a class="mascot room-ad" href="room.html" aria-label="Try the AI room. We are testing and would love your feedback.">
      <img src="img/mascot-120.webp" srcset="img/mascot-120.webp 1x, img/mascot-240.webp 2x" width="72" height="72" alt="">
-     <span class="say" id="mascot-say" role="tooltip"><span class="ln">I ask before anything risky.</span><span class="ln">I keep answers short.</span><span class="ln">No cookies or trackers of our own.</span><span class="ln">Adopt what fits. Keep what works. That's my whole thing.</span><span class="ln">Your next chat can pick up where you stopped.</span></span>
-     <span class="say-cheer" aria-hidden="true">Nice! Paste it in.</span>
-    </button>
+     <span class="hover-bridge" aria-hidden="true"></span>
+     <span class="say">
+      <span class="ad-kicker">We're testing</span>
+      <span class="ad-title">The AI room</span>
+      <span class="ad-copy">Work with two AIs on one board. Try it and tell us what you think.</span>
+      <span class="ad-cta">Try the room</span>
+     </span>
+    </a>
     <div>
      <h1 id="h-main">One mind,<br class="h1-br"> many AI.</h1>
     </div>
