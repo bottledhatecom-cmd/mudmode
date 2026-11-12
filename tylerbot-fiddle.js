@@ -221,7 +221,7 @@
       paused: !!(doc.querySelector(".tkbar.tk-paused") || (live && live.paused)),
       hidden: !!doc.hidden,
       vis: live ? !!live.vis : vis,
-      tkOn: doc.documentElement.classList.contains("tk-on") && !!(live && live.on && live.ok && live.ok()),
+      tkOn: doc.documentElement.classList.contains("tk-on") && !!(live && (live.on || live.perf) && live.ok && live.ok()), // f3: cooldown counts as on
       width: root.innerWidth || 0,
       bit: !!(live && live.bit),
       bubble: !!(live && live.bit) || !!doc.querySelector(".tb-say"),
@@ -396,7 +396,9 @@
 
   function tick() {
     var live = api();
-    if (!live || !live.on || reduced() || saveData() || (root.innerWidth || 0) < 1100) {
+    // tb13/f3: a slow-frame cooldown (live.perf) is not "off": keep the small reactions and bubbles going.
+    // Reduced motion, data saver, the pause button (pageOk) and a hidden tab still stop them as before.
+    if (!live || (!live.on && !live.perf) || reduced() || saveData() || (root.innerWidth || 0) < 1100) {
       if (fiddling || dodging || root.__tbBusy) stopAct();
       return;
     }
