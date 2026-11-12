@@ -291,7 +291,7 @@ function runFiddleUnit() {
   const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
   check(
     "cache-bumps",
-    html.includes("site.css?v=tb7") && html.includes("alive.js?v=rc12") && html.includes("mascot.js?v=rc12") && html.includes("tylerbot-play.css?v=tb9") &&
+    html.includes("site.css?v=tb7") && html.includes("alive.js?v=rc12") && html.includes("mascot.js?v=rc12") && html.includes("tylerbot-play.css?v=tb15") &&
       html.includes("tylerbot-play.js?v=tb11") && html.includes("tylerbot-fiddle.js?v=f2"),
     "query strings",
   );
