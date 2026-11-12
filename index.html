@@ -18,7 +18,7 @@
 <script src="mascot.js?v=rc13" defer></script>
 <script src="room-ad.js?v=room1" defer></script>
 <script src="alive.js?v=rc12" defer></script>
-<link rel="stylesheet" href="tylerbot-play.css?v=tb9">
+<link rel="stylesheet" href="tylerbot-play.css?v=tb15">
 <script src="tylerbot-play.js?v=tb14" defer></script>
 <script src="tylerbot-fiddle.js?v=f4" defer></script>
 <link rel="stylesheet" href="gumroad-dialog.css?v=rc11">
@@ -77,7 +77,7 @@
   <div class="tb" aria-hidden="true"><span class="dots"><i></i><i></i><i></i></span>mudmode</div>
   <!-- TODO(Graphite): still matches webm frame 0 at 468×480, including alpha. The 2026-11-05 reexport matched those color planes but had alpha off (clear areas were black); this file keeps that color and the frame-0 alpha. Do not put the h264 mp4 back. Safari still needs HEVC-with-alpha. The play-rig rest pose does not match this still (pointing hands, split feet, chest plate). -->
   <div class="tylerbot tb-flare" aria-hidden="true" data-tyler-play="img/tylerbot/"><video muted playsinline preload="auto" poster="img/tylerbot/tylerbot-flare-still.webp?v=f468" width="450" height="480"><source src="img/tylerbot/tylerbot-flare.webm" type="video/webm" media="(min-width: 1100px) and (prefers-reduced-motion: no-preference)"></video><img src="img/tylerbot/tylerbot-flare-still.webp?v=f468" width="450" height="480" alt="" decoding="async"></div>
-  <template id="tb-say" data-font="fonts/bubblegumsans-regular-latin.woff2">
+  <template id="tb-say" data-font="fonts/bubblegumsans-regular-latin.woff2" data-off>
    <!-- TYLERBOT LINES (edit here): only wording Brief checked and the owner ok'd -->
    <p data-id="K1a">Our crews built this site with mudmode!</p>
    <p data-id="K1b">Several AIs and AI accounts, in tandem.</p>
@@ -92,13 +92,6 @@
    <div class="hello hero-head">
     <a class="mascot room-ad" href="room.html" aria-label="Try the AI room. We are testing and would love your feedback.">
      <img src="img/mascot-120.webp" srcset="img/mascot-120.webp 1x, img/mascot-240.webp 2x" width="72" height="72" alt="">
-     <span class="hover-bridge" aria-hidden="true"></span>
-     <span class="say">
-      <span class="ad-kicker">We're testing</span>
-      <span class="ad-title">The AI room</span>
-      <span class="ad-copy">Work with two AIs on one board. Try it and tell us what you think.</span>
-      <span class="ad-cta">Try the room</span>
-     </span>
     </a>
     <div>
      <h1 id="h-main">One mind,<br class="h1-br"> many AI.</h1>
