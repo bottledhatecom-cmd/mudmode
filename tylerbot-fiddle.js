@@ -1,7 +1,8 @@
 /* Idle fiddle + grab dodge for the hero Tylerbot.
    Page reactions are transient classes (transform / opacity / filter only).
    Never opens a fold, moves focus, scrolls, or changes aria or form state.
-   The minified play script stays the big-bit engine; this file reads window.__tb. */
+   The minified play script stays the big-bit engine; this file reads window.__tb.
+   f4 (staged 2026-11-12): faster start, edits marked f4. */
 (function (root) {
   "use strict";
   var FAM = { SELF: 25, PEEK: 15, LOGO: 12, TICKER: 12, BUTTONS: 10, TEXT: 10, FOLDS: 8, DESK: 8 };
@@ -188,6 +189,12 @@
   var pointer = null;
   var active = [];
   var teaseEl = null;
+  // f4: faster start. bootAt/booting(): for the first 20 s, re-try every 1 s until the play script is ready
+  // (no visitor input needed). played: count of small reactions, for the shorter early gaps.
+  var bootAt = Date.now();
+  var played = 0;
+  var firstDone = false;
+  function booting() { return Date.now() - bootAt < 20000; }
 
   function mulberry32(a) {
     return function () {
@@ -390,7 +397,8 @@
   function arm(delay) {
     root.clearTimeout(timer);
     if (!pageOk() && delay == null) return;
-    var wait = delay == null ? gapFor(Date.now() - lastIn, rng) : delay;
+    // f4: 3-6 s between the first 4 reactions, then the normal gapFor (4-9 s, or 15-25 s after 3 min idle)
+    var wait = delay == null ? (played < 4 ? 3000 + rng() * 3000 : gapFor(Date.now() - lastIn, rng)) : delay;
     timer = root.setTimeout(tick, Math.max(40, wait));
   }
 
@@ -398,16 +406,19 @@
     var live = api();
     // tb13/f3: a slow-frame cooldown (live.perf) is not "off": keep the small reactions and bubbles going.
     // Reduced motion, data saver, the pause button (pageOk) and a hidden tab still stop them as before.
+    // f4: while the page is still starting up, the play script may not be on yet: re-try in 1 s instead of giving up.
+    if (booting() && (!live || (!live.on && !live.perf)) && !reduced() && !saveData() && (root.innerWidth || 0) >= 1100 && !doc.hidden) { arm(1000); return; }
     if (!live || (!live.on && !live.perf) || reduced() || saveData() || (root.innerWidth || 0) < 1100) {
       if (fiddling || dodging || root.__tbBusy) stopAct();
       return;
     }
     if (doc.hidden) return;
-    if (!pageOk()) { arm(1500); return; }
+    if (!pageOk()) { arm(booting() ? 1000 : 1500); return; } // f4: 1 s re-try while starting up
     if (Date.now() < resumeAt) { arm(resumeAt - Date.now() + 30); return; }
     var live = api();
     if (live && live.bit) { arm(700); return; }
-    if (live && live.an && live.now && live.an() - live.now() < 900) { arm(600); return; }
+    // f4: the very first reaction may start even if the first trick is due within 0.9 s (the trick waits for it, at most ~1 s)
+    if (firstDone && live && live.an && live.now && live.an() - live.now() < 900) { arm(600); return; }
     var env = envNow();
     env.has = hasPlay;
     env.fiddle = false;
@@ -415,6 +426,8 @@
     var pick = choose(state, env, rng);
     if (!pick) { arm(2000); return; }
     commit(state, pick);
+    played++;
+    firstDone = true;
     runPlay(pick, function () {
       if (gen !== state._gen && fiddling) return;
       if (rng() < 0.15 && pageOk() && !(api() && api().bit)) {
@@ -450,9 +463,9 @@
 
   function noteInput() {
     lastIn = Date.now();
-    resumeAt = lastIn + 8000;
+    resumeAt = lastIn + 4000; // f4: 4 s after input (was 8)
     stopAct();
-    arm(8000);
+    arm(4000);
   }
 
   function bubbleParts(w, h) {
@@ -631,10 +644,10 @@
         e.preventDefault();
         e.stopPropagation();
         lastIn = env.now;
-        resumeAt = lastIn + 8000;
+        resumeAt = lastIn + 4000; // f4: 4 s (was 8)
         if (fiddling) stopAct();
         startDodge(e);
-        arm(8000);
+        arm(4000);
         return;
       }
       noteGrab(grabSt, false, env.now);
@@ -672,16 +685,46 @@
         var last = entries[entries.length - 1];
         vis = !!(last && last.isIntersecting && last.intersectionRatio >= 0.2);
         var live = api();
+        // f4: the first time the hero is seen, start 1.5-2 s after the flare ends, even if the play script is not
+        // visible/ready yet (tick re-tries every 1 s). Was: wait for the play script, else for the first input.
+        if (!seenHero && vis) { seenHero = true; flareThenArm(Date.now()); return; }
         if (live && live.vis === false) { stopAct(); return; }
         if (!vis && !(live && live.vis)) { stopAct(); return; }
-        if (!seenHero) { seenHero = true; arm(4000 + rng() * 5000); }
+        if (!seenHero) { seenHero = true; flareThenArm(Date.now()); }
         else arm(400);
       }, { threshold: [0, 0.2] });
       io.observe(hero);
     } else {
       vis = true;
-      arm(4000 + rng() * 5000);
+      flareThenArm(Date.now()); // f4
     }
+  }
+
+  // f4 (r2): wait while the intro flare video is playing or about to play (12 s cap), then arm 1-1.5 s later,
+  // so the first reaction comes before the first trick (which waits for the flare end + 2 s).
+  // The end is caught by the video's "ended" event, with a 100 ms poll as the fallback.
+  // No video, the still picture, or no source (under 1100 px): arm 1-1.5 s from now.
+  function flareOn(v) {
+    return !!v && !v.ended && !bot.classList.contains("tb-still") && !!v.querySelector("source") &&
+      (bot.classList.contains("tb-live") || !!v.currentSrc);
+  }
+  function flareThenArm(t0) {
+    var v = bot.querySelector("video");
+    var armed = false;
+    var go = function () {
+      if (armed) return;
+      armed = true;
+      if (v) v.removeEventListener("ended", go);
+      arm(1000 + rng() * 500);
+    };
+    if (!flareOn(v)) { go(); return; }
+    v.addEventListener("ended", go);
+    var poll = function () {
+      if (armed) return;
+      if (!flareOn(v) || Date.now() - t0 >= 12000) { go(); return; }
+      root.setTimeout(poll, 100);
+    };
+    root.setTimeout(poll, 100);
   }
 
   bindInput();
