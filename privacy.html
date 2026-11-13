@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://giscus.app; img-src 'self' data:; frame-src https://giscus.app; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; frame-src 'none'; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noai, noimageai">
 <meta name="tdm-reservation" content="1">
 <title>mudmode privacy note</title>
-<meta name="description" content="Privacy note for mudmodecrew.com: what our host, the opt-in members chat and Gumroad (for purchases) receive.">
+<meta name="description" content="Privacy note for mudmodecrew.com: what our host and Gumroad (for purchases) receive, and that community talk is on GitHub Discussions.">
 <meta name="theme-color" content="#121110">
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="img/mudmode-icon-32.png">
@@ -21,7 +21,7 @@
 <nav class="nav-short" aria-label="Site"><div class="wrap"><a class="brand" href="index.html" aria-label="mudmode home"><img src="img/mudmode-icon-32.png" srcset="img/mudmode-icon-32.png 1x, img/mudmode-icon-64.png 2x" width="32" height="32" alt=""><b>mudmode</b></a><span class="nav-links"><a href="index.html">Home</a><a href="privacy.html" aria-current="page">Privacy</a><a href="terms.html">Terms</a><a href="full-kit-license.html">Full Kit License</a></span><a href="members.html" class="nav-members">Members</a></div></nav>
 <main class="wrap">
 <h1>Privacy note</h1>
-<p class="sub">Updated November 4, 2026</p>
+<p class="sub">Updated November 12, 2026</p>
 
 <h2 id="contact">Who we are</h2>
 <p>mudmodecrew.com is run by Hestertainment LLC, an Illinois limited liability company (USA), which also sells and licenses mudmode kits and is responsible for the personal data described in this note (the data controller). Contact (including privacy requests): <span class="js-email">mudmodecrew [at] gmail [dot] com</span>. General questions about mudmode can also go to <a href="https://github.com/bottledhatecom-cmd/mudmode/discussions">GitHub Discussions</a>.</p>
@@ -32,8 +32,8 @@
 <p>mudmeter (/meter/) measures the chats you paste in your own browser. It saves your price changes and its history in your browser's local storage on your own device, and makes no network calls. None of it is sent to us.</p>
 <p>The Hero's Compendium test page (/demos/herocompendium/) saves its settings and test save data in your browser's local storage on your own device. None of it is sent to us. Its Submit button opens an email in your own mail app; nothing is sent unless you send it. If you do, we get your email address and what you wrote, use them only to fix bugs, and delete them once the bug is fixed. The page's "clear saved data" button, or clearing this site's data, removes what it saved.</p>
 
-<h2>Members chat</h2>
-<p>Only if you click "Open the members chat", your browser loads giscus (giscus.app) and GitHub. To post you sign in with GitHub; giscus keeps a sign-in token in your browser's local storage. Posts are public on GitHub and are governed by GitHub's Terms and Privacy Statement, including GitHub's own uses of public content. Posting is covered by the <a href="https://github.com/bottledhatecom-cmd/mudmode/blob/main/CONTRIBUTING.md">mudmode contributor terms</a>.</p>
+<h2>Members chat (GitHub Discussions)</h2>
+<p>Community talk is on GitHub Discussions, on GitHub's own site, not in a chat box on this page. To read or post, you go to GitHub; posting uses GitHub's sign-in on github.com. GitHub's Terms and Privacy Statement apply, including GitHub's own uses of public content. Posts are public. Posting is covered by the <a href="https://github.com/bottledhatecom-cmd/mudmode/blob/main/CONTRIBUTING.md">mudmode contributor terms</a>.</p>
 
 <h2 id="member-sign-in">Member sign-in</h2>
 <p>If you sign in on the members page, your browser sends the license key you paste to our sign-in checker, a small program we run on Cloudflare (Cloudflare, Inc.) at mudmode-members.bottledhate-com.workers.dev. Like any web service, Cloudflare receives standard request data such as your IP address and browser type; see <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare's Privacy Policy</a>. The checker sends your key to Gumroad's license check to confirm that your purchase is in good standing (not refunded, charged back, disputed or ended); this does not count as a use of your key. Gumroad's answer includes details of your purchase, such as your email; the checker uses only whether the purchase is good and which kit it is, and passes nothing else on. The checker does not save your key or Gumroad's answer. To slow down repeated guessing, it counts sign-in attempts per IP address and per key over one-minute windows (the key is first turned into a one-way code, a hash); Cloudflare holds those counts. We have turned off the checker's request logs. After a good check, this browser tab keeps a signed sign-in token in its session storage (not a cookie). The token holds only which kit you have and when it expires. It stops working after one hour, and it is removed when you sign out or close the tab. Sign-in sets no cookies.</p>
