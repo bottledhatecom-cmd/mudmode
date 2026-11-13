@@ -18,6 +18,8 @@
 /* phase 2: the drawn ring he "shows" a line or a title bar with (never the real element; gone when the bit ends) */
 .tb-hl{position:fixed;z-index:39;box-sizing:border-box;border:2px solid #f3c969;border-radius:12px;box-shadow:0 0 0 1px rgba(26,18,11,.55),0 0 16px rgba(243,201,105,.45);pointer-events:none;opacity:0;will-change:transform,opacity}
 /* phase 1b: his speech bubble. One outline for the balloon and the tail, text stacked. aria-hidden, no pointer events, only at rest */
+/* Hide every Tylerbot speech balloon, including the idle "too slow!" tease. The robot stays. */
+.tb-say{display:none!important}
 .tb-say{position:absolute;z-index:3;box-sizing:border-box;width:max-content;max-width:min(10.25rem,var(--tb-say-max,10.25rem));margin:0;padding:.62em .9em .66em;overflow:visible;font:700 .9375rem/1.28 var(--font-head);letter-spacing:.01em;text-align:center;text-wrap:balance;overflow-wrap:break-word;background:transparent;color:#1a120b;border:0;pointer-events:none;transform-origin:var(--tb-say-o,50% 100%)}
 .tb-say.tb-say-f{font-family:"Bubblegum Sans",var(--font-head);font-weight:400}
 .tb-say-t{position:relative;z-index:1;margin:0}
