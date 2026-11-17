@@ -208,6 +208,7 @@ const TUNE = {
     BITER: 0.35, BITER_W: 36,  // chance a hole at least BITER_W wide has a giant biter
     TENT: 0.35                 // chance a hole has tentacles on one edge
   },
+  STUMP: { ON: true, X: 22, HALF: 9, H: 14 },   // the tree stump he starts the run on (first room only): stand on its top, its side blocks, step or jump off; H 14 keeps him above the rolling logs (they hit below GY-13), and a log breaks on its side
   CROC: {                      // snapper pools: each cell holds a solid croc (stand on its head; its body blocks; its open mouth bites)
     HALF: 8,                   // px: half-width of the solid head
     H: 9,                      // px: head height (he stands on it at GY - H)
@@ -353,7 +354,7 @@ function enterRoom(i,from){
   const sx = from==='L'?14 : from==='R'?W-14 : 22;
   G.rs={spawn:sx, logs:[], logT:1.2, rng:mulberry(hash(G.seed+'|run|'+i)), crawlers:room.crawlers.map((c,k)=>({x:c.cx,d:k%2?1:-1,hp:TUNE.SUPER.MOB_HP}))};
   G.burst=[]; G.splats=[]; rs_boss(); G.rs.croc={}; G.rs.perch=null; G.rs.crocRng=mulberry(hash(G.seed+'|croc|'+i)); cfReset(); G.rs.crev=crevState(room); if(G.p) G.p.grab=null; G.rs.flyers=spawnFlyers(i); G.rs.fdrops=[]; G.rs.cheeseT=0; G.rs.cheeseN=0;
-  if(!G.p) G.p=newPlayer(sx);
+  if(!G.p){ G.p=newPlayer(sx); const T=stumpOf(room); if(T&&Math.abs(sx-T.X)<T.HALF) G.p.y=GY-T.H; }   // the run starts on the stump
   if(G.sup&&G.sup.on){ G.sup.bx=supX(from==='R'?sx+TUNE.SUPER.FOLLOW_GAP:sx-TUNE.SUPER.FOLLOW_GAP); G.sup.tgt=null; G.sup.wind=0; }   // super buddy comes along
 }
 function rs_boss(){ const room=G.world.rooms[G.room]; G.rs.boss=BOSS_DEF[room.kind]?mkBoss(room):null; }
@@ -549,7 +550,7 @@ function update(dt){
     p.dead-=dt; p.y+=Math.min(p.vy,60)*dt;
     if(p.dead<=0){
       if(G.lives<=0){ endRun('lives'); return; }
-      p.x=rs.spawn; p.y=GY; p.vx=0; p.vy=0; p.onGround=true; p.vine=null; p.inv=1.6; p.dead=0; jumpQ=0; p.kick=0; p.kickDown=false; p.kickIn=false; p.react=0; p.binv=0; if(rs.boss) bossReset(rs.boss);
+      p.x=rs.spawn; { const T=stumpOf(G.world.rooms[G.room]); p.y=T&&Math.abs(rs.spawn-T.X)<T.HALF?GY-T.H:GY; } p.vx=0; p.vy=0; p.onGround=true; p.vine=null; p.inv=1.6; p.dead=0; jumpQ=0; p.kick=0; p.kickDown=false; p.kickIn=false; p.react=0; p.binv=0; if(rs.boss) bossReset(rs.boss);
     }
     stepWorld(room,rs,edt); return;
   }
@@ -588,7 +589,7 @@ function update(dt){
     if(!p.onGround && hole && hole.fill && p.y>GY+TUNE.CREV.FILL_DEPTH+6){ loseLife(hole.fill==='lava'?'burned in the lava':'swept away by the water'); }
     if(!p.onGround && p.y>GY+2 && hole && p.y>H+8){ loseLife('into the pit'); }
     if(p.onGround && hole){ p.onGround=false; }
-    if(p.dead<=0) crocSolid(p,room,prevX,prevY);
+    if(p.dead<=0){ crocSolid(p,room,prevX,prevY); stumpSolid(p,room,prevX,prevY); }
     { const pc=p.dead<=0?crocPerch(p,room):null; G.rs.perch=pc?pc.key:null; }   // the croc he stands on can't bite
     if(p.onGround && p.kickDown){ p.kickDown=false; p.kick=0; fxKickLand(p); }
     // vine grab
@@ -672,6 +673,12 @@ function fishInput(){
   if(cf.ph==='mash'){ cf.n++; if(cf.n>=F.MASH){ cf.miss=0; cfLand(cf.got[0],cf.got[1]); } return true; }
   return false;
 }
+function stumpOf(room){ const T=TUNE.STUMP; return T.ON&&G.world&&room===G.world.rooms[0]?T:null; }   // the run's first room only (not the other worlds)
+function stumpSolid(p,room,prevX,prevY){ const T=stumpOf(room); if(!T) return; const top=GY-T.H, hw=3;
+  if(p.x+hw<=T.X-T.HALF||p.x-hw>=T.X+T.HALF) return;
+  if(p.vy>=0&&prevY<=top+1&&p.y>=top){ p.y=top; p.vy=0; p.onGround=true; if(p.kickDown){ p.kickDown=false; p.kick=0; } }   // standing on top
+  else if(p.y>top+1){ p.x=prevX<=T.X?T.X-T.HALF-hw:T.X+T.HALF+hw; p.vx=0; }   // the side blocks him
+}
 function crocSolid(p,room,prevX,prevY){
   const C=TUNE.CROC, top=GY-C.H, hw=3;
   for(const c of crocs(room)){ if(p.x+hw<=c.cx-C.HALF||p.x-hw>=c.cx+C.HALF) continue;
@@ -724,7 +731,8 @@ function stepWorld(room,rs,dt){
     if(rs.logT<=0){ rs.logs.push({x:W+8,sp:50+rs.rng()*14,rot:0}); rs.logT=2.2+rs.rng()*1.4; }
   }
   for(let i=rs.logs.length-1;i>=0;i--){ const l=rs.logs[i]; l.x-=l.sp*dt; l.rot+=dt*l.sp/7;
-    if(l.x<-10 || holeAt(room,l.x)) rs.logs.splice(i,1); }
+    if(l.x<-10 || holeAt(room,l.x)) rs.logs.splice(i,1);
+    else { const T=stumpOf(room); if(T&&l.x>T.X&&l.x<T.X+T.HALF+7){ rs.logs.splice(i,1); supFx({k:'log',x:l.x}); sfx(150,.08,'square'); } } }   // a log breaks on the start stump
   room.crawlers.forEach((cr,k)=>{ const s=rs.crawlers[k];
     if(s.dead||s.drag) return;                                                // smashed by super buddy / being dragged by the hook
     const cx=cr.cx+(s.bo||0);   // s.bo: where a T-mode drag left its beat
@@ -3294,6 +3302,11 @@ function buildRoom(room) {
     mk(g1, AM.dirt, cx, -2.8, (Z_FRONT + Z_BACK) / 2, 1, 1, 1, R).receiveShadow = true;
     const top = mk(g2, AM.groundTop, 0, 0, 0, 1, 1, 1, R, true); top.receiveShadow = true;
   }
+  { const T = stumpOf(room); if (T) { const cx = X(T.X), hh = T.H * S, r = T.HALF * S;   // the start stump
+      mk(gCyl, M('#7d5432'), cx, hh / 2, 0, r * 2, hh, r * 2, R).receiveShadow = true;
+      for (let k = 0; k < 5; k++) { const a = k * 1.26 + .4; mk(gBlob, MV('#6f4624'), cx + Math.cos(a) * r * 1.05, .12, Math.sin(a) * r * 1.05, r * .75, .35, r * .45, R).rotation.y = -a; }   // root knobs at the foot
+      [[1, '#c9a06a'], [.78, '#a97c4a'], [.56, '#c9a06a'], [.34, '#a97c4a'], [.14, '#8c5d33']].forEach(([k, c], i) => mk(gDisc, M(c), cx, hh + .004 * (i + 1), 0, r * 2 * k, 1, r * 2 * k, R, true));
+      mk(gBlob, MV('#5a9a3e', true), cx - r * .7, .25, r * .6, r * .9, .3, r * .7, R, true); } }
   { const g = bankGeo(), g1 = dirtBox(76, 5.6, 36); v.own.push(g, g1); mk(g, AM.bank, 0, 0, 0, 1, 1, 1, R, true).receiveShadow = true; mk(g1, AM.dirt, 16, -2.85, -24, 1, 1, 1, R, true); }
   for (const h of room.holes) {
     const w = (h.x1 - h.x0) * S, cx = X((h.x0 + h.x1) / 2);
@@ -4242,7 +4255,7 @@ requestAnimationFrame(frame);
 const TEST_HOOK = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 if (TEST_HOOK) window.__jr = { G, keys, genWorld, update, render, kickInput, KICK: TUNE.KICK, HOOK_DOWN: TUNE.HOOK_DOWN, CREV: TUNE.CREV, CROC: TUNE.CROC, BITER: TUNE.BITER, TENT: TUNE.TENT, FORCE, crocs, crocPerch, crocSt, crocUpdate, fishInput, CROC_FISH, cf: () => G.cf, crevState,
   crevViews: () => view ? { fills: view.fills.length, biters: view.biters.length, tents: view.tents.length, bitersShown: view.biters.filter(b => b.h.root.visible).length, tentsShown: view.tents.filter(t => t.m.visible).length } : null, press(k, d) { if (k === 'block') { blockInput(d); return; } keys[k] = d; if (k === 'jump' && d) jumpQ = 0.12; },
-  fingerprint(seed) { return JSON.stringify(genWorld(seed).rooms); }, startRun, setSeed, ROOMS, TREASURES, GY, enterRoom, hurtBoss, isLocked, nextBoss, BOSS_ROOMS, BOSS_DEF, vol: () => vol, setVol, cycleVol: () => toggleMute(), sfxGain: () => sfxLastGain, VOL_GAIN, VOL_ORDER, ITEMS, dropItem, mobDied, itemViewsShown: () => itemViews.filter(v => v.visible).length, FLYER: TUNE.FLYER, spawnFlyers, mkFlyer,
+  fingerprint(seed) { return JSON.stringify(genWorld(seed).rooms); }, startRun, setSeed, ROOMS, TREASURES, GY, enterRoom, hurtBoss, isLocked, nextBoss, BOSS_ROOMS, BOSS_DEF, vol: () => vol, setVol, cycleVol: () => toggleMute(), sfxGain: () => sfxLastGain, VOL_GAIN, VOL_ORDER, ITEMS, dropItem, mobDied, itemViewsShown: () => itemViews.filter(v => v.visible).length, FLYER: TUNE.FLYER, STUMP: TUNE.STUMP, spawnFlyers, mkFlyer,
   flyerViewsShown: () => { let n = 0; for (const k in flyViews) flyViews[k].forEach(v => { if (v.root.visible) n++; }); return n; }, dropViewsShown: () => dropViews.filter(m => m.visible).length,
   setQuality, quality: () => QL().name, harm, HOOK: HK, hookInput, hookView: hookV, hookAim: () => G.p && hookAim(G.p, G.world.rooms[G.room], G.rs),
   hook: () => { const p = G.p, h = p && p.hook; return { out: !!h, cd: p ? p.hookCd : 0, glow: hookGlow.visible ? +hookGlowM.opacity.toFixed(3) : 0, backs: G.hookBacks || 0, shots: G.hookShots || 0, no: G.hookNo || 0, zips: G.hookZips || 0, h: h ? { ph: h.ph, kind: h.kind, tx: h.tx, ty: h.ty, hx: h.hx, hy: h.hy, held: h.held, L: h.L, slack: !!h.slack } : null,
