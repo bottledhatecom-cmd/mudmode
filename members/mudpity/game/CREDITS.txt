@@ -5,7 +5,7 @@ Game code, 3D models (built procedurally in game.js) and design
   mudmode. Original work; no third-party game code, art or names.
 
 Art (textures, HUD and button icons, end screens, croc skins, far-shore ring,
-     the plaque behind the "Made with mudmode" badge)
+     the paper map's ground tiles, the deep dive's backdrop plates, workshop cardboard wall, floor and tape, the forest backdrop plates, the plaque behind the "Made with mudmode" badge)
   Made by mudmode with AI image tools (text-to-image, no stock or outside pictures),
   then picked, cut, tiled, resized and re-encoded by mudmode for the game.
 
