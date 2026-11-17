@@ -239,7 +239,7 @@ function tryMap(seed, a, nGates) {
   tk('checks'); m.ms = ms; m.ok = !m.why; return m;
 }
 const walkable = (m, c) => !m.water[c] || m.bridge[c];
-const canStep = (m, a, b) => walkable(m, b) && (m.layer[a] === m.layer[b] || m.path[a] || m.path[b]);   // paper layers join only where a path ramps
+const canStep = (m, a, b) => walkable(m, b) && (Math.abs(m.layer[a] - m.layer[b]) <= 1 || m.path[a] || m.path[b]);   // one paper layer up or down is a step anywhere; a bigger drop only where a path ramps
 function reachFrom(m, s) {
   const N = m.N, seen = new Uint8Array(N * N); if (!s) return seen; const q = [s.z * N + s.x]; seen[q[0]] = 1;
   while (q.length) { const c = q.pop(), x = c % N, z = (c / N) | 0; for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, nz = z + dz; if (nx < 0 || nz < 0 || nx >= N || nz >= N) continue; const n = nz * N + nx; if (!seen[n] && canStep(m, c, n)) { seen[n] = 1; q.push(n); } } }
