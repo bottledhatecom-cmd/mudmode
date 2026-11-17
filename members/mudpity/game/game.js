@@ -3192,9 +3192,9 @@ const FP_LAYERS = [   // z: depth, k: parallax (as BD_LAYERS), y0: world y of th
   { name: 'nearback', z: -26, k: .25, haze: .12, light: { y0: -2, h: 11, fade: [0, .06, .9, 1] }, full: { y0: -2, h: 10, fade: [0, .06, .9, 1] } },
   // screen plates (full set only): band = [bottom, top] as a share of the screen height; dv = the depth they scroll as if they stood at
   { name: 'ground', screen: true, full: { band: [0, .17], dv: 15, fade: [0, 0, .55, 1], off: true }, order: 50 },   // off: as a bottom band it reads as a second path the hero can't walk on
-  // front (full set): stands in the scene just in front of the lane (z +3), so its moss and fern tips pass in front of mudbot's feet and legs
+  // front (full set): stands just behind the trail, between the map-gate doorway (z -3.4) and the rear trees (z -6 back)
   // top = the share of the plate the fern tips reach (measured from the picture), kept below the hero's head
-  { name: 'front', z: 3, k: 0, haze: 0, full: { y0: -.1, h: 6, top: .42, fade: [0, .1, .9, 1] } },
+  { name: 'front', z: -5, k: 0, haze: 0, full: { y0: -.1, h: 6, top: .42, fade: [0, .1, .9, 1] } },
   { name: 'canopy', screen: true, full: { band: [.8, 1], dv: 11, fade: [0, .35, 1, 1] }, order: 52 }
 ];
 const FP = { tex: {}, meshes: [], og: false, ogFrom: null, steam: null, steamLog: [] };
@@ -3275,7 +3275,7 @@ function platesUpdate() {
   const gx = (G.room || 0) * 32 + cam.x, tanV = Math.tan(camera.fov * Math.PI / 360), asp = camera.aspect, cut = Math.max(0, Math.min(1, cam.cut || 0));
   for (const P of FP.meshes) { if (!P.lay) continue; const L = P.L, T = FP.tex[L.name], lay = P.lay;
     if (!L.screen) { P.g.position.x = cam.x * L.k; const o = ((G.room || 0) * 32 * (1 - L.k) + 16 * (1 - L.k) - P.mesh.scale.x / 2) / P.wpl; T.t.offset.x = o - Math.floor(o);
-      if (L.z > 0) { P.mesh.material.userData.U.uA.value = 1 - cut; P.mesh.visible = !FP.og && cut < .99; }   // the front plate steps away for the close-up cutscene camera
+      if (L.z > 0) { P.mesh.material.userData.U.uA.value = 1 - cut; P.mesh.visible = !FP.og && cut < .99; }   // a plate in front of the lane steps away for the close-up cutscene camera (none now: the front fern strip stands behind the trail and stays)
       continue; }   // content at x = u*wpl - 32*room*(1-k): continuous across rooms
     // screen plate: a card 1 unit in front of the camera covering its band of the screen; it scrolls like a plate standing dv in front of the camera
     const fh = 2 * tanV, b0 = lay.band[0], b1 = lay.band[1], h = (b1 - b0) * fh, w = fh * asp * 1.04, pa = T.w / T.h;
