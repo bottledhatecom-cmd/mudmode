@@ -516,7 +516,7 @@ function enter3D() {
   if (wk.fog0 !== null) { A.scene.fog.density = wk.fog0; wk.fog0 = null; }
   fscene.add(pl.root); pl.root.visible = true; pl.root.rotation.set(0, 0, 0); pl.root.scale.setScalar(A.HS); pl.shadow.visible = false; pl.g && (pl.g.visible = true);
   fscene.add(b.root); b.root.visible = true; b.root.rotation.set(0, 0, 0);
-  F.pos.set(gx, 0, gz - 3.5); F.pos.y = groundAt(F.pos.x, F.pos.z); F.vy = 0; F.air = false; F.head = PI / 2; F.yaw = 0; F.pitch = .3; F.spd = 0;
+  F.pos.set(gx, 0, gz - 3.5); F.pos.y = groundAt(F.pos.x, F.pos.z); F.vy = 0; F.air = false; F.safe = [F.pos.x, F.pos.z]; F.deepT = 0; F.head = PI / 2; F.yaw = 0; F.pitch = .3; F.spd = 0;
   BUD.x = F.pos.x + 1.6; BUD.z = F.pos.z + 2; BUD.st = 'follow'; BUD.stay = 0; BUD.inDock = false;
   F.inBoat = false; boatHome(); BT.deepToast = false; setHelp('foot');
   Object.assign(F.fish, { ph: 'idle', t: 0, game: null }); F.fadeIn = 1.2; fadeEl.style.opacity = '1';
@@ -576,6 +576,9 @@ function stepPlayer(dt) {
   let l = Math.hypot(fx, fz); if (l > 1) { fx /= l; fz /= l; l = 1; }
   if (l > .1 && (ph === 'wait' || ph === 'bite')) reelIn(false, 'reeled in');
   const g0 = groundAt(F.pos.x, F.pos.z), wet = g0 < -.05;
+  if (!F.air && !onDock(F.pos.x, F.pos.z)) { if (g0 >= -.62) { F.safe = [F.pos.x, F.pos.z]; F.deepT = 0; }
+    else if ((F.deepT = (F.deepT || 0) + dt) > .5) { const s = F.safe || [W3.gate.userData.x, W3.gate.userData.z - 3.5]; reelIn(true); splash(F.pos.x, F.pos.z, 8);
+      F.pos.set(s[0], groundAt(s[0], s[1]), s[1]); F.vy = 0; F.spd = 0; F.deepT = 0; F.unstuck = (F.unstuck || 0) + 1; toast('too deep to wade here: back to the shore', 1.8); A.sfx(300, .12, 'triangle'); } }
   const run = keyDown('ShiftLeft') || keyDown('ShiftRight'), sp = (run ? FT.RUN : FT.WALK) * (wet ? FT.WADE : 1) * (itemOn('soggy') ? .7 : 1);
   F.spd = hold(F.spd, l > .1 ? sp * l : 0, dt, 10);
   if (l > .1) { F.head += angD(Math.atan2(-fz, fx), F.head) * Math.min(1, dt * FT.TURN); F.mdir = [fx / l, fz / l]; }
@@ -786,7 +789,7 @@ function boatOk(x, z, h) {   // centre on open lake (r < lakeR - EDGE, or the ca
   const L = 1.5 * FT.BOAT.SIZE, c = Math.cos(h) * L, sn = -Math.sin(h) * L; if (!isWater(x + c, z + sn) || !isWater(x - c, z - sn)) return false;
   for (const r of W3.rocks) { const dx = x - r.x, dz = z - r.z, rr = r.r + .75 * FT.BOAT.SIZE; if (dx * dx + dz * dz < rr * rr) return false; } return true; }
 function boatHome() { const b = W3.boat; if (!b) return; b.position.copy(b.userData.home); b.rotation.set(0, PI / 2, 0); Object.assign(BT, { x: b.position.x, z: b.position.z, h: PI / 2, v: 0, roll: 0, pitch: 0, heave: 0, kick: 0, hop: 0, hv: 0, amp: 0, bumpCd: 0 }); poseOars(0); }
-function boardBoat() { const b = W3.boat; reelIn(true); F.inBoat = true; BT.x = b.position.x; BT.z = b.position.z; BT.h = b.rotation.y; BT.v = 0; BT.hop = 0; BT.hv = 0; BT.amp = 0; F.air = false; F.vy = 0; F.spd = 0;
+function boardBoat() { const b = W3.boat; reelIn(true); F.inBoat = true; BT.x = b.position.x; BT.z = b.position.z; BT.h = b.rotation.y; BT.v = 0; BT.hop = 0; BT.hv = 0; BT.trail = []; BT.stuckT = 0; BT.still0 = null; BT.amp = 0; F.air = false; F.vy = 0; F.spd = 0;
   F.pos.set(BT.x, FT.BOAT.SEAT, BT.z); F.head = BT.h; F.boards = (F.boards || 0) + 1; setHelp('boat'); A.sfx(330, .1, 'triangle'); ripple(BT.x, BT.z, 1.2); toast('in the boat: W / S row, A / D turn', 1.6); return true; }
 function leaveBoat() { const d = W3.dock, x = Math.max(d.x - d.w / 2 + .45, Math.min(d.x + d.w / 2 - .45, BT.x)), z = Math.max(d.z1 + .45, Math.min(d.z0 - .45, BT.z));
   F.inBoat = false; F.pos.set(x, d.y, z); F.vy = 0; F.air = false; F.spd = 0; BT.v = 0; F.head = Math.atan2(-(BT.z - z), BT.x - x) + PI; setHelp('foot'); A.sfx(300, .08, 'triangle'); return true; }
@@ -817,6 +820,15 @@ function stepBoat(dt) {   // tank controls: W/S row, A/D turn; drift, rocking, s
   b.position.set(B.x, B.heave, B.z); b.rotation.set(B.roll, B.h, B.pitch); poseOars(Math.sin(B.op));
   F.pos.set(B.x, Q.SEAT + B.heave + B.hop, B.z); F.spd = 0; F.vy = 0; if (ph === 'idle') F.head = B.h;
   if (!F.exit && inCave(B.x, B.z)) { F.caveExits = (F.caveExits || 0) + 1; exitWorld('boat'); }
+  const tr = B.trail || (B.trail = []), last = tr[tr.length - 1]; if (!last || Math.hypot(B.x - last[0], B.z - last[1]) > 1.2) { tr.push([B.x, B.z, B.h]); if (tr.length > 12) tr.shift(); }
+  const tryIt = !game && !line && (Math.abs(ix) > .1 || Math.abs(iz) > .1), still = B.still0 && Math.hypot(B.x - B.still0[0], B.z - B.still0[1]) < .3 && Math.abs(B.h - B.still0[2]) < .3;
+  if (!tryIt || !still) { B.still0 = [B.x, B.z, B.h]; B.stuckT = 0; } else if ((B.stuckT = (B.stuckT || 0) + dt) > 2) {
+    const hl = Math.atan2(B.z, -B.x);   // heading that points the bow at the middle of the lake
+    let fixed = '';
+    if (Math.abs(angD(hl, B.h)) > .3 && boatOk(B.x, B.z, hl)) { B.h = hl; fixed = 'turned it toward the lake'; }
+    else for (let i = tr.length - 1; i >= 0; i--) if (Math.hypot(tr[i][0] - B.x, tr[i][1] - B.z) > .6 && boatOk(tr[i][0], tr[i][1], tr[i][2])) { B.x = tr[i][0]; B.z = tr[i][1]; B.h = tr[i][2]; fixed = 'moved it back a little'; break; }
+    B.stuckT = 0; B.still0 = [B.x, B.z, B.h];
+    if (fixed) { B.v = 0; B.unstuck = (B.unstuck || 0) + 1; ripple(B.x, B.z, 1.2); toast('the boat was wedged: ' + fixed, 1.8); } }
 }
 function stepExit(dt) { const e = F.exit; e.t += dt; fadeEl.style.opacity = sstep(e.dur - .9, e.dur, e.t).toFixed(3);
   if (e.kind === 'path') { const g = W3.gate.userData, dx = g.x - F.pos.x, dz = g.z + 2 - F.pos.z, d = Math.hypot(dx, dz); if (d > .1) { F.pos.x += dx / d * Math.min(d, 4 * dt); F.pos.z += dz / d * Math.min(d, 4 * dt); F.head = Math.atan2(-dz, dx); } F.pos.y = groundAt(F.pos.x, F.pos.z); F.spd = 4; }
