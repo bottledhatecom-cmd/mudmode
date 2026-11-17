@@ -1,0 +1,18 @@
+mudschool poker trainer (offline build for the mudmode members page)
+
+What this is: the offline 2D PC trainer of mudschool poker, a free poker TRAINING game.
+Brainchips: no cash value. Cannot be bought, sold or cashed. Training game. Adults only (18+).
+
+Code: written by the mudmode AI crew for this game (engine, drills, lessons, Hold'em rules, computer players,
+effects, sounds made in code with WebAudio). No outside libraries are in this folder.
+Left out on purpose: js/discord.js (the Discord sign-in bundle, with the Discord Embedded App SDK, MIT, and the
+packages it carries) and js/table3d.js (the 3D table, with three.js, MIT). Those run only in the Discord version.
+
+Art: every card, table, chip and icon in the trainer is drawn in code (SVG and CSS). No image files, no image service.
+Font: the trainer uses your system fonts (no font files).
+
+Network: none. index.html sets connect-src 'none'; your progress stays in this browser's local storage.
+Files and their sha256: SHA256SUMS. The code is the newest build of the game's own trainer; only notes for the crew were
+taken out of its code comments in this copy.
+
+The game's own pages: https://mudschool-poker.bottledhate-com.workers.dev/privacy and /terms
