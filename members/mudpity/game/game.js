@@ -346,7 +346,7 @@ function crevGen(seed,i,kind,room){
 function newPlayer(x){return {x,y:GY,vx:0,vy:0,face:1,onGround:true,coyote:0,vine:null,vs:1,grabCd:0,kick:0,inv:0,dead:0,step:0,stam:STAM_MAX,react:0,binv:0,shield:true,blocking:false,blk:0,chip:0,regenT:0,hook:null,hookCd:0,kickCd:0,kickDown:false,kickIn:false,grab:null};}
 function startRun(){
   G.world=genWorld(G.seed); G.t=0; G.timeLeft=TIME; G.runT=0; G.lives=LIVES; G.score=0; G.got=new Set(); G.result='';
-  G.bosses={}; G.winT=0; G.burst=[]; G.allGems=false; G.drop=null; G.items=[]; G.flyDead=new Set(); G.flyKills=0; G.blocks=0; G.lastBlock=null; blockLatch=false; keys.block=false; G.sup=supNew(); G.bud=budNew(); G.tmPaid={}; G.tmGot=0; G.freeze=null; G.cut=null; G.ease=0; G.tm=null; wsReset();
+  G.bosses={}; G.winT=0; G.burst=[]; G.allGems=false; G.drop=null; G.items=[]; G.flyDead=new Set(); G.flyKills=0; G.blocks=0; G.lastBlock=null; blockLatch=false; keys.block=false; G.sup=supNew(); G.bud=budNew(); G.tmPaid={}; G.tmGot=0; G.freeze=null; G.cut=null; G.ease=0; G.tm=null; G.kill=''; wsReset();
   G.state='play'; enterRoom(0,null); sfx(520,.08);
 }
 function enterRoom(i,from){
@@ -373,9 +373,18 @@ function sfx(f,d,type){ sfxLastGain=.04*sfxVol; try{ if(!ac){ac=new (window.Audi
   o.type=type||'square'; o.frequency.value=f; g.gain.value=sfxLastGain; g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+d);
   o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime+d); }catch(e){} }
 
+/* the game-over picture follows the last killer: why text (+ the boss in this room, since Bogjaw and the totem both throw 'mud ball') -> one word.
+   '' = the plain end picture (Bogjaw, running out of time, anything not listed) */
+function killOf(why,boss){ const w=String(why||'').replace(/ \((hand block|shield facing away)\)$/,'');
+  if(w==='into the pit') return 'pit'; if(w==='burned in the lava') return 'lava'; if(w==='swept away by the water') return 'water';
+  if(w==='dragged down by a tentacle') return 'tentacle'; if(w==='hit by a log') return 'log'; if(w==='snapped'||w==='a croc lunged at you') return 'croc';
+  if(w==='crawler bite'||w==='bitten from below'||/ dive$/.test(w)||w==='mud drip'||w==='wasp spit'||w==='junk bolt') return 'mob';
+  if(w==='crushed by the totem'||w==='shockwave'||(w==='mud ball'&&boss==='boss3')) return 'totem';
+  if(w==='Gloomwing swoop'||w==='seed bomb') return 'gloomwing';
+  return ''; }
 function loseLife(why){
   const p=G.p; if(p.dead>0) return;
-  p.dead=0.8; p.vine=null; hookClear(p); p.grab=null; p.chip=0; G.lives--; G.msg=why; G.msgT=1.2; sfx(110,.35,'sawtooth');
+  p.dead=0.8; p.vine=null; hookClear(p); p.grab=null; p.chip=0; G.lives--; G.kill=killOf(why,G.rs&&G.rs.boss&&G.rs.boss.kind); G.msg=why; G.msgT=1.2; sfx(110,.35,'sawtooth');
 }
 /* shield (plan items 3-10). A hit from a projectile, a physical attack or a log:
    - blocking with the shield in front: stamina drops by force x BLOCK_COST_PER_FORCE and he is shoved by the force of the hit;
@@ -1470,10 +1479,11 @@ const isTouch = ('ontouchstart' in window) || matchMedia('(pointer: coarse)').ma
 /* ---- quality presets: LOW = touch default (no shadow maps, fewer instances); HIGH = desktop default ---- */
 const QLEV = [
   { name: 'LOW',  shadows: false, pr: 1.25, res: 1.1, grass: 90,  fern: 12, rock: 12, flower: 14, pebble: 16, lian: 5,  rays: 3, motes: 0,  leaf: 3, far: 10, pmax: 90,  pf: .5, bd: [1, 5, 10, 2, 4, 6] },
-  { name: 'HIGH', shadows: true,  pr: 2,    res: .5,  grass: 420, fern: 36, rock: 26, flower: 50, pebble: 48, lian: 12, rays: 7, motes: 34, leaf: 5, far: 15, pmax: 240, pf: 1,  bd: [3, 12, 30, 5, 8, 12] }
+  { name: 'HIGH', shadows: true,  pr: 2,    res: .5,  grass: 420, fern: 36, rock: 26, flower: 50, pebble: 48, lian: 12, rays: 7, motes: 34, leaf: 5, far: 15, pmax: 240, pf: 1,  bd: [3, 12, 30, 5, 8, 12] },
+  { name: 'MAX',  shadows: true,  pr: 3,    res: .5,  grass: 600, fern: 50, rock: 32, flower: 70, pebble: 64, lian: 14, rays: 8, motes: 50, leaf: 6, far: 15, pmax: 320, pf: 1,  bd: [3, 12, 30, 5, 8, 12] }   // MAX: also loads the big sharp forest plates (FP_SHARP)
 ];
 let Qi = isTouch ? 0 : 1;
-{ const qq = qs.get('q'); if (qq === 'low') Qi = 0; else if (qq === 'high') Qi = 1; else { try { const s = localStorage.getItem('jr3d-quality'); if (s === 'low') Qi = 0; else if (s === 'high') Qi = 1; } catch (e) {} } }
+{ const qq = qs.get('q'); if (qq === 'low') Qi = 0; else if (qq === 'high') Qi = 1; else if (qq === 'max') Qi = 2; else { try { const s = localStorage.getItem('jr3d-quality'); if (s === 'low') Qi = 0; else if (s === 'high') Qi = 1; else if (s === 'max') Qi = 2; } catch (e) {} } }
 const QL = () => QLEV[Qi];
 
 let renderer = null;
@@ -3188,6 +3198,8 @@ const FP_LAYERS = [   // z: depth, k: parallax (as BD_LAYERS), y0: world y of th
   { name: 'canopy', screen: true, full: { band: [.8, 1], dv: 11, fade: [0, .35, 1, 1] }, order: 52 }
 ];
 const FP = { tex: {}, meshes: [], og: false, ogFrom: null, steam: null, steamLog: [] };
+const FP_EXTRA = ['front', 'canopy'], FP_SHARP = ['sky', 'far', 'middle', 'nearback'];   // web Forest setting: LIGHT = the 4 light plates; FULL (default) + front ferns and canopy band; MAX + the big sharp sky and tree plates (the Steam set)
+let forestMode = Qi === 2 ? 'max' : 'full';   // set by Graphics (setQuality); 'light' is kept for tests only
 { const S = window.MUD_STEAM; if (S && typeof S === 'object' && typeof S.art === 'string' && /^\w[\w./-]*\/$/.test(S.art) && S.art.indexOf('..') < 0 && S.art.indexOf('//') < 0) FP.steam = S.art; }
 function fpTexture(im) { const t = new THREE.CanvasTexture(im); t.wrapS = 1000; t.wrapT = 1001; t.colorSpace = THREE.SRGBColorSpace;
   if (renderer) t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy()); return t; }
@@ -3196,10 +3208,20 @@ function fpSet(name, im, tier) {   // a plate picture arrived: new texture, put 
   for (const P of FP.meshes) if (P.L.name === name) fpApply(P);
   if (old) old.t.dispose();
 }
-function fpLoad(name, src, tier) { const im = new Image(); im.onload = () => { if (tier === 'light' && FP.tex[name] && FP.tex[name].tier === 'full') return; fpSet(name, im, tier); };
+function fpLoad(name, src, tier) { const im = new Image(); im.onload = () => { if (tier === 'light' && FP.tex[name] && FP.tex[name].tier === 'full') return;
+    if (tier === 'full' && !FP.steam && FP_SHARP.includes(name) && forestMode !== 'max') return;   // left MAX before it arrived
+    fpSet(name, im, tier); };
   im.onerror = () => { FP.steamLog.push('missing ' + name); }; im.src = src; }
 { const A = window.JR_FOREST; if (A) for (const L of FP_LAYERS) if (A[L.name] && A[L.name].src) fpLoad(L.name, A[L.name].src, 'light');
   if (FP.steam) for (const L of FP_LAYERS) if (!(L.full && L.full.off)) fpLoad(L.name, FP.steam + 'forest/' + L.name + '.webp', 'full'); }
+function fpExtraLoad() { if (FP.steam || forestMode === 'light') return;
+  if (!FP.extraAsked) { FP.extraAsked = true; for (const n of FP_EXTRA) fpLoad(n, 'art/forest/' + n + '.webp', 'full'); }
+  if (forestMode === 'max' && !FP.sharpAsked) { FP.sharpAsked = true; for (const n of FP_SHARP) fpLoad(n, 'art/forest/' + n + '.webp', 'full'); } }
+function fpSharpOff() {   // back down from MAX: the 4 back plates return to the light set (kept in JR_FOREST), so LIGHT / FULL look the same as before
+  const A = window.JR_FOREST; if (FP.steam || !A) return; for (const n of FP_SHARP) if (FP.tex[n] && FP.tex[n].tier === 'full' && A[n] && A[n].src) { const im = new Image(); im.onload = () => fpSet(n, im, 'light'); im.src = A[n].src; }
+  FP.sharpAsked = false; }
+if (document.readyState === 'complete') setTimeout(fpExtraLoad, 1500); else addEventListener('load', () => setTimeout(fpExtraLoad, 1500));
+function setForest(m) { const was = forestMode; forestMode = m; if (was === 'max' && m !== 'max') fpSharpOff(); fpExtraLoad(); fpVis(); }
 function fpMat(L) {   // unlit, fog off; the shader fades the plate's top/bottom edge (uFade) and mixes in its layer's haze (uHazeK)
   const m = new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, fog: false, depthTest: !L.screen, toneMapped: false });
   m.userData.U = { uFade: { value: [0, 0, 1, 1] }, uHaze: { value: new THREE.Color(FOGC) }, uHazeK: { value: L.haze || 0 }, uA: { value: 1 } };
@@ -3214,7 +3236,7 @@ function fpMat(L) {   // unlit, fog off; the shader fades the plate's top/bottom
 const FP_FILL = { x0: -160, x1: 192, z0: -6.2, z1: -112, dy: -.12 };
 function fpFillY(x, z) { return bankH(x, z) + FP_FILL.dy; }
 function buildFill() {
-  const F = FP_FILL, hi = Qi === 1, nx = hi ? 176 : 88, nz = hi ? 53 : 27, g = new THREE.PlaneGeometry(F.x1 - F.x0, F.z0 - F.z1, nx, nz); g.rotateX(-Math.PI / 2);
+  const F = FP_FILL, hi = Qi >= 1, nx = hi ? 176 : 88, nz = hi ? 53 : 27, g = new THREE.PlaneGeometry(F.x1 - F.x0, F.z0 - F.z1, nx, nz); g.rotateX(-Math.PI / 2);
   const pp = g.attributes.position, col = new Float32Array(pp.count * 3), c = new THREE.Color(), c2 = new THREE.Color();
   for (let i = 0; i < pp.count; i++) { const x = pp.getX(i) + (F.x0 + F.x1) / 2, z = pp.getZ(i) + (F.z0 + F.z1) / 2; pp.setXYZ(i, x, fpFillY(x, z), z);
     const n = fbm(x * .2, z * .2); c.set('#256a3c').lerp(c2.set('#4f9a4e'), sstep(.3, .85, n)).lerp(c2.set('#17432e'), sstep(10, 30, -z) * .6); col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b; }
@@ -3237,7 +3259,7 @@ function fpApply(P) {   // size the plate for the tier its texture came from
 }
 function fpVis() {   // plates on (new forest) or the OG world (exactly the old code-built backdrop)
   const on = !FP.og;
-  for (const P of FP.meshes) P.mesh.visible = on && !!P.lay;
+  for (const P of FP.meshes) P.mesh.visible = on && !!P.lay && !(forestMode === 'light' && FP_EXTRA.includes(P.L.name));
   if (FP.fill) FP.fill.visible = on;
   const art = on && FP.meshes.some(P => P.lay);
   if (bd.layers.length) { bd.layers[1].code.forEach(o => { o.visible = !art; }); bd.layers[2].code.forEach(o => { o.visible = !art; }); }   // mid creatures and far ruins step aside for the plates
@@ -3596,11 +3618,11 @@ function drawUI() {
   const finalDown = st === 'play' && G.winT > 0;
   msgEl.style.display = finalDown || (G.msgT > 0 && st === 'play') ? 'block' : (st === 'paused' ? 'block' : 'none');
   setTxt('msg', st === 'paused' ? 'PAUSED' : finalDown ? 'FINAL BOSS DOWN' : G.msg);
-  let key = st + '|' + G.seed + '|' + G.best + '|' + G.result + '|' + G.score + '|' + G.got.size + '|' + blockMode + '|' + Qi + '|' + tugMode;
+  let key = st + '|' + G.seed + '|' + G.best + '|' + G.result + '|' + G.score + '|' + G.got.size + '|' + blockMode + '|' + Qi + '|' + tugMode + '|' + (G.kill || '') + '|' + forestMode;
   if (st === 'title' || st === 'end') {
     panel.style.display = st === 'title' ? 'flex' : 'block';   // title: a column, so the controls list can scroll inside it on small windows
     if (cache.panel !== key) { cache.panel = key;
-      panel.className = st === 'title' ? 'title' : 'endp ' + (G.result === 'win' ? 'win' : 'over');
+      panel.className = st === 'title' ? 'title' : 'endp ' + (G.result === 'win' ? 'win' : 'over' + (G.result === 'lives' && G.kill ? ' k-' + G.kill : ''));
       const tch = document.body.classList.contains('touch');
       panel.innerHTML = st === 'title'
         ? '<h1>MUDPITY</h1><div class="sub">(early access)</div>' +
@@ -3624,7 +3646,7 @@ function drawUI() {
           '</div>' +
           '<div class="setb" id="set-block">Block button: <b' + (blockMode === 'press' ? ' class="sel"' : '') + '>PRESS</b> / <b' + (blockMode === 'hold' ? ' class="sel"' : '') + '>HOLD</b> &nbsp;<small>' + (tch ? 'tap here to change' : '[B] or click to change') + '</small></div>' +
           '<div class="setb" id="set-tug">Tug of war: ' + TUG_MODES.map(k => '<b' + (tugMode === k ? ' class="sel"' : '') + '>' + k.toUpperCase() + '</b>').join(' / ') + ' &nbsp;<small>' + (tch ? 'tap here to change' : 'click to change') + '</small></div>' +
-          '<div class="setb" id="set-quality">Graphics: <b' + (Qi === 0 ? ' class="sel"' : '') + '>LOW</b> / <b' + (Qi === 1 ? ' class="sel"' : '') + '>HIGH</b> &nbsp;<small>' + (tch ? 'tap here to change' : 'click to change') + '</small></div>' +
+          '<div class="setb" id="set-quality">Graphics: ' + QLEV.map((q, i) => '<b' + (Qi === i ? ' class="sel"' : '') + '>' + q.name + '</b>').join(' / ') + ' &nbsp;<small>' + (tch ? 'tap here to change' : 'click to change') + '</small></div>' +
           '<div class="seedbox">Seed <b>' + esc(G.seed) + '</b> &nbsp; best <b>' + G.best + '</b><br><small>' + (tch ? 'add ?seed=name to the address for a set world' : '[N] random seed &nbsp; [D] daily seed &nbsp; or add ?seed=name to the address') + '</small></div>' +
           '<div class="go">' + (tch ? 'TAP TO START' : 'PRESS ENTER / TAP TO START') + '</div>' + BADGE
         : '<div class="top"><h1>' + (G.result === 'win' ? 'ALL BOSSES DOWN!' : G.result === 'time' ? 'TIME UP' : 'OUT OF LIVES') + '</h1>' +
@@ -3651,8 +3673,8 @@ function applyQuality() {
   qbtn.textContent = 'QUALITY: ' + q.name; qbtn.className = q.shadows ? 'hi' : 'lo';
   pl.shadow.visible = true; pl.shadow.material.opacity = q.shadows ? .18 : .45; forceRebuild = true; buildBackdrop();
 }
-function setQuality(i, save) { Qi = i; applyQuality(); if (save) { try { localStorage.setItem('jr3d-quality', QL().name.toLowerCase()); } catch (e) {} } }
-qbtn.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); setQuality(1 - Qi, true); });
+function setQuality(i, save) { Qi = i; applyQuality(); setForest(Qi === 2 ? 'max' : 'full'); if (save) { try { localStorage.setItem('jr3d-quality', QL().name.toLowerCase()); } catch (e) {} } }
+qbtn.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); setQuality((Qi + 1) % QLEV.length, true); });
 
 /* ---- per-frame scene sync ---- */
 let fps = 0, fpsN = 0, fpsT = 0;
@@ -4228,7 +4250,7 @@ function mouseButtons(e) {
 ['pointerdown', 'pointermove', 'pointerup'].forEach(t => addEventListener(t, mouseButtons));
 cv.addEventListener('contextmenu', e => e.preventDefault());   // right click is the shield, so no browser menu over the game
 panel.addEventListener('pointerdown', e => { e.preventDefault(); { const hw = e.target && e.target.closest && e.target.closest('#panel.title .how'); if (hw && hw.scrollHeight > hw.clientHeight + 1) return; }   // scrolling the controls list (drag or scrollbar) does not start the run
-  if (e.target && e.target.id === 'e-home') { goHome(); return; } if (e.target && e.target.closest && e.target.closest('#set-block')) { setBlockMode(blockMode === 'press' ? 'hold' : 'press'); return; } if (e.target && e.target.closest && e.target.closest('#set-quality')) { setQuality(1 - Qi, true); return; } if (e.target && e.target.closest && e.target.closest('#set-tug')) { setTugMode(TUG_MODES[(TUG_MODES.indexOf(tugMode) + 1) % TUG_MODES.length]); return; } if (mouseOnEnd(e)) return; startOrRestart(); });
+  if (e.target && e.target.id === 'e-home') { goHome(); return; } if (e.target && e.target.closest && e.target.closest('#set-block')) { setBlockMode(blockMode === 'press' ? 'hold' : 'press'); return; } if (e.target && e.target.closest && e.target.closest('#set-quality')) { setQuality((Qi + 1) % QLEV.length, true); return; } if (e.target && e.target.closest && e.target.closest('#set-tug')) { setTugMode(TUG_MODES[(TUG_MODES.indexOf(tugMode) + 1) % TUG_MODES.length]); return; } if (mouseOnEnd(e)) return; startOrRestart(); });
 
 fxKickLand = p => { fxDust(X(p.x), .1, 10, 3, 2); addShake(.25); };
 /* ---------- fishing world (fishworld.js): its own scene layer; these are the only hooks ---------- */
@@ -4255,7 +4277,7 @@ requestAnimationFrame(frame);
 const TEST_HOOK = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 if (TEST_HOOK) window.__jr = { G, keys, genWorld, update, render, kickInput, KICK: TUNE.KICK, HOOK_DOWN: TUNE.HOOK_DOWN, CREV: TUNE.CREV, CROC: TUNE.CROC, BITER: TUNE.BITER, TENT: TUNE.TENT, FORCE, crocs, crocPerch, crocSt, crocUpdate, fishInput, CROC_FISH, cf: () => G.cf, crevState,
   crevViews: () => view ? { fills: view.fills.length, biters: view.biters.length, tents: view.tents.length, bitersShown: view.biters.filter(b => b.h.root.visible).length, tentsShown: view.tents.filter(t => t.m.visible).length } : null, press(k, d) { if (k === 'block') { blockInput(d); return; } keys[k] = d; if (k === 'jump' && d) jumpQ = 0.12; },
-  fingerprint(seed) { return JSON.stringify(genWorld(seed).rooms); }, startRun, setSeed, ROOMS, TREASURES, GY, enterRoom, hurtBoss, isLocked, nextBoss, BOSS_ROOMS, BOSS_DEF, vol: () => vol, setVol, cycleVol: () => toggleMute(), sfxGain: () => sfxLastGain, VOL_GAIN, VOL_ORDER, ITEMS, dropItem, mobDied, itemViewsShown: () => itemViews.filter(v => v.visible).length, FLYER: TUNE.FLYER, STUMP: TUNE.STUMP, spawnFlyers, mkFlyer,
+  fingerprint(seed) { return JSON.stringify(genWorld(seed).rooms); }, startRun, setSeed, ROOMS, TREASURES, GY, enterRoom, hurtBoss, isLocked, nextBoss, BOSS_ROOMS, BOSS_DEF, vol: () => vol, setVol, cycleVol: () => toggleMute(), sfxGain: () => sfxLastGain, VOL_GAIN, VOL_ORDER, ITEMS, dropItem, mobDied, itemViewsShown: () => itemViews.filter(v => v.visible).length, FLYER: TUNE.FLYER, STUMP: TUNE.STUMP, hurt: why => loseLife(why), forest: { FP, mode: () => forestMode, set: m => setForest(m) }, spawnFlyers, mkFlyer,
   flyerViewsShown: () => { let n = 0; for (const k in flyViews) flyViews[k].forEach(v => { if (v.root.visible) n++; }); return n; }, dropViewsShown: () => dropViews.filter(m => m.visible).length,
   setQuality, quality: () => QL().name, harm, HOOK: HK, hookInput, hookView: hookV, hookAim: () => G.p && hookAim(G.p, G.world.rooms[G.room], G.rs),
   hook: () => { const p = G.p, h = p && p.hook; return { out: !!h, cd: p ? p.hookCd : 0, glow: hookGlow.visible ? +hookGlowM.opacity.toFixed(3) : 0, backs: G.hookBacks || 0, shots: G.hookShots || 0, no: G.hookNo || 0, zips: G.hookZips || 0, h: h ? { ph: h.ph, kind: h.kind, tx: h.tx, ty: h.ty, hx: h.hx, hy: h.hy, held: h.held, L: h.L, slack: !!h.slack } : null,
