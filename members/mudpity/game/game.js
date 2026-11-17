@@ -833,6 +833,7 @@ function hookInput(down){
   keys.hook=!!down; const p=G.p;
   if(tugHook(down)) return;   // T mode tug only (not in the side-scroller run): the hook is the pull there
   if(!down){ if(p&&p.hook) p.hook.held=false; return; }
+  if(G.state!=='play'||G.freeze){ G.hookNo=(G.hookNo||0)+1; return; }   // paused or frozen: a press does nothing (it used to let go of a ride)
   if(p&&p.hook&&p.hook.ph==='ride'){ hookBack(p.hook); p.grabCd=.35; sfx(660,.07); return; }   // hook again while riding = let go
   if(p&&p.grab){ G.hookNo=(G.hookNo||0)+1; return; }   // held by a tentacle (new hazard): no hook
   if(G.state!=='play'||G.freeze||!p||p.dead>0||p.vine||p.hook||p.react>0){ G.hookNo=(G.hookNo||0)+1; return; }
@@ -909,7 +910,7 @@ function hookStep(p,room,dt){
 /* zip and swing move him (in place of running); returns false when he is not on the rope */
 function hookRide(p,room,dt,ax){
   const h=p.hook; if(!hookRiding(p)) return false;
-  if(jumpQ>0){ jumpQ=0; hookBack(h); p.grabCd=0.35; if(h.ph==='swing'||h.ph==='ride') p.vy-=70; sfx(660,.07); return true; }   // jump lets go too
+  if(jumpQ>0){ jumpQ=0; const up=h.ph==='swing'||h.ph==='ride'; hookBack(h); p.grabCd=0.35; if(up) p.vy-=70; sfx(660,.07); return true; }   // jump lets go too
   if(h.ph==='ride'){   // riding a big flyer: zip up under it, then it carries him (left / right steers); jump or hook again lets go; RIDE_T max
     const f=h.ref;
     if(f.st!=='ridden'||h.t>FL.RIDE_T){ if(f.st==='ridden'){ G.msg='the '+FL.KINDS[f.kind].name+' shook you off'; G.msgT=.8; } hookBack(h); p.grabCd=.35; return true; }
