@@ -4,13 +4,14 @@ mudpity - credits and third-party notices
 Game code, 3D models (built procedurally in game.js) and design
   mudmode. Original work; no third-party game code, art or names.
 
-Art (textures, HUD and button icons, end screens, "Made with mudmode" badge, boss sheets)
-  Art by mudmode - drawn in-house for this game. Approved final set (approved Oct 27 2026).
-  Files in art/ are re-encoded / resized copies of that set.
+Art (textures, HUD and button icons, end screens, croc skins, far-shore ring,
+     the plaque behind the "Made with mudmode" badge)
+  Made by mudmode with AI image tools (text-to-image, no stock or outside pictures),
+  then picked, cut, tiled, resized and re-encoded by mudmode for the game.
 
-Buddy companion (art/buddy.webp)
-  Art by mudmode - made in-house for this game; picked Oct 28 2026.
-  The file is a cut-out (background removed), resized and re-encoded copy.
+Bosses and buddy (3D models built in code in game.js)
+  Built by mudmode. Their look follows AI concept pictures made by mudmode;
+  those pictures are not in the game files.
 
 three.js (vendor/three.min.js)
   three.js r186 (npm three@0.186.1)
