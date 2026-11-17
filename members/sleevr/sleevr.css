@@ -79,11 +79,11 @@
 .sv-steps{display:flex;flex-direction:column;gap:10px;list-style:none;margin:0;padding:0}
 .sv-step{display:block;width:100%;text-align:left;padding:14px 16px;border-radius:18px;border:2px solid var(--sv-line);background:var(--sv-panel);color:var(--sv-ink);font:inherit;cursor:pointer}
 .sv-step:hover{border-color:rgba(94,194,180,.6)}
-.sv-step[aria-selected="true"]{border-color:var(--sv-teal);background:var(--sv-panel2)}
+.sv-step[aria-pressed="true"]{border-color:var(--sv-teal);background:var(--sv-panel2)}
 .sv-step b{display:block;font-size:18px;font-weight:600;color:#fff}
 .sv-step span{display:block;margin-top:2px;font-size:15.5px;color:var(--sv-mut);line-height:1.45}
 .sv-checks{list-style:none;margin:10px 0 0;padding:0;display:none}
-.sv-step[aria-selected="true"] .sv-checks{display:block}
+.sv-step[aria-pressed="true"] .sv-checks{display:block}
 .sv-checks li{position:relative;padding-left:22px;margin-top:5px;font-size:15px;color:var(--sv-mint);line-height:1.45}
 .sv-checks li::before{content:"";position:absolute;left:2px;top:.55em;width:12px;height:6px;border-radius:99px;background:var(--sv-coral)}
 .sv-tour-foot{margin:14px 0 0;font-size:14px;color:var(--sv-dim)}

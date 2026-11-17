@@ -14,7 +14,7 @@
   function show(btn, autoplay) {
     var clip = btn.getAttribute('data-clip');
     var steps = btn.closest('.sv-steps').querySelectorAll('.sv-step');
-    Array.prototype.forEach.call(steps, function (s) { s.setAttribute('aria-selected', s === btn ? 'true' : 'false'); });
+    Array.prototype.forEach.call(steps, function (s) { s.setAttribute('aria-pressed', s === btn ? 'true' : 'false'); });
     img.setAttribute('data-clip', clip);
     img.alt = btn.getAttribute('data-alt') || '';
     var name = btn.querySelector('b');
@@ -50,7 +50,11 @@
   });
 
   Array.prototype.forEach.call(document.querySelectorAll('.sv-step'), function (b) {
-    b.addEventListener('click', function () { show(b, true); });
+    b.addEventListener('click', function () {
+      // A second tap on the step that is playing stops the clip and shows its still picture (WCAG 2.2.2 pause).
+      var playing = b.getAttribute('aria-pressed') === 'true' && !screen.classList.contains('paused');
+      show(b, !playing);
+    });
   });
 
   if (play) play.addEventListener('click', function () {
