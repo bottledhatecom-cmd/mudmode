@@ -345,7 +345,7 @@ function crevGen(seed,i,kind,room){
 function newPlayer(x){return {x,y:GY,vx:0,vy:0,face:1,onGround:true,coyote:0,vine:null,vs:1,grabCd:0,kick:0,inv:0,dead:0,step:0,stam:STAM_MAX,react:0,binv:0,shield:true,blocking:false,blk:0,chip:0,regenT:0,hook:null,hookCd:0,kickCd:0,kickDown:false,kickIn:false,grab:null};}
 function startRun(){
   G.world=genWorld(G.seed); G.t=0; G.timeLeft=TIME; G.runT=0; G.lives=LIVES; G.score=0; G.got=new Set(); G.result='';
-  G.bosses={}; G.winT=0; G.burst=[]; G.allGems=false; G.drop=null; G.items=[]; G.flyDead=new Set(); G.flyKills=0; G.blocks=0; G.lastBlock=null; blockLatch=false; keys.block=false; G.sup=supNew(); G.bud=budNew(); G.tmPaid={}; G.tmGot=0; G.freeze=null; G.cut=null; G.ease=0; G.tm=null;
+  G.bosses={}; G.winT=0; G.burst=[]; G.allGems=false; G.drop=null; G.items=[]; G.flyDead=new Set(); G.flyKills=0; G.blocks=0; G.lastBlock=null; blockLatch=false; keys.block=false; G.sup=supNew(); G.bud=budNew(); G.tmPaid={}; G.tmGot=0; G.freeze=null; G.cut=null; G.ease=0; G.tm=null; wsReset();
   G.state='play'; enterRoom(0,null); sfx(520,.08);
 }
 function enterRoom(i,from){
@@ -391,7 +391,9 @@ function harm(why,sx,force){
   p.vine=null; hookClear(p); p.grab=null; p.grabCd=0.3; p.kick=0; p.vx=d*TUNE.REACT_VX_PER_FORCE*f; p.vy=-TUNE.REACT_VY_PER_FORCE*f; if(p.vy<0) p.onGround=false; p.coyote=0;
   p.react=Math.min(TUNE.REACT_T_MAX,TUNE.REACT_T_PER_FORCE*f); p.binv=TUNE.BLOCK_INV; jumpQ=0;
   G.blocks++; G.lastBlock={why,force:f,hand:!p.shield,cost:p.shield?f*TUNE.BLOCK_COST_PER_FORCE:0};
-  if(p.shield){
+  if(p.shield&&G.gear&&G.gear.plate>0){   // workshop shield plate: this block costs no stamina (shove as normal)
+    G.gear.plate--; G.gear.plateUsed++; G.lastBlock.cost=0; G.lastBlock.plate=true; G.msg='plate took it: '+why+' ('+G.gear.plate+' left)'; G.msgT=.8; sfx(620,.09,'triangle');
+  } else if(p.shield){
     p.stam=Math.max(0,p.stam-f*TUNE.BLOCK_COST_PER_FORCE); p.regenT=TUNE.REGEN_DELAY;
     if(p.stam<=0) dropShield(); else { G.msg='blocked: '+why; G.msgT=.7; sfx(520,.09,'triangle'); }
   } else {
@@ -414,8 +416,106 @@ const superBonus=t=>t<SPD.SUPER_T;
 const ITEMS={};
 function dropItem(id,x){ if(!ITEMS[id]||BOSS_ROOMS.includes(G.room)) return null; const it={id,room:G.room,x:Math.max(8,Math.min(W-8,x))}; G.items.push(it); return it; }
 function mobDied(){ return null; }
+/* ---------- the workshop (building world, first slice) ----------
+   The junk collector's caravan stands in the last room before boss 1. Its back flap opens a cardboard workshop where junk from
+   the run is taped into gear that lasts the whole run. Junk comes from the forest rooms (lying about: walk over it; the hook is
+   unchanged and does not aim at junk)
+   and from the fishing world (junk catches); it all goes in ONE junk bag (cap BAG_MAX). The junk collector himself (trading)
+   is not in this slice: only his caravan and its workshop flap. Its own rng streams, so every room rolls exactly as before.
+   ALL NUMBERS HERE ARE PLAYTEST DEFAULTS; PLATE_HITS (3) is a set number. */
+const WORK = {
+  BAG_MAX: 12,                  // pieces the junk bag holds
+  ROOM: BOSS_ROOMS[0] - 1,      // the caravan stands in the last room before boss 1 (the only workshop stop in this slice)
+  CARAVAN_X: Array.from({ length: 61 }, (_, k) => 292 - k * 4),   // px (292 down to 52, every 4 px): first spot with solid ground under the flap, clear of a fishing side path
+  NEAR: 18,                     // px: this close to the flap = the workshop prompt shows
+  PLATE_HITS: 3,                // shield plate: shield blocks that cost no stamina, for the run
+  SPRING_PX: [10, 15, 20],      // hook spring: extra hook reach (px) by how many slots got a matching material (0 / 1 / 2)
+  PATCH_PTS: [15, 20, 25],      // buddy armour patch: extra super power meter by matching slots (0 / 1 / 2)
+  ROOM_CHANCE: 0.6, ROOM_MAX: 2, // a forest room has junk lying about this often, up to this many pieces
+  TAPE_T: 0.55                  // seconds of the tape animation
+};
+// materials: rows of the shared materials table (density g/cm3, bounce, deform, sound). A slot asks for a kind of junk; the kind
+// comes from these numbers: hard = dense and rigid, springy = bouncy, light = light.
+const MAT = { rubber: { density: 1.2, bounce: .35, deform: 'firm', sound: 'squeak' }, steel: { density: 7.85, bounce: .25, deform: 'rigid', sound: 'metal_clink' },
+  hard_plastic: { density: 1.05, bounce: .4, deform: 'rigid', sound: 'plastic_tick' }, wood: { density: .55, bounce: .2, deform: 'rigid', sound: 'wood_clack' },
+  cloth: { density: .02, bounce: .02, deform: 'cloth', sound: 'fabric_rustle' }, glass: { density: 2.5, bounce: .2, deform: 'rigid', sound: 'glass_tap' },
+  cardboard: { density: .7, bounce: .1, deform: 'firm', sound: 'box_tap' } };
+const matTags = m => { const r = MAT[m], t = []; if (r.density >= 2 && r.deform === 'rigid') t.push('hard'); if (r.bounce >= .3) t.push('springy'); if (r.density < 1.1) t.push('light'); return t; };
+const JUNK = { boot: { n: 'old boot', mat: 'rubber', col: '#4a3a2e' }, can: { n: 'tin can', mat: 'steel', col: '#a9b2b8' }, remote: { n: 'tv remote', mat: 'hard_plastic', col: '#34343c' },
+  plank: { n: 'broken plank', mat: 'wood', col: '#9a6a3a' }, rag: { n: 'old rag', mat: 'cloth', col: '#c7b48a' }, bottle: { n: 'glass bottle', mat: 'glass', col: '#5fa58a' } };
+const FOREST_JUNK = ['plank', 'rag', 'bottle', 'can', 'boot'];
+const FISH_JUNK = { boot: 'boot', can: 'can', remote: 'remote' };   // fishing-world junk catches -> the same bag
+const BLUEPRINTS = [
+  { id: 'plate', n: 'shield plate', slots: ['any', 'any'], does: 'shield blocks that cost no stamina' },   // any junk: its number (3) is set
+  { id: 'spring', n: 'hook spring', slots: ['springy', 'light'], does: 'longer hook reach' },
+  { id: 'patch', n: 'buddy armour patch', slots: ['hard', 'light'], does: 'a bigger super power meter' } ];
+function wsReset(){ G.bag = []; G.junkIn = { forest: 0, fish: 0, full: 0 }; G.gear = { plate: 0, plateUsed: 0, spring: 0, patch: 0, built: {} }; G.ws = null; G.wsNear = false; G.jspots = junkGen(G.seed); }
+/* junk lying about in the forest rooms (never in boss rooms): own rng stream, kept off holes and croc pools */
+function junkGen(seed){
+  const r = mulberry(hash(seed + '|junk')), out = [];
+  for (let i = 0; i < ROOMS; i++) { if (BOSS_ROOMS.includes(i)) continue; const room = G.world.rooms[i]; if (r() >= WORK.ROOM_CHANCE) continue;
+    const n = 1 + Math.floor(r() * WORK.ROOM_MAX);
+    for (let k = 0; k < n; k++) { let x = 0, ok = false; for (let t = 0; t < 30 && !ok; t++) { x = 40 + Math.floor(r() * 240); ok = !room.holes.some(h => x > h.x0 - 12 && x < h.x1 + 12) && !room.pools.some(q => x > q.x0 - 12 && x < q.x1 + 12) && !out.some(o => o.room === i && Math.abs(o.x - x) < 24); }
+      const kind = FOREST_JUNK[Math.floor(r() * FOREST_JUNK.length)]; if (ok) out.push({ junk: true, room: i, x, y: GY - 4, kind, got: false }); } }
+  return out;
+}
+function junkAdd(kind, src){
+  if (!JUNK[kind] || !G.bag) return false;
+  if (G.bag.length >= WORK.BAG_MAX) { G.junkIn.full++; if (G.state === 'play') { G.msg = 'junk bag full (' + WORK.BAG_MAX + '/' + WORK.BAG_MAX + ')'; G.msgT = 1; } return false; }
+  G.bag.push(kind); G.junkIn[src === 'fish' ? 'fish' : 'forest']++;
+  if (G.state === 'play') { G.msg = 'junk: ' + JUNK[kind].n + ' (' + G.bag.length + '/' + WORK.BAG_MAX + ')'; G.msgT = .9; }
+  sfx(640, .05, 'triangle'); return true;
+}
+const junkInFish = key => FISH_JUNK[key] ? junkAdd(FISH_JUNK[key], 'fish') : false;   // the fishing world hands its junk catches over here
+function junkStep(p){
+  if (!G.jspots) return; for (const j of G.jspots) { if (j.got || j.room !== G.room) continue;
+    const on = Math.abs(p.x - j.x) < 9 && Math.abs((p.y - 12) - j.y) < 14;
+    if (on && !j.touch) { if (junkAdd(j.kind, 'forest')) j.got = true; }   // a full bag refuses it once per touch; the piece stays where it lies
+    j.touch = on; }
+}
+let wsPathX = () => null;   // the fishing world's side path in a room (set once it exists): the caravan keeps clear of its prompt
+function caravanX(room){   // solid ground under the flap first; then as far from a fishing side path as can be (60, 40, 36 px: past 34 the two prompts never overlap)
+  const px = wsPathX(room.i), solid = x => !room.holes.some(h => x > h.x0 - 16 && x < h.x1 + 16) && !room.pools.some(q => x > q.x0 - 16 && x < q.x1 + 16);
+  for (const gap of [60, 40, 36, 0]) for (const x of WORK.CARAVAN_X) if (solid(x) && (px === null || Math.abs(x - px) >= gap)) return x;
+  return WORK.CARAVAN_X[0]; }
+function wsNearCheck(p){ const room = G.world.rooms[G.room]; G.wsNear = G.room === WORK.ROOM && p.dead <= 0 && p.onGround && !p.hook && !p.vine && Math.abs(p.x - caravanX(room)) < WORK.NEAR; return G.wsNear; }
+// gear effects (the whole run). matches: how many slots got a junk whose material is the kind the slot asks for
+const slotFits = (want, kind) => !!(kind && JUNK[kind] && (want === 'any' || matTags(JUNK[kind].mat).includes(want)));
+const bpMatches = (bp, slots) => bp.slots.reduce((n, w, i) => n + (slotFits(w, slots[i]) ? 1 : 0), 0);
+function bpResult(bp, slots){ const m = bpMatches(bp, slots);
+  return bp.id === 'plate' ? { m, v: WORK.PLATE_HITS, txt: WORK.PLATE_HITS + ' free shield hits' } : bp.id === 'spring' ? { m, v: WORK.SPRING_PX[m], txt: '+' + WORK.SPRING_PX[m] + ' hook reach' } : { m, v: WORK.PATCH_PTS[m], txt: '+' + WORK.PATCH_PTS[m] + ' super power' }; }
+const hookReach = () => HK.RANGE + (G.gear ? G.gear.spring : 0);
+const supMax = () => TUNE.SUPER.METER + (G.gear ? G.gear.patch : 0);
+/* the workshop screen: open at the caravan flap (F, or the WORKSHOP button); the run stands still while it is open (timer too) */
+function wsOpen(){ const p = G.p; if (G.state !== 'play' || G.freeze || !p || !wsNearCheck(p) || (G.ws && G.ws.open)) return false;
+  G.ws = { open: true, bp: BLUEPRINTS.findIndex(b => !G.gear.built[b.id]), slots: [null, null], pick: -1, tapeT: 0, opens: ((G.ws && G.ws.opens) || 0) + 1, built: 0 };
+  if (G.ws.bp < 0) G.ws.bp = 0; wsResetInput(); sfx(330, .12, 'triangle'); return true; }
+let wsResetInput = () => {};   // the view sets this (drops held keys / mouse)
+function wsPickBp(i){ const w = G.ws; if (!w || !w.open || w.tapeT > 0 || !BLUEPRINTS[i]) return false; wsClearSlots(); w.bp = i; w.pick = -1; return true; }
+function wsPickJunk(i){ const w = G.ws; if (!w || !w.open || w.tapeT > 0 || i < 0 || i >= G.bag.length) return false; w.pick = w.pick === i ? -1 : i; return true; }
+function wsFill(slot, bagI){   // put a piece from the bag in a slot (tap junk, then tap slot; or drag)
+  const w = G.ws; if (!w || !w.open || w.tapeT > 0) return false; const bp = BLUEPRINTS[w.bp]; if (!bp || G.gear.built[bp.id] || slot < 0 || slot >= bp.slots.length) return false;
+  const i = bagI === undefined ? w.pick : bagI; if (i < 0 || i >= G.bag.length) return false;
+  if (w.slots[slot]) G.bag.push(w.slots[slot]);
+  w.slots[slot] = G.bag.splice(i, 1)[0]; w.pick = -1; sfx(180, .06, 'triangle'); return true; }
+function wsTakeBack(slot){ const w = G.ws; if (!w || !w.open || w.tapeT > 0 || !w.slots[slot]) return false; G.bag.push(w.slots[slot]); w.slots[slot] = null; sfx(260, .05, 'triangle'); return true; }
+function wsClearSlots(){ const w = G.ws; if (!w) return; for (let k = 0; k < w.slots.length; k++) if (w.slots[k]) { G.bag.push(w.slots[k]); w.slots[k] = null; } }
+function wsTape(){   // tape it: the junk in the slots is used up, the gear goes on for the rest of the run
+  const w = G.ws; if (!w || !w.open || w.tapeT > 0) return false; const bp = BLUEPRINTS[w.bp];
+  if (!bp || G.gear.built[bp.id]) { G.msg = 'already built'; G.msgT = .8; return false; }
+  if (w.slots.slice(0, bp.slots.length).some(s => !s)) { G.msg = 'fill both slots first'; G.msgT = .8; sfx(140, .1, 'square'); return false; }
+  const r = bpResult(bp, w.slots); G.gear.built[bp.id] = { slots: w.slots.slice(), m: r.m, v: r.v };
+  if (bp.id === 'plate') G.gear.plate = r.v; else if (bp.id === 'spring') G.gear.spring = r.v; else { G.gear.patch = r.v; if (G.sup && G.sup.on) G.sup.meter = Math.min(supMax(), G.sup.meter + r.v); }   // already super: the meter grows with its max
+  w.slots = [null, null]; w.tapeT = WORK.TAPE_T; w.built++; w.last = bp.id; G.msg = bp.n + ' taped on: ' + r.txt; G.msgT = 1.4;
+  for (let k = 0; k < 4; k++) setTimeout(() => sfx(2400 - k * 300, .05, 'sawtooth'), k * 60);   // tape rip
+  return true; }
+function wsStep(dt){ const w = G.ws; if (w && w.tapeT > 0) { w.tapeT = Math.max(0, w.tapeT - dt); if (w.tapeT <= 0) { const n = BLUEPRINTS.findIndex(b => !G.gear.built[b.id]); if (n >= 0) w.bp = n; } } }
+function wsLeave(){   // walk out the far side: straight into the boss room
+  const w = G.ws; if (!w || !w.open) return false; wsClearSlots(); w.open = false; w.tapeT = 0; wsResetInput();
+  const p = G.p; p.x = 3; p.y = GY; p.vx = 0; p.vy = 0; p.onGround = true; p.vine = null; enterRoom(BOSS_ROOMS[0], 'L'); sfx(300, .1, 'triangle'); return true; }
+wsReset();   // the junk bag and gear exist from the start (the title screen's world too)
 function speedMult(t){ return superBonus(t) ? SPD.SUPER : Math.max(SPD.END, SPD.START-(SPD.START-SPD.END)*(t-SPD.SUPER_T)/(SPD.FADE_T-SPD.SUPER_T)); }
-function addScore(n){ const pts=Math.round(n*speedMult(G.runT)); G.score+=pts; return pts; }
+function addScore(n){ if(G.camp) return 0; const pts=Math.round(n*speedMult(G.runT)); G.score+=pts; return pts; }   // no points in a camp fight (the clock waits there); its reward is the loot
 const clockTxt=t=>{ const s=Math.max(0,Math.floor(t)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
 function endRun(result){
   G.state='end'; G.result=result;
@@ -427,10 +527,11 @@ function endRun(result){
 /* ---------- update ---------- */
 function update(dt){
   if(G.state!=='play') return;
+  if(G.ws&&G.ws.open){ wsStep(dt); return; }   // the workshop is open: the run stands still (timer too)
   if(G.freeze){ freezeStep(dt); return; }   // super cutscene: the whole game stands still (timer too)
   let edt=dt; if(G.ease>0){ G.ease=Math.max(0,G.ease-dt); const u=1-G.ease/CUT.REENTRY; edt=dt*u*u*(3-2*u); }   // after it: enemies ease back up to speed
   const room=G.world.rooms[G.room], p=G.p, rs=G.rs;
-  G.t+=dt; G.timeLeft-=dt; G.runT+=dt; if(G.msgT>0) G.msgT-=dt;
+  G.t+=dt; if(!G.camp){ G.timeLeft-=dt; G.runT+=dt; } if(G.msgT>0) G.msgT-=dt;   // G.camp: a top-down map camp fight (topworld.js): the run clock waits, as on the map
   if(G.timeLeft<=0){ G.timeLeft=0; endRun('time'); return; }
   if(jumpQ>0) jumpQ-=dt;
   if(p.hookCd>0){ p.hookCd-=dt; if(p.hookCd<=0){ p.hookCd=0; sfx(1760,.03,'sine'); } }   // zip cooldown; a tiny tick when the hook is ready
@@ -506,12 +607,13 @@ function update(dt){
   // items on the ground (none are made in this build: the stamina refill was taken out; kept for later item kinds)
   for(let i=G.items.length-1;i>=0;i--){ const it=G.items[i];
     if(it.room===G.room && p.onGround && Math.abs(p.x-it.x)<TUNE.PICKUP_RANGE){ G.items.splice(i,1); ITEMS[it.id].give(); } }
+  junkStep(p); wsNearCheck(p);   // junk lying about goes in the junk bag; the caravan flap (workshop) prompt
 
   // room transitions
   if(!p.vine){
     const locked=isLocked();
     if(p.x>W){ if(G.room<ROOMS-1&&!locked){ p.x=3; enterRoom(G.room+1,'L'); } else p.x=W; }
-    else if(p.x<0){ if(G.room>0&&!locked){ p.x=W-3; enterRoom(G.room-1,'R'); } else p.x=0; }
+    else if(p.x<0){ if(G.camp){ p.x=0; G.camp.flee=true; } else if(G.room>0&&!locked){ p.x=W-3; enterRoom(G.room-1,'R'); } else p.x=0; }   // camp fight: the left side is the way out (topworld.js)
   }
   const room2=G.world.rooms[G.room], rs2=G.rs;
   stepWorld(room2,rs2,edt); bossUpdate(edt); burstUpdate(dt); superStep(dt,rs2); flyersUpdate(room2,rs2,p,edt); if(p.dead<=0) crevUpdate(room2,rs2,p,dt); if(room2.pools.length){ crocUpdate(room2,rs2,p,dt); fishStep(room2,p,dt); }
@@ -706,13 +808,14 @@ function flyersUpdate(room,rs,p,dt){
    canopy branches overhead along an AIM_UP shot. Nothing in range = a miss (the hook flies out and he reels it back in, so a miss still costs the reel-in).
    Bosses are too heavy: the hook clinks off them. Phases: fly -> latch (wall / ledge) -> zip or swing; fly -> reel (loot);
    fly -> drag (mob); back = coming home. */
-const hookRiding=p=>!!(p.hook&&(p.hook.ph==='zip'||p.hook.ph==='swing'));
-function hookClear(p){ const h=p.hook; if(h&&h.ref&&h.ref.drag){ h.ref.drag=false; h.ref.off=true; } p.hook=null; }
+const hookRiding=p=>!!(p.hook&&(p.hook.ph==='zip'||p.hook.ph==='swing'||p.hook.ph==='ride'));
+function hookClear(p){ const h=p.hook; if(h&&h.ref&&h.ref.fly) flyerLetGo(h.ref); if(h&&h.ref&&h.ref.drag){ h.ref.drag=false; h.ref.off=true; } p.hook=null; }
 function hookAim(p,room,rs){
-  const hx=p.x, hy=p.y-14, f=p.face, R=HK.RANGE, cone=HK.CONE*Math.PI/180;
+  const hx=p.x, hy=p.y-14, f=p.face, R=hookReach(), cone=HK.CONE*Math.PI/180;   // reach: plus a workshop hook spring
   const inCone=(x,y)=>{ const dx=(x-hx)*f, dy=y-hy, d=Math.hypot(dx,dy); return (dx>2&&d<=R&&Math.abs(Math.atan2(dy,dx))<=cone)?d:-1; };
   let best=null, bd=1e9; const take=(d,o)=>{ if(d>=0&&d<bd){ bd=d; best=o; } };
   rs.crawlers.forEach(c=>{ if(!c.dead) take(inCone(c.x,GY-4),{kind:'mob',ref:c,x:c.x,y:GY-4}); });   // a kicked crawler that is already dead is skipped
+  if(rs.flyers) for(const fl of rs.flyers) if(fl.st!=='dead'&&fl.st!=='ridden'&&fl.st!=='pulled') take(inCone(fl.x,fl.y),{kind:'flyer',ref:fl,x:fl.x,y:fl.y});   // flyers (TUNE.FLYER.KINDS): small = pull it down, big = ride it
   const b=rs.boss; if(b&&!b.dead){ const by=b.kind==='boss2'?b.y:GY-20; take(inCone(b.x,by),{kind:'boss',ref:b,x:b.x,y:by}); }
   if(best) return best;
   const tr=room.treasure; if(tr&&!G.got.has(gid(room.i))) take(inCone(tr.x,tr.y),{kind:'loot',ref:tr,x:tr.x,y:tr.y});
@@ -730,6 +833,7 @@ function hookInput(down){
   keys.hook=!!down; const p=G.p;
   if(tugHook(down)) return;   // T mode tug only (not in the side-scroller run): the hook is the pull there
   if(!down){ if(p&&p.hook) p.hook.held=false; return; }
+  if(p&&p.hook&&p.hook.ph==='ride'){ hookBack(p.hook); p.grabCd=.35; sfx(660,.07); return; }   // hook again while riding = let go
   if(p&&p.grab){ G.hookNo=(G.hookNo||0)+1; return; }   // held by a tentacle (new hazard): no hook
   if(G.state!=='play'||G.freeze||!p||p.dead>0||p.vine||p.hook||p.react>0){ G.hookNo=(G.hookNo||0)+1; return; }
   const a=hookAim(p,G.world.rooms[G.room],G.rs); G.hookShots=(G.hookShots||0)+1;
@@ -753,7 +857,7 @@ function hookAimDown(p,room,rs){
   if(!holeAt(room,hx)&&GY-p.y>=TUNE.HOOK_DOWN.MIN_DROP&&GY-hy<=R) return {kind:'floor',x:hx,y:GY};
   return {kind:'miss',x:hx,y:Math.min(GY+40,hy+Math.min(R,60))};
 }
-function hookBack(h){ h.ph='back'; h.held=false; h.d0=null; h.bt=0; sfx(1100,.03,'square'); }   // the reel-in starts: no new shot until the head is back in his hand
+function hookBack(h){ if(h.ref&&h.ref.fly) flyerLetGo(h.ref); h.ph='back'; h.held=false; h.d0=null; h.bt=0; sfx(1100,.03,'square'); }   // the reel-in starts: no new shot until the head is back in his hand
 function hookMoveHead(h,x,y,sp,dt){ const dx=x-h.hx, dy=y-h.hy, d=Math.hypot(dx,dy), st=sp*dt; if(d<=st){ h.hx=x; h.hy=y; return true; } h.hx+=dx/d*st; h.hy+=dy/d*st; return false; }
 function hookStep(p,room,dt){
   const h=p.hook; if(!h) return; h.t+=dt; if(h.held) h.ht+=dt; h.ox=h.hx; h.oy=h.hy;
@@ -761,10 +865,14 @@ function hookStep(p,room,dt){
   if(h.ph==='fly'){
     if(h.kind==='mob'){ h.tx=h.ref.x; }
     if(h.kind==='loot'){ h.tx=h.ref.x; h.ty=h.ref.y; }
+    if(h.kind==='flyer'){ if(h.ref.st==='dead'||h.ref.st==='ridden'){ hookBack(h); return; } h.tx=h.ref.x; h.ty=h.ref.y; }
     if(!hookMoveHead(h,h.tx,h.ty,HK.FLY_SPEED,dt)) return;
     if(h.kind==='miss'){ hookBack(h); }
     else if(h.kind==='boss'){ hookBack(h); G.msg='too heavy to pull'; G.msgT=.7; sfx(240,.06,'square'); }
     else if(h.kind==='loot'){ h.ph='reel'; sfx(900,.05,'triangle'); }
+    else if(h.kind==='flyer'){ const f=h.ref; h.t=0;
+      if(f.big){ h.ph='ride'; h.on=false; f.st='ridden'; p.vine=null; p.onGround=false; G.flyRides=(G.flyRides||0)+1; sfx(260,.1,'sawtooth'); }   // big: ride it
+      else { h.ph='fpull'; f.st='pulled'; sfx(300,.08,'sawtooth'); } }                                                                          // small: pull it down
     else if(h.kind==='mob'){ h.ph='drag'; h.t=0; h.ref.drag=true; sfx(300,.08,'sawtooth'); }
     else { h.ph='latch'; sfx(520,.05,'square'); }
   }
@@ -789,12 +897,28 @@ function hookStep(p,room,dt){
     if(c.dead||Math.abs(dx)<=HK.MOB_STOP||h.t>HK.PULL_MOB_T){ c.drag=false; c.off=true; hookBack(h); return; }
     c.x+=Math.sign(dx)*Math.min(Math.abs(dx)-HK.MOB_STOP,HK.PULL_MOB_SPEED*dt); h.hx=c.x; h.hy=GY-4; return;
   }
+  if(h.ph==='fpull'){   // a small flyer is pulled down in front of him, then lies stunned (kick it)
+    const f=h.ref; if(f.st!=='pulled'){ hookBack(h); return; }
+    const tx=Math.max(6,Math.min(W-6,p.x+h.f*FL.PULL_STOP)), ty=GY-5, dx=tx-f.x, dy=ty-f.y, d=Math.hypot(dx,dy), st=FL.PULL_SPEED*dt;
+    if(d<=st||h.t>FL.PULL_T){ f.x=tx; f.y=ty; f.st='stun'; f.t=FL.STUN_T; G.flyPulls=(G.flyPulls||0)+1; sfx(200,.1,'square'); hookBack(h); return; }
+    f.x+=dx/d*st; f.y+=dy/d*st; h.hx=f.x; h.hy=f.y; return;
+  }
+  if(h.ph==='ride'){ h.hx=h.ref.x; h.hy=h.ref.y; return; }
   if(h.ph==='back'){ if(h.d0==null) h.d0=Math.max(1,Math.hypot(h.hx-hx,h.hy-hy)); h.bt+=dt; if(hookMoveHead(h,hx,hy,HK.REEL_SPEED,dt)){ p.hook=null; G.hookBacks=(G.hookBacks||0)+1; sfx(1400,.04,'square'); } }   // clank: back in his hand
 }
 /* zip and swing move him (in place of running); returns false when he is not on the rope */
 function hookRide(p,room,dt,ax){
   const h=p.hook; if(!hookRiding(p)) return false;
-  if(jumpQ>0){ jumpQ=0; hookBack(h); p.grabCd=0.35; if(h.ph==='swing') p.vy-=70; sfx(660,.07); return true; }   // jump lets go too
+  if(jumpQ>0){ jumpQ=0; hookBack(h); p.grabCd=0.35; if(h.ph==='swing'||h.ph==='ride') p.vy-=70; sfx(660,.07); return true; }   // jump lets go too
+  if(h.ph==='ride'){   // riding a big flyer: zip up under it, then it carries him (left / right steers); jump or hook again lets go; RIDE_T max
+    const f=h.ref;
+    if(f.st!=='ridden'||h.t>FL.RIDE_T){ if(f.st==='ridden'){ G.msg='the '+FL.KINDS[f.kind].name+' shook you off'; G.msgT=.8; } hookBack(h); p.grabCd=.35; return true; }
+    if(!h.on){ const tx=f.x, ty=f.y+FL.RIDE_HANG, dx=tx-p.x, dy=ty-p.y, d=Math.hypot(dx,dy)||1, st=HK.ZIP_SPEED*dt;
+      if(d<=st){ h.on=true; p.x=tx; p.y=ty; } else { p.x+=dx/d*st; p.y+=dy/d*st; } p.vx=0; p.vy=0; p.onGround=false; h.hx=f.x; h.hy=f.y; return true; }
+    if(ax){ h.f=ax; p.face=ax; } f.d=h.f;
+    f.x=Math.max(-2,Math.min(W+2,f.x+h.f*FL.RIDE_SPEED*dt)); f.y+=(FL.RIDE_Y-f.y)*Math.min(1,2*dt);
+    p.x=f.x; p.y=f.y+FL.RIDE_HANG; p.vx=h.f*FL.RIDE_SPEED; p.vy=0; p.onGround=false; h.hx=f.x; h.hy=f.y; return true;
+  }
   if(h.ph==='zip'){
     const dx=h.zx-p.x, dy=h.zy-p.y, d=Math.hypot(dx,dy)||1, st=HK.ZIP_SPEED*dt, ux=dx/d, uy=dy/d;
     if(d<=st||h.t>HK.ZIP_MAX_T){
@@ -834,7 +958,7 @@ const supFx=e=>{ const f=G.sup.fx; if(f.length<40) f.push(e); };   // events for
 function superInput(){
   const p=G.p, s=G.sup, SU=TUNE.SUPER; if(G.state!=='play'||!p||G.freeze) return false;
   if(!superReady(p)){ s.no++; s.nrT=.7; G.msg=s.on?'buddy is already super':'super not ready: '+Math.ceil(s.cd)+' s'; G.msgT=1; sfx(120,.14,'square'); return false; }
-  Object.assign(s,{on:true,ph:'cut',t:0,idleT:0,meter:SU.METER,bx:supX(p.x-p.face*SU.FOLLOW_GAP),face:p.face,atkT:0,wind:0,swings:0,tgt:null,capMsg:false});
+  Object.assign(s,{on:true,ph:'cut',t:0,idleT:0,meter:supMax(),bx:supX(p.x-p.face*SU.FOLLOW_GAP),face:p.face,atkT:0,wind:0,swings:0,tgt:null,capMsg:false});
   s.uses++; s.st={use:s.uses,room:G.room,dur:0,mobDmg:0,logDmg:0,bossPct:{},kills:0,logs:0,swings:0,slams:0,soaked:0,soakHits:0,bites:0,contact:0,logHits:0,counter:0};
   if(G.bud) G.bud.ride=false;   // he hops out of the dome for it
   G.freeze='cut'; G.cut={t:0,sp:1,clicks:0,n:0,tq:false}; G.msg=''; G.msgT=0; sfx(220,.25,'sawtooth'); return true;
@@ -1730,6 +1854,8 @@ function crevViews(R, v, room) {   // per hole: a biter and / or a tentacle (mov
       R.add(m); v.own.push(m); v.tents.push({ hi, m, n, side: h.tent, ex: h.tent < 0 ? h.x0 : h.x1 }); }
   });
 }
+let crocOG = false;   // OG world: the crocs wear the code-made skin (set by crocSkinOG)
+function crocSkinOG(on) { crocOG = !!on; for (const k of ['skin', 'top', 'jaw', 'lower', 'ridge']) { const m = CROC_MAT[k], s = on ? m.userData.code : m.userData.drawn; if (!s) continue; m.map = s.map; m.color.copy(s.color); m.needsUpdate = true; } }
 const CROC_MAT = (() => {   // croc skin: a procedural scale texture (wet mossy scales, darker seams), shared by every croc; the drawn skins in art/croc-tex.js replace it once loaded
   const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); g.fillStyle = '#4d5a2b'; g.fillRect(0, 0, 128, 128);
   for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) { const ox = (y % 2) * 8, px = x * 16 + ox, py = y * 16, k = 70 + ((x * 37 + y * 53) % 30);
@@ -1741,8 +1867,9 @@ const CROC_MAT = (() => {   // croc skin: a procedural scale texture (wet mossy 
     jaw: reg(new THREE.MeshStandardMaterial({ map: tb, color: '#e8e0b0', roughness: .65, metalness: 0 })), scute: M('#3a4520', '', true), belly: M('#d9cf9a'), lower: reg(new THREE.MeshStandardMaterial({ color: '#d9cf9a', roughness: .65, metalness: 0 })), ridge: reg(new THREE.MeshStandardMaterial({ color: '#3a4520', roughness: .6, metalness: 0 })) };
   // the drawn croc skins (art/croc-tex.js): mossy scales on the upper head and body, the pale belly on the lower jaw, the ridge strip down the back.
   // Drawn with flat even light, so they replace the tint (white); the procedural skin above stays until they load (and if the file is missing)
+  for (const k of ['skin', 'top', 'jaw', 'lower', 'ridge']) R[k].userData.code = { map: R[k].map, color: R[k].color.clone() };   // the OG world wears this code skin again (crocSkinOG)
   const PK = window.JR_CROC; if (PK) { const load = (src, mats, rp) => { const im = new Image(); im.onload = () => { const tx = new THREE.CanvasTexture(im); tx.wrapS = 1000; tx.wrapT = rp[2] ? 1001 : 1000;   // 1001 = ClampToEdge: the strip repeats sideways only
-      tx.repeat.set(rp[0], rp[1]); tx.colorSpace = THREE.SRGBColorSpace; for (const m of mats) { m.map = tx; m.color.set('#ffffff'); m.needsUpdate = true; } }; im.src = src; };
+      tx.repeat.set(rp[0], rp[1]); tx.colorSpace = THREE.SRGBColorSpace; for (const m of mats) { m.userData.drawn = { map: tx, color: new THREE.Color('#ffffff') }; if (!crocOG) { m.map = tx; m.color.set('#ffffff'); m.needsUpdate = true; } } }; im.src = src; };
     load(PK.skin, [R.skin, R.top, R.jaw], [2, 1]); load(PK.belly, [R.lower], [1.4, .7]); /* the hinged upper head wears the scales; the pale belly skin is the lower jaw */ load(PK.ridge, [R.ridge], [3, 1, 1]); }
   return R;
 })();
@@ -2623,7 +2750,7 @@ function syncSuper(p, dt) {
   const tx = X(s.bx); if (!b.init || G.room !== V.room) { b.x = s.ph === 'grow' && b.init ? b.x : tx; b.init = true; V.room = G.room; }
   b.x = hold(b.x, tx, dt, s.ph === 'grow' ? 6 : 10);
   for (const e of s.fx) superFx(e, b.x, z); s.fx.length = 0;
-  V.hue = (V.hue + dt * .45) % 1; const low = s.ph === 'fight' && s.meter <= .25 * SU.METER;
+  V.hue = (V.hue + dt * .45) % 1; const low = s.ph === 'fight' && s.meter <= .25 * supMax();
   let sc = big, y = 0, k = 1, wob = 0;
   if (s.ph === 'grow') { const u = Math.min(1, s.t / SU.GROW_T), eb = 1 + 2.7 * Math.pow(u - 1, 3) + 1.7 * Math.pow(u - 1, 2);   // ease-out-back: puffs past full, settles
     sc = BUDDY_H + (big - BUDDY_H) * eb; y = Math.sin(Math.PI * u) * 2.6; k = u; wob = Math.sin(u * 40) * (1 - u) * .06; }
@@ -3025,10 +3152,106 @@ function buildBackdrop() {
   // mist: soft cards drifting in front of each layer (one instanced mesh; moved with its layer each frame)
   bd.mistM = inst(gQuad, basic({ map: texSoft, color: '#e4ede0', transparent: true, opacity: .5, depthWrite: false }), nMist, bd.root);
   for (let k = 0; k < nMist; k++) bd.mist.push({ L: k % 3, x: -40 + r() * 110, y: [6, 7, 9][k % 3] + r() * 3, z: 3, w: 40 + r() * 30, h: 7 + r() * 4, ph: r() * 6 });
-  bd.t = 0; backdropUpdate(0);
+  buildPlates(); bd.t = 0; backdropUpdate(0);
 }
 // put a painted layer on (later): texture = a THREE texture (transparent PNG); hideCode hides that layer's code-built pieces
 function setBackdropArt(i, texture, hideCode) { const L = bd.layers[i]; if (!L) return false; L.card.material.map = texture || null; L.card.material.needsUpdate = true; L.card.visible = !!texture; L.code.forEach(o => { o.visible = !(texture && hideCode); }); return true; }
+/* ---- forest plates: painted parallax layers (art/forest-tex.js = the light set for web and phones; the full set only on a desktop/Steam build) ----
+   Back plates (sky, far, middle, nearback) hang behind the tree line on their own depth and parallax factor; the full set adds the front
+   plate in the scene in front of the lane, and screen plates (canopy from the top; ground, off) that ride with the camera and scroll faster than the lane.
+   Every plate repeats sideways (wrapS 1000 = RepeatWrapping, wrapT 1001 = ClampToEdge; the slim bundle has no enum names).
+   Each room shows its own slice: the texture offset carries the room index, so walking across a room edge keeps the picture continuous.
+   Edges: each plate's top/bottom edge either sits off screen, behind the hills, or fades out in the shader (uFade), so no hard cut shows.
+   OG world: enterOG(fromRoom) / leaveOG() / isOG() show exactly the old side-scroller look (plates hidden, ruins and creatures back,
+   the code-made croc skin); no gameplay change. Its entry is a hidden spot on the top-down map (topworld.js calls these).
+   Desktop/Steam: window.MUD_STEAM = { art: '<folder>/' } (set by the desktop wrapper before game.js) loads <folder>forest/<layer>.webp,
+   same origin; the web page never sets it, so web and phones never download the full set. */
+const FP_LAYERS = [   // z: depth, k: parallax (as BD_LAYERS), y0: world y of the plate bottom, h: world height, fade: [bottom from, bottom to, top from, top to] in plate v (0 = bottom)
+  { name: 'sky', z: -100, k: .95, haze: 0, light: { y0: -10, h: 64, fade: [0, .03, .9, 1] }, full: { y0: -10, h: 62, fade: [0, .03, .9, 1] } },
+  { name: 'far', z: -64, k: .72, haze: .42, light: { y0: -3.5, h: 27, fade: [0, .03, .62, .95] }, full: { y0: -3.5, h: 46, fade: [0, .01, .9, 1] } },
+  { name: 'middle', z: -42, k: .5, haze: .26, light: { y0: -1.5, h: 21, fade: [0, .04, .93, 1] }, full: { y0: -1.5, h: 22, fade: [0, .04, .93, 1] } },
+  { name: 'nearback', z: -26, k: .25, haze: .12, light: { y0: -2, h: 11, fade: [0, .06, .9, 1] }, full: { y0: -2, h: 10, fade: [0, .06, .9, 1] } },
+  // screen plates (full set only): band = [bottom, top] as a share of the screen height; dv = the depth they scroll as if they stood at
+  { name: 'ground', screen: true, full: { band: [0, .17], dv: 15, fade: [0, 0, .55, 1], off: true }, order: 50 },   // off: as a bottom band it reads as a second path the hero can't walk on
+  // front (full set): stands in the scene just in front of the lane (z +3), so its moss and fern tips pass in front of mudbot's feet and legs
+  // top = the share of the plate the fern tips reach (measured from the picture), kept below the hero's head
+  { name: 'front', z: 3, k: 0, haze: 0, full: { y0: -.1, h: 6, top: .42, fade: [0, .1, .9, 1] } },
+  { name: 'canopy', screen: true, full: { band: [.8, 1], dv: 11, fade: [0, .35, 1, 1] }, order: 52 }
+];
+const FP = { tex: {}, meshes: [], og: false, ogFrom: null, steam: null, steamLog: [] };
+{ const S = window.MUD_STEAM; if (S && typeof S === 'object' && typeof S.art === 'string' && /^\w[\w./-]*\/$/.test(S.art) && S.art.indexOf('..') < 0 && S.art.indexOf('//') < 0) FP.steam = S.art; }
+function fpTexture(im) { const t = new THREE.CanvasTexture(im); t.wrapS = 1000; t.wrapT = 1001; t.colorSpace = THREE.SRGBColorSpace;
+  if (renderer) t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy()); return t; }
+function fpSet(name, im, tier) {   // a plate picture arrived: new texture, put it on the plate, dispose the one it replaces
+  const old = FP.tex[name]; FP.tex[name] = { t: fpTexture(im), w: im.naturalWidth || im.width, h: im.naturalHeight || im.height, tier };
+  for (const P of FP.meshes) if (P.L.name === name) fpApply(P);
+  if (old) old.t.dispose();
+}
+function fpLoad(name, src, tier) { const im = new Image(); im.onload = () => { if (tier === 'light' && FP.tex[name] && FP.tex[name].tier === 'full') return; fpSet(name, im, tier); };
+  im.onerror = () => { FP.steamLog.push('missing ' + name); }; im.src = src; }
+{ const A = window.JR_FOREST; if (A) for (const L of FP_LAYERS) if (A[L.name] && A[L.name].src) fpLoad(L.name, A[L.name].src, 'light');
+  if (FP.steam) for (const L of FP_LAYERS) if (!(L.full && L.full.off)) fpLoad(L.name, FP.steam + 'forest/' + L.name + '.webp', 'full'); }
+function fpMat(L) {   // unlit, fog off; the shader fades the plate's top/bottom edge (uFade) and mixes in its layer's haze (uHazeK)
+  const m = new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, fog: false, depthTest: !L.screen, toneMapped: false });
+  m.userData.U = { uFade: { value: [0, 0, 1, 1] }, uHaze: { value: new THREE.Color(FOGC) }, uHazeK: { value: L.haze || 0 }, uA: { value: 1 } };
+  m.onBeforeCompile = s => { Object.assign(s.uniforms, m.userData.U);
+    s.fragmentShader = 'uniform float uFade[4]; uniform vec3 uHaze; uniform float uHazeK, uA;\n' + s.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\n#ifdef USE_MAP\n  diffuseColor.a *= smoothstep(uFade[0], uFade[1] + 1e-4, vMapUv.y) * (1. - smoothstep(uFade[2], uFade[3] + 1e-4, vMapUv.y)) * uA;\n  diffuseColor.rgb = mix(diffuseColor.rgb, uHaze, uHazeK);\n#endif'); };
+  bd.own.push(m); return m;
+}
+/* ground fill: the room's hill strip ends at x -22..54 and z -44, so on wide
+   screens at a room end the plates would hang over a fog gap and their bottoms would show. The fill continues the same ground (bankH, the hills'
+   colours, AM.bank) 0.12 below the hills, x -160..192, z -6.2..-112: every plate bottom sits under the ground at its own depth, so a camera above
+   the ground cannot see it. One draw call; hidden in the OG world. */
+const FP_FILL = { x0: -160, x1: 192, z0: -6.2, z1: -112, dy: -.12 };
+function fpFillY(x, z) { return bankH(x, z) + FP_FILL.dy; }
+function buildFill() {
+  const F = FP_FILL, hi = Qi === 1, nx = hi ? 176 : 88, nz = hi ? 53 : 27, g = new THREE.PlaneGeometry(F.x1 - F.x0, F.z0 - F.z1, nx, nz); g.rotateX(-Math.PI / 2);
+  const pp = g.attributes.position, col = new Float32Array(pp.count * 3), c = new THREE.Color(), c2 = new THREE.Color();
+  for (let i = 0; i < pp.count; i++) { const x = pp.getX(i) + (F.x0 + F.x1) / 2, z = pp.getZ(i) + (F.z0 + F.z1) / 2; pp.setXYZ(i, x, fpFillY(x, z), z);
+    const n = fbm(x * .2, z * .2); c.set('#256a3c').lerp(c2.set('#4f9a4e'), sstep(.3, .85, n)).lerp(c2.set('#17432e'), sstep(10, 30, -z) * .6); col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b; }
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3)); g.computeVertexNormals(); bd.own.push(g);
+  const m = new THREE.Mesh(g, AM.bank); m.name = 'fp-fill'; m.receiveShadow = true; bd.root.add(m); FP.fill = m;
+}
+function buildPlates() {   // called by buildBackdrop (start, quality change); the textures live in FP.tex and survive a rebuild
+  FP.meshes = []; buildFill();
+  for (const L of FP_LAYERS) { const g = new THREE.Group(); g.name = 'fp-' + L.name; if (!L.screen) g.position.z = L.z; bd.root.add(g);
+    const mesh = new THREE.Mesh(gQuad, fpMat(L)); mesh.frustumCulled = false; mesh.renderOrder = L.order || 0; mesh.visible = false; g.add(mesh);
+    const P = { L, g, mesh, lay: null, wpl: 1 }; FP.meshes.push(P); fpApply(P); }
+  fpVis();
+}
+function fpApply(P) {   // size the plate for the tier its texture came from
+  const T = FP.tex[P.L.name], m = P.mesh.material; if (!T) { P.lay = null; P.mesh.visible = false; return; }
+  const lay = P.L[T.tier] || P.L.full || P.L.light; P.lay = lay; m.map = T.t; m.needsUpdate = true; m.userData.U.uFade.value = lay.fade;
+  if (!P.L.screen) { P.wpl = lay.h * T.w / T.h; const hw = 1.12 * (21 - P.L.z) + 28 * (1 - P.L.k) + 6;   // half width: a 2.4:1 screen at this depth + the camera's travel (cam.x -12..44) + margin
+    P.mesh.scale.set(hw * 2, lay.h, 1); P.mesh.position.set(16 * (1 - P.L.k), lay.y0 + lay.h / 2, 0); T.t.repeat.set(hw * 2 / P.wpl, 1); }
+  fpVis();
+}
+function fpVis() {   // plates on (new forest) or the OG world (exactly the old code-built backdrop)
+  const on = !FP.og;
+  for (const P of FP.meshes) P.mesh.visible = on && !!P.lay;
+  if (FP.fill) FP.fill.visible = on;
+  const art = on && FP.meshes.some(P => P.lay);
+  if (bd.layers.length) { bd.layers[1].code.forEach(o => { o.visible = !art; }); bd.layers[2].code.forEach(o => { o.visible = !art; }); }   // mid creatures and far ruins step aside for the plates
+}
+function setOgWorld(v) { FP.og = !!v; fpVis(); crocSkinOG(FP.og); return FP.og; }
+function enterOG(fromRoom) { FP.ogFrom = fromRoom === undefined ? null : fromRoom; return setOgWorld(true); }
+function leaveOG() { const r = FP.ogFrom; FP.ogFrom = null; setOgWorld(false); return r; }   // returns the room it was entered from
+function isOG() { return FP.og; }
+const _fpV = new THREE.Vector3();
+function platesUpdate() {
+  if (FP.og && (G.state === 'title' || G.state === 'end')) leaveOG();   // the OG world never leaks into the next run
+  if (!FP.meshes.length) return;
+  const gx = (G.room || 0) * 32 + cam.x, tanV = Math.tan(camera.fov * Math.PI / 360), asp = camera.aspect, cut = Math.max(0, Math.min(1, cam.cut || 0));
+  for (const P of FP.meshes) { if (!P.lay) continue; const L = P.L, T = FP.tex[L.name], lay = P.lay;
+    if (!L.screen) { P.g.position.x = cam.x * L.k; const o = ((G.room || 0) * 32 * (1 - L.k) + 16 * (1 - L.k) - P.mesh.scale.x / 2) / P.wpl; T.t.offset.x = o - Math.floor(o);
+      if (L.z > 0) { P.mesh.material.userData.U.uA.value = 1 - cut; P.mesh.visible = !FP.og && cut < .99; }   // the front plate steps away for the close-up cutscene camera
+      continue; }   // content at x = u*wpl - 32*room*(1-k): continuous across rooms
+    // screen plate: a card 1 unit in front of the camera covering its band of the screen; it scrolls like a plate standing dv in front of the camera
+    const fh = 2 * tanV, b0 = lay.band[0], b1 = lay.band[1], h = (b1 - b0) * fh, w = fh * asp * 1.04, pa = T.w / T.h;
+    _fpV.set(0, -tanV + (b0 + b1) / 2 * fh, -1).applyQuaternion(camera.quaternion); P.mesh.position.copy(camera.position).add(_fpV); P.mesh.quaternion.copy(camera.quaternion); P.mesh.scale.set(w, h, 1);
+    const wplV = (b1 - b0) * 2 * lay.dv * tanV * pa; T.t.repeat.set(asp / ((b1 - b0) * pa) * 1.04, 1); const o = gx / wplV; T.t.offset.x = o - Math.floor(o);
+    P.mesh.material.userData.U.uA.value = 1 - cut; P.mesh.visible = !FP.og && cut < .99; }
+}
 function backdropUpdate(dt) {
   if (!bd.layers.length) return; bd.t += dt; const t = bd.t;
   for (const L of bd.layers) L.g.position.x = cam.x * L.k;   // parallax: a layer that follows the camera more drifts slower on screen
@@ -3050,6 +3273,7 @@ function backdropUpdate(dt) {
     _o.position.set(m.x + L.g.position.x + Math.sin(t * .05 + m.ph) * 6, m.y, L.z + m.z); _o.rotation.set(0, 0, 0); _o.scale.set(m.w, m.h, 1); _o.updateMatrix(); bd.mistM.setMatrixAt(i, _o.matrix); }
   if (bd.mistM) bd.mistM.instanceMatrix.needsUpdate = true;
   if (bd.shafts) bd.shafts.material.opacity = .17 + .06 * Math.sin(t * .4);
+  platesUpdate();
 }
 let view = null, builtKey = '', forceRebuild = false;
 function disposeView() { if (!view) return; for (const o of view.own) { o.dispose(); if (o.isMaterial) allMats.delete(o); } }   // per-room geometry, instanced meshes and materials
@@ -3145,6 +3369,7 @@ function buildRoom(room) {
     m.userData = { ox: -15 + k * (30 / Math.max(1, q.rays - 1)) + (rd() - .5) * 3, oz: -3.5 - rd() * 8, w: 2.2 + rd() * 3, ph: rd() * 6, base: .1 + rd() * .1 }; R.add(m); v.rays.push(m); v.own.push(m.material); }
   if (q.motes) { const mm = new THREE.InstancedMesh(gQuad, matCache.motes || (matCache.motes = reg(new THREE.MeshBasicMaterial({ map: texGlow, color: '#ffeab0', transparent: true, opacity: .55, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }))), q.motes); mm.frustumCulled = false; mm.renderOrder = 4; R.add(mm); v.own.push(mm);
     v.motes = { mesh: mm, d: Array.from({ length: q.motes }, () => ({ x: rd() * 34 - 17, y: 1 + rd() * 9, z: -6 + rd() * 12, p: rd() * 6, s: .08 + rd() * .1 })) }; }
+  if (room.i === WORK.ROOM) buildCaravan(R, v, room);   // the junk collector's caravan (its back flap is the workshop)
   if (BOSS_DEF[room.kind]) buildBossModel(room, R, v);
   view = v;
 }
@@ -3321,7 +3546,7 @@ const ICON = n => { const src = n === 'gem' ? 'art/icons/gem.png' : n === 'heart
 const BADGE = '<img id="badge" src="art/badge.png" alt="Made with mudmode">';
 const portraitMQ = matchMedia('(orientation: portrait)');
 function drawUI() {
-  const st = G.state;
+  const st = G.state; wsRender();
   document.body.classList.toggle('ingame', st === 'play' || st === 'paused');
   document.body.classList.toggle('perch', st === 'play' && !G.freeze && !!(G.rs && G.rs.perch && G.cf && G.cf.still >= TUNE.CROC.FISH.STILL));
   if (document.body.classList.contains('touch')) {   // a sideways game on an upright phone: pause under the turn-your-phone card, resume when turned back
@@ -3332,6 +3557,7 @@ function drawUI() {
   setTxt('h-time', 'TIME ' + m + ':' + String(s).padStart(2, '0')); $('h-time').className = G.timeLeft < 30 ? 'warn' : '';
   setTxt('h-mult', (superBonus(G.runT) ? 'SUPER x' + SPD.SUPER : 'x' + speedMult(G.runT).toFixed(1)));   // speed multiplier (on the run clock)
   setHTML('h-gems', ICON('gem') + G.got.size + '/' + TREASURES);
+  setTxt('h-junk', st === 'title' || !G.bag ? '' : 'JUNK ' + G.bag.length + '/' + WORK.BAG_MAX + (G.gear && G.gear.built.plate ? ' PLATE ' + G.gear.plate : ''));   // junk bag (and the shield plate's free hits left)
   const nl = Math.max(0, G.lives), chip = G.p && nl > 0 ? Math.max(0, Math.min(1, G.p.chip)) : 0, full = chip > 0 ? nl - 1 : nl;   // a hand block takes part of the current heart
   setHTML('h-lives', ICON('heart').repeat(full) + (chip > 0 ? '<span class="hc">' + ICON('heart').replace('"ic"', '"ic lost"') + ICON('heart').replace('"ic"', '"ic hf" style="clip-path:inset(0 ' + Math.round(chip * 100) + '% 0 0)"') + '</span>' : '') + ICON('heart').replace('"ic"', '"ic lost"').repeat(Math.max(0, LIVES - nl)));
   $('h-lives').title = (nl - chip) + ' lives';
@@ -3340,14 +3566,14 @@ function drawUI() {
       $('h-stam').title = 'Stamina ' + Math.round(pct) + '%' + (has ? '' : ' (shield on the ground: walk over it)'); } }
   { const p = G.p, h = p && p.hook, out = !!h, zc = p && !h && p.hookCd > 0 ? p.hookCd / TUNE.HOOK_COOLDOWN : 0, rdy = !h ? Math.round(100 * (1 - zc)) : h.ph === 'back' && h.d0 ? Math.round(100 * Math.max(0, 1 - Math.hypot(h.hx - p.x, h.hy - p.y + 14) / h.d0)) : 0, hk = rdy + '|' + out, cd = out || zc > 0;   // hook meter: empty while it is out, fills as it reels back in
     if (cache.hook !== hk) { cache.hook = hk; $('h-hfill').style.width = rdy + '%'; $('h-hook').className = cd > 0 ? 'cd' : ''; $('h-hook').title = out ? 'Hook out (reeling back in)' : zc > 0 ? 'Hook charging (after a zip)' : 'Hook ready'; tbEls.hook.style.setProperty('--cd', (100 - rdy) + '%'); } }
-  { const p = G.p, s = G.sup, rdy = st === 'play' && superReady(p), on = s.on, pm = on ? Math.round(100 * s.meter / SU.METER) : 0, nr = s.nrT > 0 && !on, sk = rdy + '|' + on + '|' + pm + '|' + nr + '|' + Math.ceil(s.cd || 0);   // super: ready cue, power-up meter, 'not ready' cue
+  { const p = G.p, s = G.sup, rdy = st === 'play' && superReady(p), on = s.on, pm = on ? Math.round(100 * s.meter / supMax()) : 0, nr = s.nrT > 0 && !on, sk = rdy + '|' + on + '|' + pm + '|' + nr + '|' + Math.ceil(s.cd || 0);   // super: ready cue, power-up meter, 'not ready' cue
     if (cache.sup !== sk) { cache.sup = sk; const el = $('h-sup'), tch = document.body.classList.contains('touch'); $('h-pfill').style.width = pm + '%';
       el.className = on ? 'on' + (pm <= 25 ? ' low' : '') : rdy ? 'rdy' : nr ? 'nr' : '';
       $('h-slab').textContent = on ? 'BUDDY' : rdy ? (tch ? 'SUPER!' : 'SUPER [Q]') : nr ? 'NOT READY' : '';
       el.title = on ? 'Super buddy power ' + pm + '%' : rdy ? 'Super ready' : 'Super: recharging (' + Math.ceil(s.cd || 0) + ' s)';
       tbEls.super.classList.toggle('rdy', rdy); tbEls.super.classList.toggle('nr', nr); tbEls.super.classList.toggle('sup', on); tbEls.super.style.setProperty('--pm', pm + '%'); } }
   syncTouchDim(st);
-  sysb.style.display = (st === 'play' || st === 'paused') ? 'flex' : 'none'; setTxt('h-room', 'ROOM ' + (G.room + 1) + '/' + ROOMS); setTxt('h-score', String(G.score));
+  sysb.style.display = (st === 'play' || st === 'paused') ? 'flex' : 'none'; setTxt('h-room', G.camp ? 'CAMP' : 'ROOM ' + (G.room + 1) + '/' + ROOMS); setTxt('h-score', String(G.score));
   const bb = G.rs && G.rs.boss, showBar = bb && !bb.dead && (st === 'play' || st === 'paused');
   bossHud.style.display = showBar ? 'block' : 'none';
   if (showBar) { setTxt('bname', bb.name + '   ' + '\u25C6'.repeat(Math.max(0, Math.ceil(bb.hp - 1e-6))) + '\u25C7'.repeat(Math.max(0, bb.max - Math.ceil(bb.hp - 1e-6)))); bossFill.style.width = (100 * Math.max(0, bb.hp) / bb.max) + '%'; }
@@ -3374,6 +3600,7 @@ function drawUI() {
             '<b>Kick</b><span>' + (tch ? 'kick button: kick any mob' : 'Ctrl or middle click. Hold S or Down + kick = kick down') + '</span>' +
             '<b>Hook</b><span>' + (tch ? 'hook button' : 'left click') + ': tap to zip to a wall or ledge, hold to swing on the rope (let go to fly on). Hook loot or a mob to pull it to you. Free: fire again once he has reeled it back in</span>' +
             '<b>Pits</b><span>lava, fast water, biters, tentacles (mash jump or kick). Stand on croc heads, not in mouths</span>' +
+            '<b>Workshop</b><span>junk you find (and junk you fish up) goes in one bag (' + WORK.BAG_MAX + ' max). The caravan before the first boss opens a cardboard workshop: ' + (tch ? 'tap WORKSHOP at its flap, tap junk then a slot (or drag it), TAPE IT' : 'F at its flap, click junk then a slot (or drag it), Space tapes it') + '. Gear lasts the whole run</span>' +
             '<b>Crocs</b><span>stand on a croc head and it can\'t bite. Swing over one and it lunges. Stand still on a head: ' + (tch ? 'fish button' : 'F') + ' to fish</span>' +
             '<b>Flyers</b><span>dive and drop things. Kick or stomp them. Glow = tougher. Camp up high and they come</span>' +
             '<b>Block</b><span>' + (tch ? 'shield button' : 'Right click, S, Down or E') + ': swing the shield off your back to stop logs, mud and boss hits. Each block costs stamina (bigger hits cost more) and it refills slowly. Out of stamina = the shield drops: walk over it to pick it up. No shield: block with your hands (' + Math.round((1 - TUNE.HAND_BLOCK_DAMAGE) * 100) + '% less damage). Unblocked hits cost a heart</span>' +
@@ -3667,7 +3894,9 @@ function render(dtReal) {
     }
     buildRoom(room); builtKey = key; forceRebuild = false; cam.lastRoom = G.room || 0; cam.lastSeed = G.seed;
     if (FW) FW.roomBuilt(room);   // fishing world: side path in this room (if any)
+    if (TW) TW.roomBuilt(room);   // top-down paper map: map gate in this room (if any)
   }
+  if (TW && TW.in3d()) { TW.render(dt); drawUI(); return; }   // the paper map / the deep dive own the screen
   if (FW && FW.in3d()) { FW.render(dt); drawUI(); return; }   // fishing world owns the screen
   const rs = G.rs, T = G.t, p = G.p, q = QL();
   // vines: rope drawn as 9 bent segments (bow is zero at both ends so the grab point still matches the logic line), leaves ride along
@@ -3724,13 +3953,13 @@ function render(dtReal) {
     cr.body.position.y = Math.abs(Math.sin(WT * 9 + k)) * .06; cr.body.scale.set(1, 1 + Math.sin(WT * 5 + k) * .03, 1);
     cr.legs.forEach(l => { l.p.rotation.z = Math.sin(WT * 14 + l.ph) * .5; }); cr.ant.forEach((a, i) => { a.rotation.z = Math.sin(WT * 4 + i) * .2; }); });
   syncBoss();
-  syncHero(room, p, dt);
+  syncHero(room, p, dt); syncJunk();   // junk lying about + the buddy patch (hidden on the title screen too)
   syncHook(p, dt); syncHookCharge(p, dt);
   syncBuddy(p, dt); syncHatch(); if (!cutV.on) junkSync(dt);
   // ambient: god-rays + motes follow the camera, camera shake, sky + sun follow
   for (const r of view.rays) { const u = r.userData; r.position.set(cam.x + u.ox * .85, 9, u.oz); r.scale.set(u.w, 26, 1); r.rotation.z = .42; r.material.opacity = u.base * (.65 + .35 * Math.sin(VT * .5 + u.ph)); }
   if (view.motes) { const mm = view.motes; mm.d.forEach((m, i) => { _o.position.set(cam.x + m.x + Math.sin(VT * m.s * 4 + m.p) * 1.2, m.y + Math.sin(VT * m.s * 3 + m.p * 2) * .7, m.z); _o.quaternion.copy(camera.quaternion); const s = .14 + .08 * Math.sin(VT * 2 + m.p); _o.scale.set(s, s, s); _o.updateMatrix(); mm.mesh.setMatrixAt(i, _o.matrix); }); mm.mesh.instanceMatrix.needsUpdate = true; }
-  setCamera(dt); if (FW) FW.afterSide(dt); camera.updateMatrixWorld(); camQ.copy(camera.quaternion); tBubbles(); bubFlush(); syncCutUI(); syncTUI(); backdropUpdate(dt);
+  setCamera(dt); if (FW) FW.afterSide(dt); if (TW) TW.afterSide(dt); camera.updateMatrixWorld(); camQ.copy(camera.quaternion); tBubbles(); bubFlush(); syncCutUI(); syncTUI(); backdropUpdate(dt);
   sky.position.copy(camera.position);
   if (q.shadows) { sun.target.position.set(Math.round(cam.x * 2) / 2, 3, 0); sun.position.copy(sun.target.position).add(SUNOFF); } else { sun.target.position.set(cam.x, 3, 0); sun.position.copy(sun.target.position).add(SUNOFF); }
   updatePool(poolN, dt); updatePool(poolA, dt);
@@ -3741,6 +3970,149 @@ function render(dtReal) {
 const fpsEl = qs.get('fps') ? $('fps') : null; if (fpsEl) { fpsEl.style.display = 'block'; fpsEl.dataset.q = '1'; }
 applyQuality(); pl.shadow.visible = false;
 
+/* ---------- the workshop: caravan, junk on the ground, the buddy patch, the workshop screen ----------
+   The room is a cardboard screen over the paused run (light on phones: one 2D canvas, no extra draw calls). Its wall, bench floor
+   and tape are the cardboard tiles in art/card (light tier, 512 px; loaded when mudbot nears the caravan); until they load (or if
+   they fail) the same room is drawn in code. The caravan, junk, icons and patch are still built in code (placeholders). Words on
+   signs and tags are drawn by code. */
+const wsArt = {}; let wsArtAsked = false;
+function wsLoadArt() { if (wsArtAsked) return; wsArtAsked = true;
+  ['wall', 'floor', 'tape'].forEach(k => { const im = new Image(); im.onload = () => { wsArt[k] = im; wsBgFor = ''; }; im.src = 'art/card/' + k + '.webp'; }); }
+const caravanSignM = reg(new THREE.MeshLambertMaterial({ map: mkTex(256, 64, (g, w, h) => { g.fillStyle = '#d9b98a'; g.fillRect(0, 0, w, h); g.fillStyle = '#3f2616'; g.font = 'bold 40px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('JUNK', w / 2, h / 2 + 2); g.strokeStyle = 'rgba(63,38,22,.5)'; g.lineWidth = 3; g.strokeRect(5, 5, w - 10, h - 10); }) }));
+const flapSignM = reg(new THREE.MeshLambertMaterial({ map: mkTex(128, 160, (g, w, h) => { g.fillStyle = '#c9a676'; g.fillRect(0, 0, w, h); g.strokeStyle = 'rgba(120,88,52,.45)'; g.lineWidth = 2; for (let x = 6; x < w; x += 9) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); }
+  g.fillStyle = 'rgba(240,226,180,.85)'; g.fillRect(0, 12, w, 14); g.fillRect(0, h - 26, w, 14); g.fillStyle = '#3f2616'; g.font = 'bold 22px system-ui, sans-serif'; g.textAlign = 'center'; g.fillText('WORK', w / 2, h / 2 - 4); g.fillText('SHOP', w / 2, h / 2 + 22); }) }));
+function buildCaravan(R, v, room) {
+  const g = new THREE.Group(), x = X(caravanX(room)); g.position.set(x + 2.4, 0, -3.4); R.add(g);
+  mk(gBox, M('#7a5233', null, true), 0, 1.75, 0, 5.2, 2.3, 2.4, g);                      // body (painted planks)
+  mk(gBox, M('#5e3d25', null, true), 0, 3.05, 0, 5.6, .3, 2.8, g);                       // roof
+  mk(gCyl, M('#8a6a44'), 0, 3.2, 0, 2.6, 5.4, 2.6, g).rotation.z = Math.PI / 2;           // rounded canvas top
+  for (const s of [-1.6, 1.6]) { const w = mk(gCyl, M('#3f2616'), s, .55, 1.25, 1.1, .18, 1.1, g); w.rotation.x = Math.PI / 2; }   // wheels
+  const sign = new THREE.Mesh(gQuad, caravanSignM); sign.scale.set(2.6, .65, 1); sign.position.set(.4, 2.1, 1.22); g.add(sign);
+  const flap = mk(gBox, M('#c9a676', null, true), -2.64, 1.55, .3, .08, 1.9, 1.5, g);   // the back flap (cardboard), facing the way he comes in
+  const fs = new THREE.Mesh(gQuad, flapSignM); fs.scale.set(1.3, 1.65, 1); fs.position.set(-2.69, 1.55, .3); fs.rotation.y = -Math.PI / 2; g.add(fs);
+  mk(gBox, M('#e8d9a8'), -2.7, 2.45, .3, .1, .12, 1.6, g, true); mk(gBox, M('#e8d9a8'), -2.7, .65, .3, .1, .12, 1.6, g, true);   // masking tape on the flap
+  v.caravan = { g, flap }; return g;
+}
+const jkViews = [];
+function buildJunkView(kind) { const g = new THREE.Group(), c = JUNK[kind].col;
+  if (kind === 'can') mk(gCyl, MS(c, .4, .6), 0, .18, 0, .32, .38, .32, g);
+  else if (kind === 'bottle') { mk(gCyl, M(c), 0, .2, 0, .26, .42, .26, g); mk(gCyl, M(c), 0, .48, 0, .1, .2, .1, g); }
+  else if (kind === 'boot') { mk(gBox, M(c, null, true), 0, .22, 0, .26, .42, .3, g); mk(gBox, M(c, null, true), .16, .08, 0, .42, .16, .3, g); }
+  else if (kind === 'plank') { const m = mk(gBox, M(c, null, true), 0, .1, 0, .9, .12, .26, g); m.rotation.z = .12; }
+  else if (kind === 'rag') mk(gBlob, M(c), 0, .06, 0, .55, .14, .4, g);
+  else mk(gBox, M(c, null, true), 0, .07, 0, .5, .12, .2, g);   // remote
+  g.userData.kind = kind; g.visible = false; scene.add(g); return g; }
+const wsPatch = new THREE.Group(); { const o = buddy.j.torso.userData.o, pm = M('#c9a676', null, true), tm = M('#e8d9a8'); wsPatch.position.set(.35 - o[0], .42 - o[1], 0 - o[2]); wsPatch.rotation.z = -.2;
+  mk(gBox, pm, 0, 0, 0, .05, .2, .26, wsPatch); mk(gBox, tm, .02, .06, 0, .03, .04, .32, wsPatch, true); mk(gBox, tm, .02, -.06, 0, .03, .04, .32, wsPatch, true);
+  wsPatch.visible = false; buddy.j.torso.add(wsPatch); }   // the buddy armour patch: shows on the junk mech while super is on
+function syncJunk() {
+  const list = G.state === 'title' || !G.jspots ? [] : G.jspots.filter(j => j.room === G.room && !j.got);
+  jkViews.forEach(v => { v.visible = false; });
+  list.forEach((j, i) => { let v = jkViews.find(o => !o.visible && o.userData.kind === j.kind); if (!v) { v = buildJunkView(j.kind); jkViews.push(v); }
+    v.visible = true; v.position.set(X(j.x), Math.max(.02, Y(j.y) - .4) + (1 + Math.sin(VT * 2.4 + i)) * .03, .3); v.rotation.y = .4 + Math.sin(VT * .8 + i) * .25; });
+  wsPatch.visible = !!(G.gear && G.gear.patch > 0 && G.sup && G.sup.on && (G.sup.ph === 'fight' || G.sup.ph === 'grow') && mech.mode !== 'out');
+}
+/* the workshop screen (DOM; inline styles, CSP-safe): blueprint cards, two taped-on slots, the junk bag, the result tag, TAPE IT, LEAVE */
+const wsCss = document.createElement('style');
+wsCss.textContent = `#ws{position:fixed;inset:0;display:none;z-index:40;color:#3f2616;font-family:system-ui,sans-serif;font-weight:bold;user-select:none;-webkit-user-select:none;touch-action:none}
+#ws canvas.bg{position:absolute;inset:0;width:100%;height:100%}
+#ws .wrap{position:absolute;left:4vmin;right:4vmin;top:9vmin;bottom:3vmin;display:flex;flex-direction:column;gap:1.6vmin}
+#ws .row{display:flex;gap:2vmin;justify-content:center;flex-wrap:wrap}
+#ws .card{background:#e3c99a;border:2px solid #8a6a44;border-radius:4px;padding:1vmin 2vmin;min-width:20vmin;max-width:30vmin;cursor:pointer;box-shadow:3px 3px 0 rgba(63,38,22,.35);font-size:max(11px,1.9vmin);position:relative}
+#ws .card small{display:block;font-weight:normal;font-size:max(10px,1.6vmin)} #ws .card.sel{outline:3px solid #e8a83a} #ws .card.on{background:#cfe3b0}
+#ws .card.on:after{content:'ON';position:absolute;right:-8px;top:-10px;background:#cfe3b0;color:#2f6a3a;border:2px solid #2f6a3a;padding:0 4px;transform:rotate(8deg);font-size:max(10px,1.6vmin)}
+#ws .bench{position:relative;display:flex;gap:3vmin;align-items:center;justify-content:center;padding:1.2vmin 2vmin;background:rgba(201,166,118,.55);border:2px dashed #8a6a44;border-radius:4px;overflow:hidden}
+#ws .slot{width:14vmin;height:14vmin;min-width:58px;min-height:58px;border:3px dashed #5e3d25;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(243,230,196,.6);cursor:pointer;font-size:max(10px,1.6vmin);text-align:center}
+#ws .slot.fit{border-style:solid;border-color:#2f6a3a} #ws .slot.miss{border-style:solid;border-color:#a3542e} #ws .slot img{width:8vmin;height:8vmin;min-width:34px;min-height:34px;pointer-events:none}
+#ws .tag{background:#f3e6c4;border:2px solid #3f2616;border-radius:3px 12px 12px 3px;padding:1vmin 2vmin;min-width:22vmin;font-size:max(11px,2vmin);transform:rotate(-2deg)}
+#ws .tag small{display:block;font-weight:normal;font-size:max(10px,1.5vmin)}
+#ws .tapest{position:absolute;left:-40%;top:42%;width:40%;height:3vmin;background:url(art/card/tape.webp) center/auto 100% repeat-x,rgba(240,226,180,.92);border-top:1px solid #c8b680;border-bottom:1px solid #c8b680;pointer-events:none;display:none}
+#ws .tapest.go{display:block;animation:wstape .5s linear forwards} @keyframes wstape{to{left:110%}}
+#ws .bag{display:flex;flex-wrap:wrap;gap:1.2vmin;justify-content:center;align-content:flex-start;min-height:12vmin;overflow:auto}
+#ws .jk{display:flex;flex-direction:column;align-items:center;background:#f3e6c4;border:2px solid #8a6a44;border-radius:5px;padding:.5vmin 1vmin;cursor:grab;font-size:max(10px,1.5vmin);min-width:12vmin;touch-action:none}
+#ws .jk img{width:8vmin;height:8vmin;min-width:34px;min-height:34px;pointer-events:none} #ws .jk.pick{outline:3px solid #e8a83a;background:#ffe9b0} #ws .jk span{pointer-events:none} #ws .jk small{font-weight:normal;pointer-events:none}
+#ws .bar{display:flex;gap:2vmin;justify-content:center}
+#ws button{font:bold max(13px,2.4vmin) system-ui,sans-serif;padding:1.2vmin 3vmin;border-radius:6px;border:2px solid #3f2616;background:#e8a83a;color:#3f2616;cursor:pointer;min-height:44px}
+#ws button.lv{background:#d9b98a} #ws button:disabled{opacity:.45}
+#ws .hint{text-align:center;font-weight:normal;font-size:max(10px,1.6vmin)}
+#ws-ghost{position:fixed;z-index:41;pointer-events:none;width:9vmin;height:9vmin;min-width:38px;min-height:38px;display:none;transform:translate(-50%,-50%)}
+#ws-go{position:fixed;left:50%;bottom:24%;transform:translateX(-50%);display:none;z-index:7;padding:.45em 1em;border-radius:6px;background:#e3c99a;border:2px solid #3f2616;color:#3f2616;font:bold max(13px,2.3vmin) system-ui,sans-serif;cursor:pointer;touch-action:none;white-space:nowrap;box-shadow:3px 3px 0 rgba(63,38,22,.4)}
+#h-junk{color:#e3c99a} body.wsopen .tb{display:none}`;
+document.head.appendChild(wsCss);
+const wsEl = document.createElement('div'); wsEl.id = 'ws'; wsEl.innerHTML = '<canvas class="bg"></canvas><div class="wrap"><div class="row cards"></div><div class="bench"><div class="tapest"></div></div><div class="hint"></div><div class="bag"></div><div class="bar"><button class="tp">TAPE IT</button><button class="lv">LEAVE: BOSS</button></div></div>';
+document.body.appendChild(wsEl);
+const wsGhost = document.createElement('img'); wsGhost.id = 'ws-ghost'; wsGhost.alt = ''; document.body.appendChild(wsGhost);
+const wsGo = document.createElement('div'); wsGo.id = 'ws-go'; document.body.appendChild(wsGo);
+{ const hj = document.createElement('span'); hj.id = 'h-junk'; hj.title = 'Junk bag'; hudEl.insertBefore(hj, $('h-gems')); }
+const wsQ = s => wsEl.querySelector(s);
+function drawJunkIcon(c, kind) { const g = c.getContext('2d'), w = c.width, h = c.height, col = JUNK[kind].col; g.clearRect(0, 0, w, h); g.save(); g.translate(w / 2, h / 2); g.lineWidth = 2.5; g.strokeStyle = '#3f2616'; g.fillStyle = col;
+  const rr = (x, y, a, b) => { g.beginPath(); g.rect(x, y, a, b); g.fill(); g.stroke(); };
+  if (kind === 'can') { rr(-12, -18, 24, 36); g.fillStyle = '#e8a83a'; g.fillRect(-12, -6, 24, 10); }
+  else if (kind === 'bottle') { rr(-10, -6, 20, 26); rr(-4, -22, 8, 16); }
+  else if (kind === 'boot') { rr(-12, -20, 14, 32); rr(-12, 6, 28, 12); }
+  else if (kind === 'plank') { g.rotate(-.3); rr(-26, -6, 52, 12); g.beginPath(); g.moveTo(-14, -2); g.lineTo(10, 2); g.stroke(); }
+  else if (kind === 'rag') { g.beginPath(); g.moveTo(-22, 8); g.quadraticCurveTo(-10, -18, 4, -6); g.quadraticCurveTo(18, -16, 22, 10); g.quadraticCurveTo(0, 20, -22, 8); g.fill(); g.stroke(); }
+  else { rr(-9, -22, 18, 44); g.fillStyle = '#d9534f'; g.beginPath(); g.arc(0, -14, 3, 0, 7); g.fill(); g.fillStyle = '#c7c7c7'; for (let k = 0; k < 3; k++) g.fillRect(-5, -4 + k * 8, 10, 4); }
+  g.restore(); }
+const wsIcons = {}, wsIcon = k => wsIcons[k] || (wsIcons[k] = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; drawJunkIcon(c, k); return c.toDataURL(); })());   // code-drawn junk icons, as images
+function drawWsBg() {   // corrugated cardboard walls, a box workbench, masking-tape seams, marker scribbles, the sign (all code-drawn placeholders)
+  const c = wsQ('canvas.bg'), dpr = Math.min(1.25, devicePixelRatio || 1), w = c.width = Math.round(innerWidth * dpr), h = c.height = Math.round(innerHeight * dpr), g = c.getContext('2d');
+  const tile = (im, y0, y1, size) => { const p = g.createPattern(im, 'repeat'), k = 1 / Math.max(1, Math.round(im.width / size)); /* whole-fraction scale: no seam lines */ p.setTransform(new DOMMatrix([k, 0, 0, k, 0, y0])); g.fillStyle = p; g.fillRect(0, y0, w, y1 - y0); };
+  if (wsArt.wall) tile(wsArt.wall, 0, h * .72, Math.max(160, h * .42)); else { const wall = g.createLinearGradient(0, 0, 0, h * .72); wall.addColorStop(0, '#b58e5e'); wall.addColorStop(1, '#c9a676'); g.fillStyle = wall; g.fillRect(0, 0, w, h * .72);
+    g.strokeStyle = 'rgba(94,61,37,.18)'; g.lineWidth = Math.max(2, w / 300); for (let x = 0; x < w; x += Math.max(8, w / 90)) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h * .72); g.stroke(); } }
+  if (wsArt.floor) tile(wsArt.floor, h * .72, h, Math.max(140, h * .3)); else { const fl = g.createLinearGradient(0, h * .72, 0, h); fl.addColorStop(0, '#8f6c45'); fl.addColorStop(1, '#7a5a38'); g.fillStyle = fl; g.fillRect(0, h * .72, w, h * .28); }
+  g.fillStyle = 'rgba(40,24,12,.28)'; g.fillRect(0, h * .72, w, h * .012);   // the bench edge
+  const r = mulberry(hash('ws-bg')), tapeH = Math.max(10, h * .03); g.fillStyle = 'rgba(240,226,180,.8)';
+  for (let k = 0; k < 6; k++) { const x = r() * w, y = r() * h * .65, a = (r() - .5) * .8, L = w * (.12 + r() * .18); g.save(); g.translate(x, y); g.rotate(a);
+    if (wsArt.tape) g.drawImage(wsArt.tape, -L / 2, -tapeH / 2, L, tapeH); else g.fillRect(-L / 2, -tapeH / 2, L, tapeH); g.restore(); }   // tape seams
+  g.strokeStyle = 'rgba(40,30,60,.35)'; g.lineWidth = Math.max(2, w / 400); for (let k = 0; k < 5; k++) { g.beginPath(); let x = r() * w, y = r() * h * .6; g.moveTo(x, y); for (let s = 0; s < 6; s++) { x += (r() - .3) * w * .04; y += (r() - .5) * h * .04; g.lineTo(x, y); } g.stroke(); }   // marker scribbles
+  const lamp = g.createRadialGradient(w * .5, h * .08, 0, w * .5, h * .08, w * .45); lamp.addColorStop(0, 'rgba(255,236,190,.35)'); lamp.addColorStop(1, 'rgba(255,236,190,0)'); g.fillStyle = lamp; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#e3c99a'; g.strokeStyle = '#3f2616'; g.lineWidth = Math.max(2, w / 500); const sw = Math.min(w * .3, 360 * dpr), sx = (w - sw) / 2, sy = h * .012, sh = h * .07; g.fillRect(sx, sy, sw, sh); g.strokeRect(sx, sy, sw, sh);
+  g.fillStyle = '#3f2616'; g.font = 'bold ' + Math.round(sh * .62) + 'px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('WORKSHOP', w / 2, sy + sh / 2 + 1);
+  if (!wsArt.floor) { g.fillStyle = 'rgba(63,38,22,.25)'; for (let k = 0; k < 4; k++) g.fillRect(w * (.04 + k * .26), h * .78, w * .18, h * .2); }   // box legs of the bench (code look only)
+}
+let wsKey = '', wsBgFor = '';
+function wsRender() {
+  const w = G.ws, open = !!(w && w.open) && G.state === 'play';   // paused (window left, phone upright): hidden under the pause
+  if (wsEl.style.display !== (open ? 'block' : 'none')) wsEl.style.display = open ? 'block' : 'none';
+  document.body.classList.toggle('wsopen', open);
+  const near = !open && G.state === 'play' && !G.freeze && G.wsNear; if (wsGo.style.display !== (near ? 'block' : 'none')) { wsGo.style.display = near ? 'block' : 'none'; wsGo.textContent = isTouch ? 'WORKSHOP' : 'WORKSHOP [F]'; }
+  if (!open) { wsKey = ''; if (G.state === 'play' && G.room >= WORK.ROOM - 1 && G.room <= WORK.ROOM) wsLoadArt(); return; }
+  wsLoadArt();
+  const bk = innerWidth + 'x' + innerHeight; if (wsBgFor !== bk) { wsBgFor = bk; drawWsBg(); }
+  const k = G.bag.join(',') + '|' + w.slots.join(',') + '|' + w.bp + '|' + w.pick + '|' + Object.keys(G.gear.built).join(',') + '|' + (w.tapeT > 0) + '|' + w.built; if (k === wsKey) return; wsKey = k;
+  const bp = BLUEPRINTS[w.bp], built = G.gear.built;
+  wsQ('.cards').innerHTML = BLUEPRINTS.map((b, i) => '<div class="card' + (i === w.bp ? ' sel' : '') + (built[b.id] ? ' on' : '') + '" data-bp="' + i + '">' + (isTouch ? '' : '[' + (i + 1) + '] ') + b.n.toUpperCase() + '<small>' + b.does + '</small><small>wants: ' + b.slots.join(' + ') + '</small></div>').join('');
+  const bench = wsQ('.bench'), tape = bench.querySelector('.tapest'); [...bench.querySelectorAll('.slot,.tag')].forEach(e => e.remove());
+  bp.slots.forEach((want, i) => { const s = document.createElement('div'), j = w.slots[i]; s.className = 'slot' + (j ? (slotFits(want, j) ? ' fit' : ' miss') : ''); s.dataset.slot = i;
+    if (j) { const im = document.createElement('img'); im.src = wsIcon(j); im.alt = ''; s.appendChild(im); s.appendChild(document.createTextNode(JUNK[j].n)); } else s.textContent = want.toUpperCase(); bench.insertBefore(s, tape); });
+  const tag = document.createElement('div'); tag.className = 'tag';
+  if (built[bp.id]) tag.innerHTML = 'ON: ' + bpResult(bp, built[bp.id].slots).txt + '<small>lasts the whole run</small>';
+  else { const r = bpResult(bp, w.slots), full = w.slots.slice(0, bp.slots.length).every(Boolean); tag.innerHTML = (full ? '' : 'will give: ') + r.txt + '<small>' + (bp.id === 'plate' ? 'any junk holds' : r.m + ' of 2 slots fit (' + bp.slots.join(' + ') + ')') + '</small>'; }
+  bench.appendChild(tag);
+  tape.classList.toggle('go', w.tapeT > 0);
+  wsQ('.bag').innerHTML = G.bag.length ? G.bag.map((j, i) => '<div class="jk' + (i === w.pick ? ' pick' : '') + '" data-j="' + i + '"><img src="' + wsIcon(j) + '" alt=""><span>' + JUNK[j].n + '</span><small>' + JUNK[j].mat.replace('_', ' ') + ': ' + (matTags(JUNK[j].mat).join(', ') || 'plain') + '</small></div>').join('') : '<div class="hint">junk bag empty: pick up junk on the run or at the lake, then come back</div>';
+  wsQ('.hint').textContent = 'JUNK BAG ' + G.bag.length + '/' + WORK.BAG_MAX + ' · ' + (isTouch ? 'tap junk, then a slot (or drag it). Tap a filled slot to take it back' : 'click junk, then a slot (or drag it). Right-click a filled slot to take it back. Space: tape it. Esc: leave');
+  wsQ('button.tp').disabled = !!built[bp.id] || !w.slots.slice(0, bp.slots.length).every(Boolean) || w.tapeT > 0;
+}
+let wsDrag = null;
+wsEl.addEventListener('contextmenu', e => e.preventDefault());
+wsEl.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const t = e.target, w = G.ws; if (!w || !w.open || G.state !== 'play' || !t.closest) return;
+  const card = t.closest('.card'); if (card) { wsPickBp(+card.dataset.bp); return; }
+  const slot = t.closest('.slot'); if (slot) { const i = +slot.dataset.slot; if (w.slots[i]) wsTakeBack(i); else wsFill(i); return; }
+  const jk = t.closest('.jk'); if (jk) { wsDrag = { i: +jk.dataset.j, x: e.clientX, y: e.clientY, moved: false, id: e.pointerId }; try { wsEl.setPointerCapture(e.pointerId); } catch (_) {} return; }
+  if (t.closest('button.tp')) { wsTape(); return; } if (t.closest('button.lv')) { wsLeave(); return; } });
+wsEl.addEventListener('pointermove', e => { const d = wsDrag; if (!d || d.id !== e.pointerId) return; if (!d.moved && Math.hypot(e.clientX - d.x, e.clientY - d.y) > 8) { d.moved = true; wsGhost.src = wsIcon(G.bag[d.i]); wsGhost.style.display = 'block'; }
+  if (d.moved) { wsGhost.style.left = e.clientX + 'px'; wsGhost.style.top = e.clientY + 'px'; } });
+const wsDrop = e => { const d = wsDrag; if (!d || d.id !== e.pointerId) return; wsDrag = null; wsGhost.style.display = 'none';
+  if (!d.moved) { wsPickJunk(d.i); return; } const el = document.elementFromPoint(e.clientX, e.clientY), s = el && el.closest && el.closest('#ws .slot'); if (s) wsFill(+s.dataset.slot, d.i); };
+wsEl.addEventListener('pointerup', wsDrop); wsEl.addEventListener('pointercancel', () => { wsDrag = null; wsGhost.style.display = 'none'; });
+wsGo.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); wsOpen(); });
+function wsKeyDown(e) {   // keys while the workshop is open (the run's keys do nothing here)
+  const c = e.code; e.preventDefault(); if (e.repeat || G.state !== 'play') return;   // paused: nothing (P / focus brings it back)
+  if (c === 'Space' || c === 'Enter') wsTape(); else if (c === 'Escape' || c === 'KeyD' || c === 'ArrowRight') wsLeave();
+  else if (c === 'Digit1' || c === 'Digit2' || c === 'Digit3') wsPickBp(+c.slice(5) - 1); else if (c === 'KeyM') toggleMute(); }
+
 /* ---------- input ---------- */
 const keyMap = { ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', ArrowUp: 'jump', KeyW: 'jump', Space: 'jump' };
 // end screen: ignore restart presses for END_LOCK ms after it appears (mashing jump / tapping no longer skips it); then a fresh press is needed
@@ -3749,6 +4121,11 @@ function noteEnd() { const e = G.state === 'end'; if (e && !wasEnd) endShownAt =
 function startOrRestart() { noteEnd(); if (G.state === 'end' && performance.now() - endShownAt < END_LOCK) return; if (G.state === 'title' || G.state === 'end') { G.p = null; startRun(); } }
 function setSeed(s) { G.seed = s; G.world = genWorld(s); G.best = 0; try { G.best = +localStorage.getItem(BEST_KEY(s)) || 0; } catch (e) {} }
 const dailySeed = () => { const d = new Date(); return 'daily-' + d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+// the workshop screen owns the keyboard while it is open: a capture listener runs before every other keydown / keyup listener
+// (the fishing world's are registered first) and stops them; P still pauses
+addEventListener('keydown', e => { if (!(G.ws && G.ws.open && (G.state === 'play' || G.state === 'paused'))) return; e.stopImmediatePropagation();
+  if (e.code === 'KeyP' && !e.repeat) { e.preventDefault(); togglePause(); return; } wsKeyDown(e); }, true);
+addEventListener('keyup', e => { if (G.ws && G.ws.open && (G.state === 'play' || G.state === 'paused')) e.stopImmediatePropagation(); }, true);
 addEventListener('keydown', e => {
   const menu = G.state === 'title' || G.state === 'end';
   if (menu && e.code === 'KeyD') { setSeed(dailySeed()); G.state = 'title'; return; }
@@ -3758,6 +4135,7 @@ addEventListener('keydown', e => {
   if (e.code === 'ArrowDown' || e.code === 'KeyS') { e.preventDefault(); keys.down = true; if (!e.repeat && G.state === 'play' && !G.freeze) blockInput(true); return; }
   if (e.code === 'KeyE') { e.preventDefault(); if (!e.repeat && G.state === 'play' && !G.freeze) blockInput(true); return; }                      // shield
   if (e.code === 'ControlLeft' || e.code === 'ControlRight') { e.preventDefault(); if (!e.repeat && !G.freeze) kickInput(true); return; }        // kick
+  if (e.code === 'KeyF' && !e.repeat && G.state === 'play' && G.wsNear && wsOpen()) { e.preventDefault(); return; }                          // the caravan flap: workshop
   if (e.code === 'KeyF' && !e.repeat && G.state === 'play' && G.rs && G.rs.perch && fishInput()) { e.preventDefault(); return; }                // fish off a croc head
   if (e.ctrlKey && (k || e.code === 'KeyS' || e.code === 'KeyE') && G.state === 'play') e.preventDefault();
   if (e.code === 'KeyB' && menu && !e.repeat) { setBlockMode(blockMode === 'press' ? 'hold' : 'press'); return; }
@@ -3796,6 +4174,7 @@ addEventListener('keyup', e => { const k = keyMap[e.code]; if (k) keys[k] = fals
 let autoPaused = false;
 function pauseOnLeave() { keys.left = keys.right = keys.jump = keys.block = keys.down = false; blockLatch = false; jumpQ = 0; hookInput(false); mouseL = mouseR = mouseM = false; if (G.state === 'play') { G.state = 'paused'; autoPaused = true; } }
 function resumeOnReturn() { if (autoPaused && G.state === 'paused') G.state = 'play'; autoPaused = false; }
+wsResetInput = () => { keys.left = keys.right = keys.jump = keys.block = keys.down = false; blockLatch = false; jumpQ = 0; hookInput(false); mouseL = mouseR = mouseM = false; };
 addEventListener('blur', pauseOnLeave);
 addEventListener('focus', () => { if (!document.hidden) resumeOnReturn(); });
 document.addEventListener('visibilitychange', () => { if (document.hidden) pauseOnLeave(); else if (document.hasFocus()) resumeOnReturn(); });
@@ -3841,13 +4220,18 @@ fxKickLand = p => { fxDust(X(p.x), .1, 10, 3, 2); addShake(.25); };
 /* ---------- fishing world (fishworld.js): its own scene layer; these are the only hooks ---------- */
 const FW = window.MudFishWorld && renderer ? window.MudFishWorld({ THREE, G, renderer, scene, camera, cv, pl, buddy, poseBuddy, buddyRig, hold, uTime, VT: () => VT,
   sfx: (...a) => sfx(...a), mats, M, AM, artify, reg, gBox, gCyl, gSph, gIco, gCone, gDisc, gRing, gQuad, gTrunk, gBlob, gRock, gTuft, texGlow, texSoft, texStar, texRay,
-  X, GY, HS, frontH, bankH, mulberry, hash, fbm, sstep, lerp, QL, roomGroup, isTouch, update,
+  X, GY, HS, frontH, bankH, mulberry, hash, fbm, sstep, lerp, QL, roomGroup, isTouch, update, junkIn: junkInFish,
   resetInput: () => { keys.left = keys.right = keys.jump = keys.block = keys.hook = keys.down = false; blockLatch = false; jumpQ = 0; hookInput(false); mouseL = mouseR = mouseM = false; } }) : null;
+/* ---------- top-down paper map + deep dive (topworld.js): its own scene layers; these are the only hooks ---------- */
+const TW = window.MudTopWorld && renderer ? window.MudTopWorld({ THREE, G, renderer, scene, camera, cv, pl, buddy, poseBuddy, hold, VT: () => VT, sfx: (...a) => sfx(...a), reg,
+  X, GY, HS, frontH, bankH, mulberry, hash, fbm, sstep, lerp, QL, roomGroup, isTouch, update, FW, mech, mechMat, genRoom, enterRoom, mkFlyer, hitFlyer, FL: TUNE.FLYER, HK, ROOMS, junkAdd: (k, s) => junkAdd(k, s), bagMax: WORK.BAG_MAX, enterOG, leaveOG, isOG,   /* the OG world: the map spot plays the side-scroller in its old look */
+  resetInput: () => { keys.left = keys.right = keys.jump = keys.block = keys.hook = keys.down = false; blockLatch = false; jumpQ = 0; hookInput(false); mouseL = mouseR = mouseM = false; } }) : null;
+if (FW && FW.test && FW.test.paths) wsPathX = i => { const m = FW.test.paths(); return m && m[i] !== undefined ? m[i] : null; };
 /* ---------- loop ---------- */
 let last = performance.now(), acc = 0;
 function frame(now) {
   const dtr = Math.min(0.1, (now - last) / 1000); acc += dtr; last = now;
-  while (acc >= STEP) { update(STEP); if (FW) FW.step(STEP); if (G.state === 'title') G.t += STEP; acc -= STEP; }
+  while (acc >= STEP) { update(STEP); if (FW) FW.step(STEP); if (TW) TW.step(STEP); if (G.state === 'title') G.t += STEP; acc -= STEP; }
   noteEnd();
   render(dtr); requestAnimationFrame(frame);
 }
@@ -3887,6 +4271,19 @@ if (TEST_HOOK) window.__jr = { G, keys, genWorld, update, render, kickInput, KIC
     bird0: bd.birds[0] ? { x: +bd.birds[0].x.toFixed(3) } : null, cr0: bd.crs[0] ? { x: +bd.crs[0].x.toFixed(3) } : null, wing0: bd.bWing ? (() => { const m = new THREE.Matrix4(), e = new THREE.Euler(); bd.bWing.getMatrixAt(0, m); e.setFromRotationMatrix(m); return +e.x.toFixed(3); })() : null,
     leg0: bd.legs ? (() => { const m = new THREE.Matrix4(), e = new THREE.Euler(); bd.legs.getMatrixAt(0, m); e.setFromRotationMatrix(m); return +e.z.toFixed(3); })() : null, rootVisible: bd.root.visible }),
   backdropShow(v) { bd.root.visible = !!v; }, setBackdropArt, backdropUpdate, cam,
+  plates: () => ({ og: FP.og, steam: FP.steam, log: FP.steamLog.slice(), list: FP.meshes.map(P => { const T = FP.tex[P.L.name], m = P.mesh.material; return { name: P.L.name, screen: !!P.L.screen, visible: P.mesh.visible, tier: T ? T.tier : null, w: T ? T.w : 0, h: T ? T.h : 0, map: !!m.map, z: P.L.z, k: P.L.k, gx: +P.g.position.x.toFixed(3), off: T ? +T.t.offset.x.toFixed(5) : 0, rep: T ? +T.t.repeat.x.toFixed(4) : 0, wpl: +P.wpl.toFixed(3), lay: P.lay, sx: +P.mesh.scale.x.toFixed(3), sy: +P.mesh.scale.y.toFixed(3), py: +P.mesh.position.y.toFixed(3), a: m.userData.U.uA.value }; }), code: bd.layers.map(L => L.code.map(o => o.visible)) }), setOgWorld, enterOG, leaveOG, isOG, crocSkin: () => ({ og: crocOG, map: CROC_MAT.skin.map && CROC_MAT.skin.map.image ? CROC_MAT.skin.map.image.width : 0, drawn: !!CROC_MAT.skin.userData.drawn }), plateImage: n => FP.tex[n] ? FP.tex[n].t.image : null, fill: () => ({ on: !!(FP.fill && FP.fill.visible), box: FP_FILL, hill: { x0: -22, x1: 54, z1: -44 } }), fillY: (x, z) => fpFillY(x, z),
+  fpProbe: () => {   // screen y (0 top .. 1 bottom) and x of everything the player must see: hero feet/head, buddy, mobs, flyers, gem, vine ends, the hook's target
+    const out = [], v = new THREE.Vector3(), pt = (tag, x, y, z) => { v.set(x, y, z).project(camera); out.push([tag, +((1 - v.y) / 2).toFixed(4), +((v.x + 1) / 2).toFixed(4)]); }, wp = (tag, o) => { o.getWorldPosition(v); pt(tag, v.x, v.y, v.z); };
+    const p = G.p; if (p) { pt('feet', X(p.x), Y(p.y), 0); pt('head', X(p.x), Y(p.y) + heroH(), 0); const a = G.rs && G.world && hookAim(p, G.world.rooms[G.room], G.rs); if (a) pt('hook', X(a.x), Y(a.y), 0); }
+    if (buddy.root.visible) wp('buddy', buddy.root);
+    if (view) { view.crawlers.forEach(c => { if (c.root.visible) wp('crawler', c.root); }); view.vines.forEach(e => wp('vine', e.knob)); if (view.gem && view.gem.root.visible) wp('gem', view.gem.root); }
+    for (const k in flyViews) flyViews[k].forEach(f => { if (f.root.visible) wp('flyer', f.root); });
+    const fr = FP.meshes.find(P => P.L.name === 'front' && P.mesh.visible); let frontTop = null; if (fr && p) { v.set(X(p.x), fr.lay.y0 + fr.lay.h * fr.lay.top, fr.L.z).project(camera); frontTop = +((1 - v.y) / 2).toFixed(4); }
+    return { pts: out, frontTop, bands: FP.meshes.filter(P => P.L.screen && P.mesh.visible).map(P => ({ name: P.L.name, band: P.lay.band })) }; },
   fish: FW ? FW.test : null,
+  ws: { WORK, JUNK, MAT, BLUEPRINTS, matTags, junkAdd, junkInFish, junkGen, wsOpen, wsPickBp, wsPickJunk, wsFill, wsTakeBack, wsTape, wsLeave, wsStep, caravanX, hookReach, supMax, bpResult, slotFits, wsNearCheck, patchShown: () => wsPatch.visible,
+    junkShown: () => jkViews.filter(v => v.visible).length, caravan: () => !!(view && view.caravan), dom: () => ({ open: getComputedStyle(wsEl).display !== 'none', go: getComputedStyle(wsGo).display !== 'none', cards: wsEl.querySelectorAll('.card').length, slots: wsEl.querySelectorAll('.slot').length, jk: wsEl.querySelectorAll('.jk').length, tag: (wsEl.querySelector('.tag') || {}).textContent || '', hud: $('h-junk').textContent }),
+    st: () => ({ bag: G.bag.slice(), junkIn: { ...G.junkIn }, gear: JSON.parse(JSON.stringify(G.gear)), ws: G.ws ? { ...G.ws, slots: G.ws.slots.slice() } : null, near: G.wsNear, spots: (G.jspots || []).map(j => ({ ...j })) }) },
   info: () => renderer ? { calls: renderer.info.render.calls, tris: renderer.info.render.triangles, fps, rev: THREE.REVISION, quality: QL().name } : null };
+if (TEST_HOOK && TW) window.__jr.top = TW.test;   // top-down map test API (localhost only)
 })();

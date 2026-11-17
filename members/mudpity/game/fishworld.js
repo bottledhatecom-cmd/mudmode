@@ -218,20 +218,39 @@ fsky.frustumCulled = false; fsky.renderOrder = -10; fscene.add(fsky);
    It sits beyond the fog, so the fog cannot reach it: the shader mixes it toward the live fog colour instead (hazy by day, dark at night,
    like the rest of the horizon). Seen from inside, so BackSide with a mirrored repeat. No file = no ring (the fog shows, as before). */
 const RING = { R: 270, REP: 3, Y: 62, HAZE: .3, FOG0: .0096, HI0: 1.15, HMAX: .9 };   // radius, repeats round the circle, band bottom height, mix toward fog (0 = none); haze scales with fog density / FOG0 (mist, rain), brightness with hemi light / HI0 (dusk, night), haze capped at HMAX
-const fring = (() => { const P = window.JR_RING; if (!P || !P.src) return null;
-  const h = TAU * RING.R / RING.REP * P.h / P.w, g = new THREE.CylinderGeometry(RING.R, RING.R, h, 96, 1, true); g.translate(0, h / 2 + RING.Y, 0);
+const FARU = { uFogC: { value: fscene.fog.color }, uHaze: { value: RING.HAZE }, uLit: { value: 1 } };   // shared by the ring and the far cards; the fog colour object itself, so skyRender's changes reach them
+function farMat(src, rep, wrapS) {   // a hazed, lit, see-through far material (BackSide, mirrored repeat: it is seen from inside the circle); the picture swaps in once loaded
   const m = new THREE.MeshBasicMaterial({ transparent: true, alphaTest: .5, fog: false, depthWrite: false, side: THREE.BackSide, toneMapped: false, visible: false });
-  const uH = { value: RING.HAZE }, uL = { value: 1 }, uF = { value: fscene.fog.color };   // the fog colour object itself, so skyRender's changes reach the ring
-  m.onBeforeCompile = sh => { sh.uniforms.uFogC = uF; sh.uniforms.uHaze = uH; sh.uniforms.uLit = uL;
+  m.onBeforeCompile = sh => { Object.assign(sh.uniforms, FARU);
     sh.fragmentShader = 'uniform vec3 uFogC; uniform float uHaze, uLit;\n' + sh.fragmentShader.replace('#include <opaque_fragment>', '#include <opaque_fragment>\n  gl_FragColor.rgb = mix(gl_FragColor.rgb * uLit, uFogC, uHaze);'); };
-  const im = new Image(); im.onload = () => { const t = new THREE.CanvasTexture(im); t.wrapS = 1000; t.wrapT = 1001; t.repeat.set(-RING.REP, 1);   // 1000 repeat, 1001 clamp (slim bundle)
-    t.colorSpace = THREE.SRGBColorSpace; m.map = t; m.visible = true; m.needsUpdate = true; }; im.src = P.src;
-  const ring = new THREE.Mesh(g, m); ring.renderOrder = -9; ring.frustumCulled = false; ring.name = 'ring'; fscene.add(ring); return { mesh: ring, haze: uH, lit: uL, h }; })();
+  const im = new Image(); im.onload = () => { const t = new THREE.CanvasTexture(im); t.wrapS = wrapS; t.wrapT = 1001; t.repeat.set(-rep, 1); if (wrapS === 1001) t.offset.set(1, 0);   // 1000 repeat, 1001 clamp (slim bundle)
+    t.colorSpace = THREE.SRGBColorSpace; m.map = t; m.visible = true; m.needsUpdate = true; }; im.src = src;
+  return m;
+}
+let fring = null, fcards = null;   // built on the first fishing visit, once art/ring-tex.js and art/far-tex.js have arrived (farArt below)
+const mkRing = () => { const P = window.JR_RING; if (!P || !P.src) return null;
+  const h = TAU * RING.R / RING.REP * P.h / P.w, g = new THREE.CylinderGeometry(RING.R, RING.R, h, 96, 1, true); g.translate(0, h / 2 + RING.Y, 0);
+  const ring = new THREE.Mesh(g, farMat(P.src, RING.REP, 1000)); ring.renderOrder = -9; ring.frustumCulled = false; ring.name = 'ring'; fscene.add(ring); return { mesh: ring, haze: FARU.uHaze, lit: FARU.uLit, h }; };
 
 // ---- terrain: a misty lake basin. lakeR(theta) = shoreline radius; inlets for the hidden coves ----
 const angD = (a, b) => { let d = a - b; while (d > PI) d -= TAU; while (d < -PI) d += TAU; return d; };
 const bump = (th, c, w) => { const d = angD(th, c) / w; return Math.exp(-d * d); };
 const TH = { falls: -PI / 2, cliffs: -.8, sunk: .05, junk: .85, dock: PI / 2 - .2, marsh: PI };
+/* far-shore cards (art/far-tex.js): each spot's landmark seen from far off (the cabin, the reeds, the cliffs, the junk heap, the falls, the sunken tree),
+   a slice of a circle just inside the ring at that spot's bearing, bottom on the ring's baseline, hazed and lit with the ring. No file = no cards. */
+const FARC = { R: 262, W: 300, Y: RING.Y + 10 };   // radius (just inside the ring), card width along the circle, bottom height (a little above the ring baseline, so the landmark clears the hills)
+const mkCards = () => { const P = window.JR_FAR; if (!P) return null; const out = {};
+  for (const id of Object.keys(TH)) { const c = P[id]; if (!c || !c.src) continue;
+    const len = FARC.W / FARC.R, h = FARC.W * c.h / c.w, a = PI / 2 - TH[id];   // three's cylinder angle runs from +z toward +x; the lake's bearing from +x toward +z
+    const g = new THREE.CylinderGeometry(FARC.R, FARC.R, h, 24, 1, true, a - len / 2, len); g.translate(0, h / 2 + FARC.Y, 0);
+    const card = new THREE.Mesh(g, farMat(c.src, 1, 1001)); card.renderOrder = -8; card.frustumCulled = false; card.name = 'far-' + id; fscene.add(card); out[id] = card; }
+  return out; };
+const FAR_ART = { asked: false, err: [] };
+function farArt() {   // first visit: fetch the ring and card art (script tags), then build them; a missing file only drops that piece
+  if (FAR_ART.asked) return; FAR_ART.asked = true;
+  const need = [['JR_RING', 'art/ring-tex.js', () => { if (!fring) fring = mkRing(); }], ['JR_FAR', 'art/far-tex.js', () => { if (!fcards) fcards = mkCards(); }]];
+  for (const [g, src, build] of need) { if (window[g]) { build(); continue; } const s = document.createElement('script'); s.src = src; s.onload = build; s.onerror = () => FAR_ART.err.push(src); document.head.appendChild(s); }
+}
 const lakeR = th => 40 + 6 * Math.sin(3 * th + .6) + 3.5 * Math.sin(5 * th + 2.1) + 2 * Math.sin(9 * th + .3) + 13 * bump(th, TH.falls, .09) + 10 * bump(th, TH.sunk, .1);
 const GP = { x: -47, z: 35 };          // glint pool (hidden), up in the south-west woods
 const FZC = -lakeR(TH.falls);          // far end of the waterfall cove (the falls stand just behind it)
@@ -261,7 +280,7 @@ function groundH(x, z) {   // same triangles as the terrain mesh, so feet match 
 const shoreAt = th => { const R = lakeR(th); return { x: Math.cos(th) * R, z: Math.sin(th) * R }; };
 const W3 = { built: false, group: null, spots: [], rocks: [], dock: null, boat: null, gate: null, fx: {} };
 function buildWorld() {
-  if (W3.built) return; W3.built = true; const t0 = performance.now(), hi = QL().name !== 'LOW', rng = mulberry(hash('fishworld-v1')), r = (a, b) => a + rng() * (b - a);
+  if (W3.built) return; W3.built = true; farArt(); const t0 = performance.now(), hi = QL().name !== 'LOW', rng = mulberry(hash('fishworld-v1')), r = (a, b) => a + rng() * (b - a);
   const grp = new THREE.Group(); W3.group = grp; fscene.add(grp); const c2 = new THREE.Color();
   // terrain
   tN = hi ? 150 : 100; const g = new THREE.PlaneGeometry(TS, TS, tN, tN); g.rotateX(-PI / 2); const p = g.attributes.position; tGrid = new Float32Array(p.count); const col = new Float32Array(p.count * 3);
@@ -513,7 +532,9 @@ function finishExit() {
   F.inBoat = false; boatHome(); setHelp('foot');
   hudEl.style.display = 'none'; helpEl.style.display = 'none'; gameEl.style.display = 'none'; touchEl.style.display = 'none'; msgEl.style.display = 'none';
   try { if (document.pointerLockElement) document.exitPointerLock(); } catch (e) { /* ignore */ }
-  const p = G.p, r = F.ret; G.state = 'play'; if (r && r.room === G.room) p.x = r.x; p.y = GY; p.vx = 0; p.vy = 0; p.onGround = true; p.inv = 1.2; p.face = 1; p.hook = null;
+  const p = G.p, r = F.ret;
+  if (r && r.map) { F.ret = null; A.resetInput(); inp.down.clear(); inp.act = false; fadeEl.style.opacity = '1'; F.sideFade = 1; F.promptTxt = null; F.lastExit = kind; r.back(kind); return; }   // came from the paper map's pond: back to the map (topworld.js)
+  G.state = 'play'; if (r && r.room === G.room) p.x = r.x; p.y = GY; p.vx = 0; p.vy = 0; p.onGround = true; p.inv = 1.2; p.face = 1; p.hook = null;
   A.resetInput(); inp.down.clear(); inp.act = false; fadeEl.style.opacity = '1'; F.sideFade = 1; F.promptTxt = null;
   G.msg = 'back from the fishing world (' + (kind === 'boat' ? 'by boat, through the waterfall cave' : 'down the path') + ')'; G.msgT = 2.2; F.lastExit = kind;
 }
@@ -664,6 +685,7 @@ function endGame(gm) {
   F.results.push(f.lastResult); f.game = null;
   if (gm.res === 'win') { F.bag.push(c); F.stats.caught++; { const add = Math.min(c.pts, Math.max(0, FISH_PTS_MAX - F.score)); F.score += add; G.score += add; } if (c.r === 'rare') F.pity = 0; else F.pity++;
     toast('caught: ' + c.n + (c.kgv ? ' (' + c.kgv + ' kg)' : '') + (c.r !== 'common' ? '  [' + c.r + ']' : '') + '  +' + c.pts, 2.2); A.sfx(1040, .2, 'triangle'); f.ph = 'land'; f.t = 0; if (itemOn('kazoo')) kazoo(); if (c.key === 'chest') openPick();
+    if (A.junkIn) A.junkIn(c.key);   // junk catches go in the run's one junk bag (game.js decides what counts as junk)
     if (c.kind === 'fish' && GULL.st === 'off' && (F.forceGull || GULL.cd <= 0 && Math.random() < (itemOn('stinky') ? 1 : FT.GULL_CHANCE))) { F.forceGull = false; gullStart(); } }
   else { F.stats[gm.res === 'snap' ? 'snaps' : 'lostFish']++; toast(gm.res === 'snap' ? 'SNAP! the line broke - the ' + c.n + ' is gone' : 'the ' + c.n + ' got away', 2); A.sfx(120, .3, 'sawtooth'); f.ph = 'reel'; f.t = 0; }
 }
@@ -947,10 +969,12 @@ if (isTouch) {   // left = move stick, right = look, FISH + JUMP buttons
 }
 
 /* ======================= hooks + test API ======================= */
-const api = { step: dt => { if (!F.manual) step(dt); }, afterSide, roomBuilt: buildSide, in3d, render, FT, skin: () => ({ on: SKIN.on, swaps: SKIN.swaps.length, rivets: SKIN.scaled.length, SKIN }),
+const api = { step: dt => { if (!F.manual) step(dt); }, afterSide, roomBuilt: buildSide, in3d, render, FT, paths,
+  fromMap(back) { if (G.state !== 'map' || typeof back !== 'function') return false; F.ret = { map: true, back }; wk.on = false; enter3D(); return true; },   // the paper map's pond door (topworld.js)
+  skin: () => ({ on: SKIN.on, swaps: SKIN.swaps.length, rivets: SKIN.scaled.length, SKIN }),
   heroMats: () => { const a = []; A.pl.root.traverse(o => { if (o.isMesh) a.push(o.material.uuid + ':' + (o.material.color ? o.material.color.getHexString() : '') + ':' + o.scale.x.toFixed(4)); }); return a.join('|'); },
   test: {
-    F, W3, RING, fring, BUD, RATS, GULL, FISH, TABLES, wk, side, inp, paths, roomPathX, startWalk, enter3D, exitWorld, buildWorld, groundH, groundAt, isWater, spotAt, H0, lakeR, mkCatch,
+    F, W3, TH, RING, get fring() { return fring; }, FARC, get fcards() { return fcards; }, FARU, farArtErr: () => FAR_ART.err.slice(), wcInfo: () => ({ on: !!WCP, loaded: !!(uWC.value && uWC.value.image && uWC.value.image.width > 1) }), BUD, RATS, GULL, FISH, TABLES, wk, side, inp, paths, roomPathX, startWalk, enter3D, exitWorld, buildWorld, groundH, groundAt, isWater, spotAt, H0, lakeR, mkCatch,
     info: () => ({ state: G.state, mode: F.mode, walk: { on: wk.on, mode: wk.mode, t: +wk.t.toFixed(2), z: +wk.z.toFixed(2), phases: wk.phases.slice(), phase: G.state === 'fishin' ? walkPhase() : null, fade: +fadeEl.style.opacity || 0, heroZ: +A.pl.root.position.z.toFixed(2), heroRotY: +A.pl.root.rotation.y.toFixed(2) },
       pos: F.pos.toArray().map(v => +v.toFixed(2)), head: +F.head.toFixed(2), yaw: +F.yaw.toFixed(2), air: F.air, spd: +F.spd.toFixed(2), bumps: F.bumps || 0, jumps: F.jumps || 0,
       fish: { ph: F.fish.ph, style: F.fish.game && F.fish.game.style, spot: F.fish.spot && F.fish.spot.id, styles: F.fish.styles.slice(), last: F.fish.lastResult },
@@ -1043,6 +1067,7 @@ Object.assign(FT, { WATER: { SHAL: '#8ec9a4', MID: '#3f93a2', DEEP: '#1c4a78', F
   RIP_SPEED: 1.9, RIP_LIFE: 2.4, RIP_MAX: 8,   // paint-daub ripples: spread speed, life (s), max at once (shader slots)
   BOB_RIP: 1.3, BITE_RIP: .35, GAME_RIP: .6,   // seconds between ripples around the bobber while waiting / on a bite / in a catch game
   DEPTH_RES_HI: 256, DEPTH_RES_LO: 128, SPAN: 160,
+  WC_SC: .06, WC_DRIFT: .006, WC_STR: 1.5, WC_FRES: .55,   // watercolour lake: tile repeats per world unit, drift speed, how strongly its blotches tint the depth colours, share of the sky fresnel kept (washes stay readable)
   SWIRL: .045, WARP: 2.6, BANDS: 13, DRIFT: .05, RIDGE: .85, SHINE: 64, SPEC: 1.05, BLEND: 1.5, JIT: .2, FRES: .34, BRISTLE: .32, FINE: .42, DEPK: 2.6, MID: .16, MIDSC: 9.5, COVE_DEEP: 3.6 } });   // swirl strokes: noise scale per unit (smaller = bigger swirls), domain warp, paint bands per swirl, drift speed, ridge bump, wet highlight power + strength, swirl push on shallow->deep, per-stroke colour jitter, sky tint at grazing angles, bristle grooves, finer swirl mixed in (no flat calm patches), depth for full deep colour; MID/MIDSC = small swirl octave (strength, scale) so close views over calm patches still cross bands
 const PAINT = { tex: null };
 FT.PAINT = Object.assign({ BOLD: 1.6, GROUND: 1.25, GROUND_SC: .03, SKY: .34,   // BOLD x stroke strength on rocks / trees / wood / grass; GROUND = big-stroke layer on flat ground (GROUND_SC tiles per unit, HIGH only); SKY = brush streaks in the sky
@@ -1082,15 +1107,20 @@ const uWater = { sky: { value: new THREE.Color(FT.WATER.SKY) }, deep: { value: n
   glint: { value: 1 }, rain: { value: 0 }, time: { value: 0 }, depth: { value: null }, fall: { value: new THREE.Vector3(0, -999, 1) },
   rip: { value: (() => { const a = new Float32Array(FT.WATER.RIP_MAX * 4); for (let i = 2; i < a.length; i += 4) a[i] = 99; return a; })() } };   // flat vec4[] (x, z, age, size): the vendored three build has no Vector4
 const WV = { baked: false, bobT: 0, lastPh: '', calls: 0 };
+const WCP = window.JR_WATER && window.JR_WATER.src ? window.JR_WATER : null;   // the picked watercolour lake tile (art/water-tex.js); null = the painted water
+const uWC = { value: null }, uWCm = { value: new THREE.Color(1, 1, 1) };
+if (WCP) { const c = document.createElement('canvas'); c.width = c.height = 1; const g = c.getContext('2d'); g.fillStyle = 'rgb(' + WCP.mean.map(v => Math.round(v * 255)).join(',') + ')'; g.fillRect(0, 0, 1, 1);
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = 1000; t.colorSpace = THREE.SRGBColorSpace; uWC.value = t; uWCm.value.setRGB(WCP.mean[0], WCP.mean[1], WCP.mean[2], THREE.SRGBColorSpace);   // 1000 = repeat (slim bundle)
+  const im = new Image(); im.onload = () => { t.dispose(); t.image = im; t.needsUpdate = true; }; im.src = WCP.src; }   // dispose first: a texture already drawn at 1x1 keeps fixed-size GPU storage (WebGL2), so the bigger picture needs a fresh upload
 function waterMat() {
-  const lo = QL().name === 'LOW', WT = FT.WATER;
+  const lo = QL().name === 'LOW', WT = FT.WATER, WC = !!WCP;
   const m = reg(new THREE.MeshLambertMaterial({ color: '#ffffff', transparent: true, opacity: .93, depthWrite: false }));
   m.onBeforeCompile = sh => { uPaint.value = paintTex(); Object.assign(sh.uniforms, { tPaint: uPaint, tDepth: uWater.depth, uTime: uWater.time, uSkyW: uWater.sky, uDeepW: uWater.deep, uMidW: uWater.mid, uShalW: uWater.shal, uFoamW: uWater.foam, uTreeW: uWater.tree,
-      uSunW: uWater.sun, uSunD: uWater.sunD, uGlintW: uWater.glint, uRainW: uWater.rain, uFall: uWater.fall, uRip: uWater.rip });
+      uSunW: uWater.sun, uSunD: uWater.sunD, uGlintW: uWater.glint, uRainW: uWater.rain, uFall: uWater.fall, uRip: uWater.rip }); if (WC) Object.assign(sh.uniforms, { tWC: uWC, uWCm: uWCm });
     const N = WT.RIP_MAX, f = n => (+n).toFixed(4);
     sh.vertexShader = 'uniform float uTime; varying vec3 vWP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n' +
       ' { vec3 wq=(modelMatrix*vec4(transformed,1.)).xyz; transformed.y+=(sin(wq.x*.33+uTime*1.05)+.8*sin(wq.z*.27-uTime*.85)+.35*sin((wq.x+wq.z)*.61+uTime*1.7))*' + f(WT.WAVE) + '; vWP=(modelMatrix*vec4(transformed,1.)).xyz; }');
-    sh.fragmentShader = '#define RIPN ' + N + '\n' + (lo ? '#define WLOW 1\n' : '') +
+    sh.fragmentShader = '#define RIPN ' + N + '\n' + (lo ? '#define WLOW 1\n' : '') + (WC ? 'uniform sampler2D tWC; uniform vec3 uWCm;\n' : '') +
       'uniform sampler2D tPaint, tDepth; uniform float uTime,uGlintW,uRainW; uniform vec3 uSkyW,uDeepW,uMidW,uShalW,uFoamW,uTreeW,uSunW,uSunD,uFall; uniform vec4 uRip[RIPN]; varying vec3 vWP;\n' +
       'float wh(vec2 p){ vec3 q=fract(p.xyx*.1031); q+=dot(q,q.yzx+33.33); return fract((q.x+q.y)*q.z); } float wn(vec2 p){ vec2 i=floor(p),u=fract(p); u=u*u*(3.-2.*u); return mix(mix(wh(i),wh(i+vec2(1,0)),u.x),mix(wh(i+vec2(0,1)),wh(i+vec2(1,1)),u.x),u.y); }\n' +
       'float wf(vec2 p){ return wn(p)*.65+wn(p*2.13+5.2)*.35; }\n' +
@@ -1100,6 +1130,13 @@ function waterMat() {
         ' vec2 wp=vWP.xz; float tt=uTime; vec4 dp=texture2D(tDepth, wp/' + f(WT.SPAN) + '+.5); float dep=dp.r*5.; float fall=dp.g;\n' +
         // swirl field: domain-warped noise that drifts and slowly churns; the falls push it out. Paint strokes = bands along its contour lines
         ' vec2 fo=wp-uFall.xy; vec2 push=fo/max(length(fo),.5)*fall*(2.2+1.4*sin(tt*.37)); float dt=tt*' + f(WT.DRIFT) + ';\n' +
+        (WC ? (' float sv=sw(wp-push-vec2(tt*.12,tt*.07),dt);\n' +   // watercolour: two drifting copies of the picked tile, normalised by its mean colour, tint the depth colours
+        ' vec2 wq=(wp-push*.3)*' + f(WT.WC_SC) + '; vec3 t1=texture2D(tWC, wq+vec2(tt,tt*.6)*' + f(WT.WC_DRIFT) + ').rgb, t2=texture2D(tWC, mat2(.8,-.6,.6,.8)*wq*.77+vec2(-tt*.7,tt)*' + f(WT.WC_DRIFT) + ').rgb;\n' +
+        ' vec3 tc=mix(t1,t2,.5)/max(uWCm,vec3(.05)); float tl=dot(tc,vec3(.299,.587,.114)); float ridge=clamp(.6+(tl-1.)*1.6,0.,1.); float e=0.; float aa=1.;\n' +
+        ' float k=clamp(dep/' + f(WT.DEPK) + '+(sv-.5)*.35,0.,1.);\n' +
+        ' vec3 wc=mix(uShalW,uMidW,smoothstep(.0,.48,k)); wc=mix(wc,uDeepW,smoothstep(.4,1.,k)); wc=mix(wc,uShalW*1.08,fall*.45);\n' +
+        ' wc*=mix(vec3(1.),tc,' + f(WT.WC_STR) + '); wc=mix(wc,wc*vec3(.9,.98,1.08),uRainW*.6);\n' +
+        ' vec3 V=normalize(cameraPosition-vWP); vec3 Nw=vec3(0.,1.,0.);\n') : (
         ' float sv=sw(wp-push-vec2(tt*.12,tt*.07),dt); float bv=sv*' + f(WT.BANDS) + '; float ph=fract(bv); float bid=floor(bv);\n' +
         ' float aa=1.-smoothstep(.22,.85,fwidth(bv));\n' +   // stroke-edge AA: far / grazing water fades to a smooth blend instead of aliasing
         ' float seg=wn(vec2(bid*3.71,0.)+wp*.16);\n' +   // strokes break up along their length
@@ -1110,9 +1147,9 @@ function waterMat() {
         ' wc*=(1.+jit)*(.72+.42*ridge); wc=mix(wc,wc*vec3(.9,.98,1.08),uRainW*.6);\n' +
         // normal from the stroke ridges: d(ridge)/d(band) is exact per pixel, the swirl gradient is smooth (no 2x2 blocks)
         ' vec3 V=normalize(cameraPosition-vWP); vec3 Nw=vec3(0.,1.,0.);\n' +
-        '#ifndef WLOW\n { vec3 dx=dFdx(vWP), dy=dFdy(vWP); float dr=-4.*e*aa*' + f(WT.RIDGE) + '; float hx=dr*dFdx(bv), hy=dr*dFdy(bv); vec3 r1=cross(dy,Nw), r2=cross(Nw,dx); float det=dot(dx,r1); vec3 gr=sign(det)*(hx*r1+hy*r2); Nw=normalize(abs(det)*Nw-gr*.5); }\n#else\n Nw=normalize(vec3(e*aa*.35,1.,(sv-.5)*.4));\n#endif\n' +
+        '#ifndef WLOW\n { vec3 dx=dFdx(vWP), dy=dFdy(vWP); float dr=-4.*e*aa*' + f(WT.RIDGE) + '; float hx=dr*dFdx(bv), hy=dr*dFdy(bv); vec3 r1=cross(dy,Nw), r2=cross(Nw,dx); float det=dot(dx,r1); vec3 gr=sign(det)*(hx*r1+hy*r2); Nw=normalize(abs(det)*Nw-gr*.5); }\n#else\n Nw=normalize(vec3(e*aa*.35,1.,(sv-.5)*.4));\n#endif\n')) +
         ' float fres=pow(1.-max(dot(normalize(mix(vec3(0.,1.,0.),Nw,.35)),V),0.),4.); float shore=1.-smoothstep(.25,2.6,dep);\n' +
-        ' wc=mix(wc,uSkyW*(.85+.25*ridge),clamp(fres,0.,1.)*' + f(WT.FRES) + '); wc=mix(wc,uTreeW,shore*fres*.35);\n' +
+        ' wc=mix(wc,uSkyW*(.85+.25*ridge),clamp(fres,0.,1.)*' + f(WT.FRES * (WC ? WT.WC_FRES : 1)) + '); wc=mix(wc,uTreeW,shore*fres*.35);\n' +
         // cream foam dabs at the shore + the falls, paint-daub ripples
         ' float dab=smoothstep(.55,.8,texture2D(tPaint, wp*.16+vec2(sv*.4,dt)+.13).r);\n' +
         ' float foam=(1.-smoothstep(0.,.18,dep+(sv-.5)*.12))*(.25+.75*dab)*(.45+.55*smoothstep(.4,.8,ridge))+fall*smoothstep(.45,.7,ridge)*.9;\n' +
@@ -1122,7 +1159,7 @@ function waterMat() {
       .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n' +
         ' { vec3 H=normalize(uSunD+V); float nh=max(dot(Nw,H),0.); float wet=(pow(nh,' + f(WT.SHINE) + ')*(.25+ridge*1.3)+smoothstep(.86,1.,ridge)*pow(nh,16.)*.25)*' + f(WT.SPEC) + ';\n' +
         '   totalEmissiveRadiance+=uSunW*wet*uGlintW*(1.-uRainW*.7)*(1.-cream*.6)+wc*.14; }'); };
-  m.customProgramCacheKey = () => 'fwoilwater' + (lo ? 'L' : 'H'); return m;
+  m.customProgramCacheKey = () => 'fwoilwater' + (lo ? 'L' : 'H') + (WC ? 'W' : ''); return m;
 }
 function bakeWaterDepth() {   // R = water depth / 5, G = waterfall churn; world span FT.WATER.SPAN around the lake centre
   const WT = FT.WATER, n = QL().name === 'LOW' ? WT.DEPTH_RES_LO : WT.DEPTH_RES_HI, d = new Uint8Array(n * n * 4), fl = W3.fall;
@@ -1306,7 +1343,7 @@ function skyRender(dt) {   // apply sky / fog / lights / water tint, place moon,
   fsun.color.copy(C.sun); fsun.intensity = C.si; fhemi.color.copy(C.hs); fhemi.groundColor.copy(C.hg); fhemi.intensity = C.hi; ffill.intensity = .5 * (1 - C.n * .6);
   uWater.sky.value.copy(C.mid).lerp(fogC, .4); waterTint(C.n, SKY.w.rain); uWater.sun.value.copy(C.sun); uWater.glint.value = (1 - C.n * .7); uWater.rain.value = SKY.w.rain;
   const fx0 = W3.fx; if (fx0.mist) { fx0.mist.material.color.copy(fogC).lerp(_ca.set('#ffffff'), .45); fx0.mist.material.opacity = .2 * (1 + SKY.w.mist * 1.6 + SKY.w.rain * .8) * (1 - C.n * .3); }
-  if (fring) { fring.haze.value = Math.min(RING.HMAX, RING.HAZE * C.fog / RING.FOG0); fring.lit.value = Math.min(1, C.hi / RING.HI0) * (1 - .7 * C.n); }
+  FARU.uHaze.value = Math.min(RING.HMAX, RING.HAZE * C.fog / RING.FOG0); FARU.uLit.value = Math.min(1, C.hi / RING.HI0) * (1 - .7 * C.n);   // ring + far cards
   if (fx0.rays) fx0.rays.material.opacity = .55 * (1 - C.n) * (1 - SKY.w.rain) * (1 - SKY.w.mist * .5);
   if (!NX) return; const cq = fcam.quaternion, cp = fcam.position;
   // moon: opposite the sun at night
