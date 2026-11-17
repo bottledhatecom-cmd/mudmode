@@ -160,7 +160,7 @@ function tryMap(seed, a, nGates) {
   // 2. height: two noise fields shaped to the zones, cut into 4 paper layers (the forest edge is the lowest layer)
   const o1 = r() * 100, o2 = r() * 100, hv = new Float32Array(C); let lo = 1e9, hi = -1e9;
   for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) { const k = ZK.indexOf(zs[zone[I(x, z)]].k); let h = fbm(x * .045 + o1, z * .045 + o2) * .9 + x / N * .5 + (k === 4 ? .12 : k === 3 ? -.1 : 0); hv[I(x, z)] = h; lo = Math.min(lo, h); hi = Math.max(hi, h); }
-  const layer = new Uint8Array(C); for (let c = 0; c < C; c++) { const x = c % N; layer[c] = x < 16 ? 0 : Math.min(3, Math.floor((hv[c] - lo) / (hi - lo + 1e-6) * 4)); }
+  const layer = new Uint8Array(C); for (let c = 0; c < C; c++) { const x = c % N; layer[c] = x < 16 ? 0 : Math.max(0, Math.min(3, Math.floor((hv[c] - lo) / (hi - lo + 1e-6) * 4))); }   /* max(0): a float32 rounding at the lowest cell gave -1, stored as 255 (a spike) */
   tk('height');
   // 4. river: from the high (east) edge, downhill with a little noise so it bends, widening; ends in a lake or at the map edge
   const water = new Uint8Array(C), river = []; let end = 'lake';
@@ -239,7 +239,7 @@ function tryMap(seed, a, nGates) {
   tk('checks'); m.ms = ms; m.ok = !m.why; return m;
 }
 const walkable = (m, c) => !m.water[c] || m.bridge[c];
-const canStep = (m, a, b) => walkable(m, b) && (Math.abs(m.layer[a] - m.layer[b]) <= 1 || m.path[a] || m.path[b]);   // one paper layer up or down is a step anywhere; a bigger drop only where a path ramps
+const canStep = (m, a, b) => walkable(m, b);   // the ground is one smooth paper surface, so every land cell joins its neighbours (only water blocks; the deep pool keeps its own lock)
 function reachFrom(m, s) {
   const N = m.N, seen = new Uint8Array(N * N); if (!s) return seen; const q = [s.z * N + s.x]; seen[q[0]] = 1;
   while (q.length) { const c = q.pop(), x = c % N, z = (c / N) | 0; for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, nz = z + dz; if (nx < 0 || nz < 0 || nx >= N || nz >= N) continue; const n = nz * N + nx; if (!seen[n] && canStep(m, c, n)) { seen[n] = 1; q.push(n); } } }
