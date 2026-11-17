@@ -3172,9 +3172,9 @@ const FP_LAYERS = [   // z: depth, k: parallax (as BD_LAYERS), y0: world y of th
   { name: 'middle', z: -42, k: .5, haze: .26, light: { y0: -1.5, h: 21, fade: [0, .04, .93, 1] }, full: { y0: -1.5, h: 22, fade: [0, .04, .93, 1] } },
   { name: 'nearback', z: -26, k: .25, haze: .12, light: { y0: -2, h: 11, fade: [0, .06, .9, 1] }, full: { y0: -2, h: 10, fade: [0, .06, .9, 1] } },
   // screen plates (full set only): band = [bottom, top] as a share of the screen height; dv = the depth they scroll as if they stood at
-  { name: 'ground', screen: true, full: { band: [0, .17], dv: 15, fade: [0, 0, .55, 1], off: true }, order: 50 },   // off: as a bottom band it reads as a second path the hero can't walk on (his pick on the design card)
+  { name: 'ground', screen: true, full: { band: [0, .17], dv: 15, fade: [0, 0, .55, 1], off: true }, order: 50 },   // off: as a bottom band it reads as a second path the hero can't walk on
   // front (full set): stands in the scene just in front of the lane (z +3), so its moss and fern tips pass in front of mudbot's feet and legs
-  // (his words, OK-LEDGER 2026-11-17 4:10 AM); top = the share of the plate the fern tips reach (measured from the picture), kept below his head
+  // top = the share of the plate the fern tips reach (measured from the picture), kept below the hero's head
   { name: 'front', z: 3, k: 0, haze: 0, full: { y0: -.1, h: 6, top: .42, fade: [0, .1, .9, 1] } },
   { name: 'canopy', screen: true, full: { band: [.8, 1], dv: 11, fade: [0, .35, 1, 1] }, order: 52 }
 ];
@@ -3198,8 +3198,8 @@ function fpMat(L) {   // unlit, fog off; the shader fades the plate's top/bottom
     s.fragmentShader = 'uniform float uFade[4]; uniform vec3 uHaze; uniform float uHazeK, uA;\n' + s.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\n#ifdef USE_MAP\n  diffuseColor.a *= smoothstep(uFade[0], uFade[1] + 1e-4, vMapUv.y) * (1. - smoothstep(uFade[2], uFade[3] + 1e-4, vMapUv.y)) * uA;\n  diffuseColor.rgb = mix(diffuseColor.rgb, uHaze, uHazeK);\n#endif'); };
   bd.own.push(m); return m;
 }
-/* ground fill (his words, OK-LEDGER 2026-11-17 5:42 AM "you can fill groun fill"): the room's hill strip ends at x -22..54 and z -44, so on wide
-   screens at a room end the plates hung over a fog gap and their bottoms showed (G3 F1). The fill continues the same ground (bankH, the hills'
+/* ground fill: the room's hill strip ends at x -22..54 and z -44, so on wide
+   screens at a room end the plates would hang over a fog gap and their bottoms would show. The fill continues the same ground (bankH, the hills'
    colours, AM.bank) 0.12 below the hills, x -160..192, z -6.2..-112: every plate bottom sits under the ground at its own depth, so a camera above
    the ground cannot see it. One draw call; hidden in the OG world. */
 const FP_FILL = { x0: -160, x1: 192, z0: -6.2, z1: -112, dy: -.12 };
