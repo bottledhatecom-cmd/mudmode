@@ -160,6 +160,7 @@
           <ul class="tier-list"><li>A kit that works on its own</li><li>Core safety rules</li><li>Safety fixes as soon as they're ready (the download here is always the newest; the kit's optional update check tells you)</li></ul>
           <a class="btn p dl-exe" href="../starter-kit/mudmode-starter-kit.exe" download>Download the easy installer (Windows .exe, 387 KB, no email)</a>
           <p class="tier-note dl-exe-note">Double-click it and it sets up the free kit in a <b>mudmode-starter-kit</b> folder in your user folder. No admin needed, and you can remove it from Windows' installed apps. The exe is digitally signed; Windows may still ask you to confirm the first time.</p>
+          <p class="tier-note dl-exe-note">Setting it up in ChatGPT, Claude or Grok? The zip below is the straightforward one. If you use this Windows installer for a chat app, tick the ChatGPT box in it (even if you use Claude or Grok), so it also puts a FOR-CHAT-APPS folder in your mudmode-starter-kit folder.</p>
           <p class="tier-note dl-or">On a Mac or Linux, or rather not run an exe? Get the zip:</p>
           <a class="btn s" href="../starter-kit/mudmode-starter-kit.zip" download>Download the free kit (zip, 196 KB, no email)</a>
 <p class="tier-note">Free under the <a href="../license.txt" target="_blank" rel="noopener">mudmode Personal Use License</a> (also in the zip as LICENSE). By downloading it, you agree to it.</p>
@@ -185,17 +186,18 @@
 
       <div class="part">
         <h3 class="part-h"><span class="part-n" aria-hidden="true">A</span>Find and unzip the download</h3>
-        <p class="small">Used the Windows installer? It already unpacked the kit for you (by default to <b class="mono-b">mudmode-starter-kit</b> in your user folder), so skip to part B.</p>
+        <p class="small">Used the Windows installer? It already unpacked the kit for you (by default to a folder named <b class="mono-b">mudmode-starter-kit</b> in your user folder). For a chat app, that folder has <b>FOR-CHAT-APPS</b> only if you ticked the ChatGPT box in it (even if you use Claude or Grok). If you see that folder, skip to part B. If you don't, use the zip instead (or run the installer again and tick the ChatGPT box).</p>
         <p class="small">Your browser saves it to <b>Downloads</b>; the file ends in <b>.zip</b>. (Full Kit: your receipt email has a <b>View content</b> button; search your inbox for <b>mudmode</b>, click it, then <b>Download</b>.)</p>
         <div class="os-grid">
           <div class="os-card"><h4>Windows</h4><ol><li>Open <b>File Explorer</b>, click <b>Downloads</b>.</li><li><b>Right-click</b> the mudmode file, click <b>Extract All...</b></li><li>Click <b>Extract</b>. A normal folder opens.</li></ol></div>
           <div class="os-card"><h4>Mac</h4><ol><li>Open <b>Finder</b>, click <b>Downloads</b>.</li><li><b>Double-click</b> the mudmode .zip file.</li><li>A normal folder appears right next to it.</li></ol></div>
         </div>
-        <p class="file-callout"><svg viewBox="0 0 24 28" aria-hidden="true"><use href="#hexi"/></svg><span>Inside: a folder called <b>FOR-CHAT-APPS</b> with two files. Use <b class="mono-b">mudmode-chat-lite.md</b>; that's the only file your AI app needs to start. It's lite mode, the default: one short page of safety rules. The other file, <b class="mono-b">mudmode-chat-setup.md</b>, is full mode (all 25 rules). You can switch any time by saying <b>"mudmode full"</b> (see <b>Free kit: go full mode</b> in step 5). You don't have to open either file. Full Kit: your folder has one file, <b class="mono-b">mudmode-chat-setup.md</b>. Use it, and type <b>Read mudmode-chat-setup.md and set me up.</b></span></p>
+        <p class="file-callout"><svg viewBox="0 0 24 28" aria-hidden="true"><use href="#hexi"/></svg><span>After you unzip, open the folder named <b class="mono-b">mudmode-starter-kit-v1.4.1</b> (on Windows, Extract All may put that folder inside another folder named <b class="mono-b">mudmode-starter-kit</b>). Inside it is a folder called <b>FOR-CHAT-APPS</b> with two files. Use <b class="mono-b">mudmode-chat-lite.md</b>; that's the only file your AI app needs to start. It's lite mode, the default: everyday-first. The other file, <b class="mono-b">mudmode-chat-setup.md</b>, is full mode (every rule; lite is the light set, and the safety rules stay on either way). You can switch later: say <b>"mudmode full"</b> and follow <b>Free kit: go full mode</b> in step 5 (swapping in the full file is optional). You don't have to open either file. Full Kit: the <b>FOR-CHAT-APPS</b> folder has one file, <b class="mono-b">mudmode-chat-setup.md</b>. Use it, and type <b>Read mudmode-chat-setup.md and set me up.</b></span></p>
       </div>
 
       <div class="part">
         <h3 class="part-h"><span class="part-n" aria-hidden="true">B</span>Add it to your AI app</h3>
+        <p class="small">In the file picker, open <b>FOR-CHAT-APPS</b>, then the lite file (or the setup file, if you have the Full Kit). Zip users: that's inside <b class="mono-b">mudmode-starter-kit-v1.4.1</b>. Windows installer users: that's inside <b class="mono-b">mudmode-starter-kit</b> in your user folder.</p>
         <div class="tabs" role="tablist" aria-label="Your AI app">
           <button type="button" role="tab" id="tab-chatgpt" aria-controls="panel-chatgpt" data-ai="chatgpt">ChatGPT</button>
           <button type="button" role="tab" id="tab-claude" aria-controls="panel-claude" data-ai="claude">Claude</button>
@@ -255,7 +257,7 @@
           </div>
         </div>
 
-        <p class="tip"><b>On a computer and like apps over websites?</b> The kit also has an installer: on a Mac, double-click the file <b>Install mudmode (double-click me)</b>; on Windows or Linux, run one command. The first time, macOS may block the Mac file because it came from the internet: right-click (or Control-click) it and choose <b>Open</b>. On macOS 15 or later, if there's no Open button, click <b>Done</b>, then go to <b>System Settings &gt; Privacy &amp; Security</b> and click <b>Open Anyway</b>. The exact commands are in <a href="#nerd" data-go="nerd">hard nerd mode</a>.</p>
+        <p class="tip"><b>On a computer and like apps over websites?</b> The kit also has an installer: on a Mac, double-click the file <b>Install mudmode (double-click me)</b>; on Windows or Linux, run one command. That path sets up a folder called <b class="mono-b">mudmode</b> in your home folder (not mudmode-starter-kit). The first time, macOS may block the Mac file because it came from the internet: right-click (or Control-click) it and choose <b>Open</b>. On macOS 15 or later, if there's no Open button, click <b>Done</b>, then go to <b>System Settings &gt; Privacy &amp; Security</b> and click <b>Open Anyway</b>. The exact commands are in <a href="#nerd" data-go="nerd">hard nerd mode</a>.</p>
       </div>
     </section>
 
