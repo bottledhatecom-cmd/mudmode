@@ -1,5 +1,6 @@
-/* tylerbot-scroll ts1: a copy of the Tylerbot hero robot rides the side of the page once the hero scrolls away.
-   Scroll speed (smoothed) drives motion-blur streaks, afterimages and embers; fast enough and he heats from gold to white-hot,
+/* tylerbot-scroll ts2: a copy of the Tylerbot hero robot rides the side of the page once the hero scrolls away.
+   He goes head-first in the direction of travel (a dive going down, a climb going up), flipping on a spring through the shortest path, and eases upright at idle.
+   Scroll speed (smoothed) drives motion-blur streaks, afterimages and embers that stream from behind him (his feet); fast enough and he heats from gold to white-hot,
    then breaks the sound barrier (shockwave ring, vapor cone, edge flash), once per burst, and cools down.
    Optional extra: the page works with this file turned off. No sound, no storage, no cookies, no network.
    Uses the existing still image only. Reads nothing from the hero's markup except its position, and never touches the hero or its scripts. Off for reduced motion. */
@@ -11,7 +12,7 @@
  if(mq&&mq.matches)return;
 
  /* ---- thresholds (px of page scroll per second, after smoothing) ---- */
- var T={trail:200,full:3800,heat0:2200,heat1:5000,barrier:5200,rearm:2400,cool:1700};
+ var T={trail:200,full:3800,heat0:2200,heat1:5000,barrier:5200,rearm:2400,cool:1700,flip:500,idle:160};
  var STILL='img/tylerbot/tylerbot-flare-still.webp?v=f468';
  var DBG=/[?&]tbs=debug/.test(w.location.search);
 
@@ -63,27 +64,34 @@
  var dbgShow=false,run=false,raf=0,last=0,py=w.pageYOffset||0,vs=0,vForce=null,heat=0,op=0,heroIn=true,armed=true,coolUntil=0,shown=false;
  var Y={x:0,v:0,init:false},R={x:0,v:0},P={x:0,v:0},bang=null,ember=[],emAcc=0,seeds=[],clean=true;
  var lastOp=-1,lastH1=-1,lastH2=-1,dbg={n:0,sum:0,max:0,over:0,fr:[]};
+ var head=0,rTg=0; /* committed heading: 0 = upright / climb (head up), 180 = dive (head down) */
  for(var s=0;s<24;s++)seeds.push({o:Math.random()*1.1-.55,l:.45+Math.random()*.55,w:.8+Math.random()*1.8,p:Math.random()*6.28,k:.6+Math.random()});
  function clamp(x,a,b){return x<a?a:x>b?b:x}
  function sm(x,a,b){x=clamp((x-a)/(b-a),0,1);return x*x*(3-2*x)}
  function spring(o,tg,k,c,dt){var n=Math.ceil(dt/.008),h=dt/n,i,a;for(i=0;i<n;i++){a=k*(tg-o.x)-c*o.v;o.v+=a*h;o.x+=o.v*h}}
+ /* shortest signed turn in (-180, 180], so a flip never takes the long way or snaps */
+ function turnTo(from,to){return from+(((to-from)%360+540)%360-180)}
  /* heat ramp: gold -> orange -> white-hot */
  function ramp(h){var r,g,b;if(h<.5){var u=h/.5;r=243+12*u;g=201-61*u;b=105-65*u}else{var u2=(h-.5)/.5;r=255;g=140+106*u2;b=40+190*u2}return[r|0,g|0,b|0]}
  function rgba(c,a){return'rgba('+c[0]+','+c[1]+','+c[2]+','+(a<0?0:a>1?1:a).toFixed(3)+')'}
+ /* heading basis: forward is his head, back is his feet. 0deg = head up, 180deg = head down. */
+ function basis(deg){var th=deg*Math.PI/180;return{fx:Math.sin(th),fy:-Math.cos(th),bx:-Math.sin(th),by:Math.cos(th),px:-Math.cos(th),py:-Math.sin(th),th:th}}
 
  function wake(){if(!run&&!d.hidden&&!(mq&&mq.matches)){run=true;last=0;raf=w.requestAnimationFrame(tick)}}
  function progress(){return clamp((w.pageYOffset||0)/(docH-vh),0,1)}
 
  /* sound barrier: crisp ring + vapor cone + edge flash, once per burst */
  function fire(dir){
-  bang={t:perf.now(),dir:dir};P.v-=dir*7;R.v+=dir*140;
+  var b=basis(R.x);bang={t:perf.now(),dir:dir,fx:b.fx,fy:b.fy,bx:b.bx,by:b.by,px:b.px,py:b.py,th:b.th};P.v-=dir*7;R.v+=dir*140;
   if(fl.animate)fl.animate([{opacity:0},{opacity:.9,offset:.14},{opacity:0}],{duration:620,easing:'cubic-bezier(.2,.7,.3,1)'});
   var i,n=46;for(i=0;i<n&&ember.length<150;i++)spawn(dir,1,true);
  }
  function spawn(dir,hc,burst){
   var a=Math.random()*6.283,sp=burst?120+Math.random()*320:60+Math.random()*200*Math.min(1,Math.abs(vs)/4000);
-  ember.push({x:cx+(Math.random()-.5)*S*.7,y:cy-dir*(Math.random()*SH*.3),
-   vx:burst?Math.cos(a)*sp:(Math.random()-.5)*70+(hc>.5?25:0),vy:burst?Math.sin(a)*sp:-dir*(50+Math.random()*(60+260*Math.abs(vs)/5000)),
+  var b=basis(R.x),back=Math.random()*SH*.3;
+  ember.push({x:cx+b.bx*back+(Math.random()-.5)*S*.7,y:cy+b.by*back,
+   vx:burst?Math.cos(a)*sp:b.bx*(50+Math.random()*(60+260*Math.abs(vs)/5000))+(Math.random()-.5)*70+(hc>.5?25:0),
+   vy:burst?Math.sin(a)*sp:b.by*(50+Math.random()*(60+260*Math.abs(vs)/5000)),
    life:0,max:.5+Math.random()*.9,r:.9+Math.random()*1.9*(.6+hc),hc:clamp(hc*(.7+Math.random()*.4),0,1)});
  }
 
@@ -110,7 +118,12 @@
   if(!Y.init){Y.x=yT;Y.v=0;Y.init=true}
   spring(Y,yT,150,15,dt);
   var shake=heat>.7?Math.sin(t*.09)*1.3*sm(heat,.7,1):0;
-  spring(R,clamp(vs/4500,-1,1)*11+shake,140,12,dt);
+  /* heading: dive at ~180 when going down, head-up at 0 when going up; a deadband stops slow wiggle from flipping him; idle eases upright */
+  if(av>T.flip)head=vs>0?180:0;
+  else if(av<T.idle)head=0;
+  rTg=turnTo(R.x,head+clamp(vs/4500,-1,1)*11+shake);
+  spring(R,rTg,80,18,dt);
+  if(av<T.idle&&Math.abs(R.v)<8){var nw=((R.x%360)+360)%360;if(nw>180)nw-=360;if(Math.abs(nw)<12)R.x=nw}
   spring(P,0,300,14,dt);
   var yy=clamp(Y.x,yMin-6,yMax+10);
   cx=left+S/2;cy=yy+SH/2;
@@ -122,50 +135,55 @@
   if(Math.abs(h2-lastH2)>.004){l2.style.opacity=h2.toFixed(3);lastH2=h2}
 
   /* ---- canvas fx ---- */
-  var wantDraw=op>.01&&(m>.02||heat>.01||ember.length||bang);
+  var wantDraw=op>.01&&(m>.02||heat>.01||ember.length||bang||Math.abs(R.v)>8);
   if(wantDraw){clean=false;ctx.clearRect(0,0,vw,vh);ctx.globalCompositeOperation='lighter';draw(t,dt,m,dir)}
   else if(!clean){ctx.globalCompositeOperation='source-over';ctx.clearRect(0,0,vw,vh);clean=true}
 
   if(shown&&op===0&&want===0){shown=false;root.classList.remove('tbs-on')}
   if(DBG){var e=perf.now()-c0;dbg.n++;dbg.sum+=e;if(e>dbg.max)dbg.max=e;if(e>4)dbg.over++}
   /* keep running only while something is moving */
-  var busy=av>2||heat>.004||ember.length||bang||Math.abs(op-want)>0||Math.abs(Y.x-yT)>.3||Math.abs(Y.v)>2||Math.abs(R.v)>.5||Math.abs(P.x)>.002||vForce!==null;
+  var busy=av>2||heat>.004||ember.length||bang||Math.abs(op-want)>0||Math.abs(Y.x-yT)>.3||Math.abs(Y.v)>2||Math.abs(R.v)>.5||Math.abs(R.x-rTg)>.4||Math.abs(P.x)>.002||vForce!==null;
   if(busy&&!d.hidden)raf=w.requestAnimationFrame(tick);else run=false;
  }
 
  function draw(t,dt,m,dir){
   var c,i,n,k,g;
-  var hc=ramp(heat),o=op;
-  /* bloom + heat shimmer glow behind him */
+  var hc=ramp(heat),o=op,b=basis(R.x);
+  /* bloom + heat shimmer glow behind him (toward his feet) */
   var rad=S*(.55+.9*heat+.35*m),ba=(.10+.5*heat+.18*m)*o*(.92+.08*Math.sin(t*.012));
-  g=ctx.createRadialGradient(cx,cy,0,cx,cy,rad);g.addColorStop(0,rgba(hc,ba));g.addColorStop(.45,rgba(hc,ba*.35));g.addColorStop(1,rgba(hc,0));
-  ctx.fillStyle=g;ctx.fillRect(cx-rad,cy-rad,rad*2,rad*2);
-  if(heat>.2){ /* faint wavy heat-haze bands rising off him */
+  var gx=cx+b.bx*S*.12,gy=cy+b.by*S*.12;
+  g=ctx.createRadialGradient(gx,gy,0,gx,gy,rad);g.addColorStop(0,rgba(hc,ba));g.addColorStop(.45,rgba(hc,ba*.35));g.addColorStop(1,rgba(hc,0));
+  ctx.fillStyle=g;ctx.fillRect(gx-rad,gy-rad,rad*2,rad*2);
+  if(heat>.2){ /* faint wavy heat-haze bands streaming off his feet */
    ctx.lineCap='round';
-   for(i=0;i<4;i++){var bx=cx+(i-1.5)*S*.22,ln=SH*(.5+.7*heat),a=.05+.1*heat;
+   for(i=0;i<4;i++){var off=(i-1.5)*S*.22,ln=SH*(.5+.7*heat),a=.05+.1*heat;
     ctx.strokeStyle=rgba(hc,a*o*(1-i*.12));ctx.lineWidth=S*.1;ctx.beginPath();
-    for(k=0;k<=8;k++){var u=k/8,yy2=cy-dir*(SH*.15+u*ln),xx=bx+Math.sin(t*.006+u*5+i*1.7)*S*.05*(.4+u);if(k)ctx.lineTo(xx,yy2);else ctx.moveTo(xx,yy2)}
+    for(k=0;k<=8;k++){var u=k/8,along=SH*.15+u*ln,wob=Math.sin(t*.006+u*5+i*1.7)*S*.05*(.4+u);
+     var xx=cx+b.bx*along+b.px*(off+wob),yy2=cy+b.by*along+b.py*(off+wob);if(k)ctx.lineTo(xx,yy2);else ctx.moveTo(xx,yy2)}
     ctx.stroke()}
   }
-  /* layered motion-blur streaks: above him going down, below going up */
+  /* layered motion-blur streaks streaming from his feet */
   if(m>.02){
    n=Math.round(6+16*m);ctx.lineCap='round';
-   var y0b=cy-dir*SH*.18;
-   for(i=0;i<n;i++){var sd=seeds[i],len=(34+330*m*sd.l)*(.88+.12*Math.sin(t*.011*sd.k+sd.p)),x=cx+sd.o*S*.85,ye=y0b-dir*len;
+   var x0=cx+b.bx*SH*.18,y0b=cy+b.by*SH*.18;
+   for(i=0;i<n;i++){var sd=seeds[i],len=(34+330*m*sd.l)*(.88+.12*Math.sin(t*.011*sd.k+sd.p));
+    var xs=x0+b.px*sd.o*S*.85,ys=y0b+b.py*sd.o*S*.85,xe=xs+b.bx*len,ye=ys+b.by*len;
     var a1=(.1+.5*m)*sd.l*o,col=ramp(clamp(heat*.9+.1*sd.l*m,0,1));
-    g=ctx.createLinearGradient(x,y0b,x,ye);g.addColorStop(0,rgba(col,a1));g.addColorStop(.5,rgba(col,a1*.35));g.addColorStop(1,rgba(col,0));
-    ctx.strokeStyle=g;ctx.lineWidth=sd.w*3.2;ctx.globalAlpha=.32;ctx.beginPath();ctx.moveTo(x,y0b);ctx.lineTo(x,ye);ctx.stroke();
-    ctx.globalAlpha=1;ctx.lineWidth=sd.w;ctx.beginPath();ctx.moveTo(x,y0b);ctx.lineTo(x,ye-0);ctx.stroke()}
+    g=ctx.createLinearGradient(xs,ys,xe,ye);g.addColorStop(0,rgba(col,a1));g.addColorStop(.5,rgba(col,a1*.35));g.addColorStop(1,rgba(col,0));
+    ctx.strokeStyle=g;ctx.lineWidth=sd.w*3.2;ctx.globalAlpha=.32;ctx.beginPath();ctx.moveTo(xs,ys);ctx.lineTo(xe,ye);ctx.stroke();
+    ctx.globalAlpha=1;ctx.lineWidth=sd.w;ctx.beginPath();ctx.moveTo(xs,ys);ctx.lineTo(xe,ye);ctx.stroke()}
   }
-  /* soft afterimages, trailing opposite the scroll */
+  /* soft afterimages, trailing from his feet and rotated with him */
   if(sprites&&m>.05){
    n=Math.round(2+5*m);var s1=sm(heat,0,.55),s2=sm(heat,.5,1),wt=[1-s1,s1*(1-s2),s2],gap=14+20*m;
-   for(i=1;i<=n;i++){var ga=.24*m*(1-(i-1)/n)*o,gy=cy-dir*i*gap,stch=1+.05*i*m;
+   for(i=1;i<=n;i++){var ga=.24*m*(1-(i-1)/n)*o,stch=1+.05*i*m,ax=cx+b.bx*i*gap,ay=cy+b.by*i*gap;
+    ctx.save();ctx.translate(ax,ay);ctx.rotate(b.th);
     for(k=0;k<3;k++){if(wt[k]<.03)continue;ctx.globalAlpha=ga*wt[k];
-     ctx.drawImage(sprites[k],cx-S*stch/2,gy-SH*stch/2+(stch-1)*dir*SH*.4,S*stch,SH*stch)}}
+     ctx.drawImage(sprites[k],-S*stch/2,-SH*stch/2,S*stch,SH*stch)}
+    ctx.restore()}
    ctx.globalAlpha=1;
   }
-  /* embers that drift off */
+  /* embers that drift off his feet */
   if(m>.12){emAcc+=(8+170*m*(.35+heat))*dt;while(emAcc>=1){emAcc--;if(ember.length<150)spawn(dir,heat,false)}}
   if(ember.length){
    var drag=Math.exp(-1.6*dt);
@@ -179,20 +197,20 @@
  }
 
  function drawBang(t){
-  var a=(t-bang.t)/1000,dir=bang.dir,i,g;
+  var a=(t-bang.t)/1000,i,g;
   if(a>1.4){bang=null;return}
   var eo=function(x){x=clamp(x,0,1);return 1-Math.pow(1-x,3)},env=a<.1?a/.1:Math.exp(-(a-.1)*3.1);
-  var K=narrow?.5:1,ax=cx,ay=cy+dir*SH*.12; /* nose; the burst is smaller and fainter on narrow screens so it stays out of the text */
+  var K=narrow?.5:1,ax=cx+bang.fx*SH*.12,ay=cy+bang.fy*SH*.12; /* nose; the burst is smaller and fainter on narrow screens so it stays out of the text */
   env*=narrow?.75:1;
-  /* vapor cone, opening behind him (Prandtl-Glauert style condensation) */
-  var L=(90+330*eo(a/.55))*K,hw=L*Math.tan(.5),ty=ay-dir*L;
-  g=ctx.createLinearGradient(ax,ay,ax,ty);g.addColorStop(0,'rgba(255,244,222,'+(.55*env).toFixed(3)+')');g.addColorStop(.55,'rgba(255,226,170,'+(.2*env).toFixed(3)+')');g.addColorStop(1,'rgba(255,210,140,0)');
-  ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(ax-hw,ty);ctx.lineTo(ax+hw,ty);ctx.closePath();ctx.fill();
-  /* flattened vapor disc */
-  var dr=(40+240*eo(a/.9))*K,dy=ay-dir*SH*.3;
+  /* vapor cone, opening behind him from his feet (Prandtl-Glauert style condensation) */
+  var L=(90+330*eo(a/.55))*K,hw=L*Math.tan(.5),tx=ax+bang.bx*L,ty=ay+bang.by*L;
+  g=ctx.createLinearGradient(ax,ay,tx,ty);g.addColorStop(0,'rgba(255,244,222,'+(.55*env).toFixed(3)+')');g.addColorStop(.55,'rgba(255,226,170,'+(.2*env).toFixed(3)+')');g.addColorStop(1,'rgba(255,210,140,0)');
+  ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(tx-hw*bang.px,ty-hw*bang.py);ctx.lineTo(tx+hw*bang.px,ty+hw*bang.py);ctx.closePath();ctx.fill();
+  /* flattened vapor disc, perpendicular to his heading */
+  var dr=(40+240*eo(a/.9))*K,dx=ax+bang.bx*SH*.3,dy=ay+bang.by*SH*.3;
   ctx.strokeStyle='rgba(255,240,208,'+(.22*env).toFixed(3)+')';ctx.lineWidth=12*(1-clamp(a/1.2,0,1))+2;
-  ctx.beginPath();ctx.ellipse(ax,dy,dr,dr*.27,0,0,6.2832);ctx.stroke();
-  ctx.strokeStyle='rgba(255,250,236,'+(.6*env).toFixed(3)+')';ctx.lineWidth=1.6;ctx.beginPath();ctx.ellipse(ax,dy,dr,dr*.27,0,0,6.2832);ctx.stroke();
+  ctx.beginPath();ctx.ellipse(dx,dy,dr,dr*.27,bang.th,0,6.2832);ctx.stroke();
+  ctx.strokeStyle='rgba(255,250,236,'+(.6*env).toFixed(3)+')';ctx.lineWidth=1.6;ctx.beginPath();ctx.ellipse(dx,dy,dr,dr*.27,bang.th,0,6.2832);ctx.stroke();
   /* crisp shock rings */
   for(i=0;i<2;i++){var p=clamp((a-i*.12)/.85,0,1);if(p<=0||p>=1)continue;
    var rr=((i?210:370)*eo(p)+14)*K,al=Math.pow(1-p,1.6);
@@ -217,7 +235,7 @@
  measure();
  if(DBG)w.__tbScroll={
   force:function(v){vForce=v;wake()},show:function(b){dbgShow=!!b;wake()},release:function(){vForce=null;wake()},
-  state:function(){return{vs:vs,heat:heat,op:op,armed:armed,bang:!!bang,embers:ember.length,y:Y.x,rot:R.x,left:left,S:S,SH:SH,narrow:narrow,yMin:yMin,yMax:yMax,heroIn:heroIn,running:run}},
+  state:function(){return{vs:vs,heat:heat,op:op,armed:armed,bang:!!bang,embers:ember.length,y:Y.x,rot:R.x,head:head,rTg:rTg,left:left,S:S,SH:SH,narrow:narrow,yMin:yMin,yMax:yMax,heroIn:heroIn,running:run}},
   stats:function(){var f=dbg.fr.slice().sort(function(a,b){return a-b}),s=0;f.forEach(function(x){s+=x});
    return{ticks:dbg.n,cpuAvg:dbg.sum/Math.max(1,dbg.n),cpuMax:dbg.max,cpuOver4:dbg.over,frames:f.length,frameAvg:s/Math.max(1,f.length),frameP95:f[Math.floor(f.length*.95)]||0,frameMax:f[f.length-1]||0}},
   reset:function(){dbg.n=0;dbg.sum=0;dbg.max=0;dbg.over=0;dbg.fr=[]},
