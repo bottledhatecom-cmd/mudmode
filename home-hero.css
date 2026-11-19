@@ -59,3 +59,16 @@
 .hh-fig{aspect-ratio:1400/961}
 .hh-fig img{position:absolute;left:0;bottom:0;height:calc(100% * 850 / 961)}
 /* XR-ASPECT-END */
+
+/* Hover / focus captions: a fixed caption area over the bottom of the art (the rug), so it never covers a face and never moves "Want more?".
+   Same heading font, warm gold fill and dark outline as "Our crew at the card table", with a soft glow instead of a panel. Idle: the "Tap anyone" line. */
+.hh-cap{position:absolute;z-index:3;left:3%;right:3%;bottom:2%;height:27%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:2px;text-align:center;pointer-events:none;
+  font-family:"Fredoka","Outfit",system-ui,sans-serif;color:#ffe29a;-webkit-text-fill-color:#ffe29a;paint-order:stroke fill;overflow:hidden}
+.hh-cap p{margin:0;text-wrap:balance}
+.hh-cap-name{font-weight:700;font-size:min(34px,6vw);line-height:1.08;letter-spacing:.01em;-webkit-text-stroke:.2em #2a1606;
+  text-shadow:0 3px 2px rgba(0,0,0,.6),0 0 14px rgba(255,190,90,.55),0 0 26px rgba(20,10,4,.85)}
+.hh-cap-desc{font-weight:500;font-size:min(16px,3.4vw);line-height:1.25;color:#fff3dc;-webkit-text-fill-color:#fff3dc;-webkit-text-stroke:.28em #2a1606;
+  text-shadow:0 2px 2px rgba(0,0,0,.65),0 0 10px rgba(20,10,4,.95),0 0 20px rgba(20,10,4,.8)}
+.hh-cap-desc:empty{display:none}
+.hh-cap:not(.on) .hh-cap-name{font-size:min(24px,4.6vw);font-weight:600}
+@media (forced-colors:active){.hh-cap{color:CanvasText;-webkit-text-fill-color:CanvasText;background:Canvas}.hh-cap p{-webkit-text-stroke:0;text-shadow:none}}
