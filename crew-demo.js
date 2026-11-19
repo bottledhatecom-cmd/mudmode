@@ -1,4 +1,4 @@
-/* Crew demo: one task, three AIs, one rules file. Example text only. No network, no storage, no tracking. */
+/* Crew demo: sample jobs for a crew of AIs, one rules file. Example text only. No network, no storage, no tracking. */
 (function () {
   'use strict';
   var M = window.MMDemo, root = document.getElementById('demo-crew');
@@ -48,13 +48,27 @@
       recheck: 'Checking steps 4 and 8 again, read-only:',
       asIs: 'publish the how-to guide', fixed: 'publish the how-to guide (with the backup step)', words: 'Yes, just this one thing.',
       lesson: 'Use the stronger AI on the risky steps, and check that each one has a copy-first step.',
-      next: { q: 'Next, share the guide with your readers? Sharing is a different thing, so I ask again.' + NEXT_ASK + 'post.', draft: 'Draft post (not sent): "Our new how-to guide is ready. Take a look."', yes: 'Keep the draft, I will post it myself', no: 'Skip', yesDone: 'Draft kept. You post it yourself.', noDone: 'Skipped. Nothing written.' } }
+      next: { q: 'Next, share the guide with your readers? Sharing is a different thing, so I ask again.' + NEXT_ASK + 'post.', draft: 'Draft post (not sent): "Our new how-to guide is ready. Take a look."', yes: 'Keep the draft, I will post it myself', no: 'Skip', yesDone: 'Draft kept. You post it yourself.', noDone: 'Skipped. Nothing written.' } },
+    { id: 'multiday', tag: 'A multi-project day', name: 'Two small apps, a research brief, and an art set', slug: 'day-of-jobs', file: 'pack-list/ and practice-timer/', bak: 'pack-list.bak/ and practice-timer.bak/',
+      flow: 'day',
+      lanes: ['AI 1 (chat app): plans the day, then reviews at the end, gives you text', 'AI 2 (code tool): builds the packing-list app, writes files', 'AI 3 (code tool): builds the practice-timer app, writes files', 'AI 4 (chat app): writes a research brief, gives you text', 'AI 5 (chat app): lays out art options, gives you text'],
+      who: ['AI 1 (chat app, Foreman)', 'AI 2 (code tool)', 'AI 3 (code tool)', 'AI 4 (chat app)', 'AI 5 (chat app)'],
+      reviewerWho: 'AI 1 (chat app, Reviewer)',
+      meta: 'This is one day with several jobs at once (example). AI 1 is the Foreman: it plans the day and splits it into a handoff note for each lane. AI 2 and AI 3 are code tools: each builds one small app in its own copy, after a backup. AI 4 hands a research brief back as text. AI 5 lays out art options as text, and you pick. At the end, AI 1 does a read-only Reviewer pass and hands the verdict back as text, so it stays five AIs, not six. A chat app gives you text to save or paste; a code tool can write the files itself. You carry every note; the AIs do not message each other.',
+      metaExtra: '',
+      plan: ['Split the day into four lanes: AI 2 builds a packing-list app, AI 3 builds a practice-timer app, AI 4 writes a short research brief, and AI 5 lays out art options for you to pick.', 'I will give you a handoff note for each lane. You carry each note to that AI; the AIs do not message each other.', 'AI 2 and AI 3 write files in their own copies, after a backup. AI 4 and AI 5 hand text back to you.', 'When the lanes have finished, you bring their notes back to me. I will do a read-only Reviewer pass (same AI, a different hat) and ask you before anything goes live.'],
+      warn: 'The packing-list app says "Pack list" on the home screen, but the research brief says "Trip list". The jobs were done side by side, so nobody compared the name.',
+      fix: 'Opened the packing-list home screen and matched the heading to "Trip list", the name in the brief, with a copy of the page saved first.',
+      recheck: 'Reading the notes you brought back, and the packing-list app again, read-only:',
+      asIs: 'put both apps live', fixed: 'put both apps live (with matching list names)', words: 'Yes, just this one thing.',
+      lesson: 'When several jobs run side by side, compare the names and facts that appear in more than one lane.',
+      next: { q: 'Next, tell people the two apps are ready? Telling people is a different thing, so I ask again.' + NEXT_ASK + 'send.', draft: 'Draft note (not sent): "Two small apps are ready: a packing list and a practice timer."', yes: 'Keep the draft, I will send it myself', no: 'Skip', yesDone: 'Draft kept. You send it yourself.', noDone: 'Skipped. Nothing written.' } }
   ];
 
   function build() {
     var my = ++gen, task = null, files = [], ledger = [];
     root.textContent = '';
-    root.appendChild(M.topBar('Try it: one task, three AIs, one rules file', 'Pick a sample job and click through. Some jobs are too big for one chat, different AIs are good at different things, and some cost more, so you save them for where they matter. The AIs share one rules file and pass short notes, and your AI stops to ask before anything risky.'));
+    root.appendChild(M.topBar('Try it: a crew of AIs, one rules file', 'Pick a sample job and click through. Some jobs are too big for one chat, different AIs are good at different things, and some cost more, so you save them for where they matter. Some days you run several jobs at once, each on its own AI. The AIs share one rules file and pass short notes, and your AI stops to ask before anything risky.'));
 
     var pickWrap = h('fieldset', 'dm-pick');
     pickWrap.appendChild(h('legend', null, 'Pick a sample job'));
@@ -87,11 +101,10 @@
     function started() {
       stage.hidden = false;
       var lanes = h('div', 'dm-lanes');
-      lanes.appendChild(h('span', 'dm-lane a1', task.lanes[0]));
-      lanes.appendChild(h('span', 'dm-lane a2', task.lanes[1]));
-      lanes.appendChild(h('span', 'dm-lane a3', task.lanes[2]));
+      task.lanes.forEach(function (text, i) { lanes.appendChild(h('span', 'dm-lane a' + (i + 1), text)); });
       stage.appendChild(lanes);
-      stage.appendChild(h('p', 'dm-meta', task.meta + ' Here, AI 1 and AI 3 hand back text blocks and you save them (or paste them on), while AI 2 writes its own files.'));
+      var extra = task.metaExtra != null ? task.metaExtra : ' Here, AI 1 and AI 3 hand back text blocks and you save them (or paste them on), while AI 2 writes its own files.';
+      stage.appendChild(h('p', 'dm-meta', task.meta + extra));
       prog = h('p', 'dm-prog', ''); stage.appendChild(prog);
       var grid = h('div', 'dm-grid');
       chat = M.chatWindow('Task: ' + task.name);
@@ -101,9 +114,9 @@
       nextWrap = h('div', 'dm-panel'); nextWrap.hidden = true; chat.win.appendChild(nextWrap);
       files.push({ n: 'CORE.md', d: 'the shared rules. The code tool reads the file; a chat app gets the rules as a pasted block.' });
       renderPanel();
-      msg('ai a1', 'AI 1 (chat app)', ['New task: "' + task.name + '". I read the pasted rules block first. Here is my plan.']);
-      step('AI 1 plans', function () { plan(); });
-      plan();
+      msg('ai a1', task.who[0], ['New task: "' + task.name + '". I read the pasted rules block first. Here is my plan.']);
+      if (task.flow === 'day') { step('AI 1 plans the day', function () { planDay(); }); planDay(); }
+      else { step('AI 1 plans', function () { plan(); }); plan(); }
     }
 
     function renderPanel() {
@@ -156,6 +169,61 @@
       c.appendChild(btns); chat.log.appendChild(c); M.scrollEnd(chat.log); M.focusSoon(first);
     }
 
+    function planDay() {
+      msg('ai a1', task.who[0], ['Plan for the day, as a task card block. Save it as jobs/' + task.slug + '/TASK-CARD.md:'].concat(task.plan.map(function (p, i) { return (i + 1) + '. ' + p; })));
+      addFile('jobs/' + task.slug + '/TASK-CARD.md', 'the day plan, and what "done" means for each lane (text from AI 1, saved by you).');
+      next('AI 1 hands you a note for each lane', handoffDay);
+    }
+    function handoffDay() {
+      msg('ai a1', task.who[0], ['Four short handoff notes, one for each lane. Save each one; you will carry them. The AIs do not message each other.'],
+        'NOTE-FOR-AI-2.md\nNext single action: build the packing-list app in a copy, after a backup.\nWritten: today, 4:05 PM CT (example), by AI 1 (Foreman)\nWhat changed: jobs/' + task.slug + '/TASK-CARD.md (new)\nOpen: please build from this card, then leave a note for the owner to carry back\n\nNOTE-FOR-AI-3.md\nNext single action: build the practice-timer app in a copy, after a backup.\nWritten: today, 4:05 PM CT (example), by AI 1 (Foreman)\nWhat changed: jobs/' + task.slug + '/TASK-CARD.md (new)\nOpen: please build from this card, then leave a note for the owner to carry back\n\nNOTE-FOR-AI-4.md\nNext single action: write a short research brief as text, on packing for a weekend walk.\nWritten: today, 4:05 PM CT (example), by AI 1 (Foreman)\nOpen: please hand the brief back as text; do not write a file\n\nNOTE-FOR-AI-5.md\nNext single action: lay out art options as text for a packing-list icon, and wait for the owner to pick.\nWritten: today, 4:05 PM CT (example), by AI 1 (Foreman)\nOpen: please hand the options back as text; do not write a file');
+      addFile('NOTE-FOR-AI-2.md', 'handoff for the packing-list app (text from AI 1, saved by you).');
+      addFile('NOTE-FOR-AI-3.md', 'handoff for the practice-timer app (text from AI 1, saved by you).');
+      addFile('NOTE-FOR-AI-4.md', 'handoff for the research brief (text from AI 1, saved by you).');
+      addFile('NOTE-FOR-AI-5.md', 'handoff for the art options (text from AI 1, saved by you).');
+      next('You carry each note to its AI', carryDay);
+    }
+    function carryDay() {
+      msg('you', 'You', ['Carrying each handoff note to its AI: I paste them in, or point each AI at the saved file. The AIs do not message each other; I pass the notes along.']);
+      next('AI 2, AI 3, AI 4 and AI 5 work their lanes', workLanes);
+    }
+    function workLanes() {
+      msg('ai a2', task.who[1], ['I read CORE.md and the handoff note you pasted. Copied pack-list/ to pack-list.bak/ first. Then built the packing-list app from the card. The home screen opens and shows a list you can tick, headed "Pack list". I still will not call it done: a second look comes later.']);
+      addFile('pack-list.bak/', 'the copy of the packing-list app, kept so every change can be undone.');
+      addFile('pack-list/', 'the packing-list app (written by AI 2, the code tool, after the backup).');
+      msg('ai a3', task.who[2], ['I read CORE.md and the handoff note you pasted. Copied practice-timer/ to practice-timer.bak/ first. Then built the practice-timer app from the card. The timer opens and counts. I still will not call it done: a second look comes later.']);
+      addFile('practice-timer.bak/', 'the copy of the practice-timer app, kept so every change can be undone.');
+      addFile('practice-timer/', 'the practice-timer app (written by AI 3, the code tool, after the backup).');
+      msg('ai a4', task.who[3], ['I read the handoff note you pasted. Here is the brief, as a text block you can save. I am asked to hand this back as text, not to write a file.'],
+        'RESEARCH-BRIEF.md (text only)\nPacking for a weekend walk.\nCover: weather, shoes, water, and a paper map.\nCall the list "Trip list".\nNo bookings, no purchases.');
+      addFile('RESEARCH-BRIEF.md', 'the brief (text from AI 4, saved by you).');
+      next('AI 5 lays out art options', artOptions);
+    }
+    function artOptions() {
+      msg('ai a5', task.who[4], ['I read the handoff note you pasted. Here are three art options for a packing-list icon, as text. I am asked to hand these back as text, not to write a file. Please pick one.']);
+      card('Pick the art (example)', ['AI 5 laid out these options as text. Your pick is the one that counts.'], '1. A simple backpack icon, plain lines, one color.\n2. A small checklist with a tick, plain lines, one color.\n3. A suitcase with a tag, plain lines, one color.', [
+        { label: 'Pick option 1, the backpack', fn: function () { pickedArt('1', 'A simple backpack icon, plain lines, one color.'); } },
+        { label: 'Pick option 2, the checklist', fn: function () { pickedArt('2', 'A small checklist with a tick, plain lines, one color.'); } },
+        { label: 'Pick option 3, the suitcase', fn: function () { pickedArt('3', 'A suitcase with a tag, plain lines, one color.'); } }
+      ], 'Pick an art option');
+    }
+    function pickedArt(num, desc) {
+      msg('ai a5', task.who[4], ['You picked option ' + num + '. Here it is as a prompt block you can save. I am asked to hand this back as text, not to write a file.'],
+        'ART-CHOICE.md (text only)\nOwner pick: option ' + num + '.\n' + desc);
+      addFile('ART-CHOICE.md', 'your art pick, from the options AI 5 handed back as text (saved by you).');
+      next('You carry the notes back to AI 1 for review', carryReview);
+    }
+    function carryReview() {
+      msg('you', 'You', ['Carrying each lane\'s note back to AI 1 for the Reviewer pass: I paste them in, or add them to its project files. The AIs do not message each other.']);
+      next('AI 1 reviews, read-only', reviewDay);
+    }
+    function reviewDay() {
+      var m = msg('ai a1', task.reviewerWho, ['I read the pasted rules block and the notes you brought back from each lane. I am asked to read only, not change anything. My verdict as a text block you can save:']);
+      var p = h('p'); p.appendChild(h('span', 'dm-tag warn', 'WARN')); p.appendChild(document.createTextNode(task.warn)); m.appendChild(p);
+      addFile('jobs/' + task.slug + '/VERDICT-reviewer.md', 'WARN: a pass, with every note listed (text from AI 1, saved by you).');
+      decide();
+    }
+
     function plan() {
       var m = msg('ai a1', 'AI 1 (chat app)', ['Plan, as a task card block. Save it as jobs/' + task.slug + '/TASK-CARD.md:'].concat(task.plan.map(function (p, i) { return (i + 1) + '. ' + p; })));
       addFile('jobs/' + task.slug + '/TASK-CARD.md', 'the plan, and what "done" means (text from AI 1, saved by you).');
@@ -194,6 +262,16 @@
       ], 'Decision after the review');
     }
     function fixFirst() {
+      if (task.flow === 'day') {
+        msg('ai a2', task.who[1], [task.fix]);
+        wait(function () {
+          var m = msg('ai a1', task.reviewerWho, [task.recheck]);
+          var p = h('p'); p.appendChild(h('span', 'dm-tag pass', 'PASS')); p.appendChild(document.createTextNode('The flagged note is handled.')); m.appendChild(p);
+          files[files.length - 1] = { n: 'jobs/' + task.slug + '/VERDICT-reviewer.md', d: 'PASS (after the fix; text from AI 1, saved by you).' }; renderPanel();
+          wait(function () { readback(task.fixed, false); });
+        });
+        return;
+      }
       msg('ai a2', task.who[1], [task.fix]);
       wait(function () {
         var m = msg('ai a3', task.who[2], [task.recheck]);
@@ -211,6 +289,18 @@
       ], 'Ask before going live');
     }
     function approve(action, withWarn) {
+      if (task.flow === 'day') {
+        ledger.push({ words: task.words, action: action, ai: 'AI 2, AI 3', status: 'OK given' }); renderPanel();
+        msg('ai a2', task.who[1], ['Wrote your OK into OK-LEDGER.md before acting. Doing the packing-list app, and nothing else. (Demo: nothing is really published.)']);
+        msg('ai a3', task.who[2], ['I read the same OK. Doing the practice-timer app, and nothing else. (Demo: nothing is really published.)']);
+        wait(function () {
+          ledger[ledger.length - 1].status = 'USED UP'; renderPanel();
+          msg('ai a2', task.who[1], ['Done: the packing-list app, for this one OK. Your OK is marked USED UP, and the rule is that it is not reused. (A rule your AI is asked to follow, not a lock.)']);
+          msg('ai a3', task.who[2], ['Done: the practice-timer app, for the same one OK.']);
+          wait(function () { followUp(withWarn); });
+        });
+        return;
+      }
       ledger.push({ words: task.words, action: action, ai: 'AI 2', status: 'OK given' }); renderPanel();
       msg('ai a2', task.who[1], ['Wrote your OK into OK-LEDGER.md before acting. Doing exactly that one thing, and nothing else. (Demo: nothing is really published.)']);
       wait(function () {
@@ -227,13 +317,13 @@
       ], 'New ask for a different action');
     }
     function finish(outcome, withWarn) {
-      msg('ai a1', 'AI 1 (chat app)', [outcome, 'Report: ' + (withWarn ? 'WARN, note listed above.' : 'PASS.') + ' Lessons for the crew: ' + task.lesson, 'Handoff block for the next chat. Save it over HANDOFF.md:'],
+      msg('ai a1', task.who[0], [outcome, 'Report: ' + (withWarn ? 'WARN, note listed above.' : 'PASS.') + ' Lessons for the crew: ' + task.lesson, 'Handoff block for the next chat. Save it over HANDOFF.md:'],
         'HANDOFF.md (short form)\nNext single action: none, the job is finished.\nWritten: 2026-11-18 4:50 PM CT (example), by AI 1\nWhat changed: ' + task.file + ' (copy kept: ' + task.bak + ')\nUnused OKs: none (the one OK is USED UP)\nStill running: none\nOpen asks for the owner: none');
       prog.textContent = 'Finished. Replay to try another task.';
       M.focusSoon(foot.querySelector('.btn'));
     }
     function hold() {
-      msg('ai a1', 'AI 1 (chat app)', ['Held. Nothing went live and no OK was logged. Here is the handoff block, so the next chat does not lose it. Save it over HANDOFF.md:'],
+      msg('ai a1', task.who[0], ['Held. Nothing went live and no OK was logged. Here is the handoff block, so the next chat does not lose it. Save it over HANDOFF.md:'],
         'HANDOFF.md (short form)\nNext single action: ask the owner whether to ' + task.fixed + '.\nWritten: 2026-11-18 4:50 PM CT (example), by AI 1\nWhat changed: ' + task.file + ' (copy kept: ' + task.bak + ')\nUnused OKs: none\nStill running: none\nOpen asks for the owner: 1. ' + task.fixed + '? (recommend: yes, after the fix)');
       prog.textContent = 'Held, safely. Replay to try another path.';
       M.focusSoon(foot.querySelector('.btn'));
