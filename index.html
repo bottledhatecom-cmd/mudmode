@@ -16,6 +16,8 @@
 <link rel="stylesheet" href="home-hero.css?v=hh4">
 <link rel="stylesheet" href="room-ad.css?v=room1">
 <link rel="stylesheet" href="mm-demos.css?v=dm5">
+<link rel="stylesheet" href="mm-explainers.css?v=ex3">
+<link rel="stylesheet" href="tylerbot-mmcue.css?v=mc1">
 <link rel="stylesheet" href="usage-demo.css?v=ud2">
 <link rel="stylesheet" href="firstvisit.css?v=fv4">
 <script src="site.js?v=mp1" defer></script>
@@ -28,8 +30,10 @@
 <script src="crew-demo.js?v=dm6" defer></script>
 <script src="local-demo.js?v=dm5" defer></script>
 <script src="usage-demo.js?v=ud2" defer></script>
+<script src="mm-explainers.js?v=ex2" defer></script>
+<script src="tylerbot-mmcue.js?v=mc1" defer></script>
 <link rel="stylesheet" href="tylerbot-play.css?v=tb15">
-<script src="tylerbot-play.js?v=tb14" defer></script>
+<script src="tylerbot-play.js?v=tb18" defer></script>
 <script src="tylerbot-fiddle.js?v=f4" defer></script>
 <link rel="stylesheet" href="gumroad-dialog.css?v=rc11">
 <script src="gumroad-dialog.js?v=gl137v" defer></script>
@@ -86,8 +90,8 @@
 
  <section class="win" aria-labelledby="h-main" id="start" tabindex="-1">
   <div class="tb" aria-hidden="true"><span class="dots"><i></i><i></i><i></i></span>mudmode</div>
-  <!-- TODO: still matches webm frame 0 at 468×480, including alpha. The 2026-11-05 reexport matched those color planes but had alpha off (clear areas were black); this file keeps that color and the frame-0 alpha. Do not put the h264 mp4 back. Safari still needs HEVC-with-alpha. The play-rig rest pose does not match this still (pointing hands, split feet, chest plate). -->
-  <div class="tylerbot tb-flare" aria-hidden="true" data-tyler-play="img/tylerbot/"><video muted playsinline preload="auto" poster="img/tylerbot/tylerbot-flare-still.webp?v=f468" width="450" height="480"><source src="img/tylerbot/tylerbot-flare.webm" type="video/webm" media="(min-width: 1100px) and (prefers-reduced-motion: no-preference)"></video><img src="img/tylerbot/tylerbot-flare-still.webp?v=f468" width="450" height="480" alt="" decoding="async"></div>
+  <!-- Hero art: the landing loop (webm, alpha) over its own still, same 468x480 frame 0. tylerbot-play.js (tb18) starts it, hides it while the puppet does a trick, and restarts it after. The puppet rig and atlas (tylerbot-play-*-landing) are built on this pose. Do not put an h264 mp4 here: it has no alpha. -->
+  <div class="tylerbot tb-flare" aria-hidden="true" data-tyler-play="img/tylerbot/"><video muted loop playsinline preload="auto" poster="img/tylerbot/tylerbot-landing-still.webp?v=l1" width="468" height="480"><source src="img/tylerbot/tylerbot-landing.webm" type="video/webm" media="(min-width: 1100px) and (prefers-reduced-motion: no-preference)"></video><img src="img/tylerbot/tylerbot-landing-still.webp?v=l1" width="468" height="480" alt="" decoding="async"></div>
   <template id="tb-say" data-font="fonts/bubblegumsans-regular-latin.woff2" data-off>
    <!-- TYLERBOT LINES (edit here): only wording already checked and the owner ok'd -->
    <p data-id="K1a">Our crews built this site with mudmode!</p>
@@ -364,6 +368,13 @@ If the instructions (or, in a plain chat, this chat) already hold "My mudmode se
   <details class="win" id="w-what">
    <summary class="tb"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><h2>More about what mudmode does</h2><span class="what">with examples to try</span></summary>
    <div class="body">
+    <figure class="ex" id="ex-what" data-ex="what" role="group" aria-label="Animated explainer: what mudmode does, in plain words" aria-describedby="ex-what-sr">
+     <div class="ex-top" hidden><span class="dm-badge">Example animation</span><button type="button" class="ex-pp" aria-pressed="false">Pause animation</button></div>
+     <div class="ex-stage" aria-hidden="true"></div>
+     <p class="dm-sr" id="ex-what-sr">A short looping example animation, with sample text. First, your AI asks "Send this email?", you say yes, and that one yes covers only that one thing; the next risky step, deleting old files, asks again. Second, a checklist shows two things done and one marked not done, because a chat app could not save a file, and the AI offers the text to copy instead. Third, a long answer shrinks to one short line. Fourth, four starter words appear: handoff, mudmode, mudmode status and mudhelp. Fifth, you say handoff, your AI writes a note, and you carry it and paste it into a new chat. It ends on a recap of those five things. Rules your AI is asked to follow, not locks.</p>
+     <figcaption class="ex-cap">Your AI is asked to stop and ask before anything risky, to say plainly what it did and didn’t do, and to keep answers short. Say “handoff” and it writes a note you paste into your next chat.</figcaption>
+     <p class="ex-fine">Example animation with sample text. Rules your AI is asked to follow, not locks.</p>
+    </figure>
     <p><b>Adopt what fits. Keep what works.</b> mudmode is young and still growing.</p>
     <ul class="plain">
      <li>Starts with four words: <b>handoff</b>, <b>mudmode</b>, <b>mudmode status</b>, <b>mudhelp</b>. Say <b>mudhelp</b> for the rest.</li>
@@ -382,6 +393,13 @@ If the instructions (or, in a plain chat, this chat) already hold "My mudmode se
   <details class="win" id="w-grow">
    <summary class="tb"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><h2>Lessons: learns from mistakes</h2><span class="what">your call</span></summary>
    <div class="body">
+    <figure class="ex" id="ex-lessons" data-ex="lessons" role="group" aria-label="Animated explainer: how the lessons book works" aria-describedby="ex-lessons-sr">
+     <div class="ex-top" hidden><span class="dm-badge">Example animation</span><button type="button" class="ex-pp" aria-pressed="false">Pause animation</button></div>
+     <div class="ex-stage" aria-hidden="true"></div>
+     <p class="dm-sr" id="ex-lessons-sr">A short looping example animation, with sample text. First, a chat ends when you say handoff. Second, your AI adds a new lesson, "Check a phone screen first.", to the lessons book. Third, a new chat starts and your AI reads the lessons book first, so it already knows the lesson. Fourth, you ask your AI to change one line and retire another, and the book shows the changed line and a retired tag. It ends on a four-step recap. In a chat app, you paste or add the lessons book text to your next chat yourself; the new chat does not know it until you do. Rules your AI is asked to follow, not locks.</p>
+     <figcaption class="ex-cap">When a chat ends, your AI adds a lesson to your lessons book, and your next chat starts by reading it (in a chat app, you paste it in). Ask your AI to change or retire any line.</figcaption>
+     <p class="ex-fine">Example animation with sample text. In a chat app, you paste or add the lessons book’s text to your next chat yourself. Rules your AI is asked to follow, not locks.</p>
+    </figure>
     <p>Your AI can keep a lessons book in your folder and read it before work. You decide what stays.</p>
     <p>What goes in your lessons book (which lessons stay, which rules you add, what you say yes to) is up to you.</p>
     <p class="fine">Our lessons reach you only through Full Kit updates, as dated packs on your Gumroad download page. Sharing a lesson back is always opt-in and 18+. Nothing is pre-ticked.</p>
@@ -392,6 +410,13 @@ If the instructions (or, in a plain chat, this chat) already hold "My mudmode se
   <details class="win pro" id="w-pro">
    <summary class="tb"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><h2>mudgo: a second AI checks the work</h2> <span class="tag">go deeper</span><span class="what">everything, in detail</span></summary>
    <div class="body">
+    <figure class="ex" id="ex-mudgo" data-ex="mudgo" role="group" aria-label="Animated explainer: how mudgo works" aria-describedby="ex-mudgo-sr">
+     <div class="ex-top" hidden><span class="dm-badge">Example animation</span><button type="button" class="ex-pp" aria-pressed="false">Pause animation</button></div>
+     <div class="ex-stage" aria-hidden="true"></div>
+     <p class="dm-sr" id="ex-mudgo-sr">A short looping example animation, with sample text. First, a three-way switch shows mudgo auto, on and off, with the safety rules staying on either way. Second, a finished job goes to a reviewer that can only read, and the review comes back as PASS, WARN (a pass with every note listed) or FAIL (stops until you decide). Third, one task goes through three AIs: AI 1 plans, AI 2 builds and AI 3 reviews, and you carry the short note between the chat apps; your AI asks you before anything goes live. It ends on a three-part recap.</p>
+     <figcaption class="ex-cap">mudgo is auto, on or off, and the safety rules stay on either way. Finished work goes to a review that can only read (PASS, WARN or FAIL), and in chat apps you carry the short notes between AIs yourself.</figcaption>
+     <p class="ex-fine">Example animation with sample text. Rules your AI is asked to follow, not locks.</p>
+    </figure>
     <p>Everyday mode is all most people need. Say "mudgo auto" and mudgo turns on by itself when the work needs it (putting a site live, branches, reviews); say "mudgo on" to keep it on, "mudgo off" to keep it off. The safety rules are on either way.</p>
     <h3>With mudgo on</h3>
     <ul class="plain">

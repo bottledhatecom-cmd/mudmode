@@ -1,0 +1,9 @@
+/* mmcue2: the mudmeter cue. Tylerbot leans toward the header mudmeter link now and then, and the link gets one extra soft glow pulse.
+   The link already has its own always-on glow and swell (site.css); this adds nothing to the link itself: the pulse is a separate ::after layer behind the text
+   (opacity and box-shadow only), so the link's own animation, href, text and layout are not touched. No text. Off under reduced motion, forced colors and print. */
+[data-tyler-play].tb-mmcue{transform-origin:50% 70%;animation:tb-mmcue var(--tb-dur,1.5s) ease-in-out 1}
+.bar .note a.hl[href="meter/"].tb-mmglow::after{content:"";position:absolute;z-index:-1;inset:-4px -10px;border-radius:999px;pointer-events:none;background:radial-gradient(closest-side,rgba(255,226,150,.85) 0%,rgba(243,201,105,.45) 55%,rgba(243,201,105,0) 100%);box-shadow:0 0 16px 4px rgba(243,201,105,.55);opacity:0;animation:tb-mmpulse var(--tb-dur,1.2s) ease-in-out 1}
+@keyframes tb-mmcue{0%,100%{transform:none}25%,75%{transform:translate(calc(var(--lx,0)*1.6px),calc(var(--ly,0)*1.6px)) rotate(calc(var(--lr,0)*1.4deg))}50%{transform:translate(calc(var(--lx,0)*1.6px),calc(var(--ly,0)*1.6px - 4px)) rotate(calc(var(--lr,0)*1.4deg))}}
+@keyframes tb-mmpulse{0%,100%{opacity:0;transform:scale(.94)}40%,60%{opacity:1;transform:scale(1.1)}}
+@media (prefers-reduced-motion:reduce){[data-tyler-play].tb-mmcue{animation:none!important;transition:none!important;transform:none!important}.bar .note a.hl[href="meter/"].tb-mmglow::after{animation:none!important;opacity:0!important;box-shadow:none!important}}
+@media (forced-colors:active),print{.bar .note a.hl[href="meter/"].tb-mmglow::after{display:none!important}}
