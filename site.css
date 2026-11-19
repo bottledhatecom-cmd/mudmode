@@ -55,6 +55,7 @@ pre.say{white-space:pre-wrap;word-break:break-word;margin:0 0 12px;padding:14px 
 .every{margin:0 0 12px}.every>summary{display:flex;align-items:center;min-height:44px;cursor:pointer;color:var(--mud2);font-size:14px}
 .fine{font-size:13px;color:var(--soft);margin:12px 0 0}
 .fine.tight{margin:0}
+.fine.start-new{margin:-4px 0 12px}
 .js-only{display:none}.js .js-only{display:inline-flex}
 .note-pending{display:none;margin:12px 0 0;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:#1b1917;color:var(--soft);font-size:14px}
 .note-pending:target{display:block}
