@@ -7,12 +7,16 @@
 
   var LESSONS = [
     { date: '2026-11-18 4:10 PM CT (example site job)', by: 'AI 2 (code tool)', cls: 'a2', head: 'Copy a file before you change it.',
-      detail: 'AI 2 changed page.html with no copy first, so a bad edit could not be undone in one step. Enforced: AIs are asked to back up before any change, and the reviewer checks for the copy.',
+      detail: 'AI 2 changed page.html with no copy first, so a bad edit could not be undone in one step. How it is checked: AIs are asked to back up before any change, and the reviewer checks for the copy.',
+      attr: 'Written by AI 2 (code tool) at handoff, not typed by you.',
+      cardBy: 'written by AI 2 (code tool) at handoff',
       share: { lesson: 'A bad edit is easy to undo only if a copy exists.', fix: 'Save a dated copy of a file before any change.', result: 'A reviewer caught a change made with no copy, and the lesson was added.', confidence: 'medium' },
       codeUse: 'Read LESSONS.md: back up before any change. Copied page.html first (page.html.bak-20261119-0905, example).',
       chatUse: 'Read the pasted LESSONS.md: back up before any change. I cannot copy your files, so please save a copy of page.html first, then use the text I hand back.' },
     { date: '2026-11-18 4:25 PM CT (example site job)', by: 'AI 3 (reviewer)', cls: 'a3', head: 'Check a phone-size screen before saying done.',
-      detail: 'The menu ran off the edge on a narrow phone. Enforced: the reviewer is asked to run a width check before every report.',
+      detail: 'The menu ran off the edge on a narrow phone. How it is checked: the reviewer is asked to run a width check before every report.',
+      attr: 'From AI 3\'s review, saved by AI 2 at handoff, not typed by you.',
+      cardBy: 'from AI 3\'s review, saved by AI 2 at handoff',
       share: { lesson: 'A page can look fine on a big screen and break on a phone.', fix: 'Check a phone-size screen before saying done.', result: 'A reviewer caught a menu that ran off the edge before it went live.', confidence: 'medium' },
       codeUse: 'Read LESSONS.md: check a phone-size screen before saying done. Checked a narrow screen: the footer link fits.',
       chatUse: 'Read the pasted LESSONS.md: check a phone-size screen before saying done. I kept the footer link short, and I ask you to look at a phone-size view before you call it done.' }
@@ -22,7 +26,7 @@
     var my = ++gen;
     root.textContent = '';
     var book = [], shared = [], statusEl;
-    root.appendChild(M.topBar('Try it: how a chat can end with lessons', 'Watch one pretend job go wrong. The AIs are asked to write the lesson into the lessons book themselves, so you type nothing. Next day, a different AI is asked to read the same book first. In the real kit you can ask your AI to change or retire any line. The buttons here just let you try deciding.'));
+    root.appendChild(M.topBar('Try it: how a chat can end with lessons', 'Watch one pretend job go wrong. The AIs are asked to write the lesson at handoff, so you type nothing: the reviewer hands its line back as text, and the code tool saves the lines into the lessons book. Next day, a different AI is asked to read the same book first. In the real kit you can ask your AI to change or retire any line. The buttons here just let you try deciding.'));
 
     var grid = h('div', 'dm-grid');
     var chat = M.chatWindow('Crew chat (example)');
@@ -57,7 +61,7 @@
         li.appendChild(document.createTextNode(b.L.date + ': '));
         li.appendChild(b.edited ? document.createTextNode(b.body) : h('b', null, b.L.head));
         if (!b.edited) li.appendChild(document.createTextNode(' ' + b.L.detail));
-        li.appendChild(h('span', 'dm-meta', ' Written by ' + b.L.by + ' at handoff, not typed by you.'));
+        li.appendChild(h('span', 'dm-meta', ' ' + b.L.attr));
         ul.appendChild(li);
       });
       pan.body.appendChild(ul);
@@ -96,7 +100,7 @@
     function offerCard(i) {
       var L = LESSONS[i], entry = book[i];
       var card = h('div', 'dm-card', null, { role: 'group', 'aria-label': 'Line ' + (i + 1) + ' of ' + LESSONS.length });
-      card.appendChild(h('h4', null, 'Line ' + (i + 1) + ' of ' + LESSONS.length + ', written by ' + L.by + ' (example)'));
+      card.appendChild(h('h4', null, 'Line ' + (i + 1) + ' of ' + LESSONS.length + ', ' + L.cardBy + ' (example)'));
       var q = h('p', 'dm-quote'); q.appendChild(document.createTextNode(L.date + ': ')); q.appendChild(h('b', null, L.head)); q.appendChild(document.createTextNode(' ' + L.detail));
       card.appendChild(q);
       var chkId = 'dm-share-' + gen + '-' + i;
@@ -238,7 +242,7 @@
         var n = act.length;
         var rep = 'Done: the Contact link is added to the footer' + (isCode ? '.' : ', as text for you to save.') + ' Report: ready for review.';
         var last = 'Lessons for the crew: I used ' + n + (n === 1 ? ' line' : ' lines') + ' from the book. Nothing new to add this time.';
-        say(who, '', [rep, last, 'Every report ends this way. A new lesson would go into the book at handoff, with how it is enforced.'], function () {
+        say(who, '', [rep, last, 'Every report ends this way. A new lesson would go into the book at handoff, with how it is checked.'], function () {
           announce('Demo finished. A different AI read the lessons book first and ended its report with Lessons for the crew.');
           M.focusSoon(foot.querySelector('.btn'));
         });
@@ -250,7 +254,7 @@
       setTimeout(function () { if (alive()) readStep(); }, M.reduced() ? 0 : 200);
     }
 
-    /* Steps 1 and 2: a mistake happens, then the AIs write the lesson themselves. */
+    /* Steps 1 and 2: a mistake happens, then the reviewer hands a lesson line back and the code tool saves the lines. */
     function runJob1() {
       msg('you', null, ['Job 1 (example, 2026-11-18): add a Contact link to the menu on page.html.']);
       say('AI 2 (code tool)', 'a2', ['I changed page.html and added the Contact link to the menu. Done, ready for review.', 'Lessons for the crew: nothing new yet.'], function () {
@@ -260,29 +264,34 @@
           m.appendChild(h('p', null, 'Sending it back to AI 2.'));
           M.scrollEnd(chat.log);
           say('AI 2 (code tool)', 'a2', ['Fixed: the menu now fits a narrow screen. I should have made a copy before changing page.html, and I did not. I am asked to write that down at handoff.'], function () {
-            say('AI 3 (reviewer)', 'a3', ['Checked again, read-only: the menu fits a narrow screen now. PASS, with the missing copy listed in my report. I am asked to write down what I caught, too.'], function () { handoff(); });
+            say('AI 3 (reviewer)', 'a3', ['Checked again, read-only: the menu fits a narrow screen now. PASS, with the missing copy listed in my report. I am asked to hand back a lesson line for what I caught, too.'], function () { handoff(); });
           });
         });
       });
     }
 
     function handoff() {
-      note('Handoff. Nobody types a lesson here: each AI is asked to write its own line into LESSONS.md.');
+      note('Handoff. Nobody types a lesson here: AI 2 (the code tool) is asked to write its own line into LESSONS.md, and to save the reviewer\'s lesson line as well.');
       var e0 = { L: LESSONS[0], fresh: true };
-      say('AI 2 (code tool)', 'a2', ['I made the mistake, so I wrote this line into LESSONS.md myself, with how it is enforced:'], function (m) {
+      say('AI 2 (code tool)', 'a2', ['I made the mistake, so I wrote this line into LESSONS.md myself, with how it is checked:'], function (m) {
         pre(m, lineText(e0));
         book.push(e0); renderPanel(); announce('AI 2 added a line to your lessons book.');
         m.appendChild(h('p', null, 'Lessons for the crew: 1 new line (copy a file first).'));
         M.scrollEnd(chat.log);
         var e1 = { L: LESSONS[1], fresh: true };
-        say('AI 3 (reviewer)', 'a3', ['I caught the other problem, so I wrote this line myself, with how it is enforced:'], function (m2) {
+        say('AI 3 (reviewer)', 'a3', ['I am read-only, so I cannot write into LESSONS.md. Here is the lesson line for what I caught, with how it is checked. I am handing it back as text for AI 2 to save:'], function (m2) {
           pre(m2, lineText(e1));
-          e0.fresh = false;
-          book.push(e1); renderPanel(); announce('AI 3 added a line to your lessons book. It now has 2 lines.');
-          m2.appendChild(h('p', null, 'Lessons for the crew: 1 new line (check a phone-size screen).'));
+          m2.appendChild(h('p', null, 'Lessons for the crew: 1 new line handed back for AI 2 to save (check a phone-size screen).'));
           M.scrollEnd(chat.log);
-          note('Your call: the book is yours. Keep, edit or retire each line. Sharing outside your crew is off unless you tick it (18+).');
-          setTimeout(function () { if (alive()) offerCard(0); }, M.reduced() ? 0 : 300);
+          say('AI 2 (code tool)', 'a2', ['I saved AI 3\'s lesson line into LESSONS.md. It is from AI 3\'s review, saved by me at handoff:'], function (m3) {
+            pre(m3, lineText(e1));
+            e0.fresh = false;
+            book.push(e1); renderPanel(); announce('AI 2 saved AI 3\'s review line into your lessons book. It now has 2 lines.');
+            m3.appendChild(h('p', null, 'Lessons for the crew: 1 new line saved from AI 3\'s review (check a phone-size screen).'));
+            M.scrollEnd(chat.log);
+            note('Your call: the book is yours. Keep, edit or retire each line. Sharing outside your crew is off unless you tick it (18+).');
+            setTimeout(function () { if (alive()) offerCard(0); }, M.reduced() ? 0 : 300);
+          });
         });
       });
     }
