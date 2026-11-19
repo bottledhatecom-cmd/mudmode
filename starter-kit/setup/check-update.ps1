@@ -6,7 +6,7 @@
 # Safety: it only uses https:// addresses (also after a redirect), reads at most 4096 bytes, and only
 # prints version numbers (digits and dots). It never prints other text from the file: the "what's new"
 # pointer below is fixed text written here.
-# Update key (v1.4.0): this kit ships mudmode's real public update key (minisign, Ed25519) as
+# Update key (v1.4.1): this kit ships mudmode's real public update key (minisign, Ed25519) as
 # tools\update-key.pub, and the same key line is written below ($UpdateKey). Before it checks anything, this
 # script makes sure that file is there and holds exactly that key; if not, it checks nothing and says so.
 # It still never downloads, installs or applies anything: you get a new mudmode yourself. A downloaded update

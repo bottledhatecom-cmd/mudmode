@@ -2,6 +2,10 @@
 
 **How to update:** download the new kit, unzip it to a NEW folder (never over your old download or your `mudmode` folder), then say **Read README.md and set me up.** again or run the setup again. Your settings, handoff, lessons, jobs and OK ledger stay as they are; see "Updating to a new version" in `README.md`. Chat apps: see "Updating" in your `FOR-CHAT-APPS/` file.
 
+## v1.4.1 (2026-11-07)
+- Free-kit signed-pack tools and the separate free welcome box are included in the test build.
+- Current-kit labels and free-kit file references are corrected; no adapter files or paid-only features were added.
+
 ## v1.4.0 (2026-11-06)
 - Free kit file structure brought in line with the current hub working order (same mudgo one-file core model as Full Kit 1.3.9): `CORE.md` is the one core (Part 1 everyday, Part 2 mudgo); `cores/` holds pointers plus `MODULES-ON-PRO.md`; modules now include `usage` and `watchdog`.
 - Words: say **mudgo on** / **mudgo off** / **mudgo auto**. Older words (`mudmode full`, `mudmode lite`, `pro mode`, `pro off`) still work.

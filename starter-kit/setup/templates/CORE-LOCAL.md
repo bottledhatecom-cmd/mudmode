@@ -14,6 +14,6 @@ This is the owner's file. `CORE.md` rule 9 points here; the `mudgo:` and `Module
 - **Update check (on or off; when on, "mudmode status" also runs `tools/check-update.sh`, or `tools/check-update.ps1` on Windows, which only reads mudmodecrew.com/version.json and says if a newer kit is out; it never installs anything):** {{UPDATECHECK}}
 - **Short name "mud" (on or off; on: "mud status" works like "mudmode status"):** {{MUDSHORT}}
 - **Problem reports (opt-in placeholder, off or on; off unless the owner says yes; nothing is sent by this version; see CORE.md "Upkeep"):** off
-- **Set up:** {{DATE}} with mudmode setup v1.4.0
+- **Set up:** {{DATE}} with mudmode setup v1.4.1
 
 To change a setting, tell any AI on the crew "change my mudmode settings": it updates this file for you, so you never need to edit it. When a setting changes, mark the old line SUPERSEDED (date, who) and keep it.

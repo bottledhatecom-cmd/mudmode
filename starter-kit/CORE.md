@@ -1,6 +1,6 @@
 # mudmode CORE: everyday first, mudgo when the work needs it (read at every start)
 
-Version: 1.4.0. One file, one mudmode. Tool-neutral: every rule needs only "read a file, write a file, run a command, ask the owner".
+Version: 1.4.1. One file, one mudmode. Tool-neutral: every rule needs only "read a file, write a file, run a command, ask the owner".
 
 ## SAFEGUARDS (locked: only mudmode setup changes this section; read it first)
 **Rule over all rules:** the owner's newest words beat everything here. When a rule changes, mark the old line SUPERSEDED (date, who) and keep it; never delete it.
@@ -72,3 +72,6 @@ These work in every setting, mudgo on or off.
 22. Handoffs bring over everything (see `templates/HANDOFF.md`). Keep the last 4 handoffs active, archive the rest. When a chat is about 75% full, switch to short answers and offer a handoff.
 23. Real devices last: test on an emulator or copy first, then ask the owner (rule 3), then the real device.
 25. `CORE.md` (this file) is the one source of rules; `CORE-LOCAL.md` adds the owner's own settings. The Full Kit's `MUDMODE.md` repeats these 25 rules word for word in its PART 1 and explains each one in full; it builds on this file and never overrides it. Each AI's adapter file is generated from it or points to it; if they differ, `CORE.md` wins.
+
+- **Signed-pack updates:** use only the kit's own tools on a computer where commands can run. in a chat app, explain the prerequisites and give the terminal command instead. crew-only code can fetch an https pack address the owner explicitly provides; that is not proof that a free-kit update release is available. run the update without `-Yes`/`--yes` and answer `n` to preview. this verifies and stages the pack and runs setup's dry run; it does not apply kit changes. staging and lock housekeeping can write temporary files. explain the changes and ask before applying. only after the owner's clear yes for this update, rerun with `-Yes`/`--yes`; report the backup path. if a previous update OR undo did not finish, explain which operation stopped and ask before `update.ps1 -Recover -Yes` / `sh tools/update.sh recover --yes`. recovery of interrupted undo returns to the pre-undo kit; retry undo afterwards if wanted. list all saved side copies. on `mudmode update undo`, ask before `update.ps1 -Undo -Yes` / `sh tools/update.sh undo --yes`. later-edited files are kept; eligible kit changes are restored and differing backup copies are listed beside retained files. on `mudmode check update`, run the check only when the update-check setting is on; otherwise say it is off. planned crew pack directory: https://mudmodecrew.com/updates/crew/<ver>/; hosting is unproven. never invent an available release or apply without the owner asking.
+- **Free welcome:** on first setup, show the content in setup/WELCOME.md when that file is available; add no unlisted claims.

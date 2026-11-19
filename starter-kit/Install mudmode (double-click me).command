@@ -1,5 +1,5 @@
 #!/bin/bash
-# mudmode one-click installer for Mac (kit v1.4.0).
+# mudmode one-click installer for Mac (kit v1.4.1).
 # Double-click this file in the UNZIPPED kit folder. It asks the setup questions in small
 # pop-up windows, then runs the kit's own setup script (setup/setup.sh) with your answers.
 # It changes nothing that setup.sh would not change: your ~/mudmode folder, plus the

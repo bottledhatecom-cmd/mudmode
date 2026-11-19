@@ -1,6 +1,6 @@
 # mudmode module: adapters
 
-**Adds:** ready-made rules files for an AI the setup doesn't connect.
+**Adds:** guidance for connecting an AI with the generic instructions included in this free kit.
 
-**Files:** `adapters/AGENTS.md`, `adapters/ANY-AI.md`, and the generated `full-kit/adapters/CLAUDE.md`, `GROK.md`, `OTHER.md`.
-**More:** the Full Kit book `full-kit/MUDMODE.md` Appendix A.
+**Files:** `AGENTS.md`, `setup/templates/connector-agents.md`, `setup/templates/connector-claude.md` and `FOR-CHAT-APPS/mudmode-chat-setup.md`.
+**More:** ready-made per-AI adapters belong to the separate Full Kit and are not included here.
