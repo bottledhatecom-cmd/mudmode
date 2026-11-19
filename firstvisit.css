@@ -14,3 +14,25 @@
 #start .hero-head::after{content:"";flex:none;width:72px}
 #start .hero-head h1{text-align:center}
 @media (max-width:700px){#start .hero-head::after{width:56px}}
+/* Share-back point: a fourth key-point card fills the row under the first three instead of sitting alone. */
+@media (min-width:701px){#start .three li:nth-child(4):last-child{grid-column:1/-1}}
+#start .three li a{color:var(--mud2);text-decoration:underline;text-underline-offset:2px}
+/* "How a shared lesson gets in": a collapsible five-step strip, HTML and CSS only. */
+#start .flow{margin:12px 0 0;background:#151311;border:1px solid var(--line);border-radius:12px}
+#start .flow>summary{cursor:pointer;min-height:44px;display:flex;align-items:center;padding:8px 14px;font-family:var(--font-head);font-size:16px;font-weight:600;color:var(--text);list-style:none}
+#start .flow>summary::-webkit-details-marker{display:none}
+#start .flow>summary::after{content:"+";margin-left:auto;color:var(--mud2);font-size:20px;line-height:1}
+#start .flow[open]>summary::after{content:"\2212"}
+#start .flow>summary:focus-visible{outline:2px solid var(--mud2);outline-offset:2px;border-radius:12px}
+#start .flow-steps{counter-reset:fs;list-style:none;margin:0;padding:4px 14px 14px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+#start .flow-steps li{counter-increment:fs;position:relative;background:#171513;border:1px solid var(--line);border-radius:10px;padding:12px 10px}
+#start .flow-steps li::before{content:counter(fs);display:flex;align-items:center;justify-content:center;width:26px;height:26px;margin-bottom:8px;border-radius:50%;background:linear-gradient(180deg,var(--mud2),var(--mud));color:#1a1511;font-weight:700;font-size:14px}
+#start .flow-steps b{display:block;margin-bottom:4px;font-size:.98em}
+#start .flow-steps span{display:block;color:var(--soft);font-size:13.5px;line-height:1.4}
+#start .flow-steps .fs-beat{border-color:#8a5a3a}
+#start .flow-steps .fs-gate{border-color:#5f8a5f}
+@media (min-width:701px){#start .flow-steps li:not(:last-child)::after{content:"\203A";position:absolute;right:-9px;top:14px;width:8px;text-align:center;color:var(--mud2);font-size:18px;line-height:1}}
+@media (max-width:700px){#start .flow-steps{grid-template-columns:1fr}#start .flow-steps li{display:grid;grid-template-columns:26px 1fr;column-gap:10px;padding:10px 12px}#start .flow-steps li::before{grid-row:1 / span 2;margin:0}#start .flow-steps b{margin:0}}
+@keyframes fs-wobble{0%,100%{transform:rotate(0)}20%{transform:rotate(-14deg) scale(1.08)}40%{transform:rotate(12deg) scale(1.08)}60%{transform:rotate(-8deg)}80%{transform:rotate(6deg)}}
+#start .flow[open] .fs-beat::before{animation:fs-wobble .7s ease-in-out .3s 3}
+@media (prefers-reduced-motion:reduce){#start .flow[open] .fs-beat::before{animation:none}}
