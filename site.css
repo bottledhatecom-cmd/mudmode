@@ -438,3 +438,9 @@ html{scroll-padding-top:16px}
 .start-new .btn.sm:focus-visible{outline:3px solid var(--mud2);outline-offset:3px}
 @media (prefers-reduced-motion:reduce){.start-new .btn.sm:hover,.start-new .btn.sm:active{transform:none}}
 @media (forced-colors:active){.start-new .btn.sm{border:1px solid ButtonText}}
+/* t144u: center the setup-question row under the already-centred hero; Start here uses the existing .btn hero system (class set in index.html). */
+#start fieldset>legend{text-align:center;width:100%}
+#start .fine.start-new{justify-content:center;text-align:center}
+#start fieldset>.seg{justify-content:center}
+#start .start-new .btn:focus-visible{outline:3px solid var(--mud2);outline-offset:3px}
+
