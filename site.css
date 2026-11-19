@@ -404,3 +404,26 @@ html:not(.tk-on) .tk-run{width:100%}html:not(.tk-on) .tk-list{flex:0 1 auto;min-
  .mp-rail img{filter:none}
  .mp-rail{border:1px solid ButtonText;border-radius:12px}
 }
+
+/* Header menu row: same display font as the hero headline (Outfit via --font-head, already loaded in this file). Links only. */
+.bar .note a.hl{font-family:var(--font-head);font-weight:600;font-size:15px;letter-spacing:.015em}
+@media (max-width:700px){
+ .bar .note{flex:0 1 auto;white-space:nowrap}
+ .bar .note a.hl{font-size:13px;letter-spacing:.01em}
+}
+
+/* mudmeter in the header: a slight transform-only swell, and a soft gold glow behind it that breathes. No layout shift. */
+.bar{overflow:visible}
+.bar .note a.hl[href="meter/"]{position:relative;z-index:0;isolation:isolate;transform-origin:50% 50%;animation:mm-meter-swell 4s ease-in-out infinite}
+.bar .note a.hl[href="meter/"]::before{content:"";position:absolute;z-index:-1;inset:-4px -10px;border-radius:999px;pointer-events:none;background:radial-gradient(closest-side,rgba(243,201,105,.5) 0%,rgba(227,167,104,.28) 52%,rgba(200,135,74,0) 100%);opacity:.45;animation:mm-meter-glow 4s ease-in-out infinite}
+@keyframes mm-meter-swell{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+@keyframes mm-meter-glow{0%,100%{opacity:.22;transform:scale(.94)}50%{opacity:.72;transform:scale(1.06)}}
+@media (max-width:700px){
+ .bar .note a.hl[href="meter/"]{transform-origin:100% 50%}
+ .bar .note a.hl[href="meter/"]::before{inset:-3px -8px}
+}
+@media (prefers-reduced-motion:reduce){
+ .bar .note a.hl[href="meter/"]{animation:none;color:#f0c08a}
+ .bar .note a.hl[href="meter/"]::before{animation:none;opacity:.34;transform:none}
+}
+@media (forced-colors:active){.bar .note a.hl[href="meter/"]::before{display:none}}
