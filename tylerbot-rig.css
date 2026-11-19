@@ -3,7 +3,8 @@
 .tb-rig{display:block;position:absolute;pointer-events:none;z-index:2;-webkit-user-select:none;user-select:none}
 .tb-rig-fly{position:fixed;left:0;top:0;z-index:38;will-change:transform}
 .tb-rig-burst{position:fixed;left:0;top:0;z-index:39;display:none}
-.tb-rig-peek{position:fixed;right:-20px;top:66vh;z-index:30;width:56px}
+.tb-rig-peek{position:fixed;right:6px;bottom:10px;z-index:30;transition:opacity .2s}
+.tb-rig-peek.tb-peek-off{opacity:0}
 /* the hero still stays in the layout (it gives the box its size) and is hidden once the canvas is drawing */
 .tb-flare.tb-rig-on img{visibility:hidden}
 .tb-flare.tb-rig-on video{display:none}

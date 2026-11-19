@@ -1,7 +1,7 @@
-/* tylerbot-rig rg1: the moving Tylerbot (cut-out rig, Canvas 2D). One robot: he sits in the hero spot, follows the page while you scroll,
+/* tylerbot-rig rg2: the moving Tylerbot (cut-out rig, Canvas 2D). One robot: he sits in the hero spot, follows the page while you scroll,
    lands back in the hero, and fires a short photon burst when an explainer fold (details.win / details.flow) is opened.
    No network except one same-origin atlas image, no storage, no inline styles (CSSOM only). Off under reduced motion (static glow only on fold open).
-   Phones and narrow screens (under 1100 px) get a small peek only. Everything is aria-hidden and pointer-events:none.
+   Phones and narrow screens (under 1100 px) get a small peek only (rg2: the whole robot, fully on screen, and he steps aside while the setup question is under him). Everything is aria-hidden and pointer-events:none.
    Optional: with this file removed the hero shows its still image and the page is unchanged. window.__tb() keeps its shape. */
 (function () {
   'use strict';
@@ -448,11 +448,11 @@
   function sprite(g, x, y, sz, a) { if (a <= .01) return; g.globalAlpha = a > 1 ? 1 : a; g.drawImage(glowSpr, x - sz / 2, y - sz / 2, sz, sz); g.globalAlpha = 1; }
 
   /* ---------- peek (phones and narrow screens) ---------- */
-  var PEEKON = null, peekY = 0, peekSc = .235;
+  var PEEKON = null, peekY = 0, peekSc = .14, peekW = 0, peekH = 0, peekKeep = null;
   function makePeek() {
     if (peekCv || reduced() || saveData()) return;
     peekCv = doc.createElement('canvas'); peekCv.className = 'tb-rig tb-rig-peek'; peekCv.setAttribute('aria-hidden', 'true');
-    var w = Math.ceil(236 * peekSc), h = Math.ceil(250 * peekSc); peekCv.style.width = w + 'px'; peekCv.style.height = h + 'px';
+    var w = Math.ceil((468 + 2 * PADR) * peekSc), h = Math.ceil((480 + 2 * PADR) * peekSc); peekW = w; peekH = h; peekCv.style.width = w + 'px'; peekCv.style.height = h + 'px';
     var d = Math.min(DPR, 2); peekCv.width = Math.ceil(w * d); peekCv.height = Math.ceil(h * d); peekCx = peekCv.getContext('2d'); doc.body.appendChild(peekCv);
     PEEKON = []; for (var k = 0; k < NP; k++) PEEKON.push(0); [IDX.torso, IDX.cape, IDX.head, IDX.antL, IDX.antR].forEach(function (k2) { PEEKON[k2] = 1; });
     for (var k3 = 0; k3 < NP; k3++) { ang[k3] = POSE.relax[k3]; tg[k3] = POSE.relax[k3]; om[k3] = 0; }
@@ -463,8 +463,13 @@
     accY = lerp(accY, -v * 2, .1); accX = 0; ang[HEAD] = clamp(-v / 400, -12, 12); ang[IDX.antL] = ang[IDX.antR] = clamp(v / 250, -30, 30) * .6 + 4;
     fk(rootM(0, 1, 1, 1, 0, 0)); wind[0] = -.2; wind[1] = clamp(-v / 1500, -1, 1); wind[2] = Math.abs(v) > 40 ? 2.4 : .3;
     if (cloth) clothStep(2);
-    drawFigure(peekCx, d * peekSc, -164 + 2 / peekSc, -12, peekCv.width, peekCv.height, PEEKON);
+    drawFigure(peekCx, d * peekSc, PADR, PADR, peekCv.width, peekCv.height, null);
     peekCv.style.transform = 'translate3d(0,' + peekY.toFixed(1) + 'px,0)';
+    // rg2: never sit on the setup question (its start line and the AI picker): fade out while they are under him
+    if (!peekKeep) peekKeep = doc.querySelector('#start fieldset');
+    var off = false;
+    if (peekKeep) { var kr = peekKeep.getBoundingClientRect(), pr = peekCv.getBoundingClientRect(); off = kr.bottom > pr.top - 8 && kr.top < pr.bottom + 8 && kr.right > pr.left - 8 && kr.left < pr.right + 8; }
+    peekCv.classList.toggle('tb-peek-off', off);
   }
 
   /* ---------- main loop ---------- */

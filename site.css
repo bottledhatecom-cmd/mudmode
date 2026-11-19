@@ -55,7 +55,6 @@ pre.say{white-space:pre-wrap;word-break:break-word;margin:0 0 12px;padding:14px 
 .every{margin:0 0 12px}.every>summary{display:flex;align-items:center;min-height:44px;cursor:pointer;color:var(--mud2);font-size:14px}
 .fine{font-size:13px;color:var(--soft);margin:12px 0 0}
 .fine.tight{margin:0}
-.fine.start-new{margin:-4px 0 12px}
 .js-only{display:none}.js .js-only{display:inline-flex}
 .note-pending{display:none;margin:12px 0 0;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:#1b1917;color:var(--soft);font-size:14px}
 .note-pending:target{display:block}
@@ -428,3 +427,14 @@ html:not(.tk-on) .tk-run{width:100%}html:not(.tk-on) .tk-list{flex:0 1 auto;min-
  .bar .note a.hl[href="meter/"]::before{animation:none;opacity:.34;transform:none}
 }
 @media (forced-colors:active){.bar .note a.hl[href="meter/"]::before{display:none}}
+/* t199-t208 (mudcast): the ticker and the header bar scroll away with the page instead of staying pinned (owner ask) */
+.tkbar,.bar{position:absolute}
+html{scroll-padding-top:16px}
+/* t199-t208: "Never used an AI? Start here" under the setup question: a small button in the ticker-button look, lighter than the picker */
+.fine.start-new{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:-2px 0 14px}
+.start-new .btn.sm{min-height:32px;height:32px;padding:0 12px;border-radius:9px;font-size:13px;line-height:1;box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset 0 -2px 0 rgba(90,50,15,.22),0 2px 0 #7a4a22,0 3px 8px rgba(0,0,0,.45)}
+.start-new .btn.sm:hover{transform:translateY(-1px);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -2px 0 rgba(90,50,15,.22),0 3px 0 #7a4a22,0 6px 12px rgba(0,0,0,.45),0 0 14px rgba(227,167,104,.35)}
+.start-new .btn.sm:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 1px 0 #7a4a22,0 2px 4px rgba(0,0,0,.4)}
+.start-new .btn.sm:focus-visible{outline:3px solid var(--mud2);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){.start-new .btn.sm:hover,.start-new .btn.sm:active{transform:none}}
+@media (forced-colors:active){.start-new .btn.sm{border:1px solid ButtonText}}
