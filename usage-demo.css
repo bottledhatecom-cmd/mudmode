@@ -1,0 +1,69 @@
+/* Project usage demo (EXAMPLE UNITS only). Builds on mm-demos.css. No network, no storage. */
+.du-ctl{display:flex;flex-direction:column;gap:6px;margin:0 0 6px}
+.du-lab{font-size:16px;font-weight:700;color:var(--text)}
+.du-range{width:100%;min-height:44px;accent-color:var(--mud);cursor:pointer}
+.du-range:focus-visible{outline:3px solid var(--mud2);outline-offset:2px}
+.du-legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:6px 0 10px;padding:0;list-style:none;font-size:13px;color:var(--soft)}
+.du-legend li{display:inline-flex;align-items:center;gap:6px}
+.du-legend .du-seg{display:inline-block;width:14px;height:14px;border-radius:3px;flex:none}
+.du-grid{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)}
+.du-chart{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;align-items:end}
+.du-wk{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;transition:opacity .2s}
+.du-wk.off{opacity:.28}
+.du-bars{display:flex;align-items:flex-end;justify-content:center;gap:6px;height:190px;width:100%}
+.du-stack{display:flex;overflow:hidden;border-radius:4px 4px 0 0;background:transparent}
+.du-stack.v{flex-direction:column-reverse;width:44%;max-width:34px;height:100%;justify-content:flex-start}
+.du-stack.v{align-self:flex-end}
+.du-stack.h{flex-direction:row;width:100%;height:16px;border-radius:8px;background:#2a2622}
+.du-seg{display:block;min-width:0;min-height:0}
+.du-stack.v .du-seg{width:100%}
+.du-stack.h .du-seg{height:100%}
+.du-seg.work{background:#8a847c}
+.du-seg.ex{background:#e3b452}
+.du-seg.rp{background:#e0745f}
+.du-seg.rb{background:#b28ad6}
+.du-seg.rd{background:#6ab27a}
+.du-seg.wr{background:#9fd69f}
+.du-nums{font-size:12px;color:var(--text);font-weight:600;white-space:nowrap}
+.du-wl{font-size:12px;color:var(--soft)}
+.du-det{margin:12px 0 0}
+.du-det summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-size:14px;color:var(--soft)}
+.du-det summary:focus-visible{outline:3px solid var(--mud2);outline-offset:2px}
+.du-tblwrap{overflow-x:auto}
+.du-tbl{table-layout:auto;min-width:520px}
+.du-tbl th,.du-tbl td{width:auto!important}
+.du-tbl caption{text-align:left;padding:0 0 4px}
+@media (max-width:720px){
+ .du-grid{grid-template-columns:minmax(0,1fr)}
+ .du-bars{height:150px}
+ .du-chart{gap:6px}
+ .du-nums{font-size:11px}
+}
+@media (forced-colors:active){.du-seg{border:1px solid CanvasText}.du-stack{border:1px solid CanvasText}}
+@media (prefers-reduced-motion:reduce){.du-wk{transition:none}}
+/* scale-up and spread-work sections */
+.du-h{margin-top:22px}
+.du-box{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:14px;align-items:start;margin:0 0 6px}
+.du-pick{margin:0}
+.du-out{min-width:0}
+.du-out .dm-big{margin:6px 0 4px}
+.du-seg.pl{background:#5d8fc7}
+.du-seg.dr{background:#6ab27a}
+.dm-note-honest{margin:8px 0 0;padding:8px 10px;border-left:3px solid var(--mud);background:rgba(255,255,255,.04);border-radius:0 8px 8px 0;font-size:14px;color:var(--text)}
+@media (max-width:720px){.du-box{grid-template-columns:minmax(0,1fr)}}
+/* spare devices visual */
+.du-off{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+.du-left{min-width:0}
+.du-devs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.du-dev{display:flex;flex-direction:column;gap:4px;padding:10px;border:1px solid var(--line);border-radius:10px;background:#1b1917;font-size:13px;color:var(--soft);min-width:0}
+.du-dev b{font-size:15px;color:var(--text)}
+.du-dev.on{border-color:#6ab27a;background:#17211a}
+.du-main{border-color:#5d8fc7;background:#161d27;align-items:center;text-align:center}
+.du-arrow{text-align:center;font-size:12px;color:var(--soft);margin:6px 0}
+.du-chk{display:flex;gap:8px;align-items:center;min-height:36px;font-size:14px;color:var(--text);cursor:pointer}
+.du-chk input{width:20px;height:20px;accent-color:var(--mud);flex:none}
+.du-chk:focus-within{outline:3px solid var(--mud2);outline-offset:2px}
+.du-st{font-size:12.5px;color:var(--soft)}
+.du-safe{margin:8px 0 0;padding:8px 10px 8px 26px;border-left:3px solid var(--mud);background:rgba(255,255,255,.04);border-radius:0 8px 8px 0;font-size:13.5px;color:var(--text)}
+.du-safe li{margin:0 0 4px}
+@media (max-width:720px){.du-off{grid-template-columns:minmax(0,1fr)}}
