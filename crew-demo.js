@@ -5,50 +5,69 @@
   if (!M || !root) return;
   var h = M.h, gen = 0;
 
+  var NEXT_ASK = ' Your yes covered one thing; this is a different thing, so I ask again. I am asked to only write a draft, not to ';
   var TASKS = [
-    { id: 'typo', name: 'Fix a typo on the About page', slug: 'about-typo', file: 'about.html', bak: 'about.html.bak-20261118-1610',
-      plan: ['Copy about.html first, then fix the typo "recieve".', 'Check the page opens and nothing else changed.', 'Ask you before anything goes live.'],
-      built: 'Copied about.html to about.html.bak-20261118-1610, then changed one word: "recieve" to "receive". The page opens and one line differs.',
-      warn: 'The same typo is also on the contact page. It was not in the plan, so nobody touched it.',
-      fix: 'Copied contact.html first, fixed the same word there, and added it to the note.',
-      asIs: 'put the About page live', fixed: 'put the About and Contact pages live', words: 'Yes, just this one thing.',
-      lesson: 'Search the whole site for a typo before fixing one page.',
-      next: { q: 'Next, tell your followers? Your yes covered one thing; this is a different thing, so I ask again. I am asked to only write a draft, not to post.', draft: 'Draft post (not sent): "We fixed a typo on our About page. Thanks for reading."', yes: 'Keep the draft, I will post it myself', no: 'Skip', yesDone: 'Draft kept. You post it yourself.', noDone: 'Skipped. Nothing written.' } },
-    { id: 'price', name: 'Add a shipping line to the home page', slug: 'home-shipping', file: 'index.html', bak: 'index.html.bak-20261118-1610',
-      plan: ['Copy index.html first, then add one line: "Ships in 2 days".', 'Check the line against the other pages.', 'Ask you before anything goes live.'],
-      built: 'Copied index.html to index.html.bak-20261118-1610, then added one line under the buy button. The page opens and one line differs.',
-      warn: 'The new line says "Ships in 2 days", but the shipping page says 3 days.',
-      fix: 'Matched the new line to the shipping page ("Ships in 3 days"), with a copy saved first.',
-      asIs: 'put the home page live', fixed: 'put the home page live (with the 3-day line)', words: 'Yes, just this one thing.',
-      lesson: 'Check a new claim against every page that mentions it.',
-      next: { q: 'Next, email your customers about it? Your yes covered one thing; this is a different thing, so I ask again. I am asked to only write a draft, not to send.', draft: 'Draft email (not sent): "Good news: orders now show their ship time right on the home page."', yes: 'Keep the draft, I will send it myself', no: 'Skip', yesDone: 'Draft kept. You send it yourself.', noDone: 'Skipped. Nothing written.' } },
-    { id: 'tidy', name: 'Tidy my project folder', slug: 'folder-tidy', file: 'drafts/', bak: 'old-drafts-backup/',
-      plan: ['List the old drafts and copy them to a backup folder first.', 'Ask you before moving anything.', 'Do not delete; only move to the backup.'],
-      built: 'Found 3 old drafts and copied them to old-drafts-backup/. Nothing is moved or deleted yet.',
-      warn: 'One of the 3 files was edited yesterday, so it may not be old.',
-      fix: 'Left that file out. 2 files are proposed to move; the backup copy of all 3 stays.',
-      asIs: 'move 3 old files into old-drafts-backup/', fixed: 'move 2 old files into old-drafts-backup/', words: 'Yes, move just these.',
-      lesson: 'Check the last-edited date before calling a file old.',
-      next: { q: 'Next, free up space by deleting the backup folder? Deleting is a different thing, so I ask again. I would not do it on this yes.', draft: '', yes: 'Keep the backup', no: 'Ask me later', yesDone: 'Backup kept. Nothing deleted.', noDone: 'Noted. Nothing deleted, and I will ask again later.' } }
+    { id: 'bigsite', tag: 'Big project split up', name: 'Build a 5-page site for my shop', slug: 'shop-site', file: 'shop-site/ (5 pages)', bak: 'shop-site.bak-20261118-1610/',
+      lanes: ['AI 1 (chat app): splits the big job into page cards, gives you text', 'AI 2 (code tool): builds one page per card, writes files', 'AI 3 (second chat app): reviews each page, gives you text'],
+      who: ['AI 1 (chat app)', 'AI 2 (code tool)', 'AI 3 (second chat)'],
+      meta: 'This job is too big to hold in one chat, so AI 1 cuts it into small page cards. AI 2 builds from one card at a time, and AI 3 looks at each page. A chat app gives you text to save or paste; a code tool can write the files itself.',
+      plan: ['Split the job into 5 page cards: 1 Home, 2 About, 3 Products, 4 Shipping, 5 Contact. Each card says what "done" means for that page.', 'AI 2 builds one page per card, in order, and copies the folder first.', 'AI 3 reviews each page, read-only, and checks anything that repeats across pages, like a price or a name.', 'Ask you before anything goes live.'],
+      act: 'AI 2 builds the pages one card at a time, in a copy.', why: 'the page cards',
+      built: 'Copied the shop-site folder to shop-site.bak-20261118-1610/ first. Then built page 1 from card 1, page 2 from card 2, and so on, one card at a time. All 5 pages open.',
+      reviewNote: 'I read the pasted rules block and the note you pasted, then went through the 5 pages one at a time. I am asked to read only, not change anything.',
+      warn: 'Page 3 (Products) shows the price differently from page 1 (Home). The pages were built from separate cards, so nobody compared them.',
+      fix: 'Opened both pages and matched page 3 to the price on page 1, with a copy of page 3 saved first. Also added "check repeated facts" to the cards, so the next page gets checked too.',
+      recheck: 'Going through the 5 pages again, read-only:',
+      asIs: 'put the 5-page site live', fixed: 'put the 5-page site live (with matching prices)', words: 'Yes, just this one thing.',
+      lesson: 'When a big job is split into cards, check what repeats across the pages.',
+      next: { q: 'Next, tell your customers the new site is open? Telling people is a different thing, so I ask again.' + NEXT_ASK + 'send.', draft: 'Draft email (not sent): "Our new shop site is open. Come and have a look."', yes: 'Keep the draft, I will send it myself', no: 'Skip', yesDone: 'Draft kept. You send it yourself.', noDone: 'Skipped. Nothing written.' } },
+    { id: 'signup', tag: 'Each AI to its strength', name: 'Add a sign-up form to my app', slug: 'signup-form', file: 'app/home.html', bak: 'app/home.html.bak-20261118-1610',
+      lanes: ['AI 1 (chat app): plans, writes the friendly text, gives you text', 'AI 2 (code tool): writes the form code, writes files', 'AI 3 (second chat app): reviews the code and the text, gives you text'],
+      who: ['AI 1 (chat app)', 'AI 2 (code tool)', 'AI 3 (second chat)'],
+      meta: 'Each AI gets the part it is better suited to (example). The code tool writes the code. A chat app writes the friendly words, and a second chat app reviews. A chat app gives you text to save or paste; a code tool can write the files itself.',
+      plan: ['AI 2 (code tool) writes the form code. I (a chat app) write the friendly words. AI 3 (a second chat app) reviews both.', 'My text, for AI 2 to use: heading "Join in", box label "Your email address", button "Sign me up", help line "Type your email address, then press the button."', 'AI 2 copies app/home.html first, then adds the form with that text.', 'Ask you before anything goes live.'],
+      act: 'AI 2 adds the form in a copy, using the text from the task card.', why: 'the task card',
+      built: 'Copied app/home.html to app/home.html.bak-20261118-1610, then added the sign-up form with AI 1\'s text. The page opens and the form shows the heading, the email box and the button.',
+      reviewNote: 'I read the pasted rules block and the note you pasted, and looked at both the form code and the friendly text. I am asked to read only, not change anything.',
+      warn: 'The form does not say what happens to the email address. A visitor cannot tell why it is asked for or what they will get.',
+      fix: 'AI 1 wrote one more help line as text, with blanks for you to fill in with your real plan: "We use your email address to [say what you will send]. You can ask us to stop." AI 2 added it under the box, with a copy of the page saved first.',
+      recheck: 'Looking at the form code and the text again, read-only:',
+      asIs: 'put the sign-up form live', fixed: 'put the sign-up form live (with the email line)', words: 'Yes, just this one thing.',
+      lesson: 'Say what happens to personal details right where they are asked for.',
+      next: { q: 'Next, write a welcome email for new sign-ups? Writing to people is a different thing, so I ask again.' + NEXT_ASK + 'send.', draft: 'Draft email (not sent): "Thanks for joining. Here is what to expect."', yes: 'Keep the draft, I will send it myself', no: 'Skip', yesDone: 'Draft kept. You send it yourself.', noDone: 'Skipped. Nothing written.' } },
+    { id: 'guide', tag: 'Save the pricier AI for where it counts', name: 'Draft and check a long how-to guide', slug: 'howto-guide', file: 'guide.md', bak: 'guide.md.bak-20261118-1610',
+      lanes: ['AI 1 (chat app): outlines the guide, marks the tricky steps, gives you text', 'AI 2 (lower-cost AI in a code tool): drafts the bulk, writes files', 'AI 3 (stronger, pricier chat app): reviews only the tricky steps, gives you text'],
+      who: ['AI 1 (chat app)', 'AI 2 (lower-cost code tool)', 'AI 3 (stronger chat)'],
+      meta: 'Some AIs cost more, so you save them for where they matter. A lower-cost AI drafts the long, plain parts. The stronger, pricier AI only reviews the tricky steps. A chat app gives you text to save or paste; a code tool can write the files itself.',
+      plan: ['Outline the guide as 10 steps and mark the tricky ones, steps 4 and 8, where a slip could lose someone\'s work.', 'AI 2, a lower-cost AI, drafts all 10 steps. Plain steps do not need the strongest AI.', 'AI 3, the pricier, stronger AI, reviews only steps 4 and 8, so it is used where it counts.', 'Ask you before anything is published.'],
+      act: 'AI 2 drafts the guide in a copy and marks steps 4 and 8 for AI 3.', why: 'the outline',
+      built: 'Saved a copy of guide.md as guide.md.bak-20261118-1610 first, then drafted all 10 steps. Steps 4 and 8 are marked for AI 3. The file opens and reads in order.',
+      reviewNote: 'I read the pasted rules block and the note you pasted. I am asked to look only at the two tricky steps, 4 and 8, and to read only, not change anything.',
+      warn: 'Step 8 changes the settings file but does not say to copy it first, so a mistake there could not be undone.',
+      fix: 'Added a step before step 8: "Copy the settings file first." Step 8 now says how to undo the change. Done in a copy, with the draft saved first.',
+      recheck: 'Checking steps 4 and 8 again, read-only:',
+      asIs: 'publish the how-to guide', fixed: 'publish the how-to guide (with the backup step)', words: 'Yes, just this one thing.',
+      lesson: 'Use the stronger AI on the risky steps, and check that each one has a copy-first step.',
+      next: { q: 'Next, share the guide with your readers? Sharing is a different thing, so I ask again.' + NEXT_ASK + 'post.', draft: 'Draft post (not sent): "Our new how-to guide is ready. Take a look."', yes: 'Keep the draft, I will post it myself', no: 'Skip', yesDone: 'Draft kept. You post it yourself.', noDone: 'Skipped. Nothing written.' } }
   ];
 
   function build() {
     var my = ++gen, task = null, files = [], ledger = [];
     root.textContent = '';
-    root.appendChild(M.topBar('Try it: one task, three AIs, one rules file', 'Pick a sample task and click through. One AI plans, one builds, one reviews. They share the same rules file and pass short notes, and your AI stops to ask before anything risky.'));
+    root.appendChild(M.topBar('Try it: one task, three AIs, one rules file', 'Pick a sample job and click through. Some jobs are too big for one chat, different AIs are good at different things, and some cost more, so you save them for where they matter. The AIs share one rules file and pass short notes, and your AI stops to ask before anything risky.'));
 
     var pickWrap = h('fieldset', 'dm-pick');
-    pickWrap.appendChild(h('legend', null, 'Pick a sample task'));
+    pickWrap.appendChild(h('legend', null, 'Pick a sample job'));
     var name = 'dm-crew-task-' + gen;
     TASKS.forEach(function (t, i) {
       var lab = h('label'); var inp = h('input', null, null, { type: 'radio', name: name, value: t.id });
       if (i === 0) inp.checked = true;
       inp.addEventListener('change', function () { pickWrap.querySelectorAll('label').forEach(function (l) { l.classList.toggle('on', l.firstChild.checked); }); });
-      lab.appendChild(inp); lab.appendChild(document.createTextNode(t.name));
+      lab.appendChild(inp); lab.appendChild(document.createTextNode(t.tag + ': ' + t.name));
       if (i === 0) lab.className = 'on';
       pickWrap.appendChild(lab);
     });
-    var startBtn = M.button('Start this task', '', function () {
+    var startBtn = M.button('Start this job', '', function () {
       var sel = pickWrap.querySelector('input:checked');
       task = TASKS.filter(function (t) { return t.id === sel.value; })[0];
       pickWrap.hidden = true; started();
@@ -68,11 +87,11 @@
     function started() {
       stage.hidden = false;
       var lanes = h('div', 'dm-lanes');
-      lanes.appendChild(h('span', 'dm-lane a1', 'AI 1 (chat app): plans, gives you text'));
-      lanes.appendChild(h('span', 'dm-lane a2', 'AI 2 (code tool): builds, writes files'));
-      lanes.appendChild(h('span', 'dm-lane a3', 'AI 3 (second chat app): reviews, gives you text'));
+      lanes.appendChild(h('span', 'dm-lane a1', task.lanes[0]));
+      lanes.appendChild(h('span', 'dm-lane a2', task.lanes[1]));
+      lanes.appendChild(h('span', 'dm-lane a3', task.lanes[2]));
       stage.appendChild(lanes);
-      stage.appendChild(h('p', 'dm-meta', 'A chat app gives you text to save or paste; a code tool can write the file itself. Here, AI 1 and AI 3 hand back text blocks and you save them (or paste them on), while AI 2 writes its own files.'));
+      stage.appendChild(h('p', 'dm-meta', task.meta + ' Here, AI 1 and AI 3 hand back text blocks and you save them (or paste them on), while AI 2 writes its own files.'));
       prog = h('p', 'dm-prog', ''); stage.appendChild(prog);
       var grid = h('div', 'dm-grid');
       chat = M.chatWindow('Task: ' + task.name);
@@ -144,25 +163,25 @@
     }
     function handoff1() {
       msg('ai a1', 'AI 1 (chat app)', ['Handing off with a short note block, so AI 2 starts exactly where I stopped. Save it as HANDOFF.md:'],
-        'HANDOFF.md (short form)\nNext single action: AI 2 makes the change in a copy.\nWritten: 2026-11-18 4:05 PM CT (example), by AI 1\nWhat changed: jobs/' + task.slug + '/TASK-CARD.md (new)\nUnused OKs: none\nStill running: none\nOpen asks for the owner: none yet');
+        'HANDOFF.md (short form)\nNext single action: ' + task.act + '\nWritten: 2026-11-18 4:05 PM CT (example), by AI 1\nWhat changed: jobs/' + task.slug + '/TASK-CARD.md (new)\nUnused OKs: none\nStill running: none\nOpen asks for the owner: none yet');
       addFile('HANDOFF.md', 'the short note between AIs and chats (text from AI 1, saved by you).');
       next('You carry the note to AI 2, then AI 2 builds', build2);
     }
     function build2() {
       msg('you', 'You', ['Carrying AI 1\'s handoff note to AI 2: paste it in, or point AI 2 at the saved file. The AIs do not message each other; you pass the note along.']);
-      msg('ai a2', 'AI 2 (code tool)', ['I read CORE.md and the handoff note. ' + task.built, 'Checked my own work first, and I still will not call it done: a second AI looks at it before anything goes out.']);
+      msg('ai a2', task.who[1], ['I read CORE.md and the handoff note. ' + task.built, 'Checked my own work first, and I still will not call it done: a second AI looks at it before anything goes out.']);
       addFile(task.bak, 'the copy, kept so every change can be undone.');
       next('AI 2 leaves a note for AI 3', note2);
     }
     function note2() {
-      msg('ai a2', 'AI 2 (code tool)', ['Telling the next AI what I changed, the same turn:'],
-        'NOTE-FOR-AI-3.md\nWhat: changed ' + task.file + ' (copy: ' + task.bak + ')\nWhere: jobs/' + task.slug + '/\nWhy: the task card\nHow to undo: put the copy back\nOpen: please review, read-only, and say PASS, WARN or FAIL');
+      msg('ai a2', task.who[1], ['Telling the next AI what I changed, the same turn:'],
+        'NOTE-FOR-AI-3.md\nWhat: changed ' + task.file + ' (copy: ' + task.bak + ')\nWhere: jobs/' + task.slug + '/\nWhy: ' + task.why + '\nHow to undo: put the copy back\nOpen: please review, read-only, and say PASS, WARN or FAIL');
       addFile('NOTE-FOR-AI-3.md', 'an inbox note for the reviewer.');
       next('You carry the note to AI 3, then AI 3 reviews', review);
     }
     function review() {
       msg('you', 'You', ['Carrying AI 2\'s note to AI 3: paste the saved note into AI 3, or add it to its project files.']);
-      var m = msg('ai a3', 'AI 3 (second chat)', ['I read the pasted rules block and the note you pasted. I am asked to read only, not change anything. My verdict as a text block you can save:']);
+      var m = msg('ai a3', task.who[2], [task.reviewNote + ' My verdict as a text block you can save:']);
       var p = h('p'); p.appendChild(h('span', 'dm-tag warn', 'WARN')); p.appendChild(document.createTextNode(task.warn)); m.appendChild(p);
       addFile('jobs/' + task.slug + '/VERDICT-reviewer.md', 'WARN: a pass, with every note listed (text from AI 3, saved by you).');
       decide();
@@ -175,9 +194,9 @@
       ], 'Decision after the review');
     }
     function fixFirst() {
-      msg('ai a2', 'AI 2 (code tool)', [task.fix]);
+      msg('ai a2', task.who[1], [task.fix]);
       wait(function () {
-        var m = msg('ai a3', 'AI 3 (second chat)', ['Reviewing again, read-only:']);
+        var m = msg('ai a3', task.who[2], [task.recheck]);
         var p = h('p'); p.appendChild(h('span', 'dm-tag pass', 'PASS')); p.appendChild(document.createTextNode('The flagged note is handled.')); m.appendChild(p);
         files[files.length - 1] = { n: 'jobs/' + task.slug + '/VERDICT-reviewer.md', d: 'PASS (after the fix; text from AI 3, saved by you).' }; renderPanel();
         wait(function () { readback(task.fixed, false); });
@@ -193,10 +212,10 @@
     }
     function approve(action, withWarn) {
       ledger.push({ words: task.words, action: action, ai: 'AI 2', status: 'OK given' }); renderPanel();
-      msg('ai a2', 'AI 2 (code tool)', ['Wrote your OK into OK-LEDGER.md before acting. Doing exactly that one thing, and nothing else. (Demo: nothing is really published.)']);
+      msg('ai a2', task.who[1], ['Wrote your OK into OK-LEDGER.md before acting. Doing exactly that one thing, and nothing else. (Demo: nothing is really published.)']);
       wait(function () {
         ledger[ledger.length - 1].status = 'USED UP'; renderPanel();
-        msg('ai a2', 'AI 2 (code tool)', ['Done: ' + action + '. Your OK is marked USED UP, and the rule is that it is not reused. (A rule your AI is asked to follow, not a lock.)']);
+        msg('ai a2', task.who[1], ['Done: ' + action + '. Your OK is marked USED UP, and the rule is that it is not reused. (A rule your AI is asked to follow, not a lock.)']);
         wait(function () { followUp(withWarn); });
       });
     }
