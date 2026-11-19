@@ -1,5 +1,5 @@
 #!/bin/sh
-# mudmode setup v1.4.0 (macOS, Linux, Windows Git Bash).
+# mudmode setup v1.4.1 (macOS, Linux, Windows Git Bash).
 # Copies the kit into ONE folder you own (default: ~/mudmode). Outside that folder it only
 # READS, except one optional connector file you say yes to (~/.claude/rules/mudmode.md for
 # Claude Code, ~/.grok/AGENTS.md for Grok Build, ~/.codex/AGENTS.md for Codex). It never deletes anything. On a rerun it updates,
@@ -22,7 +22,7 @@ set -u
 KIT_DIR=$(cd "$(dirname "$0")/.." && pwd)
 SETUP_DIR="$KIT_DIR/setup"
 TARGET="${HOME:?HOME is not set}/mudmode"
-UPDCHK=""; CONNECT=""; NAME=""; TZONE=""; ASK=""; WORDS=""; ALLOWDIR=""; MODE=""; PRO=""; MUDGO=""; YES=0; DRY=0
+UPDCHK=""; CONNECT=""; NAME=""; TZONE=""; ASK=""; WORDS=""; ALLOWDIR=""; MODE=""; PRO=""; MUDGO=""; YES=0; DRY=0; LOCAL_ONLY=0
 STAMP=$(date '+%Y%m%d-%H%M'); NOW=$(date '+%Y-%m-%d %H:%M %Z')
 WARNED=0; FAILED=0
 
@@ -42,11 +42,13 @@ while [ $# -gt 0 ]; do
     --update-check) UPDCHK=${2:-}; shift 2 ;;
     --yes|-y) YES=1; shift ;;
     --dry-run) DRY=1; shift ;;
+    --local-only) LOCAL_ONLY=1; shift ;;
     --help|-h) usage; exit 0 ;;
     *) echo "Unknown option: $1"; usage; exit 2 ;;
   esac
 done
 
+[ "$LOCAL_ONLY" -eq 1 ] && { CONNECT=none; ALLOWDIR=no; }
 INTERACTIVE=0
 if [ "$YES" -eq 0 ] && [ -t 0 ]; then INTERACTIVE=1; fi
 
@@ -257,19 +259,19 @@ refresh() { # $1 source, $2 kit-owned destination (cores/, modules/): if it diff
   else place "$1" "$2"; fi
 }
 # --- known stock files (v1.3.6): sha256 of the CORE.md cores and connector templates in the released
-# v1.3.0 to v1.3.5 kits, plus (v1.3.6c) the v1.3.6 and v1.3.6b CORE.md, connectors and changed kit files, plus (v1.3.8) the v1.3.6c ones (shipped unchanged in v1.3.7), plus (v1.4.0) the v1.3.8 CORE.md (shipped unchanged in the first v1.4.0 build). A file that matches one byte for byte (Windows line endings count as
+# v1.3.0 to v1.3.5 kits, plus (v1.3.6c) the v1.3.6 and v1.3.6b CORE.md, connectors and changed kit files, plus (v1.3.8) the v1.3.6c ones (shipped unchanged in v1.3.7), plus (v1.3.9) the v1.3.8 CORE.md (shipped unchanged in the first v1.3.9 build). A file that matches one byte for byte (Windows line endings count as
 # the same) was written by setup and never edited.
 STOCK_CORE_LITE="8df2ce0d545cc0a53b4517e6cba9f7908c0eb42724c699cc0cb1b9c671d2ad63 02158beeac2d7222fba9e401fc7549228818aa48d98d83d7a5ce3c5e0fe9e56b f4f1e69151ac5801120bb919a5a06ffd38c723ca1376a1a2330d0cc2e185916d e512ab0beb8df0baf4769ccf8b465bb7c35f9e17d286fd17eab8815e88d6ce0e 070fc2265abbe210afad844a66144956361d294a681f6352e389380b34fd5012 70db2f87a11085da968c6d36739f4fa805ee50acc145b14384e8ba2a6bea0f75"
 STOCK_CORE_FULL="a779f75c31520275342c1b274afb561c51c340e100e244fe35fafab4be91cabd 2fdb403ef64ecd84856a90f5c5d90355d9eae335c03f85c748200bb6e6d2dee7 b461794b86be0e8acac8a55ffc203257b3b14c4cc8b93e9c9ea30c9957448d18 b641b751a7ca34761f48dd6d9c78617039057f4e4b4dbfa8b4645641d8bd1654 b388742850064a75763066d4b211b844ccc0cabf8c96e6cf5416f04a0fea6fba ab869c9d52b3b454f6f282d50921e404496fe64a305aef964cf9080759663b90 aa7f5c86027b5b7ed8e490016445c7b9cff50d1d22bb3c361c8aac1d4666bf2f b9d7910149ea8db4d1741606ac9e6689375f944c4a4804d497c6881cfcb6fd81 721da803cc966cbf96b22de15b5f3e3083ff94be621348879f6bd3ee62e87933 7b37a7d7cd9b73d49ebea70252f20424f025389841611771030bc59cb4e65cc7"
 # v1.3.6: kit files whose v1.3.5 text named lite/full mode (RULE-MAP, the adapters, three templates, the CORE-LOCAL template);
-# an unedited copy is updated with a backup first, an edited one is kept. (v1.4.0) Also the v1.3.8 templates/SHARED-LESSONS.md
-# (lesson terms (v2) line, shipped unchanged in the first v1.4.0 build). (holder-r4) Also the released v1.3.0 templates/SHARED-LESSONS.md
+# an unedited copy is updated with a backup first, an edited one is kept. (v1.3.9) Also the v1.3.8 templates/SHARED-LESSONS.md
+# (lesson terms (v2) line, shipped unchanged in the first v1.3.9 build). (holder-r4) Also the released v1.3.0 templates/SHARED-LESSONS.md
 # (c617e989, shipped unchanged up to v1.3.3) and the v1.3.8 setup/templates/CORE-LOCAL.md (10126ff5, its 'Set up' line names v1.3.8).
-# (holder-r5, owner-approved: the signed rebuild replaces the old licence and readme on upgrade) Also the first v1.4.0 build's
+# (holder-r5, owner-approved: the signed rebuild replaces the old licence and readme on upgrade) Also the first v1.3.9 build's
 # full-kit/LICENSE.md (2f225ddb) and full-kit/README-START-HERE.md (64950d74). (holder-r6) Also the v1.3.8 ones: LICENSE.md (3386ffda)
 # and README-START-HERE.md (6e079afe), checked in the v1.3.8 full-kit zip 8b9136aa.
 STOCK_KIT="3386ffdaaf027450f7e483c7ba62b314d68f8c16705a25a88b92c78b72046008 6e079afede1215cdbc8e2d69707f48eb81799873c3ddd79ec91260586ba5e47f 2f225ddba2af9963cb36c950ca61c91693cbe8a593e15b0a52603261d7e29bf6 64950d74271998cb317bd3c43a61fabea6c9239ca5fb648bf0d0ddfabafca155 57149889605ce07fb717fc100e8247df26bb0902ddf196b1502127ffc55675bc dbb033769436a113d126dcdf7986c6c3ed3d440bf918f2cbd1c02d435a363bb5 55e988779c99f90e2bca3c8d73fcd9e5ca4f22b5f169f6eb6640b0af5ef47657 d319a7b2a455ffc30c2d18b3fbb8f8bb7a74115c99f4ddddb9fc21df3d68a0f5 c8c98b61cbfd309327f617c5c195a120aac3afd68a8c628764067002e659c904 acb037613e5413e66b97da95b3855df154a7f3fd102f02f8f4c6b9f830c9267f dfdf455f41bd2f6856ed655d0e22be5f46347f7936daa040d3fd799866e750d5 c4e038f5216142ae6a141727ff24545176f903c3286d72ad2e0f2ff5b9abe9bc a6bd8753cd584ff469a4a8a1b66937ba3fd8c76f4781eff6932e63a6a60712b1 d4232077b46a2e71105b4c2ec3d80a8a40f184ccc1bbb7268fb473b1e9cde041 f6ae396da9e5b835f3776771a4c9f36d19a81c7ff104f35c190611d4888e8d06 791692f670486cb3a0b2526fddd233222ed5a3e7f075c94917d9d96dcd5ecd2f 0b4d02d8c5cce00b10ec5a632e0438886d0d9791719d3a31485ff7cc3f4000ae c9be79cf7fdadd8361e043610a30f413e22d62543131a5e105749ef3269b0209 b2d1b0ddf71e8d1c7a20ec56499342f0fb2c80752e2d3e7847c52f02b6868dfc 5fa3003cce8bb18804b9ede50d9f61f25ca2b69c1d6498869bcb15ce53ca626c 9008d68762445ff033510a32e6295e84f9655564b43f5c3a895fd7cccfa5bc9b e90b862c0e5826b4392389bae2fe00ce976bc194316e17844310ed1f7d1fbe77 e59a48a42983fd123f899ccffab3025d4bdf077be704dd930c1c608c4d6fad38 7f938ecfe702b0ff869aa0dd687856df8d4f55b8c144c72e66db5acba0645824 c617e989707d3dbbce69c79d429567e9d262f8edc2a44e5b610b96f85f78e2b1 10126ff5afae4a2e4a3baf96586719e4c74faa2e149ffc8e577c7b9f8c389917"
-# (holder-r4) STOCK_CONN also has the v1.3.8 connector templates (header "written by mudmode setup v1.3.8", shipped unchanged in the first v1.4.0 build).
+# (holder-r4) STOCK_CONN also has the v1.3.8 connector templates (header "written by mudmode setup v1.3.8", shipped unchanged in the first v1.3.9 build).
 STOCK_CONN="999fc995023857871a8c345bf6544b380cce2cfae22c66e2920a059a47305259 669af4c6f16c9c8b7c7dd8cfb15009c77bcffe5259ed2e38fd2194d5fe060c52 8fcfaaa9c9084b8d2120f55f3ae2c32afd5616193caeadc7f259695d00205780 b85fc69197fa843c927c286258bd80990f63ec1af0c7d8886ae3c61230af87ac a7a46d2be9c464bdbd5bec37889299753db3bac746cb6932c5a7914e3350315c 0bbb4202af065919fa0e701cc2bf756682d07d43e0c259ad3b0d46e9d6889e1f f2082caa065c3d164016baf53e6ad6c2cae11287d975d09e7e96c7d5803252fd 2006e87384ab657dae27a9c98d908b57ea983f21ff3e2f7a6578e6cd1e4834d8 46b6957686bd44516246645e36070e5f3aa9d28ccf543e4abdd384fb66caa870 8c7116b7496cbb7b9d5135d3fb4b9865ed9e0589b78ea7364b8c4f5e60745152 27ca4ad739f7155191adf1089a096c34d3466f172d0c4fbd7fc3672d48c534ed b9b2d70c62bd38aaf8abbf12707c4ddc4e233bca86c6ffa4fcbe65d9a681bd7e 6890bf3799ac7442865f8b29ed022bf2ad8e83e0cfe337cf0e006e1e56bd6485 31fb3548c5f604f689ae2df5b35d73ecc1d91850cd3b2f10ebf6ccf5c326ca04 255fa832309b9a007c1cf590e72ec9ac1cebe79f03a3283f5d76710abb3c8de1 a091d0e3c7f80f18e152dd9bef997cfea71dca03e47f6cdf0e95d396580254cd 4893d0de9e84fffbf4144fe0ff1e151cc3ea95da8acf47dd9f2fbef600af0b45 b381301f11282abb42acff519a31f94eca363ddc1c4a1dcc1b4e6b7464475560 d55a1d5de3ffbae4f0e000f611ea75fc84b33ce7a8c5e56ebe7aced854655bb7 199799d6aa5802c456d50f5f3afa101e38906c824868304f8a424dca7279ed26 95f7b9d131fc47929539ad16ca9257a706a77e96507a0bd0c9bd43adb7337462 b079f16ecfc952946f526bb8d599c1b93af364cd4b9f8854e1e0e3655adb9f69 0f6fd9abb4e114850d2d8c2e5a94d788d2a0669974024c12797ed86766f794af e42bd0487ad36a5d6395feec54f4ba4fe65d00b2407d2b4ce111abaf5e889d7e a2d0f3a392aad31a05a69ea8e396cb27d509f1b78cafaea6e45804d7b812d8ab 6e31a38e351cfde47c7648edcf78ac7003c563e7d7a085d5c65f4f00f2b51316"
 sha_of() { # sha256 of $1, or nothing if this computer has no tool for it (then nothing counts as stock)
   if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" 2>/dev/null | cut -d' ' -f1
@@ -317,7 +319,7 @@ if [ "$NEWDIR" -eq 0 ]; then
 fi
 mkd "$TARGET"; [ "$PRO" = on ] && mkd "$TARGET/jobs"
 if [ "$NEWDIR" -eq 1 ] && [ "$DRY" -eq 0 ] && [ -d "$TARGET" ] && [ ! -e "$TARGET/.made-by-mudmode-setup" ]; then
-  printf 'mudmode setup v1.4.0 found this folder new or empty on %s. Undo can remove the whole folder.\n' "$NOW" > "$TARGET/.made-by-mudmode-setup" || fail "could not write $TARGET/.made-by-mudmode-setup"; fi
+  printf 'mudmode setup v1.4.1 found this folder new or empty on %s. Undo can remove the whole folder.\n' "$NOW" > "$TARGET/.made-by-mudmode-setup" || fail "could not write $TARGET/.made-by-mudmode-setup"; fi
 # v1.3.6: one CORE.md (Part 1 everyday, Part 2 mudgo), the same file for every setting. An unedited CORE.md
 # from any released version (lite or full) is updated, with a backup first; one with your own edits is kept.
 CORESRC="$STARTER/CORE.md"
@@ -328,13 +330,21 @@ elif [ -f "$TARGET/CORE.md" ] && [ "$KITREFRESH" -eq 1 ] && ! cmp -s "$CORESRC" 
   KEPT=$((KEPT+1)); say "kept your CORE.md: it doesn't match a released CORE.md (your own edits, or an older version), so it was not updated. The new one (everyday first, with mudgo) is in the kit at starter-kit/CORE.md; your own rules belong in CORE-LOCAL.md."
 else place "$CORESRC" "$TARGET/CORE.md"; fi
 place_dir "$STARTER/templates" "$TARGET/templates"
-place_dir "$STARTER/adapters" "$TARGET/adapters"
+# Free kit does not bundle per-AI adapters.
 place_dir "$STARTER/addons" "$TARGET/addons"
 refresh_dir "$STARTER/modules" "$TARGET/modules"
 refresh_dir "$STARTER/cores" "$TARGET/cores"
 place "$STARTER/RULE-MAP.md" "$TARGET/RULE-MAP.md"
 for f in check-update.sh check-update.ps1 update-key.pub; do [ -f "$SETUP_DIR/$f" ] && refresh "$SETUP_DIR/$f" "$TARGET/tools/$f"; done   # the opt-in update check (off unless CORE-LOCAL.md says on)
+# No startup/scheduled invocation.
+for d in meter instant-wake; do
+  [ ! -d "$KIT_DIR/tools/$d" ] || place_dir "$KIT_DIR/tools/$d" "$TARGET/tools/$d"
+done
+for f in update.ps1 update.sh verify-minisign.ps1 update-common.ps1 record-install.ps1 mudmode.py scrub_check.py scrub_check.ps1; do
+  [ -f "$KIT_DIR/tools/$f" ] && refresh "$KIT_DIR/tools/$f" "$TARGET/tools/$f"
+done
 [ -f "$KIT_DIR/VERSION" ] && [ "$KITREFRESH" -eq 1 ] && refresh "$KIT_DIR/VERSION" "$TARGET/VERSION"
+[ -f "$KIT_DIR/CONTRIBUTING.md" ] && [ "$KITREFRESH" -eq 1 ] && refresh "$KIT_DIR/CONTRIBUTING.md" "$TARGET/CONTRIBUTING.md"
 [ -f "$KIT_DIR/WHAT-TO-SAY.md" ] && [ "$KITREFRESH" -eq 1 ] && refresh "$KIT_DIR/WHAT-TO-SAY.md" "$TARGET/WHAT-TO-SAY.md"   # v1.3.5: the list "mudhelp" shows
 place "$SETUP_DIR/templates/CORE-LOCAL.md" "$TARGET/templates/CORE-LOCAL.md"
 LIVEF="OK-LEDGER.md"; [ "$PRO" = on ] && LIVEF="LESSONS.md JOBS.md OK-LEDGER.md"
@@ -386,11 +396,11 @@ if [ "$HAVE_LOCAL" -eq 1 ] && [ -f "$TARGET/CORE-LOCAL.md" ] && { [ -n "$LEGACY"
   else
     LB=$(newbak "$TARGET/CORE-LOCAL.md"); cp -p "$TARGET/CORE-LOCAL.md" "$LB" || fail "could not back up CORE-LOCAL.md"
     fill "$SETUP_DIR/templates/CORE-LOCAL.md" | grep -E '^- \*\*mudgo \(' > "$TMP/proline"
-    [ "$ONETIME" -eq 1 ] && ! grep -q '^- \*\*One-time note' "$TARGET/CORE-LOCAL.md" && printf '%s\n' "- **One-time note:** mudmode 1.3.8: you're on mudgo auto now: extra care turns on by itself when the work needs it. Say \"mudgo on\" to keep everything on." >> "$TMP/proline"
+    [ "$ONETIME" -eq 1 ] && ! grep -q '^- \*\*One-time note' "$TARGET/CORE-LOCAL.md" && printf '%s\n' "- **One-time note:** mudmode 1.4.1: you're on mudgo auto now: extra care turns on by itself when the work needs it. Say \"mudgo on\" to keep everything on." >> "$TMP/proline"
     if grep -Eq '^- \*\*(mudgo|Pro layer) \(' "$TARGET/CORE-LOCAL.md"; then
       awk -v m="$PRO" -v o="$OLDPRO" -v n="$NOW" '!d && /^- \*\*(mudgo|Pro layer) \(/ { sub(/:\*\* *[A-Za-z]*/, ":** " m); print; print "  - SUPERSEDED " n ", by setup: was " o; d=1; next } { print }' "$TARGET/CORE-LOCAL.md" > "$TMP/local.new"
     elif grep -q '^- \*\*Mode (' "$TARGET/CORE-LOCAL.md"; then
-      awk -v n="$NOW" -v pf="$TMP/proline" '!d && /^- \*\*Mode \(/ { while ((getline l < pf) > 0) print l; print "  - SUPERSEDED " n ", by setup v1.4.0: the next line (lite and full are both mudgo auto now; one CORE.md)"; print; d=1; next } { print }' "$TARGET/CORE-LOCAL.md" > "$TMP/local.new"
+      awk -v n="$NOW" -v pf="$TMP/proline" '!d && /^- \*\*Mode \(/ { while ((getline l < pf) > 0) print l; print "  - SUPERSEDED " n ", by setup v1.4.1: the next line (lite and full are both mudgo auto now; one CORE.md)"; print; d=1; next } { print }' "$TARGET/CORE-LOCAL.md" > "$TMP/local.new"
     else
       { cat "$TARGET/CORE-LOCAL.md"; cat "$TMP/proline"   # set up before v1.3: add the lines it never had
         grep -q '^- \*\*Modules ' "$TARGET/CORE-LOCAL.md" || fill "$SETUP_DIR/templates/CORE-LOCAL.md" | grep -E '^- \*\*Modules '
@@ -416,7 +426,7 @@ cat > "$TMP/HANDOFF.md" <<HOF
 
 **Next single action:** ask the owner what the first job is.
 
-- **Written:** $NOW, by mudmode setup v1.4.0
+- **Written:** $NOW, by mudmode setup v1.4.1
 - **Goal:** first session with mudmode
 - **Stage:** switched on
 - **Live state to re-check before editing:** none yet
@@ -434,7 +444,7 @@ cat > "$TMP/HANDOFF.md" <<HOF
 
 **Next single action:** ask the owner what the first job is.
 
-- **Written:** $NOW, by mudmode setup v1.4.0
+- **Written:** $NOW, by mudmode setup v1.4.1
 - **What changed:** mudmode folder set up at $DIRTXT (everyday first; mudgo $PRO)
 - **Unused OKs (exact scope):** none
 - **Still running:** none
@@ -447,7 +457,7 @@ if [ "$FULL" -eq 1 ]; then
   place_dir "$KIT_DIR/adapters" "$TARGET/full-kit/adapters"
   place_dir "$KIT_DIR/tools" "$TARGET/full-kit/tools"
   place_dir "$KIT_DIR/extras" "$TARGET/full-kit/extras"
-  if [ -d "$KIT_DIR/FOR-CHAT-APPS" ]; then place_dir "$KIT_DIR/FOR-CHAT-APPS" "$TARGET/full-kit/FOR-CHAT-APPS"; fi   # v1.4.0: the chat-app file, for Windows exe users
+  if [ -d "$KIT_DIR/FOR-CHAT-APPS" ]; then place_dir "$KIT_DIR/FOR-CHAT-APPS" "$TARGET/full-kit/FOR-CHAT-APPS"; fi   # v1.3.9: the chat-app file, for Windows exe users
 else
   [ -f "$KIT_DIR/LICENSE" ] && place "$KIT_DIR/LICENSE" "$TARGET/LICENSE"
 fi
@@ -587,13 +597,13 @@ CODEXF="${CODEX_HOME:-$HOME/.codex}/AGENTS.md"
 for oc in "$HOME/.claude/rules/mudmode.md:$TMP/claude.md" "$HOME/.grok/AGENTS.md:$TMP/agents.md" "$CODEXF:$TMP/agents.md"; do
   f=${oc%%:*}; src=${oc#*:}
   F0=$FAILED   # a failed refresh is not a setup failure: the old connector keeps working, and the next run tries again
-  if [ "$DRY" -eq 0 ] && [ -f "$f" ] && grep -qF "The shared folder is \`$DIRTXT\`." "$f" 2>/dev/null && conn_update "$src" "$f" >/dev/null 2>&1; then say "kept your connector $f up to date (a backup is beside it)"; fi
+  if [ "$LOCAL_ONLY" -eq 0 ] && [ "$DRY" -eq 0 ] && [ -f "$f" ] && grep -qF "The shared folder is \`$DIRTXT\`." "$f" 2>/dev/null && conn_update "$src" "$f" >/dev/null 2>&1; then say "kept your connector $f up to date (a backup is beside it)"; fi
   FAILED=$F0
 done
 
 # --- 3. log + result ------------------------------------------------------------
 if [ "$DRY" -eq 0 ] && [ -d "$TARGET" ]; then
-  { printf '\n## %s setup v1.4.0 from %s\n' "$NOW" "$(basename "$KIT_DIR")"
+  { printf '\n## %s setup v1.4.1 from %s\n' "$NOW" "$(basename "$KIT_DIR")"
     printf -- '- copied %s, already the same %s, kept yours %s; connected:%s; allowed folder: %s; mudgo: %s\n' "$COPIED" "$SAME" "$KEPT" "${CONNECTED:- none}" "${ALLOWED:-no}" "$PRO"; } >> "$TARGET/SETUP-LOG.md"
 fi
 say ""
@@ -607,6 +617,11 @@ if [ "$FAILED" -eq 1 ]; then say "RESULT: FAILED (see the PROBLEM lines above)";
 if [ -f "$TARGET/CORE-LOCAL.md" ]; then say "Your settings ($DIRTXT/CORE-LOCAL.md):"; grep '^- \*\*' "$TARGET/CORE-LOCAL.md" | sed 's/\*\*//g'; fi
 [ -n "$CONNECTED" ] && case "$CONNECT" in claude|both|all|claude,codex) say "Claude Code connector: ~/.claude/rules/mudmode.md" ;; esac
 [ "$REFRESHED" -gt 0 ] && say "Updated $REFRESHED kit file(s) above. If you had edited one, your edited copy is the .bak- file next to it."
+if command -v python3 >/dev/null 2>&1; then
+  python3 "$KIT_DIR/tools/mudmode.py" record-install --kit "$KIT_DIR" --root "$TARGET" || { say "RESULT: FAILED (baseline)"; exit 1; }
+else
+  say "NOTE: Python 3 unavailable; update remains disabled. Manual update only."
+fi
 say "RESULT: OK"
 case "$PRO" in
   on) say "Everyday first, with mudgo on (every rule). Say \"mudgo auto\" to let it turn on only when the work needs it." ;;
@@ -618,7 +633,7 @@ say 'Daily report: say "mudmode report" any time; if your AI can run scheduled t
 MUDTXT=""; [ "$MUDON" -eq 1 ] && MUDTXT=' ("mud status" works too)'
 names_dir() { [ -f "$1" ] && grep -qF "The shared folder is \`$DIRTXT\`." "$1" 2>/dev/null; }   # a connector for THIS folder (made now or before)
 # holder-r4: the current header comes from the connector template, so this check never names a stale version
-CONNHDR=$(sed -n '1s/.*\(written by mudmode setup v[0-9.]*[0-9]\.\).*/\1/p' "$SETUP_DIR/templates/connector-claude.md" 2>/dev/null); [ -n "$CONNHDR" ] || CONNHDR='written by mudmode setup v1.4.0.'
+CONNHDR=$(sed -n '1s/.*\(written by mudmode setup v[0-9.]*[0-9]\.\).*/\1/p' "$SETUP_DIR/templates/connector-claude.md" 2>/dev/null); [ -n "$CONNHDR" ] || CONNHDR='written by mudmode setup v1.4.1.'
 for oc in "$HOME/.claude/rules/mudmode.md:claude" "$HOME/.grok/AGENTS.md:grok" "$CODEXF:codex"; do   # v1.3.6: an older connector still speaks of lite/full mode
   f=${oc%:*}; w=${oc##*:}
   if names_dir "$f" && grep -q "mudmode connector" "$f" 2>/dev/null && ! grep -qF "$CONNHDR" "$f" 2>/dev/null; then
@@ -635,4 +650,9 @@ fi
 if [ -f "$TARGET/.made-by-mudmode-setup" ]; then say "To remove mudmode completely: setup made $DIRTXT new, so you can delete that folder (first move out anything of yours you put in it)."
 else say "To remove mudmode: setup did not make $DIRTXT, so don't delete the folder; remove only the mudmode files in it (anything else there is yours)."; fi
 [ -n "$ALLOWED" ] && say "Undo the allowed folder: remove \"$TARGET\" from permissions.additionalDirectories in ~/.claude/settings.json (setup made a dated backup beside it, settings.json.bak-...)."
+# The welcome box is built from setup/WELCOME.md, the same file the AI's
+# welcome reply comes from. Display only: it writes nothing, and a problem showing it never fails setup.
+if [ -f "$SETUP_DIR/show-welcome.sh" ]; then
+  sh "$SETUP_DIR/show-welcome.sh" --kit "$KIT_DIR" --folder "$DIRTXT" || say "(the welcome box could not be shown; setup itself is done)"
+fi
 exit 0

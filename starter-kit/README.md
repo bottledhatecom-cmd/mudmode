@@ -1,4 +1,4 @@
-# mudmode free Crew kit, v1.4.0
+# mudmode free Crew kit, v1.4.1
 
 **Free.** This folder is the whole free mudmode Crew kit. Set it up with the steps just below.
 
@@ -17,7 +17,7 @@ Your AI does the setup. You answer a few short questions. Pick the AI you use:
 
 - **Claude Code** (the Code tab in the Claude desktop app, or `claude` in a terminal), **Grok Build, Codex, Cursor** or another AI that works with files on your computer:
   1. Unzip this download.
-  2. Open the AI in the unzipped folder `mudmode-starter-kit-v1.4.0`.
+  2. Open the AI in the unzipped folder `mudmode-starter-kit-v1.4.1`.
   3. Type: **Read README.md and set me up.** Answer its questions and say yes when it asks to run the setup.
 - **Claude on claude.ai, Grok on grok.com**, or another chat app with Projects:
   1. Unzip this download.
@@ -46,7 +46,7 @@ mudmode is a plain-file way to run one or more AI assistants as a steady crew: o
 ## Which file holds the rules
 - **`CORE.md` is the one core** (v1.3.6: one file, one mudmode). It starts with a short SAFEGUARDS section, then the RULES: Part 1 (Everyday) is always on and in plain words; Part 2 (mudgo) adds the working rules for technical work (putting things live, branches, review gates, permission files). The `mudgo:` line in `CORE-LOCAL.md` says `auto` (the start: it turns on when the work needs it), `on` or `off`; say "mudgo on" or "mudgo off" any time. With mudgo on, every rule reads as in mudmode 1.2.3, word for word, plus rule 8b (new in v1.3.8), and no module file is needed; with mudgo auto or off, the modules you turn on in `modules/` add their part. `RULE-MAP.md` shows where each numbered rule lives.
 - **`CORE-LOCAL.md` is your settings** (your name, time zone, extra "always ask first" list, word rules). The setup makes it from your answers; the blank form is `setup/templates/CORE-LOCAL.md`.
-- Everything else (templates, adapters, connectors) points at those two files. The Full Kit's `MUDMODE.md` is a longer book that builds on `CORE.md`; it never replaces it.
+- Everything else (templates and connectors) points at those two files. The separate Full Kit adds a longer manual; it never replaces the core.
 
 ## What's in the kit
 ```
@@ -54,8 +54,9 @@ CORE.md                  the one core: safeguards, then everyday rules, then mud
 modules/                 the 11 modules (read when you turn them on; with mudgo on, none is needed); modules/README.md lists them
 cores/                   MODULES-ON-PRO.md (what MODULES-ON.md says with mudgo on), plus pointers where the old lite and full cores were
 RULE-MAP.md              where each of the 25 numbered rules lives
-adapters/AGENTS.md       adapter example for AIs that read AGENTS.md
-adapters/ANY-AI.md       adapter for any AI without special tools
+AGENTS.md                entry point for AIs that read AGENTS.md
+setup/templates/connector-agents.md  generic connector text
+setup/templates/connector-claude.md  Claude Code connector text
 templates/HANDOFF.md     rewritten at the end of every session (full form)
 templates/HANDOFF-LITE.md  the 5-line everyday handoff
 templates/SUGGESTIONS.md   log of the crew's side notes about modules
@@ -75,13 +76,13 @@ FOR-CHAT-APPS/           mudmode-chat-setup.md: the one file for Claude, Grok, C
 Works on any ordinary computer, even a laptop with no GPU, using cloud AIs only. This builds the same folder the setup makes; paths are written for macOS and Linux (on Windows, `~` is your user folder, `%USERPROFILE%`).
 
 1. Make a folder named `mudmode` in your home folder. One folder serves all your projects.
-2. Copy into it `CORE.md`, `RULE-MAP.md` and the folders `templates`, `adapters`, `addons`, `modules` and `cores` (keep them as folders). Then copy `HANDOFF.md`, `LESSONS.md`, `JOBS.md` and `OK-LEDGER.md` from `templates` to the top of your `mudmode` folder; the copies in `templates` stay as blank forms. Make an empty folder `jobs` inside `mudmode`. (With mudgo set to `auto` or `off` you need only `OK-LEDGER.md`, and `HANDOFF-LITE.md` copied as `HANDOFF.md`; the others can wait until you turn their module on or mudgo on.)
+2. Copy into it `CORE.md`, `RULE-MAP.md` and the folders `templates`, `addons`, `modules` and `cores` (keep them as folders). Then copy `HANDOFF.md`, `LESSONS.md`, `JOBS.md` and `OK-LEDGER.md` from `templates` to the top of your `mudmode` folder; the copies in `templates` stay as blank forms. Make an empty folder `jobs` inside `mudmode`. (With mudgo set to `auto` or `off` you need only `OK-LEDGER.md`, and `HANDOFF-LITE.md` copied as `HANDOFF.md`; the others can wait until you turn their module on or mudgo on.)
 3. Copy `setup/templates/CORE-LOCAL.md` to `mudmode/CORE-LOCAL.md` and replace each `{{...}}` with your answer: your name, your time zone, anything extra the AIs must always ask first about, your word rules, the folder (`~/mudmode`), today's date, `no` for the Claude Code allowed-folder question, `auto` for mudgo (or `on` / `off`), and `none` for the modules. Then make `mudmode/MODULES-ON.md`: with mudgo auto or off one line, `mudgo: auto. Modules on: none.`; with mudgo on a copy of `cores/MODULES-ON-PRO.md` (no module file loads then).
 4. Connect your AI:
    - **Claude Code:** copy `setup/templates/connector-claude.md` to `~/.claude/rules/mudmode.md` (make the `rules` folder if needed) and replace every `{{DIR}}` with `~/mudmode`. Claude Code reads `CLAUDE.md` and its rules folder, so don't rely on `AGENTS.md` there.
    - **AIs that read `AGENTS.md`** (Codex, Cursor, Grok Build and others): add the text of `setup/templates/connector-agents.md` (with `{{DIR}}` replaced) to your project's `AGENTS.md`, after backing that file up.
    - **Chat apps** (claude.ai, grok.com, ChatGPT and others): use `FOR-CHAT-APPS/mudmode-chat-setup.md` as in the 3-step setup (README "Set it up in 3 steps").
-   - **Any other AI:** paste `adapters/ANY-AI.md` into its custom instructions.
+   - **Any other AI:** use the generic instructions included in `FOR-CHAT-APPS/mudmode-chat-setup.md`, or the text in `setup/templates/connector-agents.md` with its folder placeholder filled in.
 5. Keep CORE as it is for a week. Your own extras belong in `CORE-LOCAL.md`, not in `CORE.md`.
 6. A connected AI reads the rules by itself. Otherwise start each chat with: "Read ~/mudmode/CORE.md, ~/mudmode/CORE-LOCAL.md and ~/mudmode/HANDOFF.md, check the handoff against the live state, then continue."
 7. End every chat with **"handoff"** (it means: rewrite `~/mudmode/HANDOFF.md` and add any real lesson to `~/mudmode/LESSONS.md`).
@@ -101,4 +102,4 @@ If you want to help improve mudmode, you can send a lesson in this fixed form: p
 Steps and a log of what you shared: `templates/SHARED-LESSONS.md`.
 
 ## License and warranty
-License: this folder is part of the mudmode Full Kit and is covered by the mudmode Full Kit License v1.7 (`../LICENSE.md`), © 2026 mudmode, licensed by Hestertainment LLC. Provided as is, no warranty; you decide what your AI tools do and review their work. Not legal, tax or financial advice.
+License: free for one person's personal, non-commercial use under the mudmode Personal Use License v1.4 (`LICENSE` in this folder). Provided as is, no warranty; you decide what your AI tools do and review their work. Not legal, tax or financial advice.

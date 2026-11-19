@@ -35,3 +35,11 @@ Short name: `mud` works too, as the whole message: `mud status`, `mud report`, `
 Want more? Say `mudmode modules` to see the extra pieces and which ones are on. (With mudgo on they are all on already.)
 
 Anything else, just ask in plain words, like "help me plan my week."
+
+## Signed-pack updates
+
+Say `mudmode update` to ask your AI to check a pack you name; `mudmode update undo` asks it to undo the previous update. Rules and consent: see CORE.md, Signed-pack updates.
+
+Windows: `powershell -ExecutionPolicy Bypass -File tools\update.ps1 -Pack <file>` or `-Url <https-pack-url>`. Mac/Linux: `sh tools/update.sh <file>` or `--url <https-pack-url>`. Run without the yes flag first; answer n to preview.
+
+Planned crew pack directory: https://mudmodecrew.com/updates/crew/<ver>/ (hosting unproven). Windows needs PowerShell 5.1; Mac/Linux needs Python 3 plus minisign or OpenSSL 3. No dependencies are installed by these tools.
