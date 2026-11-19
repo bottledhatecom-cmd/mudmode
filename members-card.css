@@ -48,5 +48,5 @@
 }
 @media (min-width:981px){.mh-tiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
 /* XR-ASPECT-START */
-.mc-art{aspect-ratio:1400/850;max-width:min(760px,calc(600px * 1400 / 850))}
+.mc-art{aspect-ratio:1400/788;max-width:min(760px,calc(600px * 1400 / 788))}
 /* XR-ASPECT-END */
