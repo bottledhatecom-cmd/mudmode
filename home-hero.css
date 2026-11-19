@@ -1,6 +1,10 @@
-.hh-rail{position:relative;z-index:2;width:100%;max-width:520px;margin:0 auto 22px;text-align:center;color:var(--soft);pointer-events:none}
+/* The crew band: its own centered row between the start card and "Want more?", same layout at every width (the old left-rail rules are gone). */
+.hh-rail{position:relative;z-index:0;width:100%;max-width:640px;margin:44px auto 40px;text-align:center;color:var(--soft);pointer-events:none}
+/* Stacking: the warm backglow is inside .hh-rail (z 0); the start panel above it and the "Want more?" block below it sit on z 1, so the glow paints behind both and never washes over them. */
+#start{z-index:1}
+#more{position:relative;z-index:1}
 .hh-fig{position:relative;display:block;width:100%;-webkit-tap-highlight-color:transparent}
-.hh-rail .xr-backglow{position:absolute;z-index:0;left:50%;top:50%;width:min(170%,100vw);height:185%;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;
+.hh-rail .xr-backglow{position:absolute;z-index:0;left:50%;top:50%;width:min(135%,100vw);height:150%;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;
   background:radial-gradient(closest-side,rgba(255,226,176,.70) 0%,rgba(243,201,105,.55) 40%,rgba(227,167,104,.34) 60%,rgba(200,135,74,.14) 80%,rgba(200,135,74,0) 100%);
   animation:hh-breathe 5s ease-in-out infinite}
 @keyframes hh-breathe{0%,100%{opacity:.85}50%{opacity:1}}
@@ -32,9 +36,6 @@
 }
 .xr-region:focus-visible .xr-edge{stroke-width:11}
 
-@media (min-width:1100px){
-  .hh-rail{position:absolute;max-width:none;margin:0}
-}
 @media (prefers-reduced-motion:reduce){.hh-rail .xr-backglow{animation:none}.xr-hit,.xr-edge{transition:none}}
 @media (forced-colors:active){.xr-region:focus-visible .xr-edge,.xr-region:hover .xr-edge,.xr-region.is-lit .xr-edge{stroke:Highlight;filter:none}.hh-rail .xr-backglow{display:none}}
 
@@ -57,12 +58,4 @@
 /* XR-ASPECT-START */
 .hh-fig{aspect-ratio:1400/961}
 .hh-fig img{position:absolute;left:0;bottom:0;height:calc(100% * 850 / 961)}
-@media (min-width:1100px){.hh-rail{top:calc(var(--tk) + 246px);right:calc(50% + 284px);width:250px}}
-@media (min-width:1180px){.hh-rail{top:calc(var(--tk) + 236px);right:calc(50% + 302px);width:280px}}
-@media (min-width:1280px){.hh-rail{top:calc(var(--tk) + 218px);right:calc(50% + 308px);width:320px}}
-@media (min-width:1360px){.hh-rail{top:calc(var(--tk) + 218px);right:calc(50% + 312px);width:360px}}
-@media (min-width:1440px){.hh-rail{top:calc(var(--tk) + 196px);right:calc(50% + 310px);width:400px}}
-@media (min-width:1600px){.hh-rail{top:calc(var(--tk) + 184px);right:calc(50% + 332px);width:460px}}
-@media (min-width:1760px){.hh-rail{top:calc(var(--tk) + 188px);right:calc(50% + 370px);width:500px}}
-@media (min-width:1920px){.hh-rail{top:calc(var(--tk) + 184px);right:calc(50% + 370px);width:510px}}
 /* XR-ASPECT-END */
