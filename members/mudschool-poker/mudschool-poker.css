@@ -167,3 +167,37 @@
 .ms-media figure.tall{max-width:230px}
 .ms-grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
 @media (max-width:700px){.ms-grid.two{grid-template-columns:1fr}.ms-media figure.tall{max-width:none}}
+
+/* DISCORD AD PANEL: the big "Add to Discord" link fills the space under the start steps. The plush 3D table blurb lives inside it. */
+.ms-startcol{display:flex;flex-direction:column;min-width:0}
+.ms-discord .ms-h3{margin-top:22px}
+.ms-discord .ms-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.ms-discord .ms-dc-head{margin-bottom:14px}
+.ms-install{margin:16px 0 0}
+.ms-install .ms-note{margin-top:0}
+.mspk-page main a.ms-ad{position:relative;display:flex;flex-direction:column;flex:1 1 auto;min-height:340px;margin-top:14px;border-radius:22px;overflow:hidden;
+  border:2px solid var(--ms-pink);background:#0c0618;color:#fff;text-decoration:none;
+  box-shadow:var(--ms-glowP),0 0 38px rgba(255,43,214,.28),inset 0 0 22px rgba(255,43,214,.16);transition:box-shadow .2s ease,transform .2s ease}
+.ms-ad-art{position:relative;display:block;flex:1 1 0;min-height:150px;overflow:hidden;background:#06050d}
+.ms-ad-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 38%;transition:transform .4s ease}
+.ms-ad-art::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(12,6,24,0) 45%,#0c0618 100%),radial-gradient(circle at 50% 0,rgba(255,43,214,.18),transparent 60%)}
+.ms-ad-body{position:relative;display:block;flex:none;padding:0 20px 20px;margin-top:-6px}
+.ms-ad-feat{display:block;font-size:15.5px;line-height:1.5;color:var(--ms-mut)}
+.ms-ad-feat b{display:block;margin-bottom:3px;font-size:20px;font-weight:600;color:#fff;text-shadow:0 0 10px rgba(25,240,255,.55)}
+.ms-ad-cta{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:14px;min-height:64px;padding:12px 18px;border-radius:18px;
+  border:2px solid #ffd6f7;background:linear-gradient(90deg,#d414b4,#7b4dff);color:#fff;font-size:clamp(26px,3vw,34px);font-weight:600;line-height:1.1;
+  text-shadow:0 2px 0 rgba(0,0,0,.28);box-shadow:0 0 18px rgba(255,43,214,.6),inset 0 0 14px rgba(255,255,255,.18)}
+.ms-ad-arrow{font-size:.9em}
+.mspk-page main a.ms-ad:hover{color:#fff;transform:translateY(-2px);box-shadow:0 0 10px rgba(255,43,214,.95),0 0 46px rgba(255,43,214,.6),0 0 70px rgba(25,240,255,.2),inset 0 0 26px rgba(255,43,214,.26)}
+.mspk-page main a.ms-ad:hover .ms-ad-art img{transform:scale(1.05)}
+.mspk-page main a.ms-ad:focus-visible{outline:4px solid var(--ms-cyan);outline-offset:4px;border-radius:22px;box-shadow:0 0 10px rgba(25,240,255,.9),0 0 40px rgba(25,240,255,.45),0 0 38px rgba(255,43,214,.28)}
+@media (min-width:901px){.ms-two{align-items:stretch}}
+@media (max-width:900px){
+  .ms-discord .ms-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .mspk-page main a.ms-ad{flex:none;min-height:0}
+  .ms-ad-art{flex:none;aspect-ratio:16/9;min-height:0}
+}
+@media (max-width:520px){.ms-discord .ms-grid{grid-template-columns:minmax(0,1fr)}.ms-ad-body{padding:0 16px 16px}}
+@media (prefers-reduced-motion:reduce){.mspk-page main a.ms-ad,.ms-ad-art img{transition:none}.mspk-page main a.ms-ad:hover{transform:none}.mspk-page main a.ms-ad:hover .ms-ad-art img{transform:none}}
+@media (forced-colors:active){.mspk-page main a.ms-ad:focus-visible{outline-color:Highlight}}
+.mspk-page main a.ms-ad::after{content:none}
