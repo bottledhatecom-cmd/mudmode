@@ -10,3 +10,4 @@
 #see .see-h3{margin:26px 0 0;font-family:var(--font-head);font-size:20px}
 #see .dm{margin-top:12px}
 @media (max-width:700px){#see .lede-see{font-size:16px}}
+.tkbar .btn.ghost .px{background:none;-webkit-text-fill-color:currentColor;animation:none}
