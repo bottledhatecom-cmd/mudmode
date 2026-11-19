@@ -1,0 +1,21 @@
+/* tylerbot-scroll ts3: the Tylerbot follower that rides the side of the page and trails with scroll speed.
+   His cape is a live cloth mesh (new cape/body assets; the shared still is unchanged) and lags, flutters, stretches and whips with motion.
+   Self-contained: the page works with this file turned off. transform and opacity only; no layout properties are animated.
+   Everything inside is aria-hidden and click-through. Off for reduced motion, forced colors and print. */
+.tbs{position:fixed;left:0;top:0;right:0;bottom:0;z-index:4;pointer-events:none;overflow:hidden;contain:strict;display:none;-webkit-user-select:none;user-select:none}
+.tbs.tbs-on{display:block}
+.tbs *{pointer-events:none}
+.tbs-fx,.tbs-cape{position:absolute;left:0;top:0;width:100%;height:100%;display:block}
+/* brief screen-edge flash for the sound barrier (opacity only; driven by the script) */
+.tbs-flash{position:absolute;left:0;top:0;right:0;bottom:0;opacity:0;background:radial-gradient(ellipse 75% 70% at 50% 50%,rgba(255,226,150,0) 58%,rgba(243,201,105,.22) 80%,rgba(255,244,214,.55) 100%)}
+.tbs-live{position:absolute;left:0;top:0;right:0;bottom:0;animation:tbs-bob 4.6s ease-in-out infinite}
+.tbs-bot{position:absolute;left:0;top:0;transform-origin:50% 55%;will-change:transform,opacity}
+.tbs-rig{position:absolute;left:0;top:0;right:0;bottom:0;transform-origin:50% 55%;will-change:transform}
+.tbs-i{position:absolute;left:0;top:0;width:100%;height:100%;display:block;object-fit:contain;-webkit-user-drag:none}
+.tbs-l0{filter:drop-shadow(0 0 10px rgba(243,201,105,.5)) drop-shadow(0 6px 10px rgba(0,0,0,.45))}
+.tbs-l1{opacity:0;filter:sepia(1) saturate(5.5) hue-rotate(-16deg) brightness(1.3) drop-shadow(0 0 14px rgba(255,138,40,.75))}
+.tbs-l2{opacity:0;filter:grayscale(.55) sepia(.35) brightness(2.7) contrast(.92) drop-shadow(0 0 20px rgba(255,244,225,.9))}
+@keyframes tbs-bob{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(0,-5px,0)}}
+@media (prefers-reduced-motion:reduce){.tbs,.tbs.tbs-on{display:none!important}}
+@media (forced-colors:active){.tbs,.tbs.tbs-on{display:none!important}}
+@media print{.tbs,.tbs.tbs-on{display:none!important}}
