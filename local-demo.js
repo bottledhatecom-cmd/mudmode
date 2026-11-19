@@ -56,7 +56,7 @@
     });
     var bl = h('label'); var bi = h('input', null, null, { type: 'checkbox' }); bi.checked = false;
     bi.addEventListener('change', function () { busy = bi.checked; update(busy ? 'You are using the computer, so heavy local jobs ask first.' : 'Computer is idle again.'); });
-    bl.appendChild(bi); bl.appendChild(document.createTextNode("I'm using my computer right now (not using the PC to offload)")); opts.appendChild(bl);
+    bl.appendChild(bi); bl.appendChild(document.createTextNode("I'm using this computer right now (so no heavy jobs on it)")); opts.appendChild(bl);
     lp.appendChild(opts);
 
     var list = h('ul', 'dm-jobs', null, { 'aria-label': 'Sample jobs' });

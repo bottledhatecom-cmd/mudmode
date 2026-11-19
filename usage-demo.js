@@ -20,10 +20,10 @@
     explain: { cls: 'ex',    label: 'Re-explaining the project' },
     repeat:  { cls: 'rp',    label: 'Repeating an old mistake' },
     rebuild: { cls: 'rb',    label: 'Rebuilding lost work' },
-    read:    { cls: 'rd',    label: 'Reading the handoff, lessons and manual' },
+    read:    { cls: 'rd',    label: 'Reading its notes at the start of each chat' },
     write:   { cls: 'wr',    label: 'Writing the handoff' },
     lost:    { cls: 'ex',    label: 'Re-explaining context between projects' },
-    note:    { cls: 'rd',    label: 'Reading the shared handoff and manual' },
+    note:    { cls: 'rd',    label: 'Reading shared notes when switching projects' },
     strong:  { cls: 'pl',    label: 'Main AI: planning, reviewing and fixing' },
     cheap:   { cls: 'dr',    label: 'Spare devices: drafts and batch jobs' },
     all:     { cls: 'work',  label: 'Everything on the main AI' }
@@ -59,7 +59,7 @@
     root.textContent = '';
     var ready = false, week = WEEKS, uid = 'du-' + Math.random().toString(36).slice(2, 7);
     root.appendChild(M.topBar('Try it: a weeks-long project, with and without mudmode',
-      'A chat AI starts each new chat knowing only what is in that chat. Slide through a 4-week project and compare two ways of working, then scale up to more AIs and spare devices. All numbers are made-up "example units" for illustration: they are not measurements, not real usage, and not about any AI service. Your numbers will differ.'));
+      'Slide through a 4-week project. A chat AI starts each new chat knowing only what is in that chat. All numbers are made-up "example units" for illustration: they are not measurements, not real usage, and not about any AI service. Your numbers will differ.'));
 
     var ctl = h('div', 'du-ctl');
     var lab = h('label', 'du-lab', null, { 'for': uid + '-w' });
@@ -129,9 +129,9 @@
 
       var diff = t.no - t.yes;
       totWin.body.appendChild(h('h4', null, 'Difference so far'));
-      totWin.body.appendChild(h('p', 'dm-big', (diff >= 0 ? diff : Math.abs(diff)) + ' example units' + (diff >= 0 ? ' less' : ' more')));
-      totWin.body.appendChild(h('p', 'dm-meta', 'Without mudmode, ' + (t.explain + t.repeat + t.rebuild) + ' of the ' + t.no + ' went to re-explaining (' + t.explain + '), repeated mistakes (' + t.repeat + ') and rebuilding lost work (' + t.rebuild + '). With mudmode, ' + (t.read + t.write) + ' of the ' + t.yes + ' went to reading and writing the handoff, lessons and manual. It costs something every chat, and in this example it stays the same size.'));
-      if (diff < 0) totWin.body.appendChild(h('p', 'dm-meta', 'Early on, the handoff is a small extra cost.'));
+      totWin.body.appendChild(h('p', 'dm-big', (diff >= 0 ? diff : Math.abs(diff)) + (diff >= 0 ? ' fewer' : ' more') + ' example units spent re-explaining and redoing work'));
+      totWin.body.appendChild(h('p', 'dm-meta', 'Without mudmode, ' + (t.explain + t.repeat + t.rebuild) + ' of the ' + t.no + ' went to re-explaining (' + t.explain + '), repeated mistakes (' + t.repeat + ') and rebuilding lost work (' + t.rebuild + '). With mudmode, ' + (t.read + t.write) + ' of the ' + t.yes + ' went to reading and writing its notes. It costs something every chat, and in this example it stays the same size.'));
+      if (diff < 0) totWin.body.appendChild(h('p', 'dm-meta', 'Early on, writing the handoff note is a small extra cost.'));
       else if (upto === 1) totWin.body.appendChild(h('p', 'dm-meta', 'In week 1 the two are close: there is not much history to lose yet.'));
 
       statusEl.textContent = '';
@@ -145,7 +145,7 @@
     tbl = h('table', 'dm-ledger du-tbl');
     tbl.appendChild(h('caption', 'dm-meta', 'Example units used in one chat, by week. Made up for illustration.'));
     var thead = h('thead'), trh = h('tr');
-    ['Week', 'Real work', 'Re-explain', 'Repeat mistakes', 'Rebuild', 'No mudmode, per chat', 'Handoff read + write', 'With mudmode, per chat'].forEach(function (c) { trh.appendChild(h('th', null, c, { scope: 'col' })); });
+    ['Week', 'Real work', 'Re-explain', 'Repeat mistakes', 'Rebuild', 'No mudmode, per chat', 'Reading + writing notes', 'With mudmode, per chat'].forEach(function (c) { trh.appendChild(h('th', null, c, { scope: 'col' })); });
     thead.appendChild(trh); tbl.appendChild(thead);
     var tb = h('tbody');
     for (var i = 0; i < WEEKS; i++) {
@@ -157,10 +157,16 @@
     var wrap = h('div', 'du-tblwrap'); wrap.appendChild(tbl); det.appendChild(wrap);
     root.appendChild(det);
 
+    /* The next two parts live in a separate container (inside the mudgo window). Without it they render into a detached element. */
+    var more = document.getElementById('demo-usage-more') || document.createElement('div');
+    more.textContent = '';
+    more.appendChild(M.topBar('Go deeper: more AIs, and spare devices', 'Two more made-up examples. All numbers are example units, for illustration only.'));
+    var status2 = h('p', 'dm-sr', '', { role: 'status', 'aria-live': 'polite' });
+    more.appendChild(status2);
     /* ---- Scale up: several AIs across several projects ---- */
     var SW = 6, LOSE = 5, READ = 1, PROJ = 3, COUNTS = [1, 3, 5], ai = 3;
-    root.appendChild(h('h3', 'dm-title du-h', 'Scale up: more AIs, more projects'));
-    root.appendChild(h('p', 'dm-lead', 'Now several AIs share ' + PROJ + ' projects. Each time one switches to a different project, it starts that project fresh. Example: each AI switches ' + SW + ' times a week. Without mudmode, a switch costs ' + LOSE + ' example units of re-explaining. With shared handoffs and manuals, a switch costs ' + READ + ' example unit to read them. Keeping those notes up to date is counted in that 1.'));
+    more.appendChild(h('h3', 'dm-title du-h', 'Scale up: more AIs, more projects'));
+    more.appendChild(h('p', 'dm-lead', 'Now several AIs share ' + PROJ + ' projects. Each time one switches to a different project, it starts that project fresh. Example: each AI switches ' + SW + ' times a week. Without mudmode, a switch costs ' + LOSE + ' example units of re-explaining. With shared notes (handoffs and rules), a switch costs ' + READ + ' example unit to read them. Keeping those notes up to date is counted in that 1.'));
     var scaleBox = h('div', 'du-box');
     var fs = h('fieldset', 'dm-pick du-pick'); fs.appendChild(h('legend', null, 'How many AIs are working?'));
     var scaleOut = h('div', 'du-out');
@@ -170,7 +176,7 @@
       r.addEventListener('change', function () { ai = n; renderScale(); });
       l.appendChild(r); l.appendChild(document.createTextNode(n + (n === 1 ? ' AI' : ' AIs'))); fs.appendChild(l);
     });
-    scaleBox.appendChild(fs); scaleBox.appendChild(scaleOut); root.appendChild(scaleBox);
+    scaleBox.appendChild(fs); scaleBox.appendChild(scaleOut); more.appendChild(scaleBox);
     function renderScale() {
       Array.prototype.forEach.call(fs.querySelectorAll('label'), function (l) { l.classList.toggle('on', l.firstChild.checked); });
       var no = ai * SW * LOSE, yes = ai * SW * READ, max = 5 * SW * LOSE;
@@ -182,10 +188,10 @@
       m2.firstChild.appendChild(h('b', null, yes + ' example units a week'));
       m2.appendChild(stack([{ k: 'note', v: yes }], max, 'h', 'With mudmode, ' + ai + ' AIs: ' + yes + ' example units a week spent reading shared notes'));
       scaleOut.appendChild(m1); scaleOut.appendChild(m2);
-      scaleOut.appendChild(h('p', 'dm-big', (no - yes) + ' example units less a week'));
+      scaleOut.appendChild(h('p', 'dm-big', (no - yes) + ' fewer example units a week spent re-explaining'));
       scaleOut.appendChild(h('p', 'dm-meta', 'The loss grows with every AI you add, because each one has to be caught up each time it changes project. Shared notes keep that cost small. In this example: 1 AI ' + (1 * SW * LOSE) + ' vs ' + (1 * SW * READ) + ', 3 AIs ' + (3 * SW * LOSE) + ' vs ' + (3 * SW * READ) + ', 5 AIs ' + (5 * SW * LOSE) + ' vs ' + (5 * SW * READ) + '.'));
-      statusEl.textContent = ''; var tx = ai + (ai === 1 ? ' AI' : ' AIs') + ': no mudmode ' + no + ', with mudmode ' + yes + ' example units a week.';
-      if (ready) setTimeout(function () { statusEl.textContent = tx; }, 30);
+      status2.textContent = ''; var tx = ai + (ai === 1 ? ' AI' : ' AIs') + ': no mudmode ' + no + ', with mudmode ' + yes + ' example units a week.';
+      if (ready) setTimeout(function () { status2.textContent = tx; }, 30);
     }
     renderScale();
 
@@ -197,8 +203,8 @@
       { id: 'desk',   name: 'Spare desktop PC',   needPlug: false }
     ];
     var linked = {}, plugged = {};
-    root.appendChild(h('h3', 'dm-title du-h', 'Link your spare devices'));
-    root.appendChild(h('p', 'dm-lead', 'Got an old phone, a cheap laptop or a spare PC lying around? Each one can run its own AI account (accounts you already have, within each service\'s terms). Your main stronger AI plans each job and reviews the result. Spare devices take the drafts and batch jobs. Example: ' + JOBS + ' jobs in a week. All on the main AI, a job costs ' + ALLSTRONG + ' example units. Split up, the main AI spends ' + STRONG + ' (planning, review and fixing) and the drafting takes ' + DRAFT + ' on the spare device\'s account. Each spare device takes up to ' + PERDEV + ' jobs a week in this example.'));
+    more.appendChild(h('h3', 'dm-title du-h', 'Link your spare devices'));
+    more.appendChild(h('p', 'dm-lead', 'Got an old phone, a cheap laptop or a spare PC lying around? Each one can run its own AI account (accounts you already have, within each service\'s terms). Your main stronger AI plans each job and reviews the result. Spare devices take the drafts and batch jobs. Example: ' + JOBS + ' jobs in a week. All on the main AI, a job costs ' + ALLSTRONG + ' example units. Split up, the main AI spends ' + STRONG + ' (planning, review and fixing) and the drafting takes ' + DRAFT + ' on the spare device\'s account. Each spare device takes up to ' + PERDEV + ' jobs a week in this example.'));
     var offBox = h('div', 'du-box du-off');
     var left = h('div', 'du-left');
     var main = h('div', 'du-dev du-main');
@@ -226,7 +232,7 @@
     });
     left.appendChild(devWrap);
     var offOut = h('div', 'du-out');
-    offBox.appendChild(left); offBox.appendChild(offOut); root.appendChild(offBox);
+    offBox.appendChild(left); offBox.appendChild(offOut); more.appendChild(offBox);
     function fmt(n) { return String(Math.round(n * 10) / 10); }
     function renderOff() {
       var active = 0;
@@ -256,10 +262,12 @@
       var ul = h('ul', 'du-safe', null, { 'aria-label': 'Safety notes' });
       ['Optional: nothing is linked unless you do it.', 'Asks first: your AI asks before it sends work to a spare device.', 'A stronger AI reviews it: drafts from spare devices are checked by the main AI before they count, and that review is in its ' + STRONG + ' units per job. Cheaper drafts can still be wrong, so you stay in charge.', 'Phones and laptops only while plugged in.', 'Use accounts you already have, within each service\'s terms. This demo does not say any service allows extra accounts or free use.'].forEach(function (t) { ul.appendChild(h('li', null, t)); });
       offOut.appendChild(ul);
-      statusEl.textContent = ''; var tx = active + ' spare devices working. Main AI ' + fmt(strong) + ' example units, total ' + fmt(total) + ' against ' + fmt(base) + ' with everything on the main AI.';
-      if (ready) setTimeout(function () { statusEl.textContent = tx; }, 30);
+      status2.textContent = ''; var tx = active + ' spare devices working. Main AI ' + fmt(strong) + ' example units, total ' + fmt(total) + ' against ' + fmt(base) + ' with everything on the main AI.';
+      if (ready) setTimeout(function () { status2.textContent = tx; }, 30);
     }
     renderOff();
+    more.appendChild(h('p', 'fine', 'Illustrative only. These example units are not tokens, dollars or minutes, and not a promise of any saving. Nothing here is sent, saved or tracked.'));
+
 
     var foot = h('div', 'dm-foot');
     foot.appendChild(M.button('Reset to week ' + WEEKS, 'ghost', function () { week = WEEKS; rng.value = String(WEEKS); render(); M.focusSoon(rng); }));

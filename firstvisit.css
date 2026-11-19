@@ -1,0 +1,12 @@
+/* First-visit pass: hero without the extra paragraphs, three key-point cards, the "See it" band. No new images. */
+#start .hero-sub{margin-bottom:22px;max-width:34em}
+#start .hero-q-line{text-align:center;margin:10px auto 0;max-width:43em}
+#start .three{margin-top:16px}
+@media (min-width:701px){#start .three{grid-template-columns:repeat(3,minmax(0,1fr))}}
+#start .three b{font-size:1.05em}
+#see .body{padding-bottom:22px}
+#see h2{margin:0 0 6px;font-family:var(--font-head);font-size:clamp(22px,3vw,28px)}
+#see .lede-see{margin:0 0 6px;color:var(--soft);font-size:18px;max-width:40em}
+#see .see-h3{margin:26px 0 0;font-family:var(--font-head);font-size:20px}
+#see .dm{margin-top:12px}
+@media (max-width:700px){#see .lede-see{font-size:16px}}
