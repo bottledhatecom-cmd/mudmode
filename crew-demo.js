@@ -106,7 +106,7 @@
     pickWrap.appendChild(startBtn);
     root.appendChild(pickWrap);
 
-    var stage = h('div'); stage.hidden = true; root.appendChild(stage);
+    var stage = h('div', 'dm-stage'); stage.hidden = true; root.appendChild(stage);
     var foot = h('div', 'dm-foot');
     foot.appendChild(M.button('Replay demo', 'ghost', function () { build(); M.focusSoon(root.querySelector('.dm-pick input')); }));
     foot.appendChild(h('p', 'fine', 'Each AI plays one part, and the builder is asked not to sign off its own work. Rules your AI is asked to follow, not locks; AI tools can still make mistakes, so keep checking their work. Results vary.'));
@@ -136,23 +136,25 @@
       var grid = h('div', 'dm-grid');
       chat = M.chatWindow('Task: ' + task.name);
       pan = M.panelWindow('Shared mudmode folder (example)');
-      grid.appendChild(chat.win); grid.appendChild(pan.win);
+      chat.win.firstChild.appendChild(prog); grid.appendChild(chat.win); grid.appendChild(pan.win);
       stage.appendChild(grid);
       nextWrap = h('div', 'dm-panel'); nextWrap.hidden = true; chat.win.appendChild(nextWrap);
       files.push({ n: 'CORE.md', d: 'the shared rules. The code tool reads the file; a chat app gets the rules as a pasted block.' });
       renderPanel();
-      msg('ai a1', task.who[0], ['New task: "' + task.name + '". I read the pasted rules block first. Here is my plan.']);
+      msg('ai a1', task.who[0], ['New task: "' + task.name + '". I read the pasted rules block first. Here is my plan.']); closeStep();
       if (task.flow === 'day') { step('AI 1 plans the day', function () { planDay(); }); planDay(); }
       else { step('AI 1 plans', function () { plan(); }); plan(); }
     }
 
     function renderPanel() {
       pan.body.textContent = '';
-      pan.body.appendChild(h('h4', null, 'Files'));
+      var pf = h('div', 'dm-pfiles'), pl = h('div', 'dm-pledger');
+      pan.body.appendChild(pf); pan.body.appendChild(pl);
+      pf.appendChild(h('h4', null, 'Files'));
       var ul = h('ul');
-      files.forEach(function (f, i) { var li = h('li', i === files.length - 1 && files.length > 1 ? 'new' : ''); li.appendChild(h('b', null, f.n)); li.appendChild(document.createTextNode(f.d ? ': ' + f.d : '')); ul.appendChild(li); });
-      pan.body.appendChild(ul);
-      pan.body.appendChild(h('h4', null, 'OK-LEDGER.md'));
+      files.forEach(function (f, i) { var li = h('li', (i === files.length - 1 && files.length > 1 ? 'new' : '') + (i === files.length - 1 ? ' dm-last' : '')); li.appendChild(h('b', null, f.n)); li.appendChild(h('span', 'dm-fd', f.d ? ': ' + f.d : '')); if (f.d) li.title = f.d; ul.appendChild(li); });
+      pf.appendChild(ul);
+      pl.appendChild(h('h4', null, 'OK-LEDGER.md'));
       var tbl = h('table', 'dm-ledger');
       var cap = h('caption', 'dm-sr', 'OK ledger: one owner OK, one named action'); tbl.appendChild(cap);
       var thead = h('thead'), tr = h('tr');
@@ -161,7 +163,7 @@
       var tb = h('tbody');
       if (!ledger.length) { var r0 = h('tr'); var c0 = h('td', null, 'Empty until your first OK.', { colspan: '4' }); r0.appendChild(c0); tb.appendChild(r0); }
       ledger.forEach(function (l) { var r = h('tr'); [l.words, l.action, l.ai, l.status].forEach(function (c) { r.appendChild(h('td', null, c)); }); tb.appendChild(r); });
-      tbl.appendChild(tb); pan.body.appendChild(tbl);
+      tbl.appendChild(tb); pl.appendChild(tbl);
     }
     function addFile(n, d) { files.push({ n: n, d: d }); renderPanel(); }
 
@@ -209,15 +211,27 @@
     function msg(cls, who, paras, pre) {
       var m = h('div', 'dm-msg ' + cls); m.appendChild(h('span', 'dm-who', who));
       paras.forEach(function (p) { m.appendChild(h('p', null, p)); });
-      if (pre) m.appendChild(h('div', 'dm-pre', pre));
-      chat.log.appendChild(m); M.scrollEnd(chat.log); return m;
+      if (pre) {
+        var parts = pre.split('\n\n');
+        if (parts.length > 1) { var grp = h('div', 'dm-pres'); parts.forEach(function (t) { grp.appendChild(h('div', 'dm-pre', t)); }); m.appendChild(grp); }
+        else m.appendChild(h('div', 'dm-pre', pre));
+      }
+      chat.log.appendChild(m); tidy(); M.scrollEnd(chat.log); return m;
     }
     var stepFn = null;
+    /* Earlier steps shrink to one line (the text stays in the page); only the current step is shown in full. */
+    var mark = 0;
+    function tidy() {
+      var kids = chat.log.children, n = kids.length, keep = 1;
+      if (n > 1 && kids[n - 1].classList.contains('dm-card') && !kids[n - 2].classList.contains('dm-card')) keep = 2;
+      for (var i = 0; i < n; i++) { kids[i].classList.toggle('dm-old', i < mark || i < n - keep); kids[i].classList.toggle('dm-gone', i < n - keep - 3); }
+    }
+    function closeStep() { mark = chat.log.children.length; tidy(); }
     function step(label, fn) { prog.textContent = 'Now: ' + label; }
     function wait(fn) { setTimeout(function () { if (alive()) fn(); }, M.reduced() ? 0 : 450); }
     function next(label, fn) {
       nextWrap.textContent = ''; nextWrap.hidden = false;
-      var b = h('div', 'dm-btns'); var btn = M.button('Next: ' + label, '', function () { nextWrap.hidden = true; nextWrap.textContent = ''; prog.textContent = 'Now: ' + label; wait(fn); });
+      var b = h('div', 'dm-btns'); var btn = M.button('Next: ' + label, '', function () { closeStep(); nextWrap.hidden = true; nextWrap.textContent = ''; prog.textContent = 'Now: ' + label; wait(fn); });
       b.appendChild(btn); nextWrap.appendChild(b); M.focusSoon(btn);
     }
     function card(title, paras, pre, buttons, ariaLabel) {
@@ -229,12 +243,12 @@
       var btns = h('div', 'dm-btns'), first = null;
       buttons.forEach(function (bd, i) {
         var b = M.button(bd.label, bd.ghost ? 'ghost' : '', function () {
-          c.classList.add('done'); btns.textContent = ''; btns.appendChild(h('p', 'dm-meta', 'You chose: ' + bd.label));
+          closeStep(); c.classList.add('done'); btns.textContent = ''; btns.appendChild(h('p', 'dm-meta', 'You chose: ' + bd.label));
           wait(bd.fn);
         });
         if (i === 0) first = b; btns.appendChild(b);
       });
-      c.appendChild(btns); chat.log.appendChild(c); M.scrollEnd(chat.log); M.focusSoon(first);
+      c.appendChild(btns); chat.log.appendChild(c); tidy(); M.scrollEnd(chat.log); M.focusSoon(first);
     }
 
     function planDay() {
