@@ -513,6 +513,7 @@ const inp = { down: new Set(), act: false, actQ: 0, stick: [0, 0], tjump: false,
 function enter3D() {
   buildWorld(); const pl = A.pl, b = A.buddy, gx = W3.gate.userData.x, gz = W3.gate.userData.z;
   G.state = 'fish'; F.mode = 'fish'; F.visits++; F.exit = null; F.paused = false; wk.on = false;
+  if (A.takeBought) for (const k of A.takeBought()) { const it = Object.values(ITEMS).flat().find(x => x.key === k); if (it) { F.items[k] = it.t ? it.t : Infinity; F.hudKey = ''; } }   // bought at the caravan (t468u): starts on this visit
   if (wk.fog0 !== null) { A.scene.fog.density = wk.fog0; wk.fog0 = null; }
   fscene.add(pl.root); pl.root.visible = true; pl.root.rotation.set(0, 0, 0); pl.root.scale.setScalar(A.HS); pl.shadow.visible = false; pl.g && (pl.g.visible = true);
   fscene.add(b.root); b.root.visible = true; b.root.rotation.set(0, 0, 0);
@@ -981,7 +982,7 @@ if (isTouch) {   // left = move stick, right = look, FISH + JUMP buttons
 }
 
 /* ======================= hooks + test API ======================= */
-const api = { step: dt => { if (!F.manual) step(dt); }, afterSide, roomBuilt: buildSide, in3d, render, FT, paths,
+const api = { get ITEMS() { return ITEMS; }, step: dt => { if (!F.manual) step(dt); }, afterSide, roomBuilt: buildSide, in3d, render, FT, paths,
   fromMap(back) { if (G.state !== 'map' || typeof back !== 'function') return false; F.ret = { map: true, back }; wk.on = false; enter3D(); return true; },   // the paper map's pond door (topworld.js)
   skin: () => ({ on: SKIN.on, swaps: SKIN.swaps.length, rivets: SKIN.scaled.length, SKIN }),
   heroMats: () => { const a = []; A.pl.root.traverse(o => { if (o.isMesh) a.push(o.material.uuid + ':' + (o.material.color ? o.material.color.getHexString() : '') + ':' + o.scale.x.toFixed(4)); }); return a.join('|'); },
@@ -1001,7 +1002,7 @@ const api = { step: dt => { if (!F.manual) step(dt); }, afterSide, roomBuilt: bu
     place(x, z) { F.pos.set(x, groundAt(x, z), z); F.vy = 0; F.air = false; F.spd = 0; },
     faceTo(x, z) { const dx = x - F.pos.x, dz = z - F.pos.z; F.head = Math.atan2(-dz, dx); F.yaw = Math.atan2(-dx, -dz); },
     spot: id => W3.spots.find(s => s.id === id), force(k) { F.fish.forced = mkCatch(k); }, forceGull() { F.forceGull = true; }, cam(o) { F.camOverride = o || null; },
-    get ITEMS() { return ITEMS; }, items: () => Object.assign({}, F.items), pick: () => F.pick && F.pick.cards.map(c => ({ key: c.key, kind: c.kind, n: c.n })), choose: i => choosePick(i), picks: () => F.picks.slice(),
+    get ITEMS() { return ITEMS; }, items: () => Object.assign({}, F.items), itemOn: k => itemOn(k), pick: () => F.pick && F.pick.cards.map(c => ({ key: c.key, kind: c.kind, n: c.n })), choose: i => choosePick(i), picks: () => F.picks.slice(),
     styleFor, waterDepth, FT,
     game: () => F.fish.game, renderOnce() { render(STEP); return { calls: F.calls, tris: F.tris }; }, water: () => waterInfo(), detail: () => Object.assign({ flies: W3.fx.flies ? W3.fx.flies.count : 0, fliesVis: !!(W3.fx.flies && W3.fx.flies.visible) }, W3.detail),
     // time + weather: sky({ tod: 0..1, kind: 'clear'|'mist'|'rain', instant, freeze }) locks them (also for later visits); sky(null) unlocks
@@ -1416,7 +1417,7 @@ const ITEMS = {
     { key: 'googly', n: 'googly bobber',  d: 'your bobber gets big googly eyes',     t: 0 } ]
 };
 F.items = {}; F.picks = []; F.pick = null;
-const itemOn = k => F.items[k] !== undefined && (F.items[k] === Infinity || F.items[k] > 0);
+const itemOn = k => F.items[k] !== undefined && (F.items[k] === Infinity || F.items[k] > 0) || !!(A.cardOn && A.cardOn(k));   // + held chest cards (t468u)
 const pickEl = document.createElement('div'); pickEl.id = 'fw-pick';
 pickEl.style.cssText = 'position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:2vmin;z-index:9;background:rgba(20,14,10,.55);font-weight:bold;color:#f3e6c4;text-shadow:1px 1px 0 #3f2616';
 document.body.appendChild(pickEl);
@@ -1457,8 +1458,8 @@ function renderItems(dt) {
   if (g && !eyes) { eyes = new THREE.Group(); const w = A.M('#ffffff'), k = A.M('#111111'); [-1, 1].forEach(s => { const e = new THREE.Mesh(A.gSph, w); e.scale.setScalar(.34); e.position.set(0, .32, s * .17); eyes.add(e); const pu = new THREE.Mesh(A.gSph, k); pu.scale.setScalar(.15); pu.position.set(.15, .32, s * .17); pu.userData.s = s; eyes.add(pu); }); F.bob.add(eyes); }
   if (eyes) { eyes.visible = g; if (g) { F.bob.scale.setScalar(1.5); eyes.children.forEach((m, i) => { if (m.userData.s) m.position.y = .32 + Math.sin(VT * 13 + i) * .06; }); eyes.rotation.y = F.head + PI; } else F.bob.scale.setScalar(1); }
 }
-function itemHud() { const ks = Object.keys(F.items); if (!ks.length) return ''; const all = Object.values(ITEMS).flat();
-  return ks.map(k => { const it = all.find(x => x.key === k), v = F.items[k]; return '<span style="color:' + (ITEMS.bad.includes(it) ? '#ff9a7a' : ITEMS.funny.includes(it) ? '#9fd8ff' : '#9fffb0') + '">' + it.n + (v === Infinity ? '' : ' ' + Math.ceil(v) + 's') + '</span>'; }).join(''); }
+function itemHud() { const all = Object.values(ITEMS).flat(), cs = (G.cards || []).filter(c => !(c.key in F.items)), ch = cs.map(c => '<span style="color:#e8c14a">card: ' + c.n + '</span>').join(''); const ks = Object.keys(F.items); if (!ks.length) return ch;
+  return ks.map(k => { const it = all.find(x => x.key === k), v = F.items[k]; return '<span style="color:' + (ITEMS.bad.includes(it) ? '#ff9a7a' : ITEMS.funny.includes(it) ? '#9fd8ff' : '#9fffb0') + '">' + it.n + (v === Infinity ? '' : ' ' + Math.ceil(v) + 's') + '</span>'; }).join('') + ch; }
 
 Object.assign(api.test, { skin: api.skin, heroMats: api.heroMats });   // reachable from the test hook too
 return api;

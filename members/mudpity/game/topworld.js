@@ -63,7 +63,7 @@ css.textContent = `#tw-fold{position:fixed;inset:0;pointer-events:none;z-index:9
 #tw-panel{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(90vw,520px);display:none;z-index:8;background:#efe6d2;border:3px solid #3f2616;border-radius:6px;
  padding:10px 14px;color:#3f2616;font-weight:bold;text-align:center;font-size:max(12px,2vmin);box-shadow:0 0 0 5px rgba(90,58,34,.5)}
 #tw-panel .row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:8px 0} #tw-panel .cd{min-width:7.5em;padding:8px 6px;border:2px solid #5a3a22;border-radius:5px;background:#fff7e6;cursor:pointer;touch-action:none}
-#tw-panel .cd:hover{background:#ffe9b8} #tw-panel .new{border-color:#d9894a;background:#ffe2b0} #tw-panel small{opacity:.75;font-weight:normal}
+#tw-panel .cd:hover{background:#ffe9b8} #tw-panel .card-good{border-color:#2f6a3a} #tw-panel .card-bad{border-color:#a3542e} #tw-panel .card-funny{border-color:#3f5a9a} #tw-panel .new{border-color:#d9894a;background:#ffe2b0} #tw-panel small{opacity:.75;font-weight:normal}
 #tw-touch{position:fixed;inset:0;display:none;z-index:5;touch-action:none}
 #tw-touch .tb3{position:absolute;width:15vmin;height:15vmin;border-radius:50%;border:2px solid rgba(63,38,22,.6);background:rgba(239,230,210,.5);display:flex;align-items:center;justify-content:center;font-weight:bold;color:#3f2616;font-size:max(11px,2vmin)}
 #tw-touch .on{background:rgba(255,179,71,.65)}`;
@@ -565,22 +565,27 @@ function openSwap(s, k) { P.panel = { kind: 'swap', s, k }; drawPanel(); }
 function chooseSwap(i) { const pn = P.panel; if (!pn || pn.kind !== 'swap') return false; const b = bag();
   if (i >= 0 && i < b.length) { const out = b.splice(i, 1)[0]; b.push(pn.k); pn.s.left.shift(); pn.s.left.push(out); toast('swapped: ' + JUNK[out].n + ' stays on the pile', 1.6); A.sfx(520, .06, 'triangle'); }
   closePanel(); return true; }
-/* ---- chests: pick 1 of 3 face-down cards (good, funny, bad); the map's own stand-in until chest cards exist ---- */
-function openPick(s) { const r = R.rng, o = ['good', 'funny', 'bad']; for (let i = 2; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [o[i], o[j]] = [o[j], o[i]]; } P.panel = { kind: 'pick', s, o }; drawPanel(); }
-function choosePick(i) { const pn = P.panel; if (!pn || pn.kind !== 'pick' || i < 0 || i > 2) return false; const s = pn.s, o = pn.o[i]; s.opened = true; s.lid.rotation.x = -1.9; R.picks = (R.picks || []).concat(o);
-  if (o === 'good') { const lean = LEAN[s.zone] || LEAN.meadow; let n = 0; for (let k = 0; k < 2; k++) if (bagAdd(lean[Math.floor(R.rng() * lean.length)])) n++; toast(n ? 'good: ' + n + ' junk piece' + (n > 1 ? 's' : '') + ' for the bag' : 'good: junk, but your bag is full', 2); }
-  else if (o === 'funny') { P.crown = true; toast('funny: a paper crown, just for this visit', 2); }
-  else { const b = bag(); if (b.length) { const lost = b.splice(Math.floor(R.rng() * b.length), 1)[0]; toast('bad: a junk rat ran off with your ' + JUNK[lost].n, 2.2); } else toast('bad: a junk rat looked in your empty bag and left', 2.2); }
-  A.sfx(o === 'bad' ? 160 : 760, .15, o === 'bad' ? 'sawtooth' : 'triangle'); closePanel(); mini.dirty = true; return true; }
+/* ---- chests: chest cards (Michael t468u/t469u picks): 3 face up, one good, one bad, one funny, from the fishing world's 9 items (game.js
+   cardDeal / cardTake). Hold 2 until the next boss room; a bad card gives +1 gem. With 2 held, a third asks which one to drop (as the bag does) ---- */
+function openPick(s) { const o = A.cardDeal ? A.cardDeal(R.rng) : []; if (!o.length) return false; P.panel = { kind: 'pick', s, o }; drawPanel(); return true; }
+function choosePick(i) { const pn = P.panel; if (!pn || pn.kind !== 'pick' || i < 0 || i > 2) return false; const c = pn.o[i];
+  if (A.cards().length >= A.CARDS.HOLD) { P.panel = { kind: 'cardswap', s: pn.s, c }; drawPanel(); return true; }
+  return cardDone(pn.s, c, -1); }
+function cardDone(s, c, drop) { if (c && !A.cardTake(c, drop)) { toast('kept your cards; the chest closes', 1.6); closePanel(); return true; }
+  s.opened = true; s.lid.rotation.x = -1.9; R.picks = (R.picks || []).concat(c.kind);
+  toast(c.kind + ' card: ' + c.n + ' (' + c.d + '; ' + c.where + ')' + (c.kind === 'bad' ? '  +' + A.CARDS.BAD_GEMS + ' gem' : '') + ' until the next boss room', 2.6);
+  A.sfx(c.kind === 'bad' ? 160 : 760, .15, c.kind === 'bad' ? 'sawtooth' : 'triangle'); closePanel(); mini.dirty = true; return true; }
+function chooseCardDrop(i) { const pn = P.panel; if (!pn || pn.kind !== 'cardswap') return false; if (i < 0) { closePanel(); toast('kept your cards; the chest stays shut', 1.6); return true; } return cardDone(pn.s, pn.c, i); }
 function closePanel() { P.panel = null; panelEl.style.display = 'none'; }
 function drawPanel() {
   const pn = P.panel; if (!pn) { panelEl.style.display = 'none'; return; } const n = isTouch ? 'tap' : 'click or press';
-  if (pn.kind === 'pick') panelEl.innerHTML = 'THE CHEST: pick one card<div class="row">' + [0, 1, 2].map(i => '<div class="cd" data-i="' + i + '">card ' + (i + 1) + '<br><small>face down</small></div>').join('') + '</div><small>' + n + ' 1, 2 or 3: one is good, one is funny, one is bad</small>';
+  if (pn.kind === 'pick') panelEl.innerHTML = 'THE CHEST: pick one card (you hold ' + A.cards().length + '/' + A.CARDS.HOLD + ')<div class="row">' + pn.o.map((c, i) => '<div class="cd card-' + c.kind + '" data-i="' + i + '">' + (i + 1) + '. ' + c.n + '<br><small>' + c.kind + (c.kind === 'bad' ? ' (+' + A.CARDS.BAD_GEMS + ' gem)' : '') + ': ' + c.d + '<br>' + c.where + '</small></div>').join('') + '</div><small>' + n + ' 1, 2 or 3. Cards last until the next boss room</small>';
+  else if (pn.kind === 'cardswap') panelEl.innerHTML = 'YOU HOLD ' + A.CARDS.HOLD + ' CARDS<div class="row"><div class="cd new">new: ' + pn.c.n + '</div></div>drop one to take it:<div class="row">' + A.cards().map((c, i) => '<div class="cd" data-i="' + i + '">' + c.n + '</div>').join('') + '</div><div class="row"><div class="cd" data-i="-1">keep mine</div></div><small>Esc: keep mine</small>';
   else { const b = bag(); panelEl.innerHTML = 'YOUR BAG IS FULL (' + b.length + '/' + bagMax() + ')<div class="row"><div class="cd new">new: ' + JUNK[pn.k].n + '</div></div>drop one to take it (the dropped piece stays on the pile):<div class="row">' +
     b.map((k, i) => '<div class="cd" data-i="' + i + '">' + JUNK[k].n + '</div>').join('') + '</div><div class="row"><div class="cd" data-i="-1">leave it</div></div><small>Esc: leave it</small>'; }
   panelEl.style.display = 'block'; }
 panelEl.addEventListener('pointerdown', e => { const t = e.target.closest && e.target.closest('.cd'); if (!t || t.dataset.i === undefined) return; e.preventDefault(); e.stopPropagation(); const i = +t.dataset.i, pn = P.panel; if (!pn) return;
-  if (pn.kind === 'pick') choosePick(i); else chooseSwap(i); });
+  if (pn.kind === 'pick') choosePick(i); else if (pn.kind === 'cardswap') chooseCardDrop(i); else chooseSwap(i); });
 /* ---- the hook on the map: river junk ---- */
 function hookMap() {
   if (P.hook || P.panel) return false; let best = null, bd = TT.HOOK_R; for (const j of R.rj) { if (j.got || !R.fog[Math.floor(j.z) * R.map.N + Math.floor(j.x)]) continue; const d = Math.hypot(j.x - P.x, j.z - P.z); if (d < bd) { bd = d; best = j; } }
@@ -935,7 +940,7 @@ addEventListener('keydown', e => {
   if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.code)) e.preventDefault();
   if (e.code === 'KeyP' && !e.repeat) { P.paused = !P.paused; P.autoPaused = false; P.hudKey = ''; return; }
   if (P.panel) { if (e.repeat) return; const n = { Digit1: 0, Digit2: 1, Digit3: 2, Digit4: 3, Digit5: 4, Digit6: 5, Digit7: 6, Digit8: 7, Digit9: 8, Numpad1: 0, Numpad2: 1, Numpad3: 2 }[e.code];
-    if (n !== undefined) { if (P.panel.kind === 'pick') choosePick(n); else chooseSwap(n); } else if (e.code === 'Escape' && P.panel.kind === 'swap') chooseSwap(-1); return; }
+    if (n !== undefined) { if (P.panel.kind === 'pick') choosePick(n); else if (P.panel.kind === 'cardswap') chooseCardDrop(n); else chooseSwap(n); } else if (e.code === 'Escape' && P.panel.kind === 'swap') chooseSwap(-1); else if (e.code === 'Escape' && P.panel.kind === 'cardswap') chooseCardDrop(-1); return; }
   inp.down.add(e.code);
   if ((e.code === 'KeyE' || e.code === 'KeyF') && !e.repeat) inp.actQ++;
   if (e.code === 'KeyH' && !e.repeat) inp.hookQ++;
@@ -965,7 +970,7 @@ if (isTouch) {
 }
 
 /* ======================= hooks + test API ======================= */
-const api = { step: dt => { if (!R.manual) step(dt); }, afterSide, roomBuilt: buildSide, in3d, render, TT, setGroundArt, setDiveArt, setOG: o => { OG = o || null; },   // setOG({ enterOG, leaveOG, isOG })
+const api = { sideNear: () => !!side.near, step: dt => { if (!R.manual) step(dt); }, afterSide, roomBuilt: buildSide, in3d, render, TT, setGroundArt, setDiveArt, setOG: o => { OG = o || null; },   // setOG({ enterOG, leaveOG, isOG })
   test: {
     TT, R, P, D, MV, TEX, JUNK, genMap, tryMap, fingerprint, greyLayout: m => greyLayout(m).toDataURL('image/png'), reachFrom, canStep, sideGates, gateRooms, roomGateX, makeMap, enterMap, toSide, toFish,
     startFromSide, enterDive: () => { const m = makeMap(); enterDive(m.spots.find(s => s.type === 'pool')); }, exitDive, openWreck, setRoom, bag, bagAdd, bagMax, refillCheck, hAt, cellAt, terrainSpeed, reveal, side,
@@ -974,7 +979,7 @@ const api = { step: dt => { if (!R.manual) step(dt); }, afterSide, roomBuilt: bu
     manual(on) { R.manual = !!on; }, startCamp: i => startCamp(R.map.camps[i]), leaveCamp, campFlyers, camps: () => R.map ? R.map.camps.map(c => ({ id: c.id, pool: !!c.pool, guard: c.guard, x: c.x, z: c.z, beaten: c.beaten, found: c.found, tries: c.tries })) : [],
     camp: () => G.camp && { id: G.camp.c.id, end: G.camp.end, flee: G.camp.flee, room: G.room, rooms: G.world.rooms.length, flyers: G.rs.flyers.map(f => ({ st: f.st, hp: f.hp, rank: f.rank, x: f.x, y: f.y, kind: f.kind })) }, campLog: () => (R.campLog || []).slice(), mats: () => ({ map: TMP.map.length, dive: TMP.dive.length }), blur: () => dispatchEvent(new Event('blur')), focus: () => dispatchEvent(new Event('focus')), advance(sec) { const n = Math.round(sec / STEP); for (let i = 0; i < n; i++) { if (G.state === 'play') A.update(STEP); step(STEP); } },
     key(code, down) { if (down) { if (!inp.down.has(code)) { if (code === 'KeyF' || code === 'KeyE') inp.actQ++; if (code === 'KeyH') inp.hookQ++; if (G.state === 'dive' && (code === 'Space' || code === 'KeyW')) inp.tupQ++; } inp.down.add(code); } else inp.down.delete(code); },
-    act: () => { inp.actQ++; }, hook: () => { inp.hookQ++; }, stroke: () => { inp.tupQ++; }, choosePick, chooseSwap, panel: () => P.panel && { kind: P.panel.kind, k: P.panel.k },
+    act: () => { inp.actQ++; }, hook: () => { inp.hookQ++; }, stroke: () => { inp.tupQ++; }, choosePick, chooseSwap, chooseCardDrop, panel: () => P.panel && { kind: P.panel.kind, k: P.panel.k, o: P.panel.o && P.panel.o.map(c => ({ ...c })) },
     place(x, z) { P.x = x; P.z = z; P.near = null; reveal(x, z, TT.REVEAL); }, placeDive(x, y) { D.x = x; D.y = y; D.vx = D.vy = 0; },
     spot: type => R.map && R.map.spots.find(s => s.type === type), spots: type => R.map ? R.map.spots.filter(s => !type || s.type === type) : [],
     info: () => ({ state: G.state, fold: fold.on, from: R.from, visits: R.visits, dives: R.dives, pos: [+P.x.toFixed(2), +P.z.toFixed(2)], spd: +P.spd.toFixed(2), near: P.near && (P.near.type || P.near), prompt: promptTxt,

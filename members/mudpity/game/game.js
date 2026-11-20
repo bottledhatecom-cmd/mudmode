@@ -23,6 +23,34 @@ const TUNE = {
   BLOCK_COST_PER_FORCE: 25,    // stamina drained by one block = hit force x this (a force-1 log costs 25: 4 log blocks from full)
   REGEN_PER_SEC: 4,            // slow refill on its own, stamina per second (empty -> full in 25 s)
   REGEN_DELAY: 1.5,            // seconds after a block before the refill starts again
+  /* PLAYTEST DEFAULTS (PLAN-shield-loot-hook lines 21-23 / 19, 30: drop rates and amounts are undecided).
+     Michael 2b 2026-11-16 5:04 PM CT via Overwatch card: gold, gems, drinks and food, as the plan says.
+     CLASH t163s814 "dont add a stamina": drinks/food are stamina regen items.
+     CLASH t165s836 / t169s856 "keep the live block stamina exactly as it is": drinks multiply regen, food adds stamina, so block stamina comes back faster than the live meter alone.
+     CLASH 5b90286 / 0527ba4 emptied ITEMS and mobDied() so stamina stayed live; this puts ground stamina items back.
+     CLASH t111u / 92363d7 was a 10% full (100) refill that worked with the shield up; this follows plan line 19 ("drinking fills it faster") and line 23 ("food for stamina regen") with milder numbers, and does not change the live regen-while-blocking rule (regen already ticks with the block up). Overwatch can ask if he wants the t111u full refill instead. */
+  LOOT: {
+    DROP_CHANCE: 1,            // PLAYTEST: a killed mob always drops one item (none in boss rooms)
+    WEIGHTS: { gold: 40, gem: 25, drink: 20, food: 15 },
+    GOLD: 5,                   // PLAYTEST: coins added to the run wallet
+    GEM: 1,                    // PLAYTEST: loot gems (separate from room-treasure gems)
+    DRINK_REGEN_MULT: 3,       // PLAYTEST: drinking fills stamina this many times faster
+    DRINK_SECS: 8,             // PLAYTEST: seconds the drink boost lasts
+    FOOD_STAM: 25              // PLAYTEST: food instantly adds this much stamina (not a full refill)
+  },
+  /* PLAYTEST DEFAULTS (PLAN-shield-loot-hook line 37 / Michael 6b 2026-11-16 5:04 PM CT): 3 scrap-shield upgrade tiers.
+     Tiers, looks, costs and stat changes were undecided; these numbers are playtest picks, marked as such.
+     Tier 1 is the live scrap shield (BLOCK_COST_PER_FORCE 25, STAM_MAX 100) so a fresh run matches live block stamina.
+     CLASH t165s836 / t169s856 "keep the live block stamina exactly as it is": tiers 2 and 3 drain less stamina per blocked hit.
+     Upgrades are bought during a run with that run's gold/gems (loot is a run wallet) and reset to tier 1 at the start of a run.
+     Sold by a named npc (proposal sec 3); buyShieldUpgrade() is also on the test hook. */
+  SHIELD_TIERS: {
+    TIERS: [
+      { id: 1, name: 'scrap',   gold: 0,  gems: 0, blockCost: 25 },  // PLAYTEST / live
+      { id: 2, name: 'riveted', gold: 15, gems: 0, blockCost: 20 },  // PLAYTEST: 5 less stamina per force-1 block
+      { id: 3, name: 'plated',  gold: 25, gems: 2, blockCost: 15 }   // PLAYTEST: 10 less stamina per force-1 block
+    ]
+  },
   RAISE_TIME: 0.18,            // seconds to reach back and bring the shield to the front; a block only counts once it is in front
   LOWER_TIME: 0.22,            // seconds to put it back on his back (look only)
   HAND_RAISE_TIME: 0.08,       // seconds to get his hands up when he has no shield
@@ -39,6 +67,7 @@ const TUNE = {
     log: 1.0,                  //   x the log's speed / 57 (logs roll at 50-64 px/s)
     crawler: 0.6, snap: 0.8, bite: 1.2,          // bite: the giant biter from below
     flyerDive: 0.7, flyerDrop: 0.5,                 // flyers: a dive, a dropped thing (PLAYTEST DEFAULTS)
+    reedSeed: 0.5, shellBite: 0.8, sludgeBite: 0.6, heronSpear: 1.1, rootBite: 0.5,   // the 10-29 ground mobs (PLAYTEST DEFAULTS)
     mudBall: 0.8, mudSplash: 0.5, bogjaw: 1.6,      // boss 1 (BOGJAW)
     seedBomb: 1.2, swoop: 1.4,                      // boss 2 (GLOOMWING)
     totem: 2.0, shockwave: 1.0, totemBall: 0.9      // boss 3 (MUDTOTEM)
@@ -67,6 +96,30 @@ const TUNE = {
     AIM_UP: 55,                // degrees above his facing direction for a plain shot (walls, canopy)
     CONE: 60,                  // degrees: loot and mobs inside this cone in front of him get the hook first
     CEIL_Y: 28                 // px: the canopy branches overhead (where the vines hang) count as a ledge
+  },
+  /* PLAYTEST DEFAULTS (PLAN-shield-loot-hook lines 64-65 / Michael 10b 2026-11-16 5:04 PM CT): hook extras on top of the live hook.
+     CLASH t163s814 "dont midfy teh grappling hook how it is now, leave it": the live hook numbers and the default fire/zip/swing/pull
+     path are unchanged. These extras are opt-in (idle visual, F-to-drag across water, muddy state, snag catch mini). A clean hook
+     uses HK.RANGE and HK.FLY_SPEED exactly. A muddy hook is slower and shorter until cleaned at idle. Dragged junk is held for the
+     junk collector (item 3, not built). Side-scroll fishing (item 7: F to fish, recipes, croc perch) is not built; F near water only
+     starts a water drag, and a snag starts a compact catch mini (tension / timing / mash, rotating). */
+  HOOK_EXTRAS: {
+    IDLE_DELAY: 3,             // PLAYTEST: seconds standing still before idle hook play starts
+    PLAY_T: 1.4,               // PLAYTEST: seconds per idle beat (play, tug, clean, wind)
+    MUDDY_RANGE: 0.7,          // PLAYTEST: x live RANGE while the hook is muddy
+    MUDDY_FLY: 0.7,            // PLAYTEST: x live FLY_SPEED while the hook is muddy
+    DRAG_REACH: 48,            // px: water must be this close in front to start a drag
+    DRAG_JUNK_T: 0.7,          // PLAYTEST: seconds of dragging over water to pick up one junk
+    SNAG_T: 1.4,               // PLAYTEST: seconds of dragging before a stuck fish / sunken chest can snag
+    LOOT_GOLD: 8,              // PLAYTEST: gold from a won catch (bottom-heavy loot)
+    LOOT_GEMS: 1,              // PLAYTEST: gems from a won catch
+    LOOT_JUNK: 1,              // PLAYTEST: junk from a won catch (held, not sold)
+    CATCH_T: 6,                // PLAYTEST: catch mini time limit (seconds)
+    MASH_NEED: 8,              // PLAYTEST: mash presses to win a mash catch
+    TIMING_NEED: 3,            // PLAYTEST: good timing presses to win
+    TENSION_LO: 35,            // PLAYTEST: hold the tension bar in this window to fill
+    TENSION_HI: 70,
+    TENSION_SNAP: 100
   },
   /* buddy super move: Q or the phone super button; ready at the start of a run, then RECHARGE s after he shrinks back. Buddy grows to
      SIZE x mudbot's height and fights on his own; he takes the hits meant for the player, and that damage drains his own power-up meter.
@@ -146,7 +199,7 @@ const TUNE = {
      Big ones (drone): hook one to ride it; it carries him forward (left / right steers); jump or press hook again to let go;
      after RIDE_T it shakes him off. Toughness by rank: RANK_HP kicks (rank 2 / 3 glow amber / red). None in boss rooms; more
      rooms get them, and more of them, later in the run. Ceiling cheese: high up (swinging on the rope, or in the air above
-     CHEESE_H) for CHEESE_T seconds = the room's flyers come for him (or, if it has none, one is called in).
+     CHEESE_H) for CHEESE_T seconds = the room's flyers come for him (or, if it has none, one is called in). Flyer 1-3 toughness stays separate from the signed crawler/snapper ladder (proposal Q6 open).
      ALL NUMBERS HERE ARE PLAYTEST DEFAULTS. */
   FLYER: {
     FIRST_ROOM: 1,             // no flyers before this room index (index 0 = the first room)
@@ -161,7 +214,7 @@ const TUNE = {
     },
     RANK_HP: [1, 2, 3],        // kicks (or stomps) to kill a rank 1 / 2 / 3 flyer
     RANK_W_START: [0.75, 0.20, 0.05],   // rank 1 / 2 / 3 odds in the first room ...
-    RANK_W_END: [0.40, 0.40, 0.20],     // ... and in the last room. Minimal rank hook (no saved ladder yet: PROPOSAL-mob-ranks.md is a draft)
+    RANK_W_END: [0.40, 0.40, 0.20],     // ... and in the last room. Flyer toughness only (crawler/snapper ladder is TUNE.RANKS / mudpity-mobs-v1)
     Y_MIN: 45, Y_MAX: 68,      // px: patrol height (ground 130, canopy 28)
     PATROL_RANGE: 40,          // px each way from its spot
     AGGRO_X: 70,               // px: he is this close sideways = it dives at him
@@ -185,6 +238,33 @@ const TUNE = {
     CHEESE_T: 3,               // seconds high or on a swing before the flyers come for him
     CHEESE_SPAWN_MAX: 2,       // flyers the trigger may call into a room with none, per visit (never in boss rooms)
     SCORE: 100                 // points per kill x rank (then the speed multiplier)
+  },
+  /* the 10-29 ground mobs (Michael t67u "yes!" to the list, PLAN-shield-loot-hook line 72). Placeholder looks built in code.
+     mud leech: latches on, drains stamina, kick it off. bog lantern: floats over a pit and pulls you toward it, hook it down.
+     reed sniper: spits seeds from the grass, the shield blocks them. shell snapper: armoured, a kick flips it onto its back, kick it
+     again while it is on its back. junk rat: steals a piece from the junk bag and runs for the room edge; hook it (or kick it) and it
+     drops the piece plus a piece of junk for the collector. sludge splitter: a kick splits it in two; kick the halves. heron stalker:
+     spears you if you stand still near water. root grabber: grabs your feet; jump or hook to get out.
+     Rolled per room visit from the seed with their own rng (the world layout and its fingerprint are unchanged); never in the first
+     room, a boss room, the caravan room or a camp. A killed mob stays dead for the run. They do not climb a rank ladder in this
+     build (no ladder on main yet). ALL NUMBERS HERE ARE PLAYTEST DEFAULTS. */
+  NEWMOB: {
+    FIRST_ROOM: 1,             // none before this room index
+    CHANCE_START: 0.35,        // chance a room has one in the first rooms ...
+    CHANCE_END: 0.75,          // ... rising to this in the last room
+    COUNT_START: 1, COUNT_END: 2,   // most in one room early / late
+    X_MIN: 70, X_MAX: 270,     // px: where they stand (clear of the room's doors)
+    SCORE: 100,                // points per kill (then the speed multiplier)
+    KINDS: {
+      leech:    { name: 'mud leech',       speed: 16, SEE: 90, DRAIN: 10 },                       // DRAIN: stamina per second while latched
+      lantern:  { name: 'bog lantern',     needs: 'hole', Y: 64, LURE_R: 75, LURE_V: 24 },       // px/s it pulls him toward its pit
+      sniper:   { name: 'reed sniper',     RANGE: 150, CD: 2.6, TELL: 0.45, SEED_V: 105 },
+      snapper:  { name: 'shell snapper',   speed: 16, range: 28, FLIP_T: 3.5 },
+      rat:      { name: 'junk rat',        speed: 26, range: 30, SEE: 110, RUN_V: 85 },
+      splitter: { name: 'sludge splitter', speed: 14, range: 26, SPLIT_PX: 10 },
+      heron:    { name: 'heron stalker',   needs: 'water', NEAR_WATER: 40, RANGE: 70, STILL_V: 8, STILL_T: 1.6, TELL: 0.45, CD: 2.2 },
+      root:     { name: 'root grabber',    BITE_T: 2.2, CD: 2.0 }
+    }
   },
   /* crevasses, solid crocs, the giant biter and the tentacles. ALL NUMBERS HERE ARE PLAYTEST DEFAULTS.
      Route rule (the generator keeps it; a smoke check walks many seeds): every hole is at most JUMP_MAX wide, or has a vine
@@ -248,7 +328,16 @@ const TUNE = {
     FADE_T: 600                // seconds: the multiplier reaches END at 10:00
   }
 };
-const HK = TUNE.HOOK, SPD = TUNE.SPEED;
+// side-scroll fishing extras on TUNE.CROC.FISH (the live FISH line above stays as it is)
+Object.assign(TUNE.CROC.FISH, {
+  /* side-scroll fishing (plan t18u-t22u, t58u): a rare catch starts the catch mini game, and the style rotates through all three
+     (mash, timing, tension) one rare catch after another. Bank spots: some water holes get a fishing spot on one bank (own rng).
+     ALL NUMBERS HERE ARE PLAYTEST DEFAULTS. */
+  STYLES: ['mash', 'timing', 'tension'],
+  TIMING_SPEED: 1.1, TIMING_ZONE: .22, TIMING_HITS: 3, TIMING_MISSES: 2, TIMING_T: 6,       // marker sweeps 0..1 (per second); green zone width; hits to land; misses to lose; seconds
+  TENSION_UP: .9, TENSION_DOWN: .7, TENSION_TUG: .35, TENSION_LO: .3, TENSION_HI: .85, TENSION_REEL: .28, TENSION_T: 9,   // hold F to reel: tension per second up / down, fish tugs, the band, catch per second in the band
+  BANK_CHANCE: .6, BANK_NEAR: 7, BANK_PATH_GAP: 40 });                                          // chance a water hole gets a bank spot; px he must be within; px kept from the fishing world path
+const HK = TUNE.HOOK, HX = TUNE.HOOK_EXTRAS, SPD = TUNE.SPEED;
 const STAM_MAX = TUNE.STAM_MAX, FORCE = TUNE.FORCE;
 const SU = TUNE.SUPER;   // buddy super move numbers (see TUNE.SUPER)
 const BLOCK_MODE_KEY = 'mudpity-block-mode';   // the player's press / hold choice, stored on this device only
@@ -319,6 +408,7 @@ const keys={left:false,right:false,jump:false,block:false,hook:false,down:false}
 /* block input: 'press' toggles the block on and off, 'hold' blocks while the key / button is down */
 let blockMode=TUNE.BLOCK_MODE_DEFAULT, blockLatch=false;
 try{ const m=localStorage.getItem(BLOCK_MODE_KEY); if(m==='press'||m==='hold') blockMode=m; }catch(e){}
+try{ rankLoad(); }catch(e){}
 function setBlockMode(m){ blockMode=m==='hold'?'hold':'press'; blockLatch=false; keys.block=false; try{ localStorage.setItem(BLOCK_MODE_KEY,blockMode); }catch(e){} }
 function blockInput(down){ if(blockMode==='hold') keys.block=!!down; else if(down) blockLatch=!blockLatch; }
 const wantBlock=()=>blockMode==='hold'?keys.block:blockLatch;
@@ -343,22 +433,219 @@ function crevGen(seed,i,kind,room){
       const side=(s<0?okL:okR)?s:(s<0?okR:okL)?-s:0; if(side) h.tent=side; } }
   for(const q of room.pools) q.dir=Array.from({length:q.n},()=>r()<.5?-1:1);   // which way each croc faces
 }
-function newPlayer(x){return {x,y:GY,vx:0,vy:0,face:1,onGround:true,coyote:0,vine:null,vs:1,grabCd:0,kick:0,inv:0,dead:0,step:0,stam:STAM_MAX,react:0,binv:0,shield:true,blocking:false,blk:0,chip:0,regenT:0,hook:null,hookCd:0,kickCd:0,kickDown:false,kickIn:false,grab:null};}
+function newPlayer(x){return {x,y:GY,vx:0,vy:0,face:1,onGround:true,coyote:0,vine:null,vs:1,grabCd:0,kick:0,inv:0,dead:0,step:0,stam:STAM_MAX,react:0,binv:0,shield:true,blocking:false,blk:0,chip:0,regenT:0,drinkT:0,hook:null,hookCd:0,kickCd:0,kickDown:false,kickIn:false,grab:null};}
 function startRun(){
   G.world=genWorld(G.seed); G.t=0; G.timeLeft=TIME; G.runT=0; G.lives=LIVES; G.score=0; G.got=new Set(); G.result='';
-  G.bosses={}; G.winT=0; G.burst=[]; G.allGems=false; G.drop=null; G.items=[]; G.flyDead=new Set(); G.flyKills=0; G.blocks=0; G.lastBlock=null; blockLatch=false; keys.block=false; G.sup=supNew(); G.bud=budNew(); G.tmPaid={}; G.tmGot=0; G.freeze=null; G.cut=null; G.ease=0; G.tm=null; G.kill=''; wsReset();
+  G.bosses={}; G.winT=0; G.burst=[]; G.allGems=false; G.drop=null; G.items=[]; G.gold=0; G.lootGems=0; G.flyDead=new Set(); G.flyKills=0; G.rareN=0; G.fishLost=0; G.nmDead=new Set(); G.nm={kills:0,steals:0,lost:0,splits:0,flips:0,latches:0,grabs:0,frees:0,spears:0,seeds:0,lures:0}; G.blocks=0; G.lastBlock=null; blockLatch=false; keys.block=false; G.sup=supNew(); G.bud=budNew(); G.tmPaid={}; G.tmGot=0; G.freeze=null; G.cut=null; G.ease=0; G.tm=null; G.kill=''; wsReset();
+  G.rs=null; G.rankUsed=[]; G.rankNews=[]; G.shieldTier=1; G.cards=[]; G.catches={}; G.rivetOil=0; G.hookMuddy=false; G.hookIdle=null; G.snagLast=null; G.snags=0; rankEnsure();
+  rankAssignRoles();
   G.state='play'; enterRoom(0,null); sfx(520,.08);
 }
 function enterRoom(i,from){
-  G.room=i; const room=G.world.rooms[i]; if(G.p) hookClear(G.p);
+  if(G.rs&&G.state==='play'&&G.room!==i) rankLeaveRoom(G.rs);
+  G.room=i; const room=G.world.rooms[i]; if(G.p) hookClear(G.p); if(BOSS_ROOMS.includes(i)) cardsExpire();   // chest cards last until the next boss room (t468u)
   const sx = from==='L'?14 : from==='R'?W-14 : 22;
   G.rs={spawn:sx, logs:[], logT:1.2, rng:mulberry(hash(G.seed+'|run|'+i)), crawlers:room.crawlers.map((c,k)=>({x:c.cx,d:k%2?1:-1,hp:TUNE.SUPER.MOB_HP}))};
-  G.burst=[]; G.splats=[]; rs_boss(); G.rs.croc={}; G.rs.perch=null; G.rs.crocRng=mulberry(hash(G.seed+'|croc|'+i)); cfReset(); G.rs.crev=crevState(room); if(G.p) G.p.grab=null; G.rs.flyers=spawnFlyers(i); G.rs.fdrops=[]; G.rs.cheeseT=0; G.rs.cheeseN=0;
+  G.burst=[]; G.splats=[]; rs_boss(); G.rs.croc={}; G.rs.perch=null; G.rs.crocRng=mulberry(hash(G.seed+'|croc|'+i)); cfReset(); G.rs.crev=crevState(room); if(G.p) G.p.grab=null; G.rs.flyers=spawnFlyers(i); G.rs.fdrops=[]; G.rs.nm=nmSpawn(i); G.rs.nseeds=[]; if(G.p) G.p.rooted=null; G.rs.cheeseT=0; G.rs.cheeseN=0;
+  rankFillRoom(i,room,G.rs);
   if(!G.p){ G.p=newPlayer(sx); const T=stumpOf(room); if(T&&Math.abs(sx-T.X)<T.HALF) G.p.y=GY-T.H; }   // the run starts on the stump
   if(G.sup&&G.sup.on){ G.sup.bx=supX(from==='R'?sx+TUNE.SUPER.FOLLOW_GAP:sx-TUNE.SUPER.FOLLOW_GAP); G.sup.tgt=null; G.sup.wind=0; }   // super buddy comes along
 }
 function rs_boss(){ const room=G.world.rooms[G.room]; G.rs.boss=BOSS_DEF[room.kind]?mkBoss(room):null; }
 function gid(i){return G.seed+'#'+i;}
+/* ======================= MOB RANKS (PROPOSAL-mob-ranks.md, signed Michael 5b 2026-11-16 5:04 PM CT via Overwatch card) =======================
+   Crawlers and snappers climb a saved browser roster (mudpity-mobs-v1). Flyers keep their own 1-3 toughness ranks (proposal Q6 is still open).
+   Bosses never climb. Promotion only at run end, one step per run. Names only on vendor and named npc, from Michael's 18-name list, caps exact.
+   Helpers/vendors/npcs do not fight. Open proposal questions use the written defaults; PLAYTEST numbers are marked. No new kick/hook kill paths. */
+const MOB_ROSTER_KEY='mudpity-mobs-v1';
+/* community names (t462u, item e): a name attaches to a mob when it earns a named rank (vendor / named npc, as the signed ladder says).
+   MECHANISM ONLY. Members are asked first, so no community name ships here: 18 placeholder slots stand in for the 18-name list
+   (the list itself stays in the hub proposal). When members say yes, their names go in COMMUNITY_NAMES and the placeholders drop out.
+   A saved roster is checked against the list on load: a name that is not on it any more (a member said no) comes off, and that
+   mob waits for a free name. Boss renames are held (they wait for the boss art redo). */
+const COMMUNITY_NAMES=[];   // filled only after members agree (Michael)
+const NAME_PLACEHOLDERS=Array.from({length:18},(_,i)=>'name '+String(i+1).padStart(2,'0'));
+const MOB_NAMES=COMMUNITY_NAMES.length?COMMUNITY_NAMES.slice():NAME_PLACEHOLDERS;
+const RANK_TYPE_LABEL=t=>/^nm-/.test(t)?((TUNE.NEWMOB.KINDS[t.slice(3)]||{}).name||t.slice(3)):t;   // 'nm-leech' -> 'mud leech'
+const RANK_STEPS=['fodder','elite','helper','vendor','npc'];
+const RANK_NEXT={fodder:'elite',elite:'helper',helper:'vendor',vendor:'npc'};
+const RANK_THRESH={elite:150,helper:400,vendor:800,npc:1500};   // proposal sec 4
+const RANK_LABEL={fodder:'fodder',elite:'elite',helper:'helper',vendor:'vendor',npc:'named npc'};
+const RANKS={
+  // PLAYTEST DEFAULTS (proposal leaves these open, or says "starting point to tune")
+  ELITE_SPEED:1.25,            // "a bit faster"
+  ELITE_SWING_BONUS:1,         // +1 hit to kill: one extra super-swing on a crawler (base is 2 swings at MOB_HP)
+  ELITE_LOOT_EXTRA:1,          // elite rolls one extra 2b loot drop (2b table itself is unchanged)
+  ELITE_CHANCE:0.25,           // chance a fight slot picks an unused elite when one is free
+  HELP_PTS:40,                 // helper: points when the player uses its help
+  SALE_PTS:50,                 // vendor: points per sale
+  VISIT_PTS:30,                // npc: points per visit
+  VENDOR_DRINK_GOLD:10,        // gold price of a drink
+  VENDOR_FOOD_GEMS:2,          // loot-gem price of food
+  RANGE:16,                    // px: walk-up range for helper / vendor / npc
+  VENDOR_X:42,                 // stall sits off the left of a safe room (visible, skippable)
+  NPC_X:278
+};
+TUNE.RANKS=RANKS;
+function rankBlankStats(){ return {hits:0,dmg:0,kills:0,blocksBeaten:0,shieldDrops:0,survived:0,escapes:0,deaths:0,runsSeen:0,helpUses:0,sales:0,visits:0}; }
+function rankScoreOf(st){
+  const s=st||rankBlankStats();
+  return Math.max(0, 10*s.hits + 25*s.dmg + 60*s.kills + 15*s.blocksBeaten + 20*s.shieldDrops + Math.floor(s.survived/5) + 5*s.escapes + RANKS.HELP_PTS*s.helpUses + RANKS.SALE_PTS*s.sales + RANKS.VISIT_PTS*s.visits - 20*s.deaths);
+}
+function rankShuffleNames(){ const a=MOB_NAMES.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+function rankEmptyRoster(){ return {v:1, nextId:1, nameOrder:rankShuffleNames(), news:[], mobs:[]}; }
+function rankLoad(){
+  let r=null;
+  try{ r=JSON.parse(localStorage.getItem(MOB_ROSTER_KEY)||'null'); }catch(e){ r=null; }
+  if(!r||r.v!==1||!Array.isArray(r.mobs)||!Array.isArray(r.nameOrder)) r=rankEmptyRoster();
+  rankNamesCheck(r);
+  G.roster=r; return r;
+}
+function rankNamesCheck(r){   // keep a saved roster on the current name list (names not on it come off; new names join the order)
+  const ok=new Set(MOB_NAMES); let n=0;
+  r.nameOrder=r.nameOrder.filter(x=>ok.has(x)); for(const x of MOB_NAMES) if(!r.nameOrder.includes(x)) r.nameOrder.push(x);
+  for(const m of r.mobs) if(m.name&&!ok.has(m.name)){ m.name=null; n++; }
+  return n;
+}
+function rankSave(){ try{ if(G.roster) localStorage.setItem(MOB_ROSTER_KEY, JSON.stringify(G.roster)); }catch(e){} }
+function resetMobs(){ G.roster=rankEmptyRoster(); G.rosterRev=(G.rosterRev||0)+1; rankSave(); return G.roster; }
+function rankById(id){ return (G.roster&&G.roster.mobs||[]).find(m=>m.id===id)||null; }
+function rankEnsure(){ if(!G.roster) rankLoad(); return G.roster; }
+function rankNew(type,rank){
+  const r=rankEnsure(), m={id:r.nextId++, type:(type==='snapper'||/^nm-[a-z]+$/.test(type))?type:'crawler', rank:rank||'fodder', name:null, justPromoted:false, stats:rankBlankStats(), score:0};
+  r.mobs.push(m); rankSave(); return m;
+}
+function rankUsedSet(){ return new Set(G.rankUsed||[]); }
+function rankPickFighter(type){
+  const r=rankEnsure(), used=rankUsedSet();
+  const pool=r.mobs.filter(m=>(m.type===type)&&(m.rank==='fodder'||m.rank==='elite')&&!used.has(m.id));
+  const elites=pool.filter(m=>m.rank==='elite'), fod=pool.filter(m=>m.rank==='fodder');
+  let m=null;
+  if(elites.length&&Math.random()<RANKS.ELITE_CHANCE) m=elites[Math.floor(Math.random()*elites.length)];
+  else if(fod.length) m=fod[Math.floor(Math.random()*fod.length)];
+  else if(elites.length) m=elites[Math.floor(Math.random()*elites.length)];
+  else m=rankNew(type,'fodder');
+  G.rankUsed=G.rankUsed||[]; if(!G.rankUsed.includes(m.id)){ G.rankUsed.push(m.id); m.stats.runsSeen=(m.stats.runsSeen||0)+1; }
+  return m;
+}
+function rankNameTaken(){ return new Set((G.roster.mobs||[]).filter(m=>m.name).map(m=>m.name)); }
+function rankGiveName(m){
+  const r=rankEnsure(), taken=rankNameTaken();
+  const free=(r.nameOrder||MOB_NAMES).find(n=>!taken.has(n));
+  if(free){ m.name=free; r.news=(r.news||[]).concat(['a '+RANK_TYPE_LABEL(m.type)+' earned the name '+free]); return free; }
+  const named=r.mobs.filter(x=>x.name&&x.id!==m.id).slice().sort((a,b)=>a.score-b.score||a.id-b.id);
+  const low=named[0];
+  if(low&&m.score>low.score){ const nm=low.name; low.name=null; low.rank='helper'; low.justPromoted=true; m.name=nm; r.news=(r.news||[]).concat([nm+' passed to a new vendor; the old one is a helper']); return nm; }
+  r.news=(r.news||[]).concat(['a vendor in training waits for a name']); return null;
+}
+function rankPromoteAll(){
+  const r=rankEnsure(); r.news=[];
+  for(const m of r.mobs){
+    m.score=rankScoreOf(m.stats);
+    if(m.justPromoted){ m.justPromoted=false; continue; }   // prove itself again at the new tier (one step / run already applied last time)
+    const next=RANK_NEXT[m.rank]; if(!next) continue;
+    if(m.score>=RANK_THRESH[next]){ m.rank=next; m.justPromoted=true; if(next==='vendor'||next==='npc') rankGiveName(m); }
+  }
+  rankSave(); return r.news.slice();
+}
+function rankStat(mid,key,n){ const m=rankById(mid); if(!m) return; m.stats[key]=(m.stats[key]||0)+(n||1); }
+function rankSafeX(room,prefer){
+  const xs=[prefer, 36, 60, 80, 240, 260, 284, 160];
+  for(const x of xs){ if(x==null) continue; const xx=Math.max(8,Math.min(W-8,x)); if(!holeAt(room,xx)) return xx; }
+  return 22;
+}
+function rankAssignRoles(){
+  const r=rankEnsure(); G.rankRoles={helpers:[],vendor:null,npc:null};
+  if(!G.world) return;
+  const safe=[];
+  for(const room of G.world.rooms){ if(BOSS_ROOMS.includes(room.i)) continue; if(!holeAt(room,RANKS.VENDOR_X)||!holeAt(room,RANKS.NPC_X)) safe.push(room.i); }
+  const rooms=safe.length?safe:G.world.rooms.filter(rm=>!BOSS_ROOMS.includes(rm.i)).map(rm=>rm.i);
+  const pick=()=>rooms.length?rooms[Math.floor(Math.random()*rooms.length)]:0;
+  for(const m of r.mobs){ if(m.rank==='helper') G.rankRoles.helpers.push({mid:m.id, room:pick(), kind:['treasure','drink','bite'][m.id%3], used:false}); }
+  const vendors=r.mobs.filter(m=>m.rank==='vendor');
+  if(vendors[0]) G.rankRoles.vendor={mid:vendors[0].id, room:rooms[0]||0, x:null};
+  const npcs=r.mobs.filter(m=>m.rank==='npc');
+  if(npcs[0]) G.rankRoles.npc={mid:npcs[0].id, room:rooms[Math.min(1,rooms.length-1)]||rooms[0]||0, x:null, visited:false};
+}
+function rankFillRoom(i,room,rs){
+  rs.crawlers.forEach(c=>{
+    const m=rankPickFighter('crawler');
+    c.mid=m.id; c.rank=m.rank;
+    if(m.rank==='elite'){ c.hp=TUNE.SUPER.MOB_HP + Math.round(TUNE.SUPER.MOB_HP/2)*RANKS.ELITE_SWING_BONUS; c.spMul=RANKS.ELITE_SPEED; }
+    else { c.spMul=1; }
+  });
+  const snaps=crocs(room); rs.snapMids=snaps.map(()=>{ const m=rankPickFighter('snapper'); return m.id; });
+  rs.snapRanks=rs.snapMids.map(id=>(rankById(id)||{}).rank||'fodder');
+  for(const m of rs.nm||[]){ const r=rankPickFighter('nm-'+m.kind); m.mid=r.id; m.rank=r.rank; }   // the new mobs (b586d36) climb the same ladder (t462u); elites: one extra loot roll
+  const roles=G.rankRoles||{};
+  rs.helper=null; rs.vendor=null; rs.npc=null;
+  const h=(roles.helpers||[]).find(x=>x.room===i);
+  if(h){ const m=rankById(h.mid); rs.helper={mid:h.mid, kind:h.kind, used:false, x:rankSafeX(room, G.p?G.p.x+24:80), name:m&&m.name}; }
+  if(roles.vendor&&roles.vendor.room===i){ const m=rankById(roles.vendor.mid); const x=rankSafeX(room,RANKS.VENDOR_X); roles.vendor.x=x; rs.vendor={mid:roles.vendor.mid, x, name:m&&m.name, sold:false}; }
+  if(roles.npc&&roles.npc.room===i){ const m=rankById(roles.npc.mid); const x=rankSafeX(room,RANKS.NPC_X); roles.npc.x=x; rs.npc={mid:roles.npc.mid, x, name:m&&m.name, visited:false}; }
+  rankSave();
+}
+function rankLeaveRoom(rs){
+  if(!rs) return;
+  for(const c of rs.crawlers||[]) if(c.mid&&!c.dead) rankStat(c.mid,'escapes',1);
+  for(const id of rs.snapMids||[]) if(id) rankStat(id,'escapes',1);
+  for(const m of rs.nm||[]) if(m.mid&&!m.dead) rankStat(m.mid,'escapes',1);
+}
+function rankSurvive(rs,dt){
+  if(!rs) return;
+  for(const c of rs.crawlers||[]) if(c.mid&&!c.dead) rankStat(c.mid,'survived',dt);
+  for(const id of rs.snapMids||[]) if(id) rankStat(id,'survived',dt);
+  for(const m of rs.nm||[]) if(m.mid&&!m.dead) rankStat(m.mid,'survived',dt);
+}
+function rankFromHit(src,blocked,dropped,lostLife,livesBefore){
+  if(!src||!src.mid) return;
+  if(!blocked){ rankStat(src.mid,'hits',1); if(lostLife){ rankStat(src.mid,'dmg',1); if(livesBefore<=1) rankStat(src.mid,'kills',1); } }
+  else {
+    if(dropped){ rankStat(src.mid,'blocksBeaten',1); rankStat(src.mid,'shieldDrops',1); }
+    else if(lostLife) rankStat(src.mid,'blocksBeaten',1);
+  }
+}
+function shieldDef(){ const T=TUNE.SHIELD_TIERS.TIERS, i=Math.max(0,Math.min(T.length-1,(G.shieldTier||1)-1)); return T[i]; }
+function blockCostPerForce(){ return shieldDef().blockCost; }
+function buyShieldUpgrade(){
+  const T=TUNE.SHIELD_TIERS.TIERS, cur=G.shieldTier||1;
+  if(cur>=T.length){ G.msg='shield already plated'; G.msgT=1; return false; }
+  const next=T[cur]; // TIERS[0] is tier 1; next upgrade is TIERS[cur] (id cur+1)
+  const oil=(G.rivetOil||0)>0, gold=Math.max(0,next.gold-(oil?RECIPES.rivet.off:0));   // rivet oil (t468u): 5 gold off the next upgrade
+  if((G.gold||0)<gold || (G.lootGems||0)<next.gems){ G.msg='need '+gold+' gold'+(next.gems?(' and '+next.gems+' gems'):'')+' to rivet the shield'; G.msgT=1.2; return false; }
+  G.gold-=gold; G.lootGems=(G.lootGems||0)-next.gems; G.shieldTier=next.id; if(oil) G.rivetOil--;
+  G.msg='shield upgraded: '+next.name+(oil?' (rivet oil: -'+RECIPES.rivet.off+' gold)':''); G.msgT=1.2; sfx(700,.08,'triangle'); sfx(1100,.1,'sine'); return true;
+}
+function vendorBuy(kind){
+  const v=G.rs&&G.rs.vendor, m=v&&rankById(v.mid); if(!v||!m||!G.p) return false;
+  if(kind==='drink'){ if((G.gold||0)<RANKS.VENDOR_DRINK_GOLD){ G.msg='need '+RANKS.VENDOR_DRINK_GOLD+' gold for a drink'; G.msgT=1; return false; } G.gold-=RANKS.VENDOR_DRINK_GOLD; giveDrink(); }
+  else if(kind==='food'){ if((G.lootGems||0)<RANKS.VENDOR_FOOD_GEMS){ G.msg='need '+RANKS.VENDOR_FOOD_GEMS+' gems for food'; G.msgT=1; return false; } G.lootGems-=RANKS.VENDOR_FOOD_GEMS; giveFood(); }
+  else return false;
+  m.stats.sales=(m.stats.sales||0)+1; G.msg=(v.name?v.name+': ':'vendor: ')+'sold '+kind; G.msgT=1; return true;
+}
+function rankInteract(p,rs){
+  if(!p||!rs||p.dead>0||!p.onGround) return;
+  if(rs.helper&&!rs.helper.used&&Math.abs(p.x-rs.helper.x)<RANKS.RANGE){
+    const h=rs.helper, room=G.world.rooms[G.room];
+    if(h.kind==='drink') giveDrink();
+    else if(h.kind==='treasure'){ const tr=room.treasure, has=tr&&!G.got.has(gid(room.i)); G.msg=has?(p.x<tr.x?'treasure to the right':'treasure to the left'):'no treasure in this room'; G.msgT=1.2; }
+    else { const foe=(rs.crawlers||[]).find(c=>!c.dead&&c.mid!==h.mid); if(foe){ foe.hp=Math.max(0,(foe.hp||0)-Math.round(TUNE.SUPER.MOB_HP/2)); G.msg='helper bit a crawler'; G.msgT=.9; if(foe.hp<=0){ foe.dead=true; rankStat(foe.mid,'deaths',1); mobDied(flyerGroundX(foe.x)); if((rankById(foe.mid)||{}).rank==='elite') mobDied(flyerGroundX(foe.x)); } } else G.msg='helper looks around'; G.msgT=.8; }
+    h.used=true; rankStat(h.mid,'helpUses',1);
+  }
+  if(rs.npc&&!rs.npc.visited&&Math.abs(p.x-rs.npc.x)<RANKS.RANGE){
+    rs.npc.visited=true; rankStat(rs.npc.mid,'visits',1);
+    const nm=rs.npc.name?rs.npc.name+' : ':'';
+    G.msg=nm+'weak spots glow. Walk over a dropped shield. Kick here to upgrade the scrap shield.'; G.msgT=1.8;
+  }
+  if(rs.npc&&p.kick>0&&Math.abs(p.x-rs.npc.x)<RANKS.RANGE){ buyShieldUpgrade(); p.kick=0; }
+  if(rs.vendor&&p.kick>0&&Math.abs(p.x-rs.vendor.x)<RANKS.RANGE){
+    if((G.gold||0)>=RANKS.VENDOR_DRINK_GOLD) vendorBuy('drink');
+    else if((G.lootGems||0)>=RANKS.VENDOR_FOOD_GEMS) vendorBuy('food');
+    else { G.msg='vendor: '+(rs.vendor.name||'')+' sells drinks ('+RANKS.VENDOR_DRINK_GOLD+' gold) and food ('+RANKS.VENDOR_FOOD_GEMS+' gems)'; G.msgT=1.2; }
+    p.kick=0;
+  }
+}
+
 
 /* ---------- helpers ---------- */
 function holeAt(room,x){ for(const h of room.holes) if(x>h.x0&&x<h.x1) return h; return null; }
@@ -378,7 +665,7 @@ function sfx(f,d,type){ sfxLastGain=.04*sfxVol; try{ if(!ac){ac=new (window.Audi
 function killOf(why,boss){ const w=String(why||'').replace(/ \((hand block|shield facing away)\)$/,'');
   if(w==='into the pit') return 'pit'; if(w==='burned in the lava') return 'lava'; if(w==='swept away by the water') return 'water';
   if(w==='dragged down by a tentacle') return 'tentacle'; if(w==='hit by a log') return 'log'; if(w==='snapped'||w==='a croc lunged at you') return 'croc';
-  if(w==='crawler bite'||w==='bitten from below'||/ dive$/.test(w)||w==='mud drip'||w==='wasp spit'||w==='junk bolt') return 'mob';
+  if(w==='crawler bite'||NM_WHY.includes(w)||w==='bitten from below'||/ dive$/.test(w)||w==='mud drip'||w==='wasp spit'||w==='junk bolt') return 'mob';
   if(w==='crushed by the totem'||w==='shockwave'||(w==='mud ball'&&boss==='boss3')) return 'totem';
   if(w==='Gloomwing swoop'||w==='seed bomb') return 'gloomwing';
   return ''; }
@@ -392,24 +679,27 @@ function loseLife(why){
    - blocking with no shield (hands): same shove, and HAND_BLOCK_DAMAGE of a heart instead of a whole one
    - not blocking (or the shield is still coming round): the hit costs a heart */
 const blockReady=p=>p.blocking&&p.blk>=(p.shield?TUNE.RAISE_TIME:TUNE.HAND_RAISE_TIME);
-function harm(why,sx,force){
+function harm(why,sx,force,src){
   const p=G.p; if(p.inv>0||p.binv>0||p.dead>0) return;
   const f=force===undefined?1:Math.max(0,force);
   if(superFight()){ superSoak(why,f); return; }   // super buddy takes the hit instead (no heart, no stamina)
-  if(!blockReady(p)){ loseLife(why); return; }
+  const livesBefore=G.lives, blocked=blockReady(p);
+  if(!blocked){ loseLife(why); rankFromHit(src,false,false,true,livesBefore); return; }
   const d=(sx===undefined||sx===p.x)?-p.face:(p.x<sx?-1:1);
   p.vine=null; hookClear(p); p.grab=null; p.grabCd=0.3; p.kick=0; p.vx=d*TUNE.REACT_VX_PER_FORCE*f; p.vy=-TUNE.REACT_VY_PER_FORCE*f; if(p.vy<0) p.onGround=false; p.coyote=0;
   p.react=Math.min(TUNE.REACT_T_MAX,TUNE.REACT_T_PER_FORCE*f); p.binv=TUNE.BLOCK_INV; jumpQ=0;
-  G.blocks++; G.lastBlock={why,force:f,hand:!p.shield,cost:p.shield?f*TUNE.BLOCK_COST_PER_FORCE:0};
+  G.blocks++; G.lastBlock={why,force:f,hand:!p.shield,cost:p.shield?f*blockCostPerForce():0};
   if(p.shield&&G.gear&&G.gear.plate>0){   // workshop shield plate: this block costs no stamina (shove as normal)
     G.gear.plate--; G.gear.plateUsed++; G.lastBlock.cost=0; G.lastBlock.plate=true; G.msg='plate took it: '+why+' ('+G.gear.plate+' left)'; G.msgT=.8; sfx(620,.09,'triangle');
   } else if(p.shield){
-    p.stam=Math.max(0,p.stam-f*TUNE.BLOCK_COST_PER_FORCE); p.regenT=TUNE.REGEN_DELAY;
-    if(p.stam<=0) dropShield(); else { G.msg='blocked: '+why; G.msgT=.7; sfx(520,.09,'triangle'); }
+    p.stam=Math.max(0,p.stam-f*blockCostPerForce()); p.regenT=TUNE.REGEN_DELAY;
+    const dropped=p.stam<=0;
+    if(dropped) dropShield(); else { G.msg='blocked: '+why; G.msgT=.7; sfx(520,.09,'triangle'); }
+    rankFromHit(src,true,dropped,false,livesBefore);
   } else {
     p.chip+=TUNE.HAND_BLOCK_DAMAGE;
-    if(p.chip>=1-1e-9){ const rest=p.chip-1; loseLife(why+' (hand block)'); p.chip=Math.max(0,rest); }
-    else { G.msg='hand block: '+why; G.msgT=.8; sfx(300,.1,'square'); }
+    if(p.chip>=1-1e-9){ const rest=p.chip-1; loseLife(why+' (hand block)'); p.chip=Math.max(0,rest); rankFromHit(src,true,false,true,livesBefore); }
+    else { G.msg='hand block: '+why; G.msgT=.8; sfx(300,.1,'square'); rankFromHit(src,true,false,false,livesBefore); }
   }
 }
 /* stamina ran out while blocking: the shield falls where he stands (over a pit it lands on the nearer edge) */
@@ -421,11 +711,31 @@ function dropShield(){
 }
 // speed multiplier on all points, on the run clock: x3 under 3:00 (super bonus), then x2.0 at 3:00 falling to x1.0 at 10:00, then x1
 const superBonus=t=>t<SPD.SUPER_T;
-/* ground items: the stamina refill item was taken out (stamina works exactly as the live game: block costs and the slow
-   refill only). The item list stays empty; mobDied() drops nothing. */
-const ITEMS={};
+/* ground items: gold, gems, drinks and food (PLAN-shield-loot-hook lines 21-23). Numbers in TUNE.LOOT are PLAYTEST DEFAULTS.
+   Walk over a drop to pick it up. No drops in boss rooms. See TUNE.LOOT for the stamina-hold clashes. */
+function giveGold(){ G.gold=(G.gold||0)+TUNE.LOOT.GOLD; G.msg='+'+TUNE.LOOT.GOLD+' gold'; G.msgT=.8; sfx(880,.06,'triangle'); return true; }
+function giveGem(){ G.lootGems=(G.lootGems||0)+TUNE.LOOT.GEM; G.msg='+'+TUNE.LOOT.GEM+' gem'; G.msgT=.8; sfx(990,.06,'sine'); return true; }
+function giveDrink(){ const p=G.p; if(!p) return false; p.drinkT=TUNE.LOOT.DRINK_SECS; G.msg='drink: stamina fills faster'; G.msgT=.9; sfx(880,.07,'triangle'); sfx(1320,.12,'sine'); return true; }
+function giveFood(){ const p=G.p; if(!p) return false; p.stam=Math.min(STAM_MAX,p.stam+TUNE.LOOT.FOOD_STAM); G.msg='food: +'+TUNE.LOOT.FOOD_STAM+' stamina'; G.msgT=.9; sfx(700,.07,'sine'); return true; }
+const ITEMS={
+  gold:{ id:'gold', name:'gold', give:giveGold },
+  gem:{ id:'gem', name:'gem', give:giveGem },
+  drink:{ id:'drink', name:'drink', give:giveDrink },
+  food:{ id:'food', name:'food', give:giveFood }
+};
+const LOOT_ORDER=['gold','gem','drink','food'];
+function pickLootKind(roll){
+  if(roll&&typeof roll==='object'&&roll.kind) return roll.kind;
+  if(G.lootPick) return G.lootPick;
+  const L=TUNE.LOOT, r=typeof roll==='number'?roll:Math.random();
+  if(r>=L.DROP_CHANCE) return null;
+  const w=L.WEIGHTS, tot=LOOT_ORDER.reduce((s,k)=>s+(w[k]||0),0);
+  let x=(typeof roll==='number'?r:Math.random())*tot;
+  for(const k of LOOT_ORDER){ x-=(w[k]||0); if(x<0) return k; }
+  return LOOT_ORDER[LOOT_ORDER.length-1];
+}
 function dropItem(id,x){ if(!ITEMS[id]||BOSS_ROOMS.includes(G.room)) return null; const it={id,room:G.room,x:Math.max(8,Math.min(W-8,x))}; G.items.push(it); return it; }
-function mobDied(){ return null; }
+function mobDied(x,roll){ const kind=pickLootKind(roll); return kind?dropItem(kind,x):null; }
 /* ---------- the workshop (building world, first slice) ----------
    The junk collector's caravan stands in the last room before boss 1. Its back flap opens a cardboard workshop where junk from
    the run is taped into gear that lasts the whole run. Junk comes from the forest rooms (lying about: walk over it; the hook is
@@ -459,7 +769,38 @@ const BLUEPRINTS = [
   { id: 'plate', n: 'shield plate', slots: ['any', 'any'], does: 'shield blocks that cost no stamina' },   // any junk: its number (3) is set
   { id: 'spring', n: 'hook spring', slots: ['springy', 'light'], does: 'longer hook reach' },
   { id: 'patch', n: 'buddy armour patch', slots: ['hard', 'light'], does: 'a bigger super power meter' } ];
-function wsReset(){ G.bag = []; G.junkIn = { forest: 0, fish: 0, full: 0 }; G.gear = { plate: 0, plateUsed: 0, spring: 0, patch: 0, built: {} }; G.ws = null; G.wsNear = false; G.jspots = junkGen(G.seed); }
+// junk collector trade at the caravan (Michael t468u/t469u picks, 5:57 PM CT): good items for gold / junk, the bad ones only in a
+// 1-junk mystery bag (one random bad or funny item), funny items 1 junk each. No junk buyback. Items work in the fishing world
+// (fishworld.js ITEMS: good 120 s, bad 60 s, funny that visit) and start on the next visit there. Junk pays oldest piece first.
+const TRADE = [ { id: 'lure', gold: 10 }, { id: 'steady', gold: 10 }, { id: 'bell', junk: 2 }, { id: 'mystery', junk: 1, n: 'mystery bag', d: 'one random bad or funny item' },
+  { id: 'duck', junk: 1 }, { id: 'kazoo', junk: 1 }, { id: 'googly', junk: 1 } ];
+const fwItems = () => (FW && FW.ITEMS) || null;
+const fwItem = k => { const I = fwItems(); if (!I) return null; for (const kind in I) for (const it of I[kind]) if (it.key === k) return Object.assign({ kind }, it); return null; };
+const tradeName = t => t.n || (fwItem(t.id) || { n: t.id }).n;
+const tradeCost = t => t.gold ? t.gold + ' gold' : t.junk + ' junk';
+function tradeBuy(id){
+  const t = TRADE.find(x => x.id === id), w = G.ws; if (!t || !w || !w.open || G.state !== 'play' || w.tapeT > 0) return false;
+  if (t.gold && (G.gold || 0) < t.gold) { G.msg = 'need ' + t.gold + ' gold for the ' + tradeName(t); G.msgT = 1.2; sfx(200, .08, 'square'); return false; }
+  if (t.junk && G.bag.length < t.junk) { G.msg = 'need ' + t.junk + ' junk for the ' + tradeName(t); G.msgT = 1.2; sfx(200, .08, 'square'); return false; }
+  let key = t.id; if (id === 'mystery') { const I = fwItems(), pool = I ? I.bad.concat(I.funny) : []; if (!pool.length) return false; key = pool[Math.floor(Math.random() * pool.length)].key; }
+  if (t.gold) G.gold -= t.gold; if (t.junk) { G.bag.splice(0, t.junk); w.pick = -1; }
+  G.fwBought = G.fwBought || {}; G.fwBought[key] = true; G.trades = (G.trades || []).concat([{ id, key }]);
+  const it = fwItem(key) || { n: key, d: '' }; G.msg = (id === 'mystery' ? 'mystery bag: ' : 'bought: ') + it.n + ' (fishing world: ' + it.d + ')'; G.msgT = 1.8; sfx(id === 'mystery' ? 1400 : 990, .12, 'triangle'); return key;
+}
+// chest cards (Michael t468u/t469u picks): a chest shows 3 face up (one good, one bad, one funny) from the same 9 items; hold 2; held cards
+// last until the next boss room; taking a bad card gives +1 gem. They work in the fishing world, and in the forest where the effect is the
+// same thing there (soggy boots: walk slower); each card says where it works. A third card asks which held card to drop (the bag's swap rule).
+const CARDS = { HOLD: 2, BAD_GEMS: 1, FOREST: { soggy: .7 } };
+const cardOn = k => !!(G.cards && G.cards.some(c => c.key === k));
+const cardWhere = k => CARDS.FOREST[k] ? 'forest + fishing world' : 'fishing world';
+function cardDeal(rng){ const I = fwItems(); if (!I) return []; const r = rng || Math.random, one = a => a[Math.floor(r() * a.length)];
+  const o = [Object.assign({ kind: 'good' }, one(I.good)), Object.assign({ kind: 'bad' }, one(I.bad)), Object.assign({ kind: 'funny' }, one(I.funny))];
+  for (let i = 2; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [o[i], o[j]] = [o[j], o[i]]; } return o.map(c => ({ key: c.key, kind: c.kind, n: c.n, d: c.d, where: cardWhere(c.key) })); }
+function cardTake(c, drop){   // drop = index of a held card to give up when 2 are held (-1 / undefined: leave the new card)
+  G.cards = G.cards || []; if (G.cards.length >= CARDS.HOLD) { if (!(drop >= 0 && drop < G.cards.length)) return false; G.cards.splice(drop, 1); }
+  G.cards.push({ key: c.key, kind: c.kind, n: c.n }); if (c.kind === 'bad') G.lootGems = (G.lootGems || 0) + CARDS.BAD_GEMS; return true; }
+function cardsExpire(){ if (G.cards && G.cards.length) { G.cards = []; G.cardsWorn = (G.cardsWorn || 0) + 1; G.msg = 'chest cards wore off (boss room)'; G.msgT = 1.4; } }
+function wsReset(){ G.fwBought = {}; G.trades = []; G.bag = []; G.junkIn = { forest: 0, fish: 0, full: 0 }; G.gear = { plate: 0, plateUsed: 0, spring: 0, patch: 0, built: {} }; G.ws = null; G.wsNear = false; G.jspots = junkGen(G.seed); }
 /* junk lying about in the forest rooms (never in boss rooms): own rng stream, kept off holes and croc pools */
 function junkGen(seed){
   const r = mulberry(hash(seed + '|junk')), out = [];
@@ -530,6 +871,7 @@ const clockTxt=t=>{ const s=Math.max(0,Math.floor(t)); return Math.floor(s/60)+'
 function endRun(result){
   G.state='end'; G.result=result;
   if(result==='win') addScore(Math.max(0,Math.floor(G.timeLeft))*10);
+  G.rankNews=rankPromoteAll();
   try{ if(G.score>G.best){G.best=G.score; localStorage.setItem(BEST_KEY(G.seed),String(G.best));} }catch(e){}
   sfx(result==='win'?880:140,.4);
 }
@@ -541,6 +883,7 @@ function update(dt){
   if(G.freeze){ freezeStep(dt); return; }   // super cutscene: the whole game stands still (timer too)
   let edt=dt; if(G.ease>0){ G.ease=Math.max(0,G.ease-dt); const u=1-G.ease/CUT.REENTRY; edt=dt*u*u*(3-2*u); }   // after it: enemies ease back up to speed
   const room=G.world.rooms[G.room], p=G.p, rs=G.rs;
+  if(G.cf&&G.cf.snag) snagStep(p,dt);   // a hook snag plays the one catch mini (t468u); the run goes on as at a fishing spot
   G.t+=dt; if(!G.camp){ G.timeLeft-=dt; G.runT+=dt; } if(G.msgT>0) G.msgT-=dt;   // G.camp: a top-down map camp fight (topworld.js): the run clock waits, as on the map
   if(G.timeLeft<=0){ G.timeLeft=0; endRun('time'); return; }
   if(jumpQ>0) jumpQ-=dt;
@@ -550,7 +893,10 @@ function update(dt){
   // block input: blk counts how long the block has been up (the shield has to come round from his back first)
   p.blocking=wantBlock()&&!p.vine&&!hookRiding(p)&&p.dead<=0; p.blk=p.blocking?p.blk+dt:0;
   // stamina refills slowly on its own (a short pause after each block) - exactly as the live game
-  if(p.regenT>0) p.regenT-=dt; else p.stam=Math.min(STAM_MAX,p.stam+TUNE.REGEN_PER_SEC*dt);
+  // a drink (plan line 19) multiplies regen for DRINK_SECS; no drink => the live rate is unchanged
+  if(p.drinkT>0) p.drinkT=Math.max(0,p.drinkT-dt);
+  const regen=TUNE.REGEN_PER_SEC*((p.drinkT>0)?TUNE.LOOT.DRINK_REGEN_MULT:1);
+  if(p.regenT>0) p.regenT-=dt; else p.stam=Math.min(STAM_MAX,p.stam+regen*dt);
   if(G.sup&&!G.sup.on&&G.sup.cd>0) G.sup.cd=Math.max(0,G.sup.cd-dt);   // buddy super recharge (its own clock; not stamina, not the run timer)
   if(G.winT>0){ G.winT-=dt; if(G.winT<=0){ endRun('win'); return; } }
 
@@ -566,6 +912,7 @@ function update(dt){
 
   const ax=(keys.right?1:0)-(keys.left?1:0);
   if(!p.grab) hookStep(p,room,dt);
+  if(!p.hook&&!(G.cf&&G.cf.snag)) hookIdleStep(p,dt);
   if(p.grab){ grabStep(p,room,dt); }   // held by a tentacle
   else if(p.vine){
     const v=p.vine, pt=vinePt(v,G.t,p.vs);
@@ -581,9 +928,9 @@ function update(dt){
   } else {
     if(p.onGround) p.coyote=0.08; else if(p.coyote>0) p.coyote-=dt;
     if(ax) p.face=ax;
-    if(p.onGround&&p.react<=0){ p.vx=ax*SPEED*(p.blocking?TUNE.BLOCK_MOVE_SCALE:1); }
+    if(p.onGround&&p.react<=0){ p.vx=ax*SPEED*(p.blocking?TUNE.BLOCK_MOVE_SCALE:1)*(cardOn('soggy')?CARDS.FOREST.soggy:1); }
     else if(p.onGround){ p.vx*=Math.exp(-6*dt); }   // a shove from a blocked hit slides him along the ground and fades
-    else { const tv=ax*SPEED, d=tv-p.vx, m=260*dt; p.vx+=Math.abs(d)<m?d:Math.sign(d)*m; }
+    else { const tv=ax*SPEED*(cardOn('soggy')?CARDS.FOREST.soggy:1), d=tv-p.vx, m=260*dt; p.vx+=Math.abs(d)<m?d:Math.sign(d)*m; }
     if(jumpQ>0 && p.coyote>0 && p.react<=0){ p.vy=-JUMP_V; p.onGround=false; p.coyote=0; jumpQ=0; sfx(440,.08); }
     if(p.kickDown&&!p.onGround&&p.vy>-30) p.vy=Math.max(p.vy,TUNE.KICK.DOWN_V);   // kick down: a fast strike down
     const prevY=p.y, prevX=p.x;
@@ -626,14 +973,14 @@ function update(dt){
     else if(p.x<0){ if(G.camp){ p.x=0; G.camp.flee=true; } else if(G.room>0&&!locked){ p.x=W-3; enterRoom(G.room-1,'R'); } else p.x=0; }   // camp fight: the left side is the way out (topworld.js)
   }
   const room2=G.world.rooms[G.room], rs2=G.rs;
-  stepWorld(room2,rs2,edt); bossUpdate(edt); burstUpdate(dt); superStep(dt,rs2); flyersUpdate(room2,rs2,p,edt); if(p.dead<=0) crevUpdate(room2,rs2,p,dt); if(room2.pools.length){ crocUpdate(room2,rs2,p,dt); fishStep(room2,p,dt); }
+  stepWorld(room2,rs2,edt); bossUpdate(edt); burstUpdate(dt); superStep(dt,rs2); flyersUpdate(room2,rs2,p,edt); nmUpdate(room2,rs2,p,edt); if(p.dead<=0) crevUpdate(room2,rs2,p,dt); if(room2.pools.length) crocUpdate(room2,rs2,p,dt); if(room2.pools.length||bankSpots(room2).length) fishStep(room2,p,dt);
 
   // hazards (skip while invulnerable)
   if(p.inv<=0 && p.dead<=0){
     for(const l of rs2.logs) if(Math.abs(p.x-l.x)<9 && p.y>GY-13){ harm('hit by a log',l.x,FORCE.log*l.sp/57); break; }
-    if(p.dead<=0) for(const c of rs2.crawlers) if(!c.dead && Math.abs(p.x-c.x)<9 && p.y>GY-8){ harm('crawler bite',c.x,FORCE.crawler); break; }
-    if(p.dead<=0) for(const c of crocs(room2)){ const C=TUNE.CROC, m0=c.d>0?c.cx+C.HALF-2:c.cx-C.HALF-C.MOUTH, m1=m0+C.MOUTH+2;   // the open mouth bites; its head is safe
-      if(c.key!==rs2.perch&&p.x>m0&&p.x<m1&&p.y>GY-C.H+2&&snapOpen(c.pl,c.k,G.t)){ harm('snapped',c.cx,FORCE.snap); break; } }
+    if(p.dead<=0) for(const c of rs2.crawlers) if(!c.dead && Math.abs(p.x-c.x)<9 && p.y>GY-8){ harm('crawler bite',c.x,FORCE.crawler,c); break; }
+    if(p.dead<=0){ const snaps=crocs(room2); for(let si=0;si<snaps.length;si++){ const c=snaps[si], C=TUNE.CROC, m0=c.d>0?c.cx+C.HALF-2:c.cx-C.HALF-C.MOUTH, m1=m0+C.MOUTH+2;   // the open mouth bites; its head is safe
+      if(c.key!==rs2.perch&&p.x>m0&&p.x<m1&&p.y>GY-C.H+2&&snapOpen(c.pl,c.k,G.t)){ harm('snapped',c.cx,FORCE.snap,{mid:rs2.snapMids&&rs2.snapMids[si]}); break; } } }
   }
   // treasure
   const tr=room2.treasure;
@@ -641,6 +988,7 @@ function update(dt){
     G.got.add(gid(room2.i)); addScore([500,300,800][tr.kind]); sfx(990,.1); G.msg='treasure!'; G.msgT=.8;
     if(G.got.size>=TREASURES&&!G.allGems){ G.allGems=true; const pts=addScore(1000); G.msg='all gems! +'+pts; G.msgT=1.5; }
   }
+  rankSurvive(rs2,dt); rankInteract(p,rs2);
 }
 /* solid crocs: one per snapper pool cell. He can stand on a head; the body blocks him; the open mouth bites (FORCE.snap) */
 function crocs(room){ if(room._crocs) return room._crocs; const out=[]; Object.defineProperty(room,'_crocs',{value:out}); room.pools.forEach((pl,pi)=>{ const cw=(pl.x1-pl.x0)/pl.n; for(let k=0;k<pl.n;k++) out.push({pl,k,pi,key:pi+'_'+k,cx:pl.x0+(k+.5)*cw,d:pl.dir?pl.dir[k]:1}); }); return out; }
@@ -662,26 +1010,59 @@ function crocUpdate(room,rs,p,dt){
 }
 /* fishing from a croc head: stand still on one, F (or the fish button) casts, wait for the bite, F again. Common catches land; rare ones are a quick mash */
 const CROC_FISH = { common: [['mud minnow', 20], ['bog perch', 35], ['whiskered loach', 30], ['old boot', 5], ['rusty can', 5]], rare: [['croc-tooth eel', 150], ['golden mudskipper', 200], ['sunken trinket', 180]] };
-function cfReset(){ G.cf={ph:'idle',t:0,still:0,key:null,wait:0,miss:(G.cf&&G.cf.miss)||0,n:0,got:null}; }
+function cfReset(){ G.cf={ph:'idle',t:0,still:0,key:null,wait:0,miss:(G.cf&&G.cf.miss)||0,n:0,got:null,style:null,mk:0,dir:1,zone:0,hits:0,misses:0,ten:0,prog:0,hold:false}; }
+/* bank fishing spots: one bank of some water-filled holes (own rng stream: the room roll is unchanged). key 'b<hole index>' */
+function bankSpots(room){ if(room._banks) return room._banks; const F=TUNE.CROC.FISH, r=mulberry(hash(G.seed+'|bank|'+room.i)), out=[]; Object.defineProperty(room,'_banks',{value:out});
+  room.holes.forEach((h,hi)=>{ if(h.fill!=='water') return; const roll=r(), side=r()<.5?-1:1; if(roll>=F.BANK_CHANCE) return;
+    for(const sd of [side,-side]){ const x=sd<0?h.x0-6:h.x1+6; if(x<14||x>W-14||holeAt(room,x)||room.pools.some(q=>x>q.x0-8&&x<q.x1+8)) continue; const px=wsPathX(room.i); if(px!==null&&Math.abs(px-x)<F.BANK_PATH_GAP) continue; out.push({key:'b'+hi,x,dir:-sd,hx:(h.x0+h.x1)/2}); break; } });
+  return out; }
+function bankAt(p,room){ if(!p.onGround||p.y<GY-.6) return null; for(const b of bankSpots(room)) if(Math.abs(p.x-b.x)<TUNE.CROC.FISH.BANK_NEAR) return b; return null; }
+const fishSpot=()=>G.rs&&(G.rs.perch||G.rs.bank)||null;
+function cfStyle(){ const F=TUNE.CROC.FISH, n=G.rareN||0; return F.STYLES[n%F.STYLES.length]; }
+function cfLose(why){ const cf=G.cf; const sn=cf.snag; cf.ph='idle'; cf.t=0; cf.miss++; cf.hold=false; if(sn) snagEnd(false); G.msg=why; G.msgT=1.2; sfx(120,.3,'sawtooth'); G.fishLost=(G.fishLost||0)+1; }
+const cfBar=(n,at,lo,hi)=>{ let b=''; for(let i=0;i<n;i++){ const u=(i+.5)/n; b+=Math.abs(u-at)<.5/n?'|':(u>=lo&&u<=hi?'=':'-'); } return '['+b+']'; };
 function fishStep(room,p,dt){
-  const F=TUNE.CROC.FISH, cf=G.cf||(cfReset(),G.cf), perch=G.rs.perch, still=perch&&Math.abs(p.vx)<1&&!keys.left&&!keys.right&&!p.blocking&&!G.freeze;
+  if(G.cf&&G.cf.snag) return;   // a hook snag plays the same mini (snagStep)
+  const F=TUNE.CROC.FISH, cf=G.cf||(cfReset(),G.cf); { const b=p.dead<=0&&!G.rs.perch?bankAt(p,room):null; G.rs.bank=b?b.key:null; G.rs.bankDir=b?b.dir:0; }
+  const perch=fishSpot(), still=perch&&Math.abs(p.vx)<1&&!keys.left&&!keys.right&&!p.blocking&&!G.freeze;
   if(!still){ if(cf.ph!=='idle'){ G.msg='the line came in'; G.msgT=.8; } const m=cf.miss; cfReset(); G.cf.miss=m; return; }
   cf.key=perch; cf.still+=dt; cf.t+=dt;
-  if(cf.ph==='idle'&&cf.still>=F.STILL&&G.msgT<=0){ G.msg=isTouch?'tap FISH to cast':'F: fish off the croc'; G.msgT=.15; }
+  if(cf.ph==='idle'&&cf.still>=F.STILL&&G.msgT<=0){ G.msg=isTouch?'tap FISH to cast':(G.rs.perch?'F: fish off the croc':'F: fish from the bank'); G.msgT=.15; }
   else if(cf.ph==='wait'&&cf.t>=cf.wait){ cf.ph='bite'; cf.t=0; sfx(880,.12,'square'); G.msg='! BITE - '+(isTouch?'tap FISH':'press F'); G.msgT=F.WIN; }
   else if(cf.ph==='bite'&&cf.t>F.WIN){ cf.ph='idle'; cf.t=0; cf.miss++; G.msg='it nibbled off the bait'; G.msgT=.9; }
-  else if(cf.ph==='mash'){ G.msg='RARE: '+cf.got[0]+'! mash '+(isTouch?'FISH':'F')+' '+cf.n+'/'+F.MASH; G.msgT=.15; if(cf.t>F.MASH_T){ cf.ph='idle'; cf.t=0; cf.miss++; G.msg='the '+cf.got[0]+' got away'; G.msgT=1.2; sfx(120,.3,'sawtooth'); } }
+  else cfMini(cf,dt);
 }
-function cfLand(name,pts){ const cf=G.cf; const got=addScore(pts); G.fishCaught=(G.fishCaught||0)+1; G.msg='caught: '+name+'  +'+got; G.msgT=1.6; sfx(1040,.2,'triangle'); cf.ph='idle'; cf.t=0; }
+// one catch mini game (Michael t468u/t469u pick 5): bank / croc-head rare fish and the hook snag (0697985) both play this: styles rotate
+// tension / timing / mash on G.rareN, F (or the FISH button) plays it; in a snag the hook button plays it too
+const cfTag=()=>G.cf&&G.cf.snag?'SNAG: ':'RARE: ', cfBtn=()=>G.cf&&G.cf.snag?(isTouch?'HOOK':'F'):(isTouch?'FISH':'F');
+function cfMini(cf,dt){ const F=TUNE.CROC.FISH;
+  if(cf.ph==='mash'){ G.msg=cfTag()+cf.got[0]+'! mash '+cfBtn()+' '+cf.n+'/'+F.MASH; G.msgT=.15; if(cf.t>F.MASH_T){ cfLose('the '+cf.got[0]+' got away'); } }
+  else if(cf.ph==='timing'){ cf.mk+=cf.dir*F.TIMING_SPEED*dt; if(cf.mk>1){ cf.mk=2-cf.mk; cf.dir=-1; } if(cf.mk<0){ cf.mk=-cf.mk; cf.dir=1; }
+    G.msg=cfTag()+cf.got[0]+'! '+(isTouch?'tap '+cfBtn():'F')+' in the zone '+cfBar(15,cf.mk,cf.zone-F.TIMING_ZONE/2,cf.zone+F.TIMING_ZONE/2)+' '+cf.hits+'/'+F.TIMING_HITS; G.msgT=.15; if(cf.t>F.TIMING_T) cfLose('the '+cf.got[0]+' got away'); }
+  else if(cf.ph==='tension'){ const tug=F.TENSION_TUG*(.5+.5*Math.sin(cf.t*5.3))*(Math.sin(cf.t*1.7)>.2?1:0); cf.ten=Math.max(0,cf.ten+((cf.hold?F.TENSION_UP:-F.TENSION_DOWN)+tug)*dt);
+    if(cf.ten>=F.TENSION_LO&&cf.ten<=F.TENSION_HI) cf.prog+=F.TENSION_REEL*dt;
+    G.msg=cfTag()+cf.got[0]+'! hold '+cfBtn()+' to reel, keep the line in the band '+cfBar(15,Math.min(1,cf.ten),F.TENSION_LO,F.TENSION_HI)+' '+Math.floor(cf.prog*100)+'%'; G.msgT=.15;
+    if(cf.ten>1){ cfLose('SNAP! the line broke: the '+cf.got[0]+' got away'); } else if(cf.prog>=1){ cf.miss=0; cf.hold=false; cfLand(cf.got[0],cf.got[1]); } else if(cf.t>F.TENSION_T) cfLose('the '+cf.got[0]+' got away'); }
+}
+function cfLand(name,pts){ const cf=G.cf; if(cf.snag){ snagEnd(true); return; } const got=addScore(pts); G.fishCaught=(G.fishCaught||0)+1; G.msg='caught: '+name+'  +'+got; G.msgT=1.6; sfx(1040,.2,'triangle'); cf.ph='idle'; cf.t=0; recipeCatch(name); }
+/* fishing recipe (Michael t468u/t469u pick A): rivet oil = rusty can + croc-tooth eel, both caught by the water this run. It is made the moment
+   the second one lands (no recipe screen in this slice) and makes the next shield upgrade cost 5 gold less. Block stamina is unchanged. */
+const RECIPES = { rivet: { n: 'rivet oil', needs: ['rusty can', 'croc-tooth eel'], off: 5 } };
+function recipeCatch(name){ const R = RECIPES.rivet; G.catches = G.catches || {}; G.catches[name] = (G.catches[name] || 0) + 1;
+  if (!R.needs.includes(name) || !R.needs.every(k => G.catches[k] > 0)) return false;
+  R.needs.forEach(k => G.catches[k]--); G.rivetOil = (G.rivetOil || 0) + 1; G.msg = 'made ' + R.n + ' (' + R.needs.join(' + ') + '): next shield upgrade -' + R.off + ' gold'; G.msgT = 2; sfx(1200, .1, 'sine'); return true; }
 function fishInput(){
-  const F=TUNE.CROC.FISH, cf=G.cf; if(G.state!=='play'||G.freeze||!G.p||G.p.dead>0||!cf||!G.rs.perch||cf.still<F.STILL) return false;
+  const F=TUNE.CROC.FISH, cf=G.cf; if(G.state!=='play'||G.freeze||!G.p||G.p.dead>0||!cf) return false; if(!cf.snag&&(!fishSpot()||cf.still<F.STILL)) return false;
   if(cf.ph==='idle'){ cf.ph='wait'; cf.t=0; cf.wait=F.WAIT[0]+Math.random()*(F.WAIT[1]-F.WAIT[0]); sfx(700,.08,'triangle'); return true; }
   if(cf.ph==='wait'){ cf.ph='idle'; cf.t=0; G.msg='too early!'; G.msgT=.8; return true; }
   if(cf.ph==='bite'){ const rare=Math.random()<F.RARE+cf.miss*F.PITY, tab=rare?CROC_FISH.rare:CROC_FISH.common, c=tab[Math.floor(Math.random()*tab.length)];
-    if(rare){ cf.ph='mash'; cf.t=0; cf.n=0; cf.got=c; sfx(440,.15,'sawtooth'); } else cfLand(c[0],c[1]); return true; }
+    if(rare){ const st=cfStyle(); G.rareN=(G.rareN||0)+1; cf.style=st; cf.ph=st; cf.t=0; cf.n=0; cf.got=c; cf.mk=0; cf.dir=1; cf.hits=0; cf.misses=0; cf.ten=.45; cf.prog=0; cf.hold=true; cf.zone=.25+Math.random()*.5; sfx(440,.15,'sawtooth'); } else cfLand(c[0],c[1]); return true; }
+  if(cf.ph==='timing'){ const F2=F; if(Math.abs(cf.mk-cf.zone)<=F2.TIMING_ZONE/2){ cf.hits++; sfx(900+cf.hits*120,.06,'triangle'); cf.zone=.15+Math.random()*.7; if(cf.hits>=F2.TIMING_HITS){ cf.miss=0; cfLand(cf.got[0],cf.got[1]); } } else { cf.misses++; sfx(200,.08,'square'); if(cf.misses>=F2.TIMING_MISSES) cfLose('the '+cf.got[0]+' got away'); } return true; }
+  if(cf.ph==='tension'){ cf.hold=true; return true; }
   if(cf.ph==='mash'){ cf.n++; if(cf.n>=F.MASH){ cf.miss=0; cfLand(cf.got[0],cf.got[1]); } return true; }
   return false;
 }
+function fishRelease(){ const cf=G.cf; if(cf&&cf.ph==='tension') cf.hold=false; }
 function stumpOf(room){ const T=TUNE.STUMP; return T.ON&&G.world&&room===G.world.rooms[0]?T:null; }   // the run's first room only (not the other worlds)
 function stumpSolid(p,room,prevX,prevY){ const T=stumpOf(room); if(!T) return; const top=GY-T.H, hw=3;
   if(p.x+hw<=T.X-T.HALF||p.x-hw>=T.X+T.HALF) return;
@@ -745,8 +1126,8 @@ function stepWorld(room,rs,dt){
   room.crawlers.forEach((cr,k)=>{ const s=rs.crawlers[k];
     if(s.dead||s.drag) return;                                                // smashed by super buddy / being dragged by the hook
     const cx=cr.cx+(s.bo||0);   // s.bo: where a T-mode drag left its beat
-    if(s.off){ const lo=cx-cr.range, hi=cx+cr.range; s.d=s.x>hi?-1:s.x<lo?1:s.d; s.x+=s.d*cr.sp*dt; if(s.x>=lo&&s.x<=hi) s.off=false; return; }   // walks back to its beat after a drag
-    s.x+=s.d*cr.sp*dt;
+    if(s.off){ const lo=cx-cr.range, hi=cx+cr.range; s.d=s.x>hi?-1:s.x<lo?1:s.d; s.x+=s.d*cr.sp*(s.spMul||1)*dt; if(s.x>=lo&&s.x<=hi) s.off=false; return; }   // walks back to its beat after a drag
+    s.x+=s.d*cr.sp*(s.spMul||1)*dt;
     if(s.x>cx+cr.range){s.x=cx+cr.range;s.d=-1;} if(s.x<cx-cr.range){s.x=cx-cr.range;s.d=1;}
     if(s.bo&&holeAt(room,s.x)){ s.x-=s.d*cr.sp*dt; s.d=-s.d; } });
 }
@@ -775,7 +1156,7 @@ function hitFlyer(f){
   if(f.hp>0){ G.msg=K.name+' hit ('+f.hp+' more)'; G.msgT=.6; sfx(330,.06,'square'); return false; }
   f.st='dead'; if(f.id&&G.flyDead) G.flyDead.add(G.seed+'#'+f.id); G.flyKills=(G.flyKills||0)+1;
   const pts=addScore(FL.SCORE*f.rank); G.msg=K.name+' down! +'+pts; G.msgT=.9; sfx(180,.12,'sawtooth'); sfx(990,.06,'triangle');
-  mobDied(flyerGroundX(f.x));   // drops nothing now (stamina refill item taken out)
+  mobDied(flyerGroundX(f.x));   // gold / gem / drink / food (TUNE.LOOT)
   return true;
 }
 function flyersUpdate(room,rs,p,dt){
@@ -819,6 +1200,116 @@ function flyersUpdate(room,rs,p,dt){
     if(d.y>=GY) rs.fdrops.splice(i,1); }
 }
 
+/* ---------- the 10-29 ground mobs (numbers in TUNE.NEWMOB) ---------- */
+const NM = TUNE.NEWMOB, NM_WHY = ['reed seed','shell snapper bite','sludge splitter bite','heron spear','root grabber bite'];
+function nmWater(room){ return room.pools.map(q=>[q.x0,q.x1]).concat(room.holes.filter(h=>h.fill==='water').map(h=>[h.x0,h.x1])); }
+function nmSolid(room,x,pad){ return !room.holes.some(h=>x>h.x0-pad&&x<h.x1+pad)&&!room.pools.some(q=>x>q.x0-pad&&x<q.x1+pad)&&!(stumpOf(room)&&Math.abs(x-stumpOf(room).X)<stumpOf(room).HALF+pad); }
+function mkNm(kind,x,id){ const K=NM.KINDS[kind]; return {nm:true,id:id||null,kind,x,y:GY,hx:x,d:1,st:kind==='root'?'lurk':kind==='rat'?'sniff':kind==='sniper'?'wait':kind==='heron'?'wait':kind==='lantern'?'float':'walk',t:0,cd:1,hitCd:0,still:0,size:2,carry:null,ph:x*.31,dead:false,name:K.name}; }
+function nmSpawn(i){
+  if(!G.world||i>=ROOMS||G.camp||i<NM.FIRST_ROOM||BOSS_ROOMS.includes(i)||i===WORK.ROOM) return [];
+  const room=G.world.rooms[i], r=mulberry(hash(G.seed+'|nmob|'+i)), k=i/(ROOMS-1);
+  if(r()>=lerp(NM.CHANCE_START,NM.CHANCE_END,k)) return [];
+  const max=Math.round(lerp(NM.COUNT_START,NM.COUNT_END,k)), n=1+Math.floor(r()*max), water=nmWater(room), out=[];
+  const kinds=Object.keys(NM.KINDS).filter(q=>{ const nd=NM.KINDS[q].needs; return !nd||(nd==='hole'?room.holes.length>0:water.length>0); });
+  for(let j=0;j<n;j++){ const kind=kinds[Math.floor(r()*kinds.length)], id=G.seed+'#nm'+i+'_'+j; let x=null;
+    if(kind==='lantern'){ const h=room.holes[Math.floor(r()*room.holes.length)]; x=(h.x0+h.x1)/2; }
+    else if(kind==='heron'){ const w=water[Math.floor(r()*water.length)]; for(const c of [w[0]-14,w[1]+14,w[0]-24,w[1]+24]) if(c>=NM.X_MIN-30&&c<=NM.X_MAX+20&&nmSolid(room,c,6)){ x=c; break; } }
+    else for(let t=0;t<30&&x===null;t++){ const c=NM.X_MIN+Math.floor(r()*(NM.X_MAX-NM.X_MIN)); if(nmSolid(room,c,12)&&!out.some(o=>Math.abs(o.x-c)<30)) x=c; }
+    if(x===null||(G.nmDead&&G.nmDead.has(id))) continue; out.push(mkNm(kind,x,id)); }
+  return out;
+}
+function nmKill(m,how){
+  if(m.dead) return; m.dead=true; m.st='dead'; if(m.id&&G.nmDead) G.nmDead.add(m.id); if(G.nm) G.nm.kills++; const p=G.p;
+  if(p&&p.rooted&&p.rooted.m===m) p.rooted=null; if(p&&p.hook&&p.hook.ref===m&&p.hook.ph!=='back') hookBack(p.hook);
+  if(m.kind==='rat') nmRatDrop(m);
+  mobDied(flyerGroundX(m.x));   // gold / gem / drink / food (TUNE.LOOT, plan lines 21-23), as for the other mobs
+  if(m.mid){ if(m.rank==='elite') for(let ei=0;ei<RANKS.ELITE_LOOT_EXTRA;ei++) mobDied(flyerGroundX(m.x)); rankStat(m.mid,'deaths',1); }
+  const pts=addScore(NM.SCORE); G.msg=m.name+(how?' '+how:' down')+'! +'+pts; G.msgT=1; sfx(180,.12,'sawtooth'); sfx(990,.06,'triangle');
+}
+function nmRatDrop(m){   // the stolen piece comes back, plus one piece of junk for the collector (walk over them)
+  if(!G.jspots) return; const r=G.rs.rng, room=G.world.rooms[G.room], at=dx=>{ let x=Math.max(10,Math.min(W-10,m.x+dx)); const h=holeAt(room,x); if(h) x=(x-h.x0<h.x1-x)?h.x0-6:h.x1+6; return x; };
+  if(m.carry){ G.jspots.push({junk:true,room:G.room,x:at(-8),y:GY-4,kind:m.carry,got:false,rat:true}); m.carry=null; }
+  G.jspots.push({junk:true,room:G.room,x:at(8),y:GY-4,kind:FOREST_JUNK[Math.floor(r()*FOREST_JUNK.length)],got:false,rat:true});
+}
+function nmHooked(m){   // the hook reached a bog lantern or a junk rat
+  if(m.kind==='lantern'){ nmKill(m,'hooked down'); return; }
+  if(m.kind==='rat'){ nmKill(m,'hooked'); return; }
+}
+function nmFree(how){ const p=G.p; if(!p||!p.rooted) return false; const m=p.rooted.m; p.rooted=null; m.st='lurk'; m.cd=NM.KINDS.root.CD; p.inv=Math.max(p.inv,.5); G.nm.frees++; G.msg=how==='hook'?'hooked yourself out of the roots':'jumped free of the roots'; G.msgT=.9; sfx(660,.08); return true; }
+function nmUpdate(room,rs,p,dt){
+  if(!rs.nm) return; const live=p.dead<=0;
+  if(!live){ if(p.rooted) p.rooted=null; for(const m of rs.nm) if(m.st==='latched'){ m.st='walk'; m.y=GY; m.cd=1.5; } }
+  const kickAt=(m,cy)=>live&&p.kick>0&&!p.onGround&&!p.vine&&Math.abs(p.x-m.x)<12&&Math.abs((p.y-12)-cy)<16;
+  const stompAt=m=>live&&!p.onGround&&p.vy>0&&Math.abs(p.x-m.x)<9&&p.y>=GY-14&&p.y<=GY+2;
+  const touch=(m,w)=>live&&p.inv<=0&&Math.abs(p.x-m.x)<(w||8)&&p.y>GY-10;
+  const beat=(m,K)=>{ m.x+=m.d*K.speed*dt; if(m.x>m.hx+K.range){ m.x=m.hx+K.range; m.d=-1; } if(m.x<m.hx-K.range){ m.x=m.hx-K.range; m.d=1; } if(holeAt(room,m.x)){ m.x-=m.d*K.speed*dt; m.d=-m.d; } };
+  const nearWater=x=>nmWater(room).some(w=>x>w[0]-NM.KINDS.heron.NEAR_WATER&&x<w[1]+NM.KINDS.heron.NEAR_WATER);
+  const add=[];
+  for(const m of rs.nm){ if(m.dead||m.st==='gone') continue; const K=NM.KINDS[m.kind]; m.t+=dt; if(m.hitCd>0) m.hitCd-=dt; if(m.cd>0) m.cd-=dt; const dx=p.x-m.x;
+    if(m.kind==='leech'){
+      if(m.st==='latched'){ m.x=p.x; m.y=p.y-6; p.stam=Math.max(0,p.stam-K.DRAIN*dt); p.regenT=Math.max(p.regenT||0,TUNE.REGEN_DELAY);
+        if(p.kick>0&&m.hitCd<=0){ nmKill(m,'kicked off'); } continue; }
+      if(live&&Math.abs(dx)<K.SEE&&m.cd<=0){ m.d=dx>=0?1:-1; const nx=m.x+m.d*K.speed*dt; if(!holeAt(room,nx)) m.x=nx; } else beat(m,{speed:K.speed*.5,range:20});
+      if(m.hitCd<=0&&(kickAt(m,GY-4)||stompAt(m))){ nmKill(m,'squashed'); continue; }
+      if(touch(m,7)&&p.onGround&&m.cd<=0){ m.st='latched'; m.hitCd=.35; G.nm.latches++; G.msg='a mud leech latched on: kick it off'; G.msgT=1.2; sfx(240,.1,'sawtooth'); }
+      continue; }
+    if(m.kind==='lantern'){
+      m.x=m.hx+Math.sin(m.t*.8+m.ph)*8; m.y=K.Y+Math.sin(m.t*2+m.ph)*4;
+      if(live&&p.onGround&&!p.hook&&!p.rooted&&Math.abs(dx)<K.LURE_R&&Math.abs(dx)>2){ p.x-=Math.sign(dx)*K.LURE_V*dt; if(!m.lured){ m.lured=true; G.nm.lures++; G.msg='a bog lantern pulls you toward the pit: hook it down'; G.msgT=1.4; } }
+      if(m.hitCd<=0&&kickAt(m,m.y)){ nmKill(m,'kicked down'); }
+      continue; }
+    if(m.kind==='sniper'){
+      if(m.hitCd<=0&&(kickAt(m,GY-6)||stompAt(m))){ nmKill(m,'kicked out of the reeds'); continue; }
+      if(m.st==='wait'){ if(live&&Math.abs(dx)<K.RANGE&&m.cd<=0){ m.st='tell'; m.t=0; m.d=dx>=0?1:-1; sfx(1300,.05,'sawtooth'); } }
+      else if(m.st==='tell'&&m.t>=K.TELL){ rs.nseeds.push({x:m.x+m.d*6,y:GY-11,vx:m.d*K.SEED_V,mid:m.mid}); G.nm.seeds++; m.st='wait'; m.cd=K.CD; sfx(700,.05,'square'); }
+      continue; }
+    if(m.kind==='snapper'){
+      if(m.st==='back'){ if(m.hitCd<=0&&(kickAt(m,GY-4)||stompAt(m))){ nmKill(m,'kicked while on its back'); continue; } if(m.t>=K.FLIP_T){ m.st='walk'; m.t=0; } continue; }
+      beat(m,K);
+      if(m.hitCd<=0&&kickAt(m,GY-5)){ m.st='back'; m.t=0; m.hitCd=.4; G.nm.flips++; G.msg='flipped the shell snapper onto its back: kick it again'; G.msgT=1.2; sfx(300,.1,'square'); continue; }
+      if(m.hitCd<=0&&stompAt(m)){ p.vy=-170; m.hitCd=.3; G.msg='its shell is too hard: kick it over'; G.msgT=.9; sfx(900,.05,'square'); continue; }
+      if(touch(m,9)){ harm('shell snapper bite',m.x,FORCE.shellBite,m); }
+      continue; }
+    if(m.kind==='rat'){
+      if(m.hitCd<=0&&(kickAt(m,GY-3)||stompAt(m))){ nmKill(m,'kicked'); continue; }
+      if(m.st==='flee'){ m.x+=m.d*K.RUN_V*dt; if(m.x<-8||m.x>W+8){ m.st='gone'; if(m.carry){ G.nm.lost++; G.msg='the junk rat got away with your '+JUNK[m.carry].n; G.msgT=1.4; } } continue; }
+      const has=G.bag&&G.bag.length>0;
+      if(live&&has&&Math.abs(dx)<K.SEE){ m.st='run'; m.d=dx>=0?1:-1; const nx=m.x+m.d*K.RUN_V*.6*dt; if(!holeAt(room,nx)) m.x=nx; }
+      else { m.st='sniff'; beat(m,K); }
+      if(live&&has&&Math.abs(p.x-m.x)<8&&p.y>GY-12&&m.cd<=0){ const k=Math.floor(rs.rng()*G.bag.length); m.carry=G.bag.splice(k,1)[0]; m.st='flee'; m.d=p.x<m.x?1:-1; m.hitCd=.25; G.nm.steals++; G.msg='a junk rat stole your '+JUNK[m.carry].n+': hook it!'; G.msgT=1.4; sfx(1500,.08,'square'); }
+      continue; }
+    if(m.kind==='splitter'){
+      beat(m,K);
+      if(m.hitCd<=0&&(kickAt(m,GY-4)||stompAt(m))){
+        if(m.size>1){ m.size=1; m.hitCd=.45; m.x-=K.SPLIT_PX; m.d=-1; m.hx=m.x; if(m.id) G.nmDead.add(m.id); m.id=null; const b=mkNm('splitter',Math.min(W-10,m.x+2*K.SPLIT_PX),null); b.size=1; b.hitCd=.45; b.d=1; add.push(b); G.nm.splits++; G.msg='the sludge splitter split in two!'; G.msgT=1.1; sfx(200,.12,'sawtooth'); }
+        else nmKill(m,'splatted');
+        continue; }
+      if(touch(m,m.size>1?9:6)){ harm('sludge splitter bite',m.x,FORCE.sludgeBite*(m.size>1?1:.6),m); }
+      continue; }
+    if(m.kind==='heron'){
+      if(m.hitCd<=0&&(kickAt(m,GY-10)||stompAt(m))){ nmKill(m,'kicked'); continue; }
+      const still=live&&p.onGround&&Math.abs(p.vx)<K.STILL_V&&Math.abs(dx)<K.RANGE&&nearWater(p.x);
+      if(m.st==='wait'){ m.still=still?m.still+dt:0; m.d=dx>=0?1:-1; if(m.still>=K.STILL_T&&m.cd<=0){ m.st='tell'; m.t=0; sfx(1600,.06,'sawtooth'); } }
+      else if(m.st==='tell'&&m.t>=K.TELL){ m.st='wait'; m.still=0; m.cd=K.CD; G.nm.spears++; if(live&&Math.abs(p.x-m.x)<K.RANGE&&p.y>GY-30) harm('heron spear',m.x,FORCE.heronSpear,m); sfx(500,.08,'square'); }
+      continue; }
+    if(m.kind==='root'){
+      if(p.rooted&&p.rooted.m===m){
+        if(!live){ p.rooted=null; m.st='lurk'; continue; }
+        if(!p.onGround){ nmFree('jump'); continue; }
+        p.x=m.x; p.vx=0; p.rooted.t+=dt;
+        if(m.hitCd<=0&&p.kick>0){ nmKill(m,'kicked loose'); continue; }
+        if(p.rooted.t>=K.BITE_T){ p.rooted=null; m.st='lurk'; m.cd=K.CD; harm('root grabber bite',m.x,FORCE.rootBite,m); }
+        continue; }
+      if(m.st==='lurk'&&live&&p.onGround&&!p.rooted&&p.inv<=0&&m.cd<=0&&Math.abs(dx)<6){ p.rooted={m,t:0}; m.st='grab'; m.hitCd=.3; G.nm.grabs++; G.msg='a root grabber has your feet: jump or hook out'; G.msgT=1.4; sfx(160,.15,'sawtooth'); }
+      else if(m.st==='grab') m.st='lurk';
+      continue; }
+  }
+  for(const b of add) rs.nm.push(b);
+  for(let i=rs.nseeds.length-1;i>=0;i--){ const s=rs.nseeds[i]; s.x+=s.vx*dt;
+    if(live&&p.inv<=0&&Math.abs(p.x-s.x)<6&&s.y>p.y-24&&s.y<p.y+2){ rs.nseeds.splice(i,1); harm('reed seed',s.x,FORCE.reedSeed,s); continue; }
+    if(s.x<-6||s.x>W+6) rs.nseeds.splice(i,1); }
+}
+
 /* ---------- grappling hook (numbers in TUNE.HOOK) ----------
    Aim: the game aims by facing (no mouse aim), so the hook goes out in front of him. First choice: a mob or loot inside the cone
    in front; then the far ledge of a pit ahead; then a wall ahead (the outer trunks, or a locked boss arena's sides); then the
@@ -826,13 +1317,86 @@ function flyersUpdate(room,rs,p,dt){
    Bosses are too heavy: the hook clinks off them. Phases: fly -> latch (wall / ledge) -> zip or swing; fly -> reel (loot);
    fly -> drag (mob); back = coming home. */
 const hookRiding=p=>!!(p.hook&&(p.hook.ph==='zip'||p.hook.ph==='swing'||p.hook.ph==='ride'));
+function waterAt(room,x){
+  if(!room) return null;
+  for(const h of room.holes) if(x>h.x0&&x<h.x1&&h.fill==='water') return {kind:'hole',x0:h.x0,x1:h.x1};
+  for(const pl of room.pools) if(x>pl.x0&&x<pl.x1) return {kind:'pool',x0:pl.x0,x1:pl.x1};
+  return null;
+}
+function waterAhead(p,room){ if(!p||!room) return null; const f=p.face||1; for(let d=6; d<=HX.DRAG_REACH; d+=6){ const w=waterAt(room,p.x+f*d); if(w) return w; } return waterAt(room,p.x); }
+function hookMuddy(){ return !!G.hookMuddy; }
+function hookRange(){ return hookMuddy()?hookReach()*HX.MUDDY_RANGE:hookReach(); }   // live reach (HK.RANGE + workshop spring); less while muddy
+function hookFlySpeed(){ return hookMuddy()?HK.FLY_SPEED*HX.MUDDY_FLY:HK.FLY_SPEED; }
+function hookMarkMuddy(){ if(!G.hookMuddy){ G.hookMuddy=true; G.msg='hook got muddy'; G.msgT=1; } }
+function hookClean(){ if(G.hookMuddy){ G.hookMuddy=false; G.msg='hook cleaned'; G.msgT=1; sfx(1200,.05,'sine'); } }
+// hook junk (0697985 water drag + snag) goes in live's one junk bag (Michael t468u/t469u pick 4): a random kind from the fishing-world junk
+// list (boot / tin can / tv remote), counted as water junk; a full bag refuses it as live does. No second counter.
+function giveJunk(n){ n=n||1; const ks=Object.keys(FISH_JUNK); let got=0; for(let k=0;k<n;k++) if(junkAdd(FISH_JUNK[ks[Math.floor(Math.random()*ks.length)]],'fish')) got++; return got; }
+function hookIdleCancel(){ G.hookIdle=null; }
+function hookIdleQuiet(p){
+  if(!p||G.state!=='play'||G.freeze||(G.cf&&G.cf.snag)||p.dead>0||p.hook||p.vine||p.react>0||p.blocking||!p.onGround) return false;
+  if(keys.left||keys.right||keys.jump||keys.hook||keys.block||keys.down) return false;
+  if(Math.abs(p.vx)>4) return false;
+  return true;
+}
+function hookIdleStep(p,dt){
+  if(!hookIdleQuiet(p)){ hookIdleCancel(); return; }
+  const id=G.hookIdle||(G.hookIdle={t:0,beat:0,name:'wait'});
+  id.t+=dt;
+  if(id.name==='wait'){ if(id.t>=HX.IDLE_DELAY){ id.name='play'; id.t=0; id.beat=1; } return; }
+  if(id.t<HX.PLAY_T) return;
+  id.t=0; id.beat++;
+  const cycle=['play','tug','clean','wind'];
+  id.name=cycle[(id.beat-1)%cycle.length];
+  if(id.name==='clean') hookClean();
+  if(id.name==='tug') G.msg='tug of war with buddy'; else if(id.name==='play') G.msg='fiddling with the hook'; else if(id.name==='wind') G.msg='winding the hook';
+  if(id.name!=='clean') G.msgT=1;
+}
+function hookIdleView(p){
+  const id=G.hookIdle; if(!id||id.name==='wait'||!p) return null;
+  const f=p.face||1, t=id.t;
+  let hx=p.x+f*10, hy=p.y-10;
+  if(id.name==='play'){ hx=p.x+f*(8+Math.sin(t*8)*4); hy=p.y-12-Math.abs(Math.sin(t*6))*6; }
+  else if(id.name==='tug'){ hx=p.x-f*(16+Math.sin(t*7)*3); hy=p.y-8; }
+  else if(id.name==='clean'){ hx=p.x+f*6; hy=p.y-14+Math.sin(t*10)*2; }
+  else { hx=p.x+f*4; hy=p.y-6; }
+  return {ph:'idle',kind:'idle',hx,hy,ox:hx,oy:hy,held:false};
+}
+// live wins (t462u): F keeps live's jobs first (workshop flap, croc-head / bank fishing, the fishing world's misty path); a water drag
+// only starts where live's F does nothing, and F with no water in front stays silent there, as in live
+const gateNear = () => !!(typeof TW !== 'undefined' && TW && TW.sideNear && TW.sideNear());   // the paper-map gate's F prompt (topworld.js)
+const fwPathNear = () => { const p = G.p, x = G.room != null ? wsPathX(G.room) : null; return x !== null && !!p && Math.abs(p.x - x) < 16; };
+function startWaterDrag(quiet){
+  const p=G.p; if(!p||G.state!=='play'||G.freeze||p.dead>0||p.vine||p.hook||p.react>0) return false;
+  const room=G.world.rooms[G.room], w=waterAhead(p,room);
+  if(!w){ if(!quiet){ G.msg='no water in front to drag'; G.msgT=1; } return false; }
+  hookIdleCancel();
+  const f=p.face||1, hx=Math.max(w.x0+2,Math.min(w.x1-2,p.x+f*Math.min(HX.DRAG_REACH,24)));
+  p.hook={ph:'water',kind:'water',ref:null,tx:hx,ty:GY+4,hx,hy:GY+4,held:true,ht:0,t:0,f,L:0,dragT:0,dragDist:0,gotJunk:false,snag:false};
+  G.hookDrags=(G.hookDrags||0)+1; G.msg='dragging the hook through the water'; G.msgT=1; sfx(400,.06,'sine'); return true;
+}
+function hookCatchStart(kind){   // a snag on the dragged hook starts the one catch mini (cfMini); the run goes on, keep still and play it
+  kind=kind==='chest'?'chest':'fish'; if(!G.cf) cfReset(); const cf=G.cf, st=cfStyle(); G.rareN=(G.rareN||0)+1; G.snags=(G.snags||0)+1; hookIdleCancel();
+  Object.assign(cf,{snag:kind,style:st,ph:st,t:0,n:0,got:[kind==='chest'?'sunken chest':'stuck fish',0],mk:0,dir:1,hits:0,misses:0,ten:.45,prog:0,hold:true,zone:.25+Math.random()*.5});
+  G.snagLast={kind,style:st,win:null}; if(G.p&&G.p.hook&&G.p.hook.ph==='water') G.p.hook.held=true; sfx(700,.08,'triangle'); return {kind,style:st};
+}
+function snagEnd(ok){ const cf=G.cf, kind=cf.snag; cf.snag=null; cf.ph='idle'; cf.t=0; cf.hold=false; if(G.snagLast) G.snagLast.win=!!ok;
+  if(ok){ cf.miss=0; G.gold=(G.gold||0)+HX.LOOT_GOLD; G.lootGems=(G.lootGems||0)+HX.LOOT_GEMS; giveJunk(HX.LOOT_JUNK);
+    G.msg=(kind==='chest'?'chest':'fish')+'! +'+HX.LOOT_GOLD+'g +'+HX.LOOT_GEMS+' gem +junk in the bag'; G.msgT=1.4; sfx(1400,.1,'sine'); }
+  if(G.p&&G.p.hook&&G.p.hook.ph==='water') hookBack(G.p.hook); }
+function snagStep(p,dt){ const cf=G.cf; if(!cf||!cf.snag) return;
+  if(!p||p.dead>0||!p.hook||p.hook.ph!=='water'||keys.left||keys.right||Math.abs(p.vx)>1){ cfLose('the line came in: the snag got away'); return; }
+  cf.t+=dt; cfMini(cf,dt); }
+function hookCatchWin(){ const cf=G.cf; if(!cf||!cf.snag) return false; cfLand(cf.got[0],0); return true; }
 function hookClear(p){ const h=p.hook; if(h&&h.ref&&h.ref.fly) flyerLetGo(h.ref); if(h&&h.ref&&h.ref.drag){ h.ref.drag=false; h.ref.off=true; } p.hook=null; }
 function hookAim(p,room,rs){
-  const hx=p.x, hy=p.y-14, f=p.face, R=hookReach(), cone=HK.CONE*Math.PI/180;   // reach: plus a workshop hook spring
+  const hx=p.x, hy=p.y-14, f=p.face, R=hookRange(), cone=HK.CONE*Math.PI/180;   // reach: plus a workshop hook spring; less while the hook is muddy (0697985)
   const inCone=(x,y)=>{ const dx=(x-hx)*f, dy=y-hy, d=Math.hypot(dx,dy); return (dx>2&&d<=R&&Math.abs(Math.atan2(dy,dx))<=cone)?d:-1; };
   let best=null, bd=1e9; const take=(d,o)=>{ if(d>=0&&d<bd){ bd=d; best=o; } };
   rs.crawlers.forEach(c=>{ if(!c.dead) take(inCone(c.x,GY-4),{kind:'mob',ref:c,x:c.x,y:GY-4}); });   // a kicked crawler that is already dead is skipped
-  if(rs.flyers) for(const fl of rs.flyers) if(fl.st!=='dead'&&fl.st!=='ridden'&&fl.st!=='pulled') take(inCone(fl.x,fl.y),{kind:'flyer',ref:fl,x:fl.x,y:fl.y});   // flyers (TUNE.FLYER.KINDS): small = pull it down, big = ride it
+  if(rs.flyers) for(const fl of rs.flyers) if(fl.st!=='dead'&&fl.st!=='ridden'&&fl.st!=='pulled') take(inCone(fl.x,fl.y),{kind:'flyer',ref:fl,x:fl.x,y:fl.y});
+  // the only new hook targets are the bog lantern and the junk rat: kept by Michael t462u ("ok on your recs", vs t163s814 "leave the hook"); the hook itself is live's
+  if(rs.nm) for(const m of rs.nm) if(!m.dead&&m.st!=='gone'&&(m.kind==='lantern'||m.kind==='rat')){ const my=m.kind==='lantern'?m.y:GY-4; take(inCone(m.x,my),{kind:'nmob',ref:m,x:m.x,y:my}); }   // the 10-29 mobs: hook a bog lantern down, hook a junk rat   // flyers (TUNE.FLYER.KINDS): small = pull it down, big = ride it
   const b=rs.boss; if(b&&!b.dead){ const by=b.kind==='boss2'?b.y:GY-20; take(inCone(b.x,by),{kind:'boss',ref:b,x:b.x,y:by}); }
   if(best) return best;
   const tr=room.treasure; if(tr&&!G.got.has(gid(room.i))) take(inCone(tr.x,tr.y),{kind:'loot',ref:tr,x:tr.x,y:tr.y});
@@ -848,10 +1412,13 @@ function hookAim(p,room,rs){
 }
 function hookInput(down){
   keys.hook=!!down; const p=G.p;
+  if(G.cf&&G.cf.snag){ if(down) fishInput(); else fishRelease(); return; }   // a snag: the hook button plays the one catch mini, does not fire
   if(tugHook(down)) return;   // T mode tug only (not in the side-scroller run): the hook is the pull there
   if(!down){ if(p&&p.hook) p.hook.held=false; return; }
   if(G.state!=='play'||G.freeze){ G.hookNo=(G.hookNo||0)+1; return; }   // paused or frozen: a press does nothing (it used to let go of a ride)
   if(p&&p.hook&&p.hook.ph==='ride'){ hookBack(p.hook); p.grabCd=.35; sfx(660,.07); return; }   // hook again while riding = let go
+  if(p&&p.rooted&&p.dead<=0){ nmFree('hook'); return; }   // held by a root grabber: the hook press gets him out
+  hookIdleCancel();
   if(p&&p.grab){ G.hookNo=(G.hookNo||0)+1; return; }   // held by a tentacle (new hazard): no hook
   if(G.state!=='play'||G.freeze||!p||p.dead>0||p.vine||p.hook||p.react>0){ G.hookNo=(G.hookNo||0)+1; return; }
   const a=hookAim(p,G.world.rooms[G.room],G.rs); G.hookShots=(G.hookShots||0)+1;
@@ -884,8 +1451,10 @@ function hookStep(p,room,dt){
     if(h.kind==='mob'){ h.tx=h.ref.x; }
     if(h.kind==='loot'){ h.tx=h.ref.x; h.ty=h.ref.y; }
     if(h.kind==='flyer'){ if(h.ref.st==='dead'||h.ref.st==='ridden'){ hookBack(h); return; } h.tx=h.ref.x; h.ty=h.ref.y; }
-    if(!hookMoveHead(h,h.tx,h.ty,HK.FLY_SPEED,dt)) return;
+    if(h.kind==='nmob'){ if(h.ref.dead||h.ref.st==='gone'){ hookBack(h); return; } h.tx=h.ref.x; h.ty=h.ref.kind==='lantern'?h.ref.y:GY-4; }
+    if(!hookMoveHead(h,h.tx,h.ty,hookFlySpeed(),dt)) return;
     if(h.kind==='miss'){ hookBack(h); }
+    else if(h.kind==='nmob'){ hookBack(h); nmHooked(h.ref); }
     else if(h.kind==='boss'){ hookBack(h); G.msg='too heavy to pull'; G.msgT=.7; sfx(240,.06,'square'); }
     else if(h.kind==='loot'){ h.ph='reel'; sfx(900,.05,'triangle'); }
     else if(h.kind==='flyer'){ const f=h.ref; h.t=0;
@@ -922,6 +1491,18 @@ function hookStep(p,room,dt){
     f.x+=dx/d*st; f.y+=dy/d*st; h.hx=f.x; h.hy=f.y; return;
   }
   if(h.ph==='ride'){ h.hx=h.ref.x; h.hy=h.ref.y; return; }
+  if(h.ph==='water'){
+    if(!h.held){ hookMarkMuddy(); hookBack(h); return; }
+    if(G.cf&&G.cf.snag){ return; }
+    const roomW=waterAt(room,h.hx)||waterAhead(p,room);
+    if(!roomW){ hookMarkMuddy(); hookBack(h); return; }
+    const want=p.x+(p.face||1)*24;
+    h.hx=Math.max(roomW.x0+2,Math.min(roomW.x1-2,want)); h.hy=GY+4; hookMarkMuddy();
+    const walked=Math.abs((h.lx==null?p.x:h.lx)-p.x); h.lx=p.x; h.dragDist=(h.dragDist||0)+walked; h.dragT=(h.dragT||0)+dt;
+    if(!h.gotJunk&&h.dragT>=HX.DRAG_JUNK_T){ h.gotJunk=true; giveJunk(1); }
+    if(!h.snag&&h.dragT>=HX.SNAG_T&&!fwPathNear()&&!gateNear()){ h.snag=true; hookCatchStart((G.snags||0)%2?'chest':'fish'); }
+    return;
+  }
   if(h.ph==='back'){ if(h.d0==null) h.d0=Math.max(1,Math.hypot(h.hx-hx,h.hy-hy)); h.bt+=dt; if(hookMoveHead(h,hx,hy,HK.REEL_SPEED,dt)){ p.hook=null; G.hookBacks=(G.hookBacks||0)+1; sfx(1400,.04,'square'); } }   // clank: back in his hand
 }
 /* zip and swing move him (in place of running); returns false when he is not on the rope */
@@ -1288,7 +1869,7 @@ function supStrike(rs){   // the swing lands on whatever is in reach now (a slam
 function supHit(rs,o){
   const s=G.sup, st=s.st, SU=TUNE.SUPER, D=SU.HIT_DMG;
   if(o.k==='mob'){ const c=o.ref; if(c.dead) return; const d=Math.min(D,c.hp); c.hp-=D; st.mobDmg+=d; supDrain(SU.MOB_COUNTER,'counter'); c.x=Math.max(0,Math.min(W,c.x+(c.x>=s.bx?1:-1)*6));
-    if(c.hp<=0){ c.dead=true; c.drag=false; st.kills++; addScore(SU.KILL_SCORE); supFx({k:'kill',x:c.x}); } else supFx({k:'hit',x:c.x,y:4}); }
+    if(c.hp<=0){ c.dead=true; c.drag=false; st.kills++; addScore(SU.KILL_SCORE); mobDied(flyerGroundX(c.x)); if((rankById(c.mid)||{}).rank==='elite'){ for(let ei=0;ei<RANKS.ELITE_LOOT_EXTRA;ei++) mobDied(flyerGroundX(c.x)); } if(c.mid) rankStat(c.mid,'deaths',1); supFx({k:'kill',x:c.x}); } else supFx({k:'hit',x:c.x,y:4}); }
   else if(o.k==='log'){ const l=o.ref, i=rs.logs.indexOf(l); if(i<0) return; if(l.hp===undefined) l.hp=SU.LOG_HP; const d=Math.min(D,l.hp); l.hp-=D; st.logDmg+=d;
     if(l.hp<=0){ rs.logs.splice(i,1); st.logs++; addScore(SU.LOG_SCORE); supFx({k:'log',x:l.x}); supDrain(SU.LOG_SMASH,'counter'); } else supFx({k:'hit',x:l.x,y:7}); }
   else { const b=o.ref; if(!supBossHittable(b)) return; const done=st.bossPct[G.room]||0, pct=Math.min(D*SU.BOSS_DMG_SCALE,SU.BOSS_CAP_PCT-done);
@@ -2353,7 +2934,16 @@ function buildShield() {
   const texRing = mkTex(64, 64, (c, w) => { const r = c.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, 'rgba(255,255,255,0)'); r.addColorStop(.58, 'rgba(255,255,255,0)'); r.addColorStop(.72, 'rgba(255,255,255,1)'); r.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = r; c.fillRect(0, 0, w, w); });
   const haloM = reg(new THREE.MeshBasicMaterial({ map: texRing, color: '#9fe3ff', transparent: true, opacity: .6, depthWrite: false, fog: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }));
   const halo = new THREE.Mesh(gQuad, haloM); halo.rotation.y = Math.PI / 2; halo.position.x = -.06; halo.scale.set(1.7, 1.7, 1); halo.renderOrder = 5; face.add(halo);
-  return { root, face, glowM, haloM, halo };
+  // PLACEHOLDER tier bits (no GPU art; Claude lane): a riveted extra plate at tier 2, a thicker rim band at tier 3. Hidden at tier 1 (live scrap).
+  const t2 = new THREE.Group(); t2.name = 'tier2'; t2.visible = false; face.add(t2);
+  mk(gBox, MS('#c9c4ae', .5, .35, 0, true), .06, .42, 0, .04, .22, .7, t2, true);
+  const bolt2 = new THREE.CylinderGeometry(.03, .034, .025, 6); bolt2.rotateZ(Math.PI / 2);
+  mk(bolt2, MS('#d39a4a', .4, .35, 0, true), .085, .42, -.28, 1, 1, 1, t2, true);
+  mk(bolt2, MS('#d39a4a', .4, .35, 0, true), .085, .42, .28, 1, 1, 1, t2, true);
+  const t3 = new THREE.Group(); t3.name = 'tier3'; t3.visible = false; face.add(t3);
+  const band = new THREE.TorusGeometry(.62, .03, 4, 10); band.rotateY(Math.PI / 2);
+  mk(band, MS('#b08a4a', .45, .4, 0, true), .02, 0, 0, 1, 1, 1, t3, true);
+  return { root, face, glowM, haloM, halo, t2, t3 };
 }
 const shield = buildShield(); pl.bod.add(shield.root);
 // buddy companion: the golem buddy (face, brow and tuft locked to the picked golem concept; the concept art stays outside the repo and is
@@ -3584,7 +4174,7 @@ const portraitMQ = matchMedia('(orientation: portrait)');
 function drawUI() {
   const st = G.state; wsRender();
   document.body.classList.toggle('ingame', st === 'play' || st === 'paused');
-  document.body.classList.toggle('perch', st === 'play' && !G.freeze && !!(G.rs && G.rs.perch && G.cf && G.cf.still >= TUNE.CROC.FISH.STILL));
+  document.body.classList.toggle('perch', st === 'play' && !G.freeze && !!(G.rs && fishSpot() && G.cf && G.cf.still >= TUNE.CROC.FISH.STILL));
   if (document.body.classList.contains('touch')) {   // a sideways game on an upright phone: pause under the turn-your-phone card, resume when turned back
     if (portraitMQ.matches && st === 'play' && !G.freeze) { G.state = 'paused'; G.rotPause = true; }
     else if (G.rotPause && !portraitMQ.matches) { G.rotPause = false; if (G.state === 'paused') G.state = 'play'; } }
@@ -3594,6 +4184,7 @@ function drawUI() {
   setTxt('h-mult', (superBonus(G.runT) ? 'SUPER x' + SPD.SUPER : 'x' + speedMult(G.runT).toFixed(1)));   // speed multiplier (on the run clock)
   setHTML('h-gems', ICON('gem') + G.got.size + '/' + TREASURES);
   setTxt('h-junk', st === 'title' || !G.bag ? '' : 'JUNK ' + G.bag.length + '/' + WORK.BAG_MAX + (G.gear && G.gear.built.plate ? ' PLATE ' + G.gear.plate : ''));   // junk bag (and the shield plate's free hits left)
+  { const el=$('h-loot'); if(el){ const g=G.gold||0, lg=G.lootGems||0, d=G.p&&G.p.drinkT>0?(' drink '+G.p.drinkT.toFixed(0)+'s'):'', t=shieldDef(), md=G.hookMuddy?' muddy':''; el.textContent='loot '+g+'g '+lg+' gem'+d+'  shield '+t.name+md+((G.cards&&G.cards.length)?('  cards: '+G.cards.map(c=>c.n).join(', ')):'')+(G.rivetOil?('  rivet oil'+(G.rivetOil>1?' x'+G.rivetOil:'')):''); el.title='Run loot from mob drops. Shield tier '+t.id+' ('+t.name+'). Junk is held for the collector (not built). A muddy hook works worse until cleaned at idle.'; } }
   const nl = Math.max(0, G.lives), chip = G.p && nl > 0 ? Math.max(0, Math.min(1, G.p.chip)) : 0, full = chip > 0 ? nl - 1 : nl;   // a hand block takes part of the current heart
   setHTML('h-lives', ICON('heart').repeat(full) + (chip > 0 ? '<span class="hc">' + ICON('heart').replace('"ic"', '"ic lost"') + ICON('heart').replace('"ic"', '"ic hf" style="clip-path:inset(0 ' + Math.round(chip * 100) + '% 0 0)"') + '</span>' : '') + ICON('heart').replace('"ic"', '"ic lost"').repeat(Math.max(0, LIVES - nl)));
   $('h-lives').title = (nl - chip) + ' lives';
@@ -3618,7 +4209,7 @@ function drawUI() {
   const finalDown = st === 'play' && G.winT > 0;
   msgEl.style.display = finalDown || (G.msgT > 0 && st === 'play') ? 'block' : (st === 'paused' ? 'block' : 'none');
   setTxt('msg', st === 'paused' ? 'PAUSED' : finalDown ? 'FINAL BOSS DOWN' : G.msg);
-  let key = st + '|' + G.seed + '|' + G.best + '|' + G.result + '|' + G.score + '|' + G.got.size + '|' + blockMode + '|' + Qi + '|' + tugMode + '|' + (G.kill || '') + '|' + forestMode;
+  let key = st + '|' + G.seed + '|' + G.best + '|' + G.result + '|' + G.score + '|' + G.got.size + '|' + blockMode + '|' + Qi + '|' + tugMode + '|' + (G.kill || '') + '|' + forestMode + '|' + ((G.roster&&G.roster.mobs.length)||0) + '|' + (G.rosterRev||0) + '|' + ((G.rankNews||[]).join('^'));
   if (st === 'title' || st === 'end') {
     panel.style.display = st === 'title' ? 'flex' : 'block';   // title: a column, so the controls list can scroll inside it on small windows
     if (cache.panel !== key) { cache.panel = key;
@@ -3647,10 +4238,12 @@ function drawUI() {
           '<div class="setb" id="set-block">Block button: <b' + (blockMode === 'press' ? ' class="sel"' : '') + '>PRESS</b> / <b' + (blockMode === 'hold' ? ' class="sel"' : '') + '>HOLD</b> &nbsp;<small>' + (tch ? 'tap here to change' : '[B] or click to change') + '</small></div>' +
           '<div class="setb" id="set-tug">Tug of war: ' + TUG_MODES.map(k => '<b' + (tugMode === k ? ' class="sel"' : '') + '>' + k.toUpperCase() + '</b>').join(' / ') + ' &nbsp;<small>' + (tch ? 'tap here to change' : 'click to change') + '</small></div>' +
           '<div class="setb" id="set-quality">Graphics: ' + QLEV.map((q, i) => '<b' + (Qi === i ? ' class="sel"' : '') + '>' + q.name + '</b>').join(' / ') + ' &nbsp;<small>' + (tch ? 'tap here to change' : 'click to change') + '</small></div>' +
+          '<div class="setb" id="set-mobs">Mob roster: <b>' + ((G.roster&&G.roster.mobs.length)||0) + ' saved</b> &nbsp;<b id="set-mobs-reset">RESET MOBS</b> &nbsp;<small>' + (tch ? 'tap RESET MOBS to start the roster over' : 'click RESET MOBS to start the roster over') + '</small></div>' +
           '<div class="seedbox">Seed <b>' + esc(G.seed) + '</b> &nbsp; best <b>' + G.best + '</b><br><small>' + (tch ? 'add ?seed=name to the address for a set world' : '[N] random seed &nbsp; [D] daily seed &nbsp; or add ?seed=name to the address') + '</small></div>' +
           '<div class="go">' + (tch ? 'TAP TO START' : 'PRESS ENTER / TAP TO START') + '</div>' + BADGE
         : '<div class="top"><h1>' + (G.result === 'win' ? 'ALL BOSSES DOWN!' : G.result === 'time' ? 'TIME UP' : 'OUT OF LIVES') + '</h1>' +
           '<p>Score ' + G.score + ' &nbsp; time ' + clockTxt(G.runT) + ' &nbsp; gems ' + G.got.size + '/' + TREASURES + ' &nbsp; best ' + G.best + ' &nbsp; seed ' + esc(G.seed) + '</p>' +
+          ((G.rankNews&&G.rankNews.length)?'<p class="rank-news">'+G.rankNews.map(esc).join('<br>')+'</p>':'') +
           '<div class="go">ENTER / TAP: play again &nbsp; [H] title &nbsp; [N] new seed</div></div>' +
           '<img class="ib" id="e-restart" src="art/icons/restart.png" alt="Play again" title="Play again (Enter)"><img class="ib" id="e-home" src="art/icons/home.png" alt="Title" title="Back to the title (H)">' + BADGE;
     }
@@ -3658,6 +4251,27 @@ function drawUI() {
 }
 /* touch buttons dim when their action can't do anything right now (menus, pause, falling, staggered by a blocked hit, between lives) */
 const tbEls = { left: $('bl'), right: $('br'), jump: $('bj'), block: $('bk'), hook: $('bh'), super: $('bq') };
+/* PLACEHOLDER role props (no GPU art; Claude lane): helper hat, vendor stall, npc sign. */
+let rankActors = null, rankEliteGlowM = null;
+function ensureRankActors() {
+  if (rankActors) return rankActors;
+  rankEliteGlowM = reg(new THREE.MeshBasicMaterial({ map: texGlow, color: '#ffb040', transparent: true, opacity: .55, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }));
+  const hatM = M('#6a3a1a'), stallM = M('#8a5a30'), signM = M('#e8c14a'), clothM = M('#4a6a3a');
+  function actor(kind) {
+    const g = new THREE.Group(); g.visible = false; scene.add(g);
+    if (kind === 'helper') { mk(gCone, hatM, 0, 1.1, 0, .35, .4, .35, g); mk(gSph, M('#c4a07a'), 0, .7, 0, .28, .28, .28, g); }
+    else if (kind === 'vendor') { mk(gBox, stallM, 0, .45, 0, 1.1, .9, .7, g); mk(gBox, clothM, 0, 1.0, 0, 1.3, .08, .9, g); mk(gBox, signM, 0, 1.35, 0, .7, .35, .06, g); }
+    else { mk(gBox, stallM, 0, .7, 0, .08, 1.4, .08, g); mk(gBox, signM, 0.2, 1.2, 0, .7, .45, .06, g); }
+    return g;
+  }
+  rankActors = { helper: actor('helper'), vendor: actor('vendor'), npc: actor('npc') };
+  return rankActors;
+}
+function syncRankActors(room, rs, dt) {
+  const A = ensureRankActors();
+  function put(g, rec) { g.visible = !!(rec); if (!rec) return; g.position.set(X(rec.x), 0, 0.15); g.scale.setScalar(HS); g.rotation.y = Math.sin((VT || 0) * 0.6) * 0.05; }
+  put(A.helper, rs && rs.helper); put(A.vendor, rs && rs.vendor); put(A.npc, rs && rs.npc);
+}
 function syncTouchDim(st) {
   const p = G.p, live = st === 'play' && p && p.dead <= 0, free = live && p.react <= 0;
   const tg = tugOn(), on = { left: !!free || tg, right: !!free || tg, jump: (st === 'title' || st === 'end') || tg || !!(free && (p.onGround || p.coyote > 0 || p.vine)), block: !!(live && !p.vine), hook: tg || !!(free && !p.vine && !p.hook && !(p.hookCd > 0)), super: !!(st === 'play' && superReady(p)) };
@@ -3690,6 +4304,7 @@ function syncShield(p, dt) {
   pl.hadShield = p.shield;
   sh.glowM.emissiveIntensity = .05 + 1.1 * glow + pl.blkFlash * 2; sh.haloM.opacity = Math.min(1, glow + pl.blkFlash * 2);
   const hs = 1.62 + .14 * glow + Math.sin(VT * 6) * .03 * glow; sh.halo.scale.set(hs, hs, 1);
+  if (sh.t2) sh.t2.visible = (G.shieldTier || 1) >= 2; if (sh.t3) sh.t3.visible = (G.shieldTier || 1) >= 3;
   if (p.shield) {
     if (sh.root.parent !== pl.bod) { pl.bod.add(sh.root); pl.shE = 0; }
     sh.root.visible = true;
@@ -3707,22 +4322,38 @@ function syncShield(p, dt) {
 }
 /* ground item view (unused now: the stamina refill item was taken out): blue canister with steel caps, a bright band and a soft additive glow; bobs and spins on the ground.
    Meshes are made on first need and reused (3 draw calls + the glow card per item on screen). */
+/* PLACEHOLDER loot shapes (no GPU art; Claude lane): gold = flat coin, gem = two cones, drink = green bottle, food = brown slab. */
 const gCan = new THREE.CylinderGeometry(.2, .2, .55, 12), gCanCap = new THREE.CylinderGeometry(.13, .15, .1, 10);
-const canM = reg(new THREE.MeshStandardMaterial({ color: '#2a6fd6', emissive: '#3fa9ff', emissiveIntensity: .8, roughness: .35, metalness: .4 }));
+const gCoin = new THREE.CylinderGeometry(.28, .28, .07, 12);
+const lootMats = {
+  gold: reg(new THREE.MeshStandardMaterial({ color: '#e8c14a', emissive: '#8a6a10', emissiveIntensity: .35, roughness: .4, metalness: .7 })),
+  gem: reg(new THREE.MeshStandardMaterial({ color: '#4aa3d9', emissive: '#1a4a80', emissiveIntensity: .4, roughness: .3, metalness: .3 })),
+  drink: reg(new THREE.MeshStandardMaterial({ color: '#3a8a4a', emissive: '#1a4a20', emissiveIntensity: .3, roughness: .4, metalness: .2 })),
+  food: reg(new THREE.MeshStandardMaterial({ color: '#a86a38', emissive: '#4a2010', emissiveIntensity: .15, roughness: .7, metalness: .05 }))
+};
+const canM = lootMats.drink;
 const canCapM = reg(new THREE.MeshStandardMaterial({ color: '#c9d3dc', roughness: .4, metalness: .8 }));
 const canBandM = reg(new THREE.MeshBasicMaterial({ color: '#bff3ff' }));
 const canGlowM = reg(new THREE.MeshBasicMaterial({ map: texGlow, color: '#59c8ff', transparent: true, opacity: .7, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }));
 const itemViews = [];
-function buildStamItem() { const g = new THREE.Group();
-  mk(gCan, canM, 0, .32, 0, 1, 1, 1, g); mk(gCanCap, canCapM, 0, .64, 0, 1, 1, 1, g); mk(gCanCap, canCapM, 0, .0, 0, 1.2, 1, 1.2, g);
-  mk(gCan, canBandM, 0, .32, 0, 1.05, .16, 1.05, g, true);
-  const gl = new THREE.Mesh(gQuad, canGlowM); gl.scale.set(1.6, 1.6, 1); gl.position.set(0, .34, -.25); gl.renderOrder = 4; g.add(gl); g.userData.glow = gl;
+function buildLootPart(kind, parent) {
+  const g = new THREE.Group(); g.name = kind; g.visible = false; parent.add(g);
+  if (kind === 'gold') { mk(gCoin, lootMats.gold, 0, .12, 0, 1, 1, 1, g); }
+  else if (kind === 'gem') { mk(gCone, lootMats.gem, 0, .22, 0, .45, .35, .45, g); const bot = mk(gCone, lootMats.gem, 0, .05, 0, .45, .35, .45, g, true); bot.rotation.x = Math.PI; }
+  else if (kind === 'drink') { mk(gCan, lootMats.drink, 0, .32, 0, 1, 1, 1, g); mk(gCanCap, canCapM, 0, .64, 0, 1, 1, 1, g); mk(gCanCap, canCapM, 0, .0, 0, 1.2, 1, 1.2, g); mk(gCan, canBandM, 0, .32, 0, 1.05, .16, 1.05, g, true); }
+  else { mk(gBox, lootMats.food, 0, .12, 0, .5, .16, .36, g); }
+  return g;
+}
+function buildLootItem() { const g = new THREE.Group(); g.userData.parts = {};
+  for (const k of LOOT_ORDER) g.userData.parts[k] = buildLootPart(k, g);
+  const gl = new THREE.Mesh(gQuad, canGlowM); gl.scale.set(1.4, 1.4, 1); gl.position.set(0, .28, -.25); gl.renderOrder = 4; g.add(gl); g.userData.glow = gl;
   g.visible = false; scene.add(g); return g; }
 function syncItems() {
   const list = G.state === 'title' ? [] : (G.items || []).filter(it => it.room === G.room);
-  while (itemViews.length < list.length) itemViews.push(buildStamItem());
-  canGlowM.opacity = .5 + .3 * Math.sin(VT * 5); canM.emissiveIntensity = .6 + .4 * Math.sin(VT * 5);
+  while (itemViews.length < list.length) itemViews.push(buildLootItem());
+  canGlowM.opacity = .5 + .3 * Math.sin(VT * 5);
   itemViews.forEach((v, i) => { const it = list[i]; v.visible = !!it; if (!it) return;
+    for (const k of LOOT_ORDER) v.userData.parts[k].visible = it.id === k;
     v.position.set(X(it.x), .08 + (1 + Math.sin(VT * 3 + i)) * .05, .2); v.rotation.y = VT * 1.6; v.userData.glow.rotation.y = -v.rotation.y; v.scale.setScalar(HS); });
 }
 /* flyer views, built in code: bat = dark fuzzy body, big ears, red eyes, leathery flapping wings; wasp = striped yellow body,
@@ -3767,6 +4398,42 @@ function syncFlyers() {
   const ds = on && rs.fdrops ? rs.fdrops : [];
   while (dropViews.length < ds.length) dropViews.push(mk(gSph, dropMats.bat, 0, 0, 0, .22, .3, .22, scene, true));
   dropViews.forEach((m, i) => { const d = ds[i]; m.visible = !!d; if (!d) return; m.material = dropMats[d.kind]; m.position.set(X(d.x), Y(d.y), 0); });
+}
+/* the 10-29 ground mob views: placeholder low-poly shapes built in code (no art yet). Pooled per kind, made on first need. */
+function nmEyes(root, x, y, z, col) { for (const s of [1, -1]) mk(gSph, M(col || '#ffe070', col || '#ffd040'), x, y, s * z, .07, .07, .07, root, true); }
+const NM_BUILD = {
+  leech: () => { const root = new THREE.Group(), h = { root, parts: [] }, c = M('#4a2f3a'); for (let i = 0; i < 4; i++) h.parts.push(mk(gSph, c, -.18 * i, .1, 0, .26 - i * .03, .2 - i * .02, .2 - i * .02, root)); mk(gCyl, M('#7a3040'), .14, .1, 0, .1, .06, .1, root, true); nmEyes(root, .1, .2, .07, '#ff9070'); return h; },
+  lantern: () => { const root = new THREE.Group(), h = { root, parts: [] }; mk(gSph, M('#a8ff9a', '#7aff60'), 0, 0, 0, .32, .32, .32, root, true); mk(gCone, M('#2e3a26'), 0, .32, 0, .16, .22, .16, root, true); const gl = new THREE.Mesh(gQuad, flyGlowM[1]); gl.material = reg(new THREE.MeshBasicMaterial({ map: texGlow, color: '#9aff70', transparent: true, opacity: .7, depthWrite: false, fog: false, blending: THREE.AdditiveBlending })); gl.scale.set(2.2, 2.2, 1); gl.position.z = -.3; root.add(gl); h.glow = gl; return h; },
+  sniper: () => { const root = new THREE.Group(), h = { root, parts: [] }, reed = M('#6f8f3a'); for (let i = -2; i <= 2; i++) { const r = mk(gCyl, reed, i * .09, .45, (i % 2) * .05, .03, .9, .03, root, true); r.rotation.z = i * .08; } const head = mk(gSph, M('#5c7a2c'), 0, .55, .12, .2, .18, .18, root); h.parts.push(head); mk(gCyl, M('#3c4a1c'), .16, .55, .12, .05, .14, .05, root, true).rotation.z = Math.PI / 2; nmEyes(root, .08, .62, .2); return h; },
+  snapper: () => { const root = new THREE.Group(), h = { root, parts: [] }; h.shell = mk(gHalf, MS('#6a5a3a', .6, .2), 0, .12, 0, .55, .4, .45, root); mk(gSph, M('#7a8a4a'), .36, .12, 0, .2, .16, .18, root); nmEyes(root, .46, .2, .08); for (const sx of [1, -1]) for (const sz of [1, -1]) mk(gBox, M('#5a6a3a'), sx * .22, .02, sz * .2, .1, .08, .1, root, true); return h; },
+  rat: () => { const root = new THREE.Group(), h = { root, parts: [] }, fur = M('#6b6258'); mk(gSph, fur, 0, .14, 0, .4, .24, .24, root); mk(gCone, fur, .26, .15, 0, .12, .2, .12, root, true).rotation.z = -Math.PI / 2; for (const s of [1, -1]) mk(gSph, M('#c49a8a'), .12, .3, s * .08, .08, .1, .03, root, true); nmEyes(root, .3, .2, .05, '#ff4040'); const tail = mk(gCyl, M('#c49a8a'), -.36, .12, 0, .02, .4, .02, root, true); tail.rotation.z = 1.2; h.sack = mk(gSph, M('#8a6a3a'), -.08, .36, 0, .16, .16, .16, root, true); return h; },
+  splitter: () => { const root = new THREE.Group(), h = { root, parts: [] }; h.body = mk(gSph, M('#5a4a2a', '#1a1408'), 0, .24, 0, .5, .46, .44, root); nmEyes(root, .2, .34, .1, '#e8ff60'); return h; },
+  heron: () => { const root = new THREE.Group(), h = { root, parts: [] }, grey = M('#9aa4ac'); mk(gSph, grey, 0, .8, 0, .32, .24, .2, root); h.neck = mk(gCyl, grey, .18, 1.05, 0, .05, .36, .05, root, true); h.head = mk(gSph, M('#b8c0c6'), .24, 1.24, 0, .12, .1, .1, root); h.bill = mk(gCone, M('#d8a030'), .42, 1.24, 0, .04, .28, .04, root, true); h.bill.rotation.z = -Math.PI / 2; for (const s of [1, -1]) mk(gCyl, M('#5a5040'), 0, .34, s * .06, .025, .7, .025, root, true); nmEyes(root, .3, 1.28, .05, '#ffd000'); return h; },
+  root: () => { const root = new THREE.Group(), h = { root, parts: [] }, wood = M('#4a3220'); for (let i = 0; i < 5; i++) { const c = mk(gCone, wood, (i - 2) * .1, .12, (i % 2 ? .08 : -.08), .06, .4, .06, root, true); c.rotation.z = (i - 2) * .25; h.parts.push(c); } mk(gSph, M('#3a2a18'), 0, 0, 0, .4, .1, .3, root, true); return h; }
+};
+const NM_VS = { leech: 3.4, lantern: 2.8, sniper: 3.4, snapper: 3.6, rat: 3.4, splitter: 3.6, heron: 2.8, root: 3.4 };   // display scale (a crawler is about 1.75 wide)
+const nmViews = { leech: [], lantern: [], sniper: [], snapper: [], rat: [], splitter: [], heron: [], root: [] }, seedViews = [];
+/* bank fishing spot marker (placeholder, built in code): a short post with a coil of line and a red float */
+const bankViews = [];
+function buildBankView() { const g = new THREE.Group(); mk(gCyl, M('#7a5a36'), 0, .45, 0, .12, .9, .12, g, true); mk(gCyl, M('#f3e6c4'), 0, .75, 0, .2, .08, .2, g, true); mk(gSph, M('#d9534f', '#601010'), .18, .55, 0, .14, .14, .14, g, true); g.visible = false; scene.add(g); return g; }
+function syncBank() { const room = G.state !== 'title' && G.world && G.rs ? G.world.rooms[G.room] : null, list = room && room.i < ROOMS ? bankSpots(room) : [];
+  while (bankViews.length < list.length) bankViews.push(buildBankView());
+  bankViews.forEach((v, i) => { const b = list[i]; v.visible = !!b; if (b) { v.position.set(X(b.x - b.dir * 5), 0, .9); v.scale.setScalar(1.6); } }); }
+function syncNm() {
+  const rs = G.rs, on = G.state !== 'title' && rs && rs.nm, list = on ? rs.nm.filter(m => !m.dead && m.st !== 'gone') : [], used = {};
+  for (const k in nmViews) used[k] = 0;
+  for (const m of list) { const pool = nmViews[m.kind]; let v = pool[used[m.kind]++]; if (!v) { v = NM_BUILD[m.kind](); v.root.visible = false; scene.add(v.root); pool.push(v); }
+    const r = v.root, tell = m.st === 'tell' ? Math.sin(VT * 60) * .06 : 0; r.visible = true; r.position.set(X(m.x) + tell, Y(m.y), .25); r.scale.setScalar(NM_VS[m.kind] * (m.kind === 'splitter' && m.size < 2 ? .6 : 1));
+    r.rotation.set(0, m.d > 0 ? 0 : Math.PI, m.st === 'back' ? Math.PI : 0); if (m.st === 'back') r.position.y += .45 * NM_VS[m.kind];
+    if (m.kind === 'root') { const up = m.st === 'grab' || (G.p && G.p.rooted && G.p.rooted.m === m); v.parts.forEach((c, i) => { c.scale.y = up ? 1.6 + Math.sin(VT * 8 + i) * .2 : .35; }); }
+    if (m.kind === 'heron') { const sp = m.st === 'tell'; v.neck.scale.y = sp ? 1.5 : 1; v.bill.position.x = sp ? .55 : .42; }
+    if (m.kind === 'rat') v.sack.visible = !!m.carry;
+    if (m.kind === 'leech') v.parts.forEach((c, i) => { c.position.y = .1 + Math.sin(VT * 9 + i) * .03; });
+    if (m.kind === 'lantern') v.glow.rotation.y = -r.rotation.y; }
+  for (const k in nmViews) nmViews[k].forEach((v, i) => { if (i >= used[k]) v.root.visible = false; });
+  const ss = on && rs.nseeds ? rs.nseeds : [];
+  while (seedViews.length < ss.length) seedViews.push(mk(gSph, M('#c8b060'), 0, 0, 0, .12, .1, .1, scene, true));
+  seedViews.forEach((m, i) => { const s = ss[i]; m.visible = !!s; if (s) m.position.set(X(s.x), Y(s.y), .3); });
 }
 /* hook charge glow: after a zip a soft glow at his hook hand brightens as the cooldown charges, flashes when ready, then fades */
 const hookGlowM = reg(new THREE.MeshBasicMaterial({ map: texGlow, color: '#ffd27a', transparent: true, opacity: 0, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }));
@@ -3813,7 +4480,8 @@ function hookImpact(h, x, y) {   // the bite: sparks + a little dust (shared poo
   fxSpark(x, y, 9, '#ffd690', 3.5); fxDust(x, y - .1, 5, 1, .8, h.kind === 'ceil' ? '#7d8f55' : '#a88a62'); addShake(.06);
 }
 function syncHook(p, dt) {
-  const V = hookV, h = p && G.state !== 'title' && p.dead <= 0 ? p.hook : null;
+  const V = hookV, h = p && G.state !== 'title' && p.dead <= 0 ? (p.hook || hookIdleView(p)) : null;
+  if (V.head && V.head.material && V.head.material.color) V.head.material.color.set(G.hookMuddy ? '#6b4a2a' : '#a4a49a');
   V.rope.visible = V.head.visible = !!h; if (!h) { V.ph = null; V.sc = 0; return; }
   // head, interpolated between the last two logic steps
   const al = Math.max(0, Math.min(1, acc / STEP)), hx = h.ox === undefined ? h.hx : h.ox + (h.hx - h.ox) * al, hy = h.oy === undefined ? h.hy : h.oy + (h.hy - h.oy) * al;
@@ -3827,7 +4495,7 @@ function syncHook(p, dt) {
     if (h.ph === 'back') { V.wA = Math.max(V.wA, .75); V.wDir = -1; V.spinV = -14; if (V.ph && V.ph !== 'fly') fxSpark(_hB.x, _hB.y, 3, '#e8e0c8', 1.6); }   // lets go with a clank
     V.ph = h.ph;
   }
-  const taut = h.ph === 'swing' || h.ph === 'zip' || h.ph === 'drag' || h.ph === 'latch' || h.ph === 'reel' || h.ph === 'fpull' || h.ph === 'ride' || (h.ph === 'tug' && !h.slack);   // tug: slack while a robot falls off a lip
+  const taut = h.ph === 'swing' || h.ph === 'zip' || h.ph === 'drag' || h.ph === 'latch' || h.ph === 'reel' || h.ph === 'fpull' || h.ph === 'ride' || h.ph === 'water' || (h.ph === 'tug' && !h.slack);   // tug: slack while a robot falls off a lip
   V.slack = hold(V.slack, h.ph === 'fly' || h.slack ? .45 : h.ph === 'back' ? .6 : h.ph === 'reel' ? .12 : 0, dt, taut ? 14 : 6);
   V.wA = hold(V.wA, h.ph === 'back' ? .3 : 0, dt, 3.2); V.wPh += dt * 16 * V.wDir;
   V.snap *= Math.exp(-dt * 7);
@@ -3866,7 +4534,7 @@ function syncHero(room, p, dt) {
   pl.wasAir = air; pl.wasGround = p.onGround && !vine;
   if (p.dead > 0 && !pl.wasDead) { fxBurst(g.position.x, g.position.y + 1.2, 18, '#d6a577', 7); fxDust(g.position.x, g.position.y + 1, 8, 4, 3, '#8d6544'); addShake(.5); }
   pl.wasDead = p.dead > 0;
-  syncShield(p, dt); syncItems(); syncFlyers();
+  syncShield(p, dt); syncItems(); syncFlyers(); syncNm(); syncBank();
   if (pl.lastLives >= 0 && G.lives < pl.lastLives) { pl.hurtT = 1.1; if (p.dead <= 0) addShake(.4); }
   pl.lastLives = G.lives;
   if (p.inv > 0 && pl.lastInv <= 0 && p.dead <= 0) fxSpark(g.position.x, g.position.y + 1.6, 7, '#ffffff', 5);
@@ -3965,8 +4633,8 @@ function render(dtReal) {
     const rise = cs ? cs.y * S : 0; s.root.position.y = s.y0 + rise + (tell ? Math.sin(VT * 40) * .05 : 0) + (pinned ? Math.sin(VT * 9) * .02 : 0);
     s.root.rotation.z = hold(s.root.rotation.z, lung && cs.st !== 'down' ? .45 * s.dz : 0, dt, 14); s.tail.position.y = .1 + rise * .4;
   }
-  { const cf = G.cf, on = G.state === 'play' && cf && (cf.ph === 'wait' || cf.ph === 'bite' || cf.ph === 'mash') && G.p; cfLine.visible = cfBob.visible = !!on;
-    if (on) { const p = G.p, side = p.face || 1, bx = X(p.x + side * 22), by = .12 + (cf.ph === 'bite' ? -.18 + Math.sin(VT * 30) * .05 : Math.sin(VT * 2.2) * .04);
+  { const cf = G.cf, on = G.state === 'play' && cf && (cf.ph === 'wait' || cf.ph === 'bite' || cf.ph === 'mash' || cf.ph === 'timing' || cf.ph === 'tension') && G.p; cfLine.visible = cfBob.visible = !!on;
+    if (on) { const p = G.p, side = (G.rs && G.rs.bank ? G.rs.bankDir : p.face) || 1, bx = X(p.x + side * 22), by = .12 + (cf.ph === 'bite' ? -.18 + Math.sin(VT * 30) * .05 : Math.sin(VT * 2.2) * .04);
       cfBob.position.set(bx, by, .6); const ax = X(p.x + side * 4), ay = Y(p.y - 14), dx = bx - ax, dy = by + .15 - ay, len = Math.hypot(dx, dy);
       cfLine.position.set(ax + dx / 2, ay + dy / 2, .6); cfLine.scale.set(.025, len, .025); cfLine.rotation.set(0, 0, -Math.atan2(dx, dy)); } }
   if (view.tarFlag) view.bubbles.forEach((b, i) => { const k = .5 + .5 * Math.sin(VT * 3 + i * 2); b.scale.set(.5 * k + .1, .3 * k + .05, .5 * k + .1); });
@@ -3987,7 +4655,10 @@ function render(dtReal) {
   crs.forEach((c, k) => { const s = rs && rs.crawlers[k]; const cr = view.crawlers[k]; if (!s || s.dead) { cr.root.visible = false; return; }
     cr.root.visible = true; cr.root.position.set(X(s.x), 0, 0); cr.body.rotation.y = hold(cr.body.rotation.y, s.d > 0 ? 0 : Math.PI, dt, 14);
     cr.body.position.y = Math.abs(Math.sin(WT * 9 + k)) * .06; cr.body.scale.set(1, 1 + Math.sin(WT * 5 + k) * .03, 1);
+    ensureRankActors(); if (!cr.glow) { const gl = new THREE.Mesh(gQuad, rankEliteGlowM); gl.scale.set(1.6, 1.6, 1); gl.position.set(0, 0.7, -0.4); gl.renderOrder = 4; cr.root.add(gl); cr.glow = gl; }
+    cr.glow.visible = s.rank === 'elite';
     cr.legs.forEach(l => { l.p.rotation.z = Math.sin(WT * 14 + l.ph) * .5; }); cr.ant.forEach((a, i) => { a.rotation.z = Math.sin(WT * 4 + i) * .2; }); });
+  syncRankActors(room, rs, dt);
   syncBoss();
   syncHero(room, p, dt); syncJunk();   // junk lying about + the buddy patch (hidden on the title screen too)
   syncHook(p, dt); syncHookCharge(p, dt);
@@ -4073,9 +4744,12 @@ wsCss.textContent = `#ws{position:fixed;inset:0;display:none;z-index:40;color:#3
 #ws .hint{text-align:center;font-weight:normal;font-size:max(10px,1.6vmin)}
 #ws-ghost{position:fixed;z-index:41;pointer-events:none;width:9vmin;height:9vmin;min-width:38px;min-height:38px;display:none;transform:translate(-50%,-50%)}
 #ws-go{position:fixed;left:50%;bottom:24%;transform:translateX(-50%);display:none;z-index:7;padding:.45em 1em;border-radius:6px;background:#e3c99a;border:2px solid #3f2616;color:#3f2616;font:bold max(13px,2.3vmin) system-ui,sans-serif;cursor:pointer;touch-action:none;white-space:nowrap;box-shadow:3px 3px 0 rgba(63,38,22,.4)}
-#h-junk{color:#e3c99a} body.wsopen .tb{display:none}`;
+#h-junk{color:#e3c99a} body.wsopen .tb{display:none}
+#ws .trade{gap:1.2vmin;align-items:stretch} #ws .trade .tl{align-self:center;font-size:max(11px,1.8vmin)}
+#ws .buy{background:#cfe0e8;border:2px solid #3f5a6a;border-radius:4px;padding:.6vmin 1.4vmin;cursor:pointer;font-size:max(10px,1.6vmin);box-shadow:2px 2px 0 rgba(63,38,22,.35);text-align:center}
+#ws .buy small{display:block;font-weight:normal} #ws .buy.no{opacity:.5} #ws .buy.got{outline:3px solid #2f6a3a}`;
 document.head.appendChild(wsCss);
-const wsEl = document.createElement('div'); wsEl.id = 'ws'; wsEl.innerHTML = '<canvas class="bg"></canvas><div class="wrap"><div class="row cards"></div><div class="bench"><div class="tapest"></div></div><div class="hint"></div><div class="bag"></div><div class="bar"><button class="tp">TAPE IT</button><button class="lv">LEAVE: BOSS</button></div></div>';
+const wsEl = document.createElement('div'); wsEl.id = 'ws'; wsEl.innerHTML = '<canvas class="bg"></canvas><div class="wrap"><div class="row cards"></div><div class="bench"><div class="tapest"></div></div><div class="hint"></div><div class="bag"></div><div class="row trade"></div><div class="bar"><button class="tp">TAPE IT</button><button class="lv">LEAVE: BOSS</button></div></div>';
 document.body.appendChild(wsEl);
 const wsGhost = document.createElement('img'); wsGhost.id = 'ws-ghost'; wsGhost.alt = ''; document.body.appendChild(wsGhost);
 const wsGo = document.createElement('div'); wsGo.id = 'ws-go'; document.body.appendChild(wsGo);
@@ -4116,7 +4790,7 @@ function wsRender() {
   if (!open) { wsKey = ''; if (G.state === 'play' && G.room >= WORK.ROOM - 1 && G.room <= WORK.ROOM) wsLoadArt(); return; }
   wsLoadArt();
   const bk = innerWidth + 'x' + innerHeight; if (wsBgFor !== bk) { wsBgFor = bk; drawWsBg(); }
-  const k = G.bag.join(',') + '|' + w.slots.join(',') + '|' + w.bp + '|' + w.pick + '|' + Object.keys(G.gear.built).join(',') + '|' + (w.tapeT > 0) + '|' + w.built; if (k === wsKey) return; wsKey = k;
+  const k = G.bag.join(',') + '|' + w.slots.join(',') + '|' + w.bp + '|' + w.pick + '|' + Object.keys(G.gear.built).join(',') + '|' + (w.tapeT > 0) + '|' + w.built + '|' + (G.gold || 0) + '|' + Object.keys(G.fwBought || {}).join(','); if (k === wsKey) return; wsKey = k;
   const bp = BLUEPRINTS[w.bp], built = G.gear.built;
   wsQ('.cards').innerHTML = BLUEPRINTS.map((b, i) => '<div class="card' + (i === w.bp ? ' sel' : '') + (built[b.id] ? ' on' : '') + '" data-bp="' + i + '">' + (isTouch ? '' : '[' + (i + 1) + '] ') + b.n.toUpperCase() + '<small>' + b.does + '</small><small>wants: ' + b.slots.join(' + ') + '</small></div>').join('');
   const bench = wsQ('.bench'), tape = bench.querySelector('.tapest'); [...bench.querySelectorAll('.slot,.tag')].forEach(e => e.remove());
@@ -4129,12 +4803,15 @@ function wsRender() {
   tape.classList.toggle('go', w.tapeT > 0);
   wsQ('.bag').innerHTML = G.bag.length ? G.bag.map((j, i) => '<div class="jk' + (i === w.pick ? ' pick' : '') + '" data-j="' + i + '"><img src="' + wsIcon(j) + '" alt=""><span>' + JUNK[j].n + '</span><small>' + JUNK[j].mat.replace('_', ' ') + ': ' + (matTags(JUNK[j].mat).join(', ') || 'plain') + '</small></div>').join('') : '<div class="hint">junk bag empty: pick up junk on the run or at the lake, then come back</div>';
   wsQ('.hint').textContent = 'JUNK BAG ' + G.bag.length + '/' + WORK.BAG_MAX + ' · ' + (isTouch ? 'tap junk, then a slot (or drag it). Tap a filled slot to take it back' : 'click junk, then a slot (or drag it). Right-click a filled slot to take it back. Space: tape it. Esc: leave');
+  wsQ('.trade').innerHTML = '<span class="tl">JUNK COLLECTOR:</span>' + TRADE.map(t => { const can = t.gold ? (G.gold || 0) >= t.gold : G.bag.length >= t.junk, got = G.fwBought && G.fwBought[t.id];
+    return '<div class="buy' + (can ? '' : ' no') + (got ? ' got' : '') + '" data-buy="' + t.id + '">' + tradeName(t).toUpperCase() + '<small>' + tradeCost(t) + '</small></div>'; }).join('');
   wsQ('button.tp').disabled = !!built[bp.id] || !w.slots.slice(0, bp.slots.length).every(Boolean) || w.tapeT > 0;
 }
 let wsDrag = null;
 wsEl.addEventListener('contextmenu', e => e.preventDefault());
 wsEl.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const t = e.target, w = G.ws; if (!w || !w.open || G.state !== 'play' || !t.closest) return;
   const card = t.closest('.card'); if (card) { wsPickBp(+card.dataset.bp); return; }
+  const buy = t.closest('.buy'); if (buy) { tradeBuy(buy.dataset.buy); return; }
   const slot = t.closest('.slot'); if (slot) { const i = +slot.dataset.slot; if (w.slots[i]) wsTakeBack(i); else wsFill(i); return; }
   const jk = t.closest('.jk'); if (jk) { wsDrag = { i: +jk.dataset.j, x: e.clientX, y: e.clientY, moved: false, id: e.pointerId }; try { wsEl.setPointerCapture(e.pointerId); } catch (_) {} return; }
   if (t.closest('button.tp')) { wsTape(); return; } if (t.closest('button.lv')) { wsLeave(); return; } });
@@ -4172,7 +4849,7 @@ addEventListener('keydown', e => {
   if (e.code === 'KeyE') { e.preventDefault(); if (!e.repeat && G.state === 'play' && !G.freeze) blockInput(true); return; }                      // shield
   if (e.code === 'ControlLeft' || e.code === 'ControlRight') { e.preventDefault(); if (!e.repeat && !G.freeze) kickInput(true); return; }        // kick
   if (e.code === 'KeyF' && !e.repeat && G.state === 'play' && G.wsNear && wsOpen()) { e.preventDefault(); return; }                          // the caravan flap: workshop
-  if (e.code === 'KeyF' && !e.repeat && G.state === 'play' && G.rs && G.rs.perch && fishInput()) { e.preventDefault(); return; }                // fish off a croc head
+  if (e.code === 'KeyF' && !e.repeat && G.state === 'play' && G.rs && (fishSpot() || (G.cf && G.cf.snag && !fwPathNear() && !gateNear())) && fishInput()) { e.preventDefault(); return; }                // fish off a croc head or from a bank spot
   if (e.ctrlKey && (k || e.code === 'KeyS' || e.code === 'KeyE') && G.state === 'play') e.preventDefault();
   if (e.code === 'KeyB' && menu && !e.repeat) { setBlockMode(blockMode === 'press' ? 'hold' : 'press'); return; }
   if (e.code === 'Enter') { e.preventDefault(); if (!(e.repeat && G.state === 'end')) startOrRestart(); }
@@ -4182,6 +4859,7 @@ addEventListener('keydown', e => {
   else if (e.code === 'KeyQ' && !e.repeat && G.state === 'play') superInput();   // super move: when buddy is recharged
   else if (e.code === 'KeyR' && !e.repeat && G.state === 'play') rideInput();    // buddy rides in the dome / hops out (near him)
   else if (e.code === 'KeyT' && !e.repeat && G.state === 'play') tInput();      // T mode: pause + buddy in the chest + mini games
+  else if (e.code === 'KeyF' && !e.repeat && G.state === 'play' && !G.freeze && !fwPathNear() && !gateNear() && !(G.rs && fishSpot())) { e.preventDefault(); if (G.p && G.p.hook && G.p.hook.ph === 'water') { G.p.hook.held = false; } else startWaterDrag(true); }   // PLAYTEST 10b: F near water drags the hook (not the fishing slice)
   else if (G.freeze === 't' && TKEYS[e.code]) { e.preventDefault(); if (!e.repeat) tKey(e.code); }
   else if (e.code === 'KeyH' && G.state === 'end') goHome();
 });
@@ -4205,7 +4883,7 @@ function togglePause() { if (G.state === 'play' || G.state === 'paused') G.state
 function goHome() { if (G.state === 'end') { G.state = 'title'; } }
 syncSnd();
 [['b-pause', togglePause], ['b-snd', toggleMute]].forEach(([id, f]) => $(id).addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); f(); }));
-addEventListener('keyup', e => { const k = keyMap[e.code]; if (k) keys[k] = false; if (e.code === 'ArrowDown' || e.code === 'KeyS') { keys.down = false; blockInput(false); } if (e.code === 'KeyE') blockInput(false); if (G.freeze === 't' && TKEYS[e.code]) tKeyUp(e.code); });
+addEventListener('keyup', e => { if (e.code === 'KeyF') fishRelease(); const k = keyMap[e.code]; if (k) keys[k] = false; if (e.code === 'ArrowDown' || e.code === 'KeyS') { keys.down = false; blockInput(false); } if (e.code === 'KeyE') blockInput(false); if (G.freeze === 't' && TKEYS[e.code]) tKeyUp(e.code); });
 // leaving the tab / window: drop held input and pause (the existing P pause, so the timer and the run clock stop); a pause made this way resumes on return
 let autoPaused = false;
 function pauseOnLeave() { keys.left = keys.right = keys.jump = keys.block = keys.down = false; blockLatch = false; jumpQ = 0; hookInput(false); mouseL = mouseR = mouseM = false; if (G.state === 'play') { G.state = 'paused'; autoPaused = true; } }
@@ -4220,7 +4898,7 @@ document.querySelectorAll('.tb').forEach(b => { const k = b.dataset.k;
     const hd = e => { e.preventDefault(); if (G.state === 'play') hookInput(true); try { b.setPointerCapture(e.pointerId); } catch (_) {} }, hu = e => { e.preventDefault(); hookInput(false); };
     b.addEventListener('pointerdown', hd); b.addEventListener('pointerup', hu); b.addEventListener('pointercancel', hu); b.addEventListener('lostpointercapture', hu); return; }
   if (k === 'tmode') { b.addEventListener('pointerdown', e => { e.preventDefault(); tInput(); }); return; }   // T button (touch): same as T
-  if (k === 'fish') { b.addEventListener('pointerdown', e => { e.preventDefault(); fishInput(); }); return; }   // fish button (touch): same as F on a croc head
+  if (k === 'fish') { b.addEventListener('pointerdown', e => { e.preventDefault(); fishInput(); }); const fu = e => { e.preventDefault(); fishRelease(); }; b.addEventListener('pointerup', fu); b.addEventListener('pointercancel', fu); return; }   // fish button (touch): same as F (held = reel in the tension style)
   if (k === 'kick') { b.addEventListener('pointerdown', e => { e.preventDefault(); kickInput(true); b.classList.add('on'); }); const ku = e => { e.preventDefault(); b.classList.remove('on'); }; b.addEventListener('pointerup', ku); b.addEventListener('pointercancel', ku); return; }   // kick button (touch): same as Ctrl
   if (k === 'super') {   // super button: same as Q (lit and pulsing when buddy is recharged; a tap before that gives the 'not ready' cue)
     b.addEventListener('pointerdown', e => { e.preventDefault(); superInput(); }); return; }
@@ -4250,17 +4928,17 @@ function mouseButtons(e) {
 ['pointerdown', 'pointermove', 'pointerup'].forEach(t => addEventListener(t, mouseButtons));
 cv.addEventListener('contextmenu', e => e.preventDefault());   // right click is the shield, so no browser menu over the game
 panel.addEventListener('pointerdown', e => { e.preventDefault(); { const hw = e.target && e.target.closest && e.target.closest('#panel.title .how'); if (hw && hw.scrollHeight > hw.clientHeight + 1) return; }   // scrolling the controls list (drag or scrollbar) does not start the run
-  if (e.target && e.target.id === 'e-home') { goHome(); return; } if (e.target && e.target.closest && e.target.closest('#set-block')) { setBlockMode(blockMode === 'press' ? 'hold' : 'press'); return; } if (e.target && e.target.closest && e.target.closest('#set-quality')) { setQuality((Qi + 1) % QLEV.length, true); return; } if (e.target && e.target.closest && e.target.closest('#set-tug')) { setTugMode(TUG_MODES[(TUG_MODES.indexOf(tugMode) + 1) % TUG_MODES.length]); return; } if (mouseOnEnd(e)) return; startOrRestart(); });
+  if (e.target && e.target.id === 'e-home') { goHome(); return; } if (e.target && e.target.closest && e.target.closest('#set-block')) { setBlockMode(blockMode === 'press' ? 'hold' : 'press'); return; } if (e.target && e.target.closest && e.target.closest('#set-quality')) { setQuality((Qi + 1) % QLEV.length, true); return; } if (e.target && e.target.closest && e.target.closest('#set-tug')) { setTugMode(TUG_MODES[(TUG_MODES.indexOf(tugMode) + 1) % TUG_MODES.length]); return; } if (e.target && e.target.closest && e.target.closest('#set-mobs-reset')) { resetMobs(); cache.panel = ''; drawUI(); return; } if (mouseOnEnd(e)) return; startOrRestart(); });
 
 fxKickLand = p => { fxDust(X(p.x), .1, 10, 3, 2); addShake(.25); };
 /* ---------- fishing world (fishworld.js): its own scene layer; these are the only hooks ---------- */
 const FW = window.MudFishWorld && renderer ? window.MudFishWorld({ THREE, G, renderer, scene, camera, cv, pl, buddy, poseBuddy, buddyRig, hold, uTime, VT: () => VT,
   sfx: (...a) => sfx(...a), mats, M, AM, artify, reg, gBox, gCyl, gSph, gIco, gCone, gDisc, gRing, gQuad, gTrunk, gBlob, gRock, gTuft, texGlow, texSoft, texStar, texRay,
-  X, GY, HS, frontH, bankH, mulberry, hash, fbm, sstep, lerp, QL, roomGroup, isTouch, update, junkIn: junkInFish,
+  X, GY, HS, frontH, bankH, mulberry, hash, fbm, sstep, lerp, QL, roomGroup, isTouch, update, junkIn: junkInFish, cardOn, takeBought: () => { const b = G.fwBought || {}; G.fwBought = {}; return Object.keys(b); },
   resetInput: () => { keys.left = keys.right = keys.jump = keys.block = keys.hook = keys.down = false; blockLatch = false; jumpQ = 0; hookInput(false); mouseL = mouseR = mouseM = false; } }) : null;
 /* ---------- top-down paper map + deep dive (topworld.js): its own scene layers; these are the only hooks ---------- */
 const TW = window.MudTopWorld && renderer ? window.MudTopWorld({ THREE, G, renderer, scene, camera, cv, pl, buddy, poseBuddy, hold, VT: () => VT, sfx: (...a) => sfx(...a), reg,
-  X, GY, HS, frontH, bankH, mulberry, hash, fbm, sstep, lerp, QL, roomGroup, isTouch, update, FW, mech, mechMat, genRoom, enterRoom, mkFlyer, hitFlyer, FL: TUNE.FLYER, HK, ROOMS, junkAdd: (k, s) => junkAdd(k, s), bagMax: WORK.BAG_MAX, enterOG, leaveOG, isOG,   /* the OG world: the map spot plays the side-scroller in its old look */
+  X, GY, HS, frontH, bankH, mulberry, hash, fbm, sstep, lerp, QL, roomGroup, isTouch, update, FW, mech, mechMat, genRoom, enterRoom, mkFlyer, hitFlyer, FL: TUNE.FLYER, HK, ROOMS, junkAdd: (k, s) => junkAdd(k, s), bagMax: WORK.BAG_MAX, cardDeal, cardTake, cards: () => G.cards || [], CARDS, enterOG, leaveOG, isOG,   /* the OG world: the map spot plays the side-scroller in its old look */
   resetInput: () => { keys.left = keys.right = keys.jump = keys.block = keys.hook = keys.down = false; blockLatch = false; jumpQ = 0; hookInput(false); mouseL = mouseR = mouseM = false; } }) : null;
 if (FW && FW.test && FW.test.paths) wsPathX = i => { const m = FW.test.paths(); return m && m[i] !== undefined ? m[i] : null; };
 /* ---------- loop ---------- */
@@ -4275,11 +4953,17 @@ requestAnimationFrame(frame);
 
 // test hook (read/steer only; no network). Only exposed on localhost / 127.0.0.1, never on the live site.
 const TEST_HOOK = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-if (TEST_HOOK) window.__jr = { G, keys, genWorld, update, render, kickInput, KICK: TUNE.KICK, HOOK_DOWN: TUNE.HOOK_DOWN, CREV: TUNE.CREV, CROC: TUNE.CROC, BITER: TUNE.BITER, TENT: TUNE.TENT, FORCE, crocs, crocPerch, crocSt, crocUpdate, fishInput, CROC_FISH, cf: () => G.cf, crevState,
+if (TEST_HOOK) window.__jr = { G, keys, genWorld, update, render, kickInput, KICK: TUNE.KICK, HOOK_DOWN: TUNE.HOOK_DOWN, CREV: TUNE.CREV, CROC: TUNE.CROC, BITER: TUNE.BITER, TENT: TUNE.TENT, FORCE, crocs, crocPerch, crocSt, crocUpdate, fishInput, fishRelease, bankSpots, bankAt, cfStyle, fishStats: () => ({ rareN: G.rareN || 0, caught: G.fishCaught || 0, lost: G.fishLost || 0, bank: G.rs && G.rs.bank, perch: G.rs && G.rs.perch, bankShown: bankViews.filter(v => v.visible).length }), CROC_FISH, cf: () => G.cf, crevState,
   crevViews: () => view ? { fills: view.fills.length, biters: view.biters.length, tents: view.tents.length, bitersShown: view.biters.filter(b => b.h.root.visible).length, tentsShown: view.tents.filter(t => t.m.visible).length } : null, press(k, d) { if (k === 'block') { blockInput(d); return; } keys[k] = d; if (k === 'jump' && d) jumpQ = 0.12; },
-  fingerprint(seed) { return JSON.stringify(genWorld(seed).rooms); }, startRun, setSeed, ROOMS, TREASURES, GY, enterRoom, hurtBoss, isLocked, nextBoss, BOSS_ROOMS, BOSS_DEF, vol: () => vol, setVol, cycleVol: () => toggleMute(), sfxGain: () => sfxLastGain, VOL_GAIN, VOL_ORDER, ITEMS, dropItem, mobDied, itemViewsShown: () => itemViews.filter(v => v.visible).length, FLYER: TUNE.FLYER, STUMP: TUNE.STUMP, hurt: why => loseLife(why), forest: { FP, mode: () => forestMode, set: m => setForest(m) }, spawnFlyers, mkFlyer,
+  fingerprint(seed) { return JSON.stringify(genWorld(seed).rooms); }, startRun, endRun, setSeed, ROOMS, TREASURES, GY, enterRoom, hurtBoss, isLocked, nextBoss, BOSS_ROOMS, BOSS_DEF, vol: () => vol, setVol, cycleVol: () => toggleMute(), sfxGain: () => sfxLastGain, VOL_GAIN, VOL_ORDER, ITEMS, dropItem, mobDied, pickLootKind, giveGold, giveGem, giveDrink, giveFood, hitFlyer, LOOT: () => TUNE.LOOT, loot: () => ({ gold: G.gold||0, gems: G.lootGems||0, items: (G.items||[]).map(it => ({id:it.id,room:it.room,x:it.x})), drinkT: G.p?G.p.drinkT:0, stam: G.p?G.p.stam:null }), itemViewsShown: () => itemViews.filter(v => v.visible).length, FLYER: TUNE.FLYER, STUMP: TUNE.STUMP, hurt: why => loseLife(why), forest: { FP, mode: () => forestMode, set: m => setForest(m) }, spawnFlyers, mkFlyer,
+  RANKS, MOB_NAMES, COMMUNITY_NAMES, NAME_PLACEHOLDERS, rankNamesCheck, MOB_ROSTER_KEY, RANK_THRESH, RANK_STEPS, rankScoreOf, rankLoad, rankSave, resetMobs, rankNew, rankById, rankPromoteAll, rankGiveName, vendorBuy, rankAssignRoles, rankFillRoom,
+  SHIELD_TIERS: () => TUNE.SHIELD_TIERS, shieldDef, blockCostPerForce, buyShieldUpgrade, shieldTier: () => G.shieldTier || 1,
+  roster: () => ({ mobs: (G.roster&&G.roster.mobs||[]).map(m=>({id:m.id,type:m.type,rank:m.rank,name:m.name,score:m.score,justPromoted:!!m.justPromoted,stats:{...m.stats}})), news: (G.rankNews||(G.roster&&G.roster.news)||[]).slice(), roles: G.rankRoles||null }),
+  nm: { NM, nmSpawn, mkNm, nmUpdate, nmKill, nmFree, nmHooked, list: () => (G.rs && G.rs.nm) || [], seeds: () => (G.rs && G.rs.nseeds) || [], stats: () => ({ ...(G.nm || {}) }), shown: () => { let n = 0; for (const k in nmViews) nmViews[k].forEach(v => { if (v.root.visible) n++; }); return n; }, put(kind, x) { const m = mkNm(kind, x, null); G.rs.nm.push(m); return m; } },
   flyerViewsShown: () => { let n = 0; for (const k in flyViews) flyViews[k].forEach(v => { if (v.root.visible) n++; }); return n; }, dropViewsShown: () => dropViews.filter(m => m.visible).length,
-  setQuality, quality: () => QL().name, harm, HOOK: HK, hookInput, hookView: hookV, hookAim: () => G.p && hookAim(G.p, G.world.rooms[G.room], G.rs),
+  setQuality, quality: () => QL().name, harm, HOOK: HK, HOOK_EXTRAS: () => HX, hookInput, hookView: hookV, hookAim: () => G.p && hookAim(G.p, G.world.rooms[G.room], G.rs),
+  fwPathNear, gateNear, waterAt, waterAhead, hookMuddy, hookRange, hookFlySpeed, hookMarkMuddy, hookClean, giveJunk, startWaterDrag, hookCatchStart, hookCatchWin, snagStep, hookIdleCancel,
+  hookExtras: () => ({ muddy: !!G.hookMuddy, idle: G.hookIdle ? { name: G.hookIdle.name, t: +G.hookIdle.t.toFixed(3), beat: G.hookIdle.beat } : null, catch: G.cf && G.cf.snag ? { kind: G.cf.snag, style: G.cf.style, ph: G.cf.ph, win: null } : (G.snagLast ? { ...G.snagLast } : null), drags: G.hookDrags || 0 }),
   hook: () => { const p = G.p, h = p && p.hook; return { out: !!h, cd: p ? p.hookCd : 0, glow: hookGlow.visible ? +hookGlowM.opacity.toFixed(3) : 0, backs: G.hookBacks || 0, shots: G.hookShots || 0, no: G.hookNo || 0, zips: G.hookZips || 0, h: h ? { ph: h.ph, kind: h.kind, tx: h.tx, ty: h.ty, hx: h.hx, hy: h.hy, held: h.held, L: h.L, slack: !!h.slack } : null,
     rope: hookV.rope.visible, head: hookV.head.visible, vis: { ph: hookV.ph, slack: +hookV.slack.toFixed(3), wave: +hookV.wA.toFixed(3), snap: +hookV.snap.toFixed(3), spin: +hookV.spinV.toFixed(2), impacts: hookV.impacts, snaps: hookV.snaps, maxSag: +hookV.maxSag.toFixed(3), ropeTris: gRope.index.count / 3, headTris: gHookHead.attributes.position.count / 3, hand: _hA.toArray().map(v => +v.toFixed(2)), headAt: hookV.head.position.toArray().map(v => +v.toFixed(2)), hero: pl.root.visible ? pl.root.position.toArray().map(v => +v.toFixed(2)) : null, heroScale: +pl.root.scale.x.toFixed(3), cam: camera.position.toArray().map(v => +v.toFixed(2)) } }; }, BEST_KEY, STAM_MAX, TUNE, setBlockMode, blockMode: () => blockMode, wantBlock, blockReady: () => !!(G.p && blockReady(G.p)),
   shieldView: () => { const w = shield.root.getWorldPosition(new THREE.Vector3()); return { parent: shield.root.parent === pl.bod ? 'hero' : 'ground', visible: shield.root.visible, e: pl.shE || 0, x: w.x, y: w.y, z: w.z, heroX: G.p ? X(G.p.x) : null, glow: shield.glowM.emissiveIntensity, halo: shield.haloM.opacity }; },
@@ -4317,7 +5001,7 @@ if (TEST_HOOK) window.__jr = { G, keys, genWorld, update, render, kickInput, KIC
     const fr = FP.meshes.find(P => P.L.name === 'front' && P.mesh.visible); let frontTop = null; if (fr && p) { v.set(X(p.x), fr.lay.y0 + fr.lay.h * fr.lay.top, fr.L.z).project(camera); frontTop = +((1 - v.y) / 2).toFixed(4); }
     return { pts: out, frontTop, bands: FP.meshes.filter(P => P.L.screen && P.mesh.visible).map(P => ({ name: P.L.name, band: P.lay.band })) }; },
   fish: FW ? FW.test : null,
-  ws: { WORK, JUNK, MAT, BLUEPRINTS, matTags, junkAdd, junkInFish, junkGen, wsOpen, wsPickBp, wsPickJunk, wsFill, wsTakeBack, wsTape, wsLeave, wsStep, caravanX, hookReach, supMax, bpResult, slotFits, wsNearCheck, patchShown: () => wsPatch.visible,
+  ws: { RECIPES, recipeCatch, cfLand, CARDS, cardOn, cardDeal, cardTake, cardsExpire, TRADE, tradeBuy, fwItem, WORK, JUNK, MAT, BLUEPRINTS, matTags, junkAdd, junkInFish, junkGen, wsOpen, wsPickBp, wsPickJunk, wsFill, wsTakeBack, wsTape, wsLeave, wsStep, caravanX, hookReach, supMax, bpResult, slotFits, wsNearCheck, patchShown: () => wsPatch.visible,
     junkShown: () => jkViews.filter(v => v.visible).length, caravan: () => !!(view && view.caravan), dom: () => ({ open: getComputedStyle(wsEl).display !== 'none', go: getComputedStyle(wsGo).display !== 'none', cards: wsEl.querySelectorAll('.card').length, slots: wsEl.querySelectorAll('.slot').length, jk: wsEl.querySelectorAll('.jk').length, tag: (wsEl.querySelector('.tag') || {}).textContent || '', hud: $('h-junk').textContent }),
     st: () => ({ bag: G.bag.slice(), junkIn: { ...G.junkIn }, gear: JSON.parse(JSON.stringify(G.gear)), ws: G.ws ? { ...G.ws, slots: G.ws.slots.slice() } : null, near: G.wsNear, spots: (G.jspots || []).map(j => ({ ...j })) }) },
   info: () => renderer ? { calls: renderer.info.render.calls, tris: renderer.info.render.triangles, fps, rev: THREE.REVISION, quality: QL().name } : null };
