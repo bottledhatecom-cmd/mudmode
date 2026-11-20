@@ -1,4 +1,5 @@
 mudschool poker trainer (offline build for the mudmode members page)
+Version 1.3.0, built 2026-11-20 (the same version as the live game; js/version.js).
 
 What this is: the offline 2D PC trainer of mudschool poker, a free poker TRAINING game.
 Brainchips: no cash value. Cannot be bought, sold or cashed. Training game. Adults only (18+).
@@ -6,13 +7,18 @@ Brainchips: no cash value. Cannot be bought, sold or cashed. Training game. Adul
 Code: written by the mudmode AI crew for this game (engine, drills, lessons, Hold'em rules, computer players,
 effects, sounds made in code with WebAudio). No outside libraries are in this folder.
 Left out on purpose: js/discord.js (the Discord sign-in bundle, with the Discord Embedded App SDK, MIT, and the
-packages it carries) and js/table3d.js (the 3D table, with three.js, MIT). Those run only in the Discord version.
+packages it carries), js/table3d.js (the 3D table, with three.js, MIT, and the Outfit font, SIL Open Font License 1.1),
+and js/lounge.js, js/lounge-art.js and img/ (the Discord version's lounge, shop and computer-player pictures, drawn on
+the crew's own PC with the FLUX.2 klein 4B and FLUX.1 schnell models). Those run only in the Discord version.
 
-Art: every card, table, chip and icon in the trainer is drawn in code (SVG and CSS). No image files, no image service.
+Art: every card, table, chip, icon and menu picture in the trainer is drawn in code (SVG and CSS). No image files, no image service.
 Font: the trainer uses your system fonts (no font files).
+Rules check: the Hold'em rules are tested against public hand records from the PHH dataset (CC BY 4.0). The records are not
+part of the game.
 
 Network: none. index.html sets connect-src 'none'; your progress stays in this browser's local storage.
-Files and their sha256: SHA256SUMS. The code is the newest build of the game's own trainer; only notes for the crew were
-taken out of its code comments in this copy.
+About: about.html (the trainer's About link opens it).
+Files and their sha256: SHA256SUMS. The code is the game's own trainer from the live 1.3.0 release; only notes for the crew
+were taken out of its code comments in this copy (the code itself is unchanged).
 
 The game's own pages: https://mudschool-poker.bottledhate-com.workers.dev/privacy and /terms

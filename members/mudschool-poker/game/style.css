@@ -33,6 +33,74 @@ h1.logo{font-family:"Comic Sans MS","Comic Neue",system-ui,sans-serif;text-align
 .foot{color:#c3c9e6;font-size:14px;text-align:center;margin-top:14px}
 .road{margin:4px 0 2px}
 .road svg{display:block;width:100%;height:auto}
+/* (menu build 1.2.0) the main menu on ONE screen, no scroll (offline home and the Discord menu): the wrapper is exactly
+   the window's height, the tile grid takes whatever is left, and the small print gives way first on short screens */
+.mm{display:flex;flex-direction:column;gap:8px;height:calc(100vh - 40px);height:calc(100dvh - 40px);min-height:0;overflow:hidden}
+#app:has(> .mm){max-width:760px}
+.mm>*{flex:0 0 auto;margin:0}
+.mm .topbar{flex-wrap:nowrap}
+.mm-brand{text-align:center}
+/* the name: the same poster font as the boxes, big, hot gradient, dark comic outline, a glow that breathes */
+.mm-brand h1.logo{margin:0;display:inline-block;white-space:nowrap;padding:0 .18em;font:400 clamp(26px,min(7.4vh,10.4vw),56px)/1 Impact,Haettenschweiler,"Arial Narrow Bold","Roboto Condensed","sans-serif-condensed","Arial Black",sans-serif;
+  text-transform:uppercase;letter-spacing:.045em;transform:skewX(-7deg) rotate(-1.5deg);color:#ffe14d;text-shadow:none;
+  background:linear-gradient(180deg,#fff 0,#ffe14d 38%,#ff8a00 62%,#ff2bd6 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(2px 3px 0 #0b0716) drop-shadow(-1px -1px 0 #0b0716) drop-shadow(0 0 10px #ff2bd6) drop-shadow(0 0 22px #ff2bd6aa);animation:mm-glow 2.8s ease-in-out infinite}
+@keyframes mm-glow{0%,100%{filter:drop-shadow(2px 3px 0 #0b0716) drop-shadow(-1px -1px 0 #0b0716) drop-shadow(0 0 10px #ff2bd6) drop-shadow(0 0 22px #ff2bd6aa)}50%{filter:drop-shadow(2px 3px 0 #0b0716) drop-shadow(-1px -1px 0 #0b0716) drop-shadow(0 0 14px #ffe14d) drop-shadow(0 0 30px #ff6a00cc)}}
+.mm-brand .tag{margin:4px 0 0;font-size:12px;font-weight:800;letter-spacing:.16em;color:#ffe14d;text-shadow:0 0 8px #ffe14d88}
+.mm .mm-main{padding:clamp(8px,1.8vh,16px) 16px;font-size:clamp(18px,3vh,22px)}
+.mm .mm-main small{font-size:12px;margin-top:3px}
+.mm-grid{flex:1 1 0;min-height:0;display:grid;grid-template-columns:1fr 1fr;grid-auto-rows:minmax(0,1fr);gap:8px}
+.mm-grid>.btn:last-child:nth-child(odd){grid-column:1/-1}
+/* the tiles: loud comic boxes:
+   a poster font from the device (Impact or the nearest heavy condensed one; no font file is shipped), the tile's own
+   colour (--tc, from its art), halftone dots and a big code-drawn burst that pulses and pops when touched */
+.mm .mm-tile{position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;gap:2px;margin:0;min-height:0;overflow:hidden;
+  padding:8px 10px;border-radius:16px;border:2px solid var(--tc,var(--cyan));text-align:left;
+  background:#120c22;
+  background:radial-gradient(circle at 1px 1px,#ffffff14 1px,transparent 1.6px) 0 0/9px 9px,linear-gradient(140deg,color-mix(in srgb,var(--tc,#19f0ff) 42%,#0b0716) 0,#0b0716 62%);
+  box-shadow:0 0 0 1px #0b0716,0 0 12px color-mix(in srgb,var(--tc,#19f0ff) 55%,transparent),inset 0 0 18px #00000066;
+  font-size:16px;transition:transform .08s,box-shadow .2s}
+.mm .mm-tile:hover,.mm .mm-tile:focus-visible{outline:none;box-shadow:0 0 0 1px #0b0716,0 0 22px var(--tc,#19f0ff),inset 0 0 18px #00000044}
+.mm .mm-tile:disabled{opacity:.5;cursor:default}
+.mm-ic{position:absolute;right:-11px;top:-11px;width:min(50%,104px);aspect-ratio:1;pointer-events:none;transform:rotate(-8deg)}
+.mm-art{display:block;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 0 7px var(--tc,#19f0ff));transform-origin:50% 50%;animation:mm-pulse 2.6s ease-in-out infinite}
+.mm-grid>.btn:nth-child(2n) .mm-art{animation-delay:-.9s}
+.mm-grid>.btn:nth-child(3n) .mm-art{animation-delay:-1.7s}
+@keyframes mm-pulse{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.09) rotate(5deg)}}
+.mm .mm-tile:hover .mm-art,.mm .mm-tile:active .mm-art{animation:mm-boom .45s cubic-bezier(.3,.7,.4,1.7) both}
+@keyframes mm-boom{0%{transform:scale(.8) rotate(-14deg)}60%{transform:scale(1.34) rotate(12deg)}100%{transform:scale(1.18) rotate(6deg)}}
+.mm-tx{position:relative;z-index:1;flex:0 1 auto;min-width:0;max-width:100%;display:block}
+.mm-tx b{display:block;font:400 clamp(19px,2.9vh,25px)/1.02 Impact,Haettenschweiler,"Arial Narrow Bold","Roboto Condensed","sans-serif-condensed","Arial Black",sans-serif;
+  text-transform:uppercase;letter-spacing:.035em;color:#fff;transform:skewX(-6deg);transform-origin:0 100%;
+  text-shadow:2px 2px 0 #0b0716,-1px -1px 0 #0b0716,1px -1px 0 #0b0716,-1px 1px 0 #0b0716,0 0 12px var(--tc,#19f0ff)}
+.mm .mm-tile small{font:600 12px/1.25 system-ui,"Segoe UI",Roboto,sans-serif;color:#e6e9fb;margin-top:3px;text-shadow:0 1px 2px #0b0716,0 0 6px #0b0716;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.mm .mm-tile .badge{float:none;display:inline-block;margin-left:6px;font:800 12px system-ui,sans-serif;padding:1px 7px;vertical-align:middle;transform:skewX(6deg);text-shadow:none;letter-spacing:0}
+.mm .mm-main{font-family:Impact,Haettenschweiler,"Arial Narrow Bold","Roboto Condensed","sans-serif-condensed","Arial Black",sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.05em;
+  font-size:clamp(22px,3.8vh,30px);text-shadow:2px 2px 0 #0b0716,0 0 14px #ffe14d;box-shadow:0 0 14px #ffe14dcc,inset 0 0 16px #ffe14d33}
+.mm .mm-main small{font:600 12px system-ui,sans-serif;text-transform:none;letter-spacing:0;text-shadow:none}
+.mm .foot{font-size:12px;line-height:1.3;color:#aab1d2}
+.mm .olabel{font-size:12px;padding:4px 8px}
+.mm .mm-who,.mm .mm-low{font-size:13px;padding:6px 10px}
+.mm-road{width:min(440px,100%);max-height:92vh;overflow:auto}
+.mm-road .road svg{max-height:62vh}
+@media (min-width:600px){.mm-grid{grid-template-columns:repeat(4,1fr)}.mm-grid>.btn:last-child:nth-child(odd){grid-column:auto}.mm-ic{width:min(62%,128px)}}
+/* short screens: the art moves to the right edge at the tile's own height and the small print goes first, so nothing ever scrolls */
+@media (max-height:700px){.mm{gap:6px}.mm .mm-tile{justify-content:center;padding:4px 10px}.mm-ic{top:50%;right:-6px;width:auto;height:118%;transform:translateY(-50%) rotate(-8deg)}.mm-tx{max-width:calc(100% - 46px)}.mm .mm-tile small{-webkit-line-clamp:1}.mm .mm-main small{display:none}}
+@media (max-width:420px){.mm-brand .tag{font-size:11px;letter-spacing:.07em}}
+@media (max-height:620px){.mm .mm-tile small{display:none}.mm-tx b{font-size:17px}.mm .mm-low{display:none}.mm .foot{font-size:11px}.mm .iconbtn{width:36px;height:36px}.mm .chip{padding:4px 10px}.mm-brand .tag{font-size:11px}}
+@media (max-height:700px) and (min-width:600px){.mm .mm-tile small{display:-webkit-box;-webkit-line-clamp:2}.mm-tx b{font-size:19px}.mm-tx{max-width:calc(100% - 70px)}}
+@media (max-height:410px) and (min-width:600px){.mm .mm-tile small{display:none}.mm-tx b{font-size:18px}}
+/* (1.3.0) the Discord menu has one more tile (Daily challenge): a tile name's longest word always fits inside its own box, and on
+   short wide windows the names may use more of the tile's width (two lines, not three). The offline home is not touched. */
+.mm-on .mm-tx{min-width:min-content}
+/* (release 1.3.0): on wide windows the Discord menu's tiles
+   sit in rows of 3 that are centred, so 5 tiles read 3 + 2 and the owner's 6 read 3 + 3, never a lone tile at the left */
+@media (min-width:600px){.mm-on .mm-grid{display:flex;flex-wrap:wrap;justify-content:center;align-content:stretch}
+  .mm-on .mm-grid>.btn{flex:0 0 calc((100% - 16px) / 3);height:calc((100% - 8px) / 2)}}
+@media (max-height:410px) and (min-width:600px){.mm-on .mm-tx{max-width:calc(100% - 40px)}}
+/* a window too short even for that (under 340 px tall) scrolls instead of squeezing the buttons */
+@media (max-height:340px){.mm{height:auto;min-height:calc(100vh - 40px);min-height:calc(100dvh - 40px);overflow:visible}.mm-grid{flex:0 0 auto;grid-auto-rows:minmax(48px,auto)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
 .pulse{animation:pulse 1.6s ease-in-out infinite}
 
@@ -213,3 +281,314 @@ button.fx-tap{animation:fx-tap .32s cubic-bezier(.3,.7,.4,1.4)}
 /* bots: an empty seat's "+" on the online table: faint until hover, focus or a tap */
 .oplus{opacity:.3;cursor:pointer;transition:opacity .2s}
 .oplus:hover,.oplus:focus,.oplus:active{opacity:.95;outline:none}
+
+/* (gifts build) My card tabs, the collection book, the shop, the 2D Squeeze reveal */
+.otabs{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+.otabs button{flex:1 1 30%;min-height:38px;border-radius:12px;border:1px solid #ffffff33;background:#0d0b1c;color:#eef3ff;font:700 13px system-ui,sans-serif;cursor:pointer}
+.otabs button[aria-selected="true"]{border-color:var(--pink);background:#ff2bd622}
+.osub{margin:14px 0 6px;font:800 16px "Comic Sans MS",system-ui,sans-serif;color:#ffd6f4}
+.btn.mini{width:auto;min-height:34px;padding:4px 12px;margin:0;font-size:13px}
+#otab [aria-pressed="true"]{border-color:var(--pink)}
+.oset{border:1px solid #ffffff22;border-radius:12px;padding:8px;margin:6px 0}
+.oset.done{border-color:#39ff88}
+.opiece{display:inline-block;margin:3px 4px 3px 0;padding:2px 8px;border-radius:10px;background:#ffffff10;color:#c3c9e6;font-size:13px}
+.opiece.have{background:#39ff8822;color:#eafff2}
+.obook{display:grid;gap:2px;font-size:12px;overflow-x:auto}
+.obrow{display:grid;grid-template-columns:minmax(120px,1.6fr) repeat(5,minmax(44px,1fr));gap:2px;align-items:center}
+.obrow span{padding:4px;border-radius:6px;background:#0d0b1c;text-align:center;overflow-wrap:anywhere}
+.obrow span:first-child{text-align:left}
+.obrow.ohead span{background:none;font-weight:800}
+.obrow .got{color:#fff;font-weight:800;background:#ffffff14}
+.obrow .none{color:#5d5880}
+.oach{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid #ffffff14;opacity:.6}
+.oach.got{opacity:1}
+.oic{font-size:26px;line-height:1}
+/* (art-wire build) the Lounge art pictures (js/lounge-art.js) */
+.lic{display:inline-block;width:1.5em;height:1.5em;vertical-align:middle;object-fit:contain}
+.oic .lic{width:40px;height:40px}
+.talk button .lic{width:22px;height:22px}
+.othumbs{display:flex;gap:3px;flex:0 0 auto;align-items:center}
+.othumb{height:40px;width:auto;max-width:96px;border-radius:5px;object-fit:contain;display:block}
+.stat .othumbs{display:inline-flex;vertical-align:middle;margin-right:6px}
+.stat .othumb{height:26px;max-width:64px}
+.ofr{position:relative;display:block;width:26px;height:26px;margin:0 auto 1px}
+.ofr img{position:absolute;display:block}
+.ofr .ofr-ic{left:4px;top:4px;width:18px;height:18px}
+.ofr .ofr-fr{left:0;top:0;width:26px;height:26px}
+.oshop{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid #ffffff14}
+.oshop>div{flex:1 1 auto;min-width:0}
+.oshop.soon{opacity:.6}
+.oshop .need{color:#ffbe8a;font-size:12px;text-align:right;max-width:40%}
+.oshop .soon{color:#a9a3c9;font-size:12px}
+.otrade{padding:8px 0;border-top:1px solid #ffffff14}
+.achline{border-left:3px solid #ffe14d;padding-left:8px}
+.sq{animation:sq 1.4s ease-out}
+@keyframes sq{0%{clip-path:inset(0 0 100% 0)}100%{clip-path:inset(0 0 0 0)}}
+.oframe.holo{transform-box:fill-box;transform-origin:center;animation:holo 6s linear infinite}
+@keyframes holo{to{transform:rotate(360deg)}}
+@media (max-width:420px){.oshop{flex-wrap:wrap}.oshop .need{max-width:100%;text-align:left}.othumbs+div{flex-basis:200px}}
+
+/* ==== (quality pass, 1.3.0) the online screens, one screen each, no page scroll: a framed header plate, panels for every sentence, poster lettering from the device (no font
+   file), code-drawn art, a scroll INSIDE a long panel and never on the page. Everything is scoped under .qs (or the aura
+   layer and the offline .head plate) so the menus and the offline screens keep their own rules. ==== */
+:root{--ink:#0b0716;--orange:#ff8a00;--poster:Impact,Haettenschweiler,"Arial Narrow Bold","Roboto Condensed","sans-serif-condensed","Arial Black",sans-serif}
+body>#app{z-index:1}
+#app:has(> .qs){max-width:1180px;padding:0;min-height:0}
+.qs{display:flex;flex-direction:column;gap:8px;height:100vh;height:100dvh;padding:10px 14px;overflow:hidden;min-height:0}
+.qs>*{flex:0 0 auto;margin:0}
+.qs .qbody{flex:1 1 0;min-height:0;display:flex;flex-direction:column;gap:8px;position:relative}
+.qs .qbody>*{margin:0}
+/* the header plate: menu button, the title in the poster font, number pills, the sound button */
+.qbar{display:flex;align-items:center;gap:8px;min-width:0;padding:5px 8px;border-radius:16px;border:2px solid var(--pink);background:linear-gradient(140deg,#3a0f52,#120a26 70%);box-shadow:0 0 0 1px var(--ink),0 0 14px #ff2bd688,inset 0 0 16px #0008}
+.qbar .qt{margin:0;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:2px .2em 2px 2px;font:400 clamp(20px,4.4vh,32px)/1.05 var(--poster);letter-spacing:.05em;text-transform:uppercase;transform:skewX(-7deg);
+  color:#ffe14d;background:linear-gradient(180deg,#fff,#ffe14d 40%,#ff8a00 66%,#ff2bd6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(2px 2px 0 var(--ink)) drop-shadow(0 0 7px #ff2bd6)}
+.qbar .qsp{flex:1 1 0;min-width:0}
+.qbar .iconbtn{flex:0 0 auto;width:40px;height:40px;border-radius:12px;border:2px solid var(--line);background:#120d26;font-size:18px;display:inline-flex;align-items:center;justify-content:center;padding:0;position:relative}
+.qbar .iconbtn.qtx{width:auto;padding:0 10px;font:700 13px system-ui,sans-serif;gap:5px;white-space:nowrap}
+.qbar .iconbtn[aria-pressed="true"]{border-color:var(--cyan);box-shadow:0 0 10px #19f0ff88}
+.qbar .iconbtn .qn{position:absolute;right:-6px;top:-6px;min-width:18px;height:18px;border-radius:9px;background:var(--pink);color:#fff;font:800 11px/18px system-ui;text-align:center;padding:0 4px}
+.qpill{display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;padding:4px 11px;border-radius:999px;border:2px solid var(--yellow);background:#221c06;font:400 17px/1 var(--poster);letter-spacing:.04em;color:var(--yellow);box-shadow:0 0 10px #ffe14d66;white-space:nowrap}
+.qpill.c{border-color:var(--cyan);color:var(--cyan);background:#06202a;box-shadow:0 0 10px #19f0ff55}
+.qpill.g{border-color:var(--green);color:var(--green);background:#062a14;box-shadow:0 0 10px #39ff8855}
+.qtag{display:inline-block;font:400 13px/1 var(--poster);letter-spacing:.09em;text-transform:uppercase;color:var(--ink);background:var(--yellow);border-radius:6px;padding:3px 7px;transform:skewX(-7deg);white-space:nowrap}
+.qdots{display:flex;gap:4px;flex:0 1 auto;min-width:0;overflow:hidden}
+.qdots i{flex:0 0 auto;width:16px;height:8px;border-radius:4px;background:var(--line)}
+.qdots i.ok{background:var(--green);box-shadow:0 0 6px var(--green)}.qdots i.no{background:var(--red)}.qdots i.now{background:var(--cyan);box-shadow:0 0 6px var(--cyan)}
+/* the foot: the brainchips label, Privacy / Terms / About and the version in one small plate */
+.qfoot{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:2px 10px;padding:4px 10px;border-radius:12px;border:1px dashed #ffe14d66;background:#120d26cc;font-size:12px;line-height:1.3;text-align:center}
+.qfoot .olabel{margin:0;padding:0;border:0;font-size:12px;font-weight:700;color:var(--yellow)}
+.qfoot .foot{margin:0;font-size:12px;color:#aab1d8}
+.qfoot .foot a{color:var(--cyan)}
+/* panels: every sentence sits in one */
+.qs .note,.qpanel{margin:0;border-radius:14px;border:2px solid var(--line);border-left-width:2px;background:linear-gradient(180deg,#1a1236e6,#0e0a20e6);box-shadow:inset 0 0 18px #0007;padding:8px 12px;color:#d6dbf5;font-size:14px}
+.qpanel>.note{border:0;background:none;box-shadow:none;padding:4px 0}
+.qscroll{flex:1 1 0;min-height:0;overflow:auto;overscroll-behavior:contain}
+.qcol{display:flex;flex-direction:column;gap:8px;min-height:0}
+.qcol>*{margin:0}
+.qrow{display:flex;gap:8px;flex-wrap:wrap}
+.qrow>.btn{flex:1 1 140px;width:auto}
+/* buttons: poster lettering, their own colour, halftone dots */
+.qs .btn{display:block;width:100%;margin:0;font:400 clamp(16px,2.7vh,21px)/1.08 var(--poster);letter-spacing:.05em;text-transform:uppercase;color:#fff;border-radius:14px;border:2px solid var(--c,var(--cyan));padding:9px 14px;text-shadow:2px 2px 0 var(--ink);text-align:center;
+  background:radial-gradient(circle at 1px 1px,#ffffff14 1px,transparent 1.6px) 0 0/9px 9px,linear-gradient(140deg,color-mix(in srgb,var(--c,#19f0ff) 46%,#0b0716),#0b0716 70%);box-shadow:0 0 0 1px var(--ink),0 0 12px color-mix(in srgb,var(--c,#19f0ff) 60%,transparent)}
+.qs .btn small{font:600 12px/1.25 system-ui,"Segoe UI",Roboto,sans-serif;text-transform:none;letter-spacing:0;text-shadow:none;color:#dfe3fa;margin-top:3px}
+.qs .btn.yellow{--c:var(--yellow)}.qs .btn.pink{--c:var(--pink)}.qs .btn.danger{--c:var(--red)}.qs .btn.green{--c:var(--green)}.qs .btn.violet{--c:var(--violet)}.qs .btn.orange{--c:var(--orange)}
+.qs .btn.big{font-size:clamp(18px,3.2vh,25px);padding:11px 14px}
+.qs .btn:disabled{opacity:.5;cursor:default}
+.qs .btn.mini{width:auto;min-height:32px;padding:4px 10px;font-size:14px;display:inline-block}
+.qs .stat{margin:0 0 6px;border:2px solid var(--line);background:#0e0a20cc;border-radius:12px;padding:7px 10px;gap:8px;align-items:center}
+.qs .stat b{color:var(--cyan);font:400 18px/1.1 var(--poster);letter-spacing:.03em;text-align:right}
+.qs .stat small{font-family:system-ui,sans-serif;letter-spacing:0}
+.qs .center{text-align:center}
+/* ---- drills, the Daily challenge and the party quiz: the question panel and big answer buttons ---- */
+.qgrid{flex:1 1 0;min-height:0;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:10px}
+.qq{display:flex;flex-direction:column;align-items:stretch;gap:8px;min-height:0;border-color:var(--cyan);box-shadow:0 0 14px #19f0ff44,inset 0 0 18px #0007;overflow:hidden}
+.qq>.note:first-child{border:0;background:none;box-shadow:none;padding:0 2px;color:#c9d0f2}
+.qs .qpic{flex:1 1 0;min-height:0;display:flex;align-items:center;justify-content:center;margin:0;padding:6px;border-radius:14px}
+.qs .qpic svg{display:block;width:100%;height:100%;max-height:none;max-width:560px}
+.qs .qpic.plain{font-size:40px}
+.qs .qtext{margin:0;flex:0 0 auto;font:400 clamp(18px,3.6vh,30px)/1.1 var(--poster);letter-spacing:.035em;text-transform:uppercase;text-align:center;color:#fff;text-shadow:2px 2px 0 var(--ink),0 0 12px #19f0ff;overflow-wrap:anywhere}
+.qs .ans{display:grid;grid-template-columns:1fr;grid-auto-rows:minmax(0,1fr);gap:8px;margin:0;min-height:0}
+.qside{display:flex;flex-direction:column;gap:8px;min-height:0}
+.qside>.ans{flex:1 1 0;max-height:420px}
+.qs .ans button{display:flex;align-items:center;justify-content:flex-start;gap:12px;min-height:44px;margin:0;padding:6px 14px;border-radius:14px;border:2px solid var(--violet);text-align:left;color:#fff;
+  font:400 clamp(19px,4vh,34px)/1.05 var(--poster);letter-spacing:.04em;text-transform:uppercase;text-shadow:2px 2px 0 var(--ink);
+  background:radial-gradient(circle at 1px 1px,#ffffff12 1px,transparent 1.6px) 0 0/9px 9px,linear-gradient(140deg,#3b2470,#0b0716 72%);box-shadow:0 0 0 1px var(--ink),0 0 10px #9d6bff66;overflow-wrap:anywhere}
+.qs .ans.wide button{font-size:clamp(16px,2.8vh,22px)}
+.qs .ans button .k{order:-1;flex:0 0 auto;width:1.6em;height:1.6em;border-radius:9px;background:var(--yellow);color:var(--ink);font:400 15px/1.6em var(--poster);text-align:center;text-shadow:none;transform:rotate(-6deg);box-shadow:3px 3px 0 var(--ink);display:block}
+.qs .ans button.picked{border-color:var(--cyan);box-shadow:0 0 14px var(--cyan)}
+.qs .ans button.right,.qs .ans button.picked.right{border-color:var(--green);background:linear-gradient(140deg,#0f5a32,#0b0716 75%);box-shadow:0 0 16px var(--green)}
+.qs .ans button.wrong,.qs .ans button.picked.wrong{border-color:var(--red);background:linear-gradient(140deg,#5a0f22,#0b0716 75%);box-shadow:0 0 16px var(--red)}
+.qs .ans button:disabled{cursor:default;opacity:1}
+.qs .why{margin:0;display:none;flex:1 1 auto;min-height:0;overflow:auto;border-radius:14px;border:2px solid var(--line);background:linear-gradient(180deg,#1a1236f2,#0e0a20f2);box-shadow:inset 0 0 18px #0007;padding:8px 12px;font-size:14px}
+.qs .why.show{display:block}
+.qs .why .verdict{font:400 clamp(20px,3.4vh,28px)/1.1 var(--poster);letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px}
+.qs .why svg{max-height:200px}
+.qs .why .note{margin:6px 0}
+.qearn{display:flex;align-items:center;gap:10px}
+.qearn>span:not(.qtag):not(.qpill){flex:1 1 auto;min-width:0}
+.qs-answered .qq .qpic{flex:0 1 auto;max-height:28vh}
+.qs-answered .qside>.ans{flex:0 0 auto}
+.qs-answered .qs .ans button,.qs-answered .ans button{min-height:38px;font-size:clamp(16px,2.6vh,22px)}
+.qside>.qrow{flex:0 0 auto}
+/* ---- the table: the stage is the hero; one soft aura behind it ---- */
+.qstage{flex:1 1 0;min-height:0;position:relative;border-radius:20px;border:2px solid var(--violet);background:radial-gradient(ellipse at 50% 45%,#2a125655 0,#0c082066 75%);box-shadow:0 0 0 1px var(--ink),0 0 18px #9d6bff55,inset 0 0 40px #000a;overflow:hidden}
+.qstage>svg{position:absolute;inset:0;width:100%;height:100%;display:block;overflow:visible}
+.qstage .qplate-turn{transform-box:fill-box;transform-origin:50% 50%;animation:qturn 2.4s ease-in-out infinite}
+@keyframes qturn{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.04);opacity:1}}
+.qstage .sqc{transform-box:fill-box;transform-origin:50% 100%;transform:scaleY(0);animation:sqc 1.4s ease-out}
+@keyframes sqc{from{transform:scaleY(1)}to{transform:scaleY(0)}}
+.qnotice{position:absolute;left:10px;right:10px;top:8px;z-index:2;max-height:40%;overflow:auto;border-radius:14px}
+.qs .qnotice .note{font-size:13px;border-color:var(--yellow);box-shadow:0 0 12px #ffe14d55,inset 0 0 18px #0007}
+.qs-table .qctl,.qs-table .qbody>.ans{min-height:50px}
+.qturn{display:flex;align-items:center;gap:10px;min-height:46px;padding:5px 12px!important}
+.qturn>b{font:400 20px/1 var(--poster);letter-spacing:.05em;text-transform:uppercase;color:var(--yellow);white-space:nowrap}
+.qturn .note{border:0;background:none;box-shadow:none;padding:0;flex:1 1 auto;min-width:0;font-size:14px}
+.qturn .qlast{flex:1 1 auto;min-width:0;color:#c3c9e6;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qtm{flex:1 1 60px;height:12px;border-radius:6px;background:#1a1636;border:1px solid var(--line);overflow:hidden}
+.qtm i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--pink),var(--cyan));box-shadow:0 0 12px var(--cyan);transition:width .5s linear}
+.qs-table .ans{grid-template-columns:repeat(var(--n,4),minmax(0,1fr));grid-auto-rows:auto}
+.qs-table .ans button{justify-content:center;text-align:center;min-height:48px;font-size:clamp(17px,3vh,24px);padding:6px 8px;--c:var(--cyan);border-color:var(--c);background:radial-gradient(circle at 1px 1px,#ffffff14 1px,transparent 1.6px) 0 0/9px 9px,linear-gradient(140deg,color-mix(in srgb,var(--c) 46%,#0b0716),#0b0716 70%);box-shadow:0 0 0 1px var(--ink),0 0 12px color-mix(in srgb,var(--c) 60%,transparent)}
+.qs-table .ans button[data-a="f"]{--c:var(--red)}.qs-table .ans button[data-a="cc"]{--c:var(--cyan)}.qs-table .ans button[data-a="cbr"]{--c:var(--yellow)}.qs-table .ans button.qp{--c:var(--pink);font-size:clamp(15px,2.4vh,19px)}
+.qctl{display:flex;gap:8px;flex-wrap:wrap}
+.qctl>.btn{flex:1 1 150px;width:auto}
+/* the drawer at the table: talk, the table log, your seat switches, the host switch (scrolls inside) */
+.qdrawer{position:absolute;right:8px;top:8px;bottom:8px;z-index:3;width:min(380px,calc(100% - 16px));display:none;flex-direction:column;gap:8px;padding:10px;border-radius:16px;border:2px solid var(--cyan);background:linear-gradient(180deg,#160f30f7,#0b0716f7);box-shadow:0 0 18px #19f0ff55;overflow:auto;overscroll-behavior:contain}
+.qdrawer.open{display:flex}
+.qdrawer>*{margin:0;flex:0 0 auto}
+.qdrawer h3{margin:0;font:400 17px/1 var(--poster);letter-spacing:.06em;text-transform:uppercase;color:var(--yellow)}
+.qdrawer .talk{margin:0}
+.qdrawer .tlines{margin:0}
+.qdrawer .qlog{font-size:13px;color:#c3c9e6}
+.qdrawer .btn{font-size:16px;padding:8px 10px}
+/* ---- My card and the Shop: the card (or the showcase) on the left, the tabs and a panel that scrolls inside on the right ---- */
+.qcgrid{flex:1 1 0;min-height:0;display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:10px}
+.qhero{position:relative;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:10px;border-radius:22px;border:3px solid var(--tc,var(--orange));
+  background:radial-gradient(circle at 1px 1px,#ffffff12 1px,transparent 1.6px) 0 0/10px 10px,linear-gradient(160deg,#2a125699,#0e0a2099 70%);box-shadow:0 0 0 2px var(--ink),0 0 22px color-mix(in srgb,var(--tc,#ff8a00) 55%,transparent),inset 0 0 26px #000a;overflow:hidden;transition:border-color 1.2s,box-shadow 1.2s}
+.qhero>*{margin:0;flex:0 0 auto}
+.qhero .pcard{flex:1 1 0;min-height:0;width:100%;display:flex;align-items:center;justify-content:center}
+.qhero .pcard svg{width:100%;height:100%;max-width:none;margin:0}
+.qhero .btn{width:auto;min-width:60%}
+.qcside{display:flex;flex-direction:column;gap:8px;min-height:0}
+.qs .otabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0}
+.qs .otabs button{min-height:36px;margin:0;border-radius:12px;border:2px solid var(--tc,var(--cyan));color:#fff;font:400 clamp(14px,2.3vh,18px)/1 var(--poster);letter-spacing:.05em;text-transform:uppercase;text-shadow:2px 2px 0 var(--ink);
+  background:linear-gradient(140deg,color-mix(in srgb,var(--tc,#19f0ff) 35%,#0b0716),#0b0716 75%);box-shadow:0 0 0 1px var(--ink),0 0 8px color-mix(in srgb,var(--tc,#19f0ff) 45%,transparent);padding:6px 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qs .otabs button[aria-selected="true"]{background:linear-gradient(140deg,color-mix(in srgb,var(--tc,#19f0ff) 75%,#0b0716),#0b0716 85%);box-shadow:0 0 0 2px #fff,0 0 14px var(--tc,#19f0ff)}
+.qs #otab{flex:1 1 0;min-height:0;overflow:auto;overscroll-behavior:contain;border-radius:14px;border:2px solid var(--line);background:linear-gradient(180deg,#1a1236cc,#0e0a20cc);box-shadow:inset 0 0 18px #0007;padding:8px 10px;display:flex;flex-direction:column;gap:8px}
+.qs #otab>*{margin:0;flex:0 0 auto}
+.qs #otab .note{border-width:1px;padding:6px 10px}
+.qs #otab .btn{font-size:clamp(15px,2.4vh,19px)}
+.qs .osub{margin:6px 0 0;font:400 17px/1 var(--poster);letter-spacing:.06em;text-transform:uppercase;color:#ffd6f4}
+.qs .talk{display:flex;gap:6px;flex-wrap:wrap;margin:0}
+.qs .talk button{flex:1 1 auto}
+.qcstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.qcstats>div{text-align:center;padding:6px 4px;border-radius:12px;border:2px solid var(--line);background:#0e0a20cc}
+.qcstats b{display:block;font:400 clamp(20px,3.6vh,30px)/1 var(--poster);color:var(--cyan);text-shadow:2px 2px 0 var(--ink),0 0 10px #19f0ff}
+.qcstats span{font-size:12px;color:var(--mut)}
+/* the shop: a showcase, category chips, a shelf of item cards */
+.qhero.qshow{justify-content:flex-start;align-items:stretch;border-color:var(--tc,var(--yellow))}
+.qshow .qart{flex:1 1 0;min-height:70px;display:flex;align-items:center;justify-content:center;border-radius:14px;background:radial-gradient(ellipse at 50% 50%,#3a1a70aa,#0c082099 72%);overflow:hidden;padding:8px}
+.qshow .qart img,.qshow .qart svg{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block}
+.qshow .qart svg{width:100%;height:100%}
+.qshow h2{margin:0;font:400 clamp(20px,3.8vh,30px)/1.05 var(--poster);letter-spacing:.05em;text-transform:uppercase;color:var(--tc,var(--yellow));text-shadow:2px 2px 0 var(--ink)}
+.qshow .qwhat{font-size:14px;color:#dfe3fa}
+.qprog{height:12px;border-radius:6px;background:#1a1636;overflow:hidden;border:1px solid var(--line)}
+.qprog u{display:block;height:100%;background:linear-gradient(90deg,var(--orange),var(--yellow));box-shadow:0 0 10px var(--yellow)}
+.qprog.ok u{background:linear-gradient(90deg,var(--green),var(--cyan))}
+.qneed{display:flex;justify-content:space-between;gap:8px;font-weight:700;font-size:13px}
+.qcats{display:flex;gap:6px;flex-wrap:wrap}
+.qs .qcats .btn{width:auto;flex:0 1 auto;font-size:14px;padding:6px 10px;--c:var(--violet)}
+.qs .qcats .btn[aria-pressed="true"]{--c:var(--pink);box-shadow:0 0 0 2px #fff,0 0 12px var(--pink)}
+.qs .qcats .btn.qaff{--c:var(--green)}
+.qitems{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.qs .oshop.qitem{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:5px;padding:8px;margin:0;border:2px solid var(--r,var(--cyan));border-top:2px solid var(--r,var(--cyan));border-radius:14px;cursor:pointer;
+  background:linear-gradient(160deg,color-mix(in srgb,var(--r,#19f0ff) 26%,#0b0716),#0b0716 66%);box-shadow:0 0 10px color-mix(in srgb,var(--r,#19f0ff) 45%,transparent);transition:transform .15s}
+.qs .oshop.qitem.on{transform:translateY(-3px);box-shadow:0 0 0 2px #fff,0 0 16px var(--r,#19f0ff)}
+.qs .oshop.qitem.soon{opacity:.62}
+.qitem .qpv{height:64px;border-radius:10px;background:#0b0716;display:flex;align-items:center;justify-content:center;overflow:hidden;gap:3px}
+.qitem .qpv .othumbs{max-width:100%}
+.qitem .qpv .othumb{height:56px;max-width:100%}
+.qitem .qpv svg{height:58px;width:auto;max-width:100%}
+.qitem>b{font:400 16px/1.05 var(--poster);letter-spacing:.03em;text-transform:uppercase;text-shadow:1px 1px 0 var(--ink);overflow-wrap:anywhere}
+.qitem>small{font-size:11px;color:var(--mut);line-height:1.25}
+.qitem .qprice{align-self:flex-start;font:400 15px/1 var(--poster);letter-spacing:.04em;color:var(--ink);background:var(--r,var(--cyan));border-radius:8px;padding:4px 8px}
+.qitem .qstate{font-size:12px;font-weight:700}
+.qitem .qstate .need{color:#ffbe8a}.qitem .qstate .soon{color:#a9a3c9}
+.qitem .qlock{position:absolute;right:6px;top:6px;font:700 10px system-ui;background:#0b0716;border:1px solid var(--yellow);color:var(--yellow);border-radius:6px;padding:2px 5px;max-width:70%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* the trading card aura colour and the plain screens (18+, sign-in, reports, loading) */
+.qplain{flex:1 1 0;min-height:0;overflow:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:8px;width:100%;max-width:640px;margin:0 auto}
+.qplain>*{margin:0;flex:0 0 auto}
+/* the aura: ONE soft colour behind the table (or the showcase, or your card) that matches the situation and breathes slowly.
+   It never cycles through colours; it changes only when the situation changes, with a slow cross-fade. It lives on its own
+   layer under the page (the screen redraws never restart it). Transform and opacity only; still with reduced motion. */
+.qaura{position:fixed;left:0;top:0;width:0;height:0;pointer-events:none;z-index:0;container-type:size;transition:opacity 1.4s ease;--amp:1.025;--spd:8s;--op:.22;--tint:#9d6bff}
+.qaura.off{opacity:0}
+.qaura b{position:absolute;left:50%;top:50%;width:min(88cqw,200cqh);aspect-ratio:2/1;transform:translate(-50%,-50%);display:block}
+.qaura i{position:absolute;inset:0;border-radius:50%;display:block;background:var(--tint);filter:blur(58px);opacity:var(--op);animation:aura-breathe var(--spd) ease-in-out infinite;transition:background-color 1.4s ease,opacity 1.4s ease}
+@keyframes aura-breathe{0%,100%{scale:.975}50%{scale:var(--amp)}}
+.qaura[data-ev="wait"]{--tint:#9d6bff;--op:.2;--amp:1.02;--spd:9s}
+.qaura[data-ev="turn"]{--tint:#ffe14d;--op:.26;--amp:1.035;--spd:6s}
+.qaura[data-ev="call"]{--tint:#19f0ff;--op:.28;--amp:1.04;--spd:5s}
+.qaura[data-ev="raise"]{--tint:#ff8a00;--op:.32;--amp:1.05;--spd:4s}
+.qaura[data-ev="allin"]{--tint:#ff2b6b;--op:.38;--amp:1.07;--spd:2.6s}
+.qaura[data-ev="win"]{--tint:#39ff88;--op:.38;--amp:1.07;--spd:3.2s}
+.qaura[data-ev="fold"]{--tint:#6c6699;--op:.12;--amp:1.015;--spd:10s}
+.qaura[data-ev="deal"]{--tint:#9d6bff;--op:.26;--amp:1.04;--spd:5s}
+.qaura[data-ev="card"],.qaura[data-ev="shop"]{--op:.3;--amp:1.04;--spd:6.5s}
+.qaura[data-ev="card"] b,.qaura[data-ev="shop"] b{width:min(96cqw,150cqh);aspect-ratio:1.25/1}
+@media (prefers-reduced-motion:reduce){.qaura i{animation:none!important}}
+/* the offline play screens share the header plate */
+.head{padding:5px 8px 5px 12px;border-radius:16px;border:2px solid var(--pink);background:linear-gradient(140deg,#3a0f52,#120a26 70%);box-shadow:0 0 0 1px var(--ink),0 0 14px #ff2bd666,inset 0 0 16px #0008}
+.head h2{font:400 clamp(20px,3.6vh,28px)/1.05 var(--poster);letter-spacing:.05em;text-transform:uppercase;transform:skewX(-7deg);color:#ffe14d;text-shadow:2px 2px 0 var(--ink),0 0 8px #ff2bd6}
+/* narrow windows: one column; the picture and the card give way first */
+@media (max-width:700px){
+  .qs{padding:8px 10px;gap:6px}
+  .qgrid{display:flex;flex-direction:column;gap:8px}
+  .qgrid>.qq{flex:1 1 0}
+  .qgrid>.qside{flex:0 1 auto}
+  .qs-answered .qgrid>.qq{flex:0 1 auto;max-height:40%}
+  .qs-answered .qgrid>.qside{flex:1 1 0}
+  .qs-answered .qq .qpic{max-height:16vh}
+  .qside>.ans{flex:0 0 auto;max-height:none}
+  .qs .ans button{min-height:46px;font-size:clamp(18px,3.2vh,26px)}
+  .qcgrid{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}
+  .qcgrid .qhero{max-height:38vh}
+  .qs-tab .qcgrid .qhero:not(.qshow){display:none}
+  .qhero.qshow{flex-direction:row;flex-wrap:wrap;align-items:center;max-height:none;gap:6px 10px;padding:8px}
+  .qshow .qart{flex:0 0 74px;height:64px;min-height:0;padding:4px}
+  .qshow .qshowtx{flex:1 1 160px;min-width:0}
+  .qshow .qwhat,.qshow .qtag{display:none}
+  .qshow h2{font-size:19px}
+  .qshow .btn{flex:1 1 100%;min-width:0}
+  .qshow .qneedbox{flex:1 1 100%}
+  .qitems{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
+  .qs-table .ans{--n:3}
+  .qbar{gap:6px;padding:4px 6px}
+  .qbar .qt{font-size:clamp(18px,5.6vw,26px)}
+  .qpill{font-size:15px;padding:3px 8px}
+  .qbar .iconbtn{width:36px;height:36px;font-size:16px}
+  .qbar .iconbtn.qtx .qlong{display:none}
+  .qdots i{width:10px}
+}
+@media (max-width:420px){.qbar .qhide{display:none}.qfoot,.qfoot .olabel,.qfoot .foot{font-size:11px}.qturn>b{font-size:17px}}
+/* short windows (phones on their side, a short Discord window): smaller plates, the small print goes first */
+@media (max-height:520px){
+  .qs{gap:5px;padding:6px 10px}
+  .qbar{padding:3px 6px}.qbar .iconbtn{width:34px;height:34px}
+  .qfoot{padding:2px 8px;font-size:11px}.qfoot .olabel,.qfoot .foot{font-size:11px}
+  .qs .ans button{min-height:36px;padding:4px 10px}
+  .qs-table .ans button{min-height:38px}
+  .qturn{min-height:38px}
+  .qs .note,.qpanel{padding:5px 10px;font-size:13px}
+  .qhero{padding:6px}
+  .qs .otabs button{min-height:30px;padding:4px}
+}
+@media (max-height:520px) and (min-width:560px){.qs-answered .qgrid>.qq{max-height:none}.qgrid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);grid-template-rows:none}.qcgrid{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);grid-template-rows:none}.qcgrid .qhero{max-height:none}.qs-tab .qcgrid .qhero:not(.qshow){display:flex}.qhero.qshow{flex-direction:column;flex-wrap:nowrap;align-items:stretch}.qshow .qart{flex:1 1 0;height:auto}.qs-table .ans{--n:6}}
+@media (max-height:420px){.qs .qtext{font-size:17px}.qturn .qlast{display:none}.qearn .qhide{display:none}}
+/* below 340 px tall the page may scroll (the menu's rule): the screen keeps its natural height */
+@media (max-height:340px){.qs{height:auto;min-height:100vh;min-height:100dvh;overflow:visible}.qs .qbody,.qgrid,.qcgrid,.qstage,.qscroll,.qs #otab,.qplain{flex:0 0 auto}.qstage{height:300px}.qs #otab,.qscroll,.qplain{max-height:none;overflow:visible}}
+/* the party table inside the quality frame: the seats in a row over the question, the clock under them */
+.qs .lounge{margin:0;padding:8px;border-radius:20px}
+.qs .lounge .seats{margin:4px 0}
+.qq .qseats{flex:0 0 auto}
+.qq .timer{flex:0 0 auto}
+@media (max-height:520px){.qs .qseats .seat{padding:4px 2px}.qs .qseats .seat .av{width:30px;height:30px;font-size:15px}.qs .qseats .seat .sc{font-size:15px}}
+/* the lounge layer's screen-reader line (lounge.js) sits at the top left, so it never adds a pixel of page scroll */
+body>[aria-live="polite"]{top:0;left:0}
+.qbar .iconbtn .qn{right:1px;top:1px;min-width:15px;height:15px;border-radius:8px;font:800 10px/15px system-ui;padding:0 3px}
+@media (max-width:700px){.qcgrid{grid-template-columns:minmax(0,1fr)}.qcside,.qs #otab{min-width:0}.qs .otabs button{font-size:14px;letter-spacing:.02em;padding:6px 2px}}
+@media (max-width:360px){.qbar .qt{font-size:16px;letter-spacing:.02em}.qbar .iconbtn{width:32px;height:32px;font-size:15px;border-radius:10px}.qbar{gap:4px}.qs .otabs button{font-size:13px}}
+/* (quality pass, after the first browser look) phones: the card keeps half the screen on the Card tab, the action buttons go
+   three to a row, the shop's category chips scroll sideways in one row, the turn bar keeps only the clock */
+@media (max-width:700px){
+  .qs-card:not(.qs-tab) .qcgrid{grid-template-rows:minmax(0,1fr) minmax(0,1.15fr)}
+  .qs-card:not(.qs-tab) .qcgrid .qhero{max-height:none}
+  .qs-table .qbody>.ans{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .qs-table .ans button{font-size:clamp(15px,2.4vh,19px)}
+  .qcats{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}
+  .qs .qcats .btn{flex:0 0 auto;font-size:13px;padding:5px 9px;white-space:nowrap}
+  .qcside>.note{font-size:11.5px;padding:5px 9px}
+  .qturn .qlast{display:none}
+}
+@media (max-width:420px){.qhide{display:none!important}}
+@media (min-width:701px){.qside{justify-content:center}.qs .qtext{font-size:clamp(20px,4.2vh,36px)}}
+.qplain>:first-child{margin-top:auto}.qplain>:last-child{margin-bottom:auto}

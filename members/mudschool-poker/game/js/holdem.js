@@ -146,7 +146,7 @@
       potLog.push({ amount: pot.amount, from: pot.from, pay: got });
       var elig = pot.eligible.filter(function (i) { return !self.p[i].folded; });
       // nobody still in the hand put chips into this layer (e.g. both blinds stood up and were folded before anyone acted):
-      // the chips go to the player(s) still in the hand, never to nobody
+      // the chips go to the player(s) still in the hand, never to nobody (2026-11-17: room_test 5c lost 15 chips 1 run in 8)
       if (!elig.length) elig = live.slice();
       if (!elig.length) return;
       var winners = elig;

@@ -27,6 +27,7 @@
 .ms-hero{padding:46px 0 26px;border-bottom:1px solid var(--ms-line)}
 .ms-hero>.wrap:first-child{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,560px);gap:34px;align-items:center}
 .ms-eyebrow{margin:0 0 6px;font-size:15px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ms-yellow);text-shadow:0 0 10px rgba(255,225,77,.45)}
+.ms-eyebrow .brandword{text-transform:none}
 .ms-name{margin:0;font-size:clamp(46px,6.6vw,84px);line-height:.98;font-weight:600;letter-spacing:-.01em}
 .ms-name span{display:inline-block}
 .ms-p{color:#ffe6fb;text-shadow:0 0 4px #fff,0 0 12px var(--ms-pink),0 0 28px var(--ms-pink),0 0 52px rgba(255,43,214,.55)}
