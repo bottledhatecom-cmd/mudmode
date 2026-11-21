@@ -54,6 +54,7 @@ function mobOf(why, bossKind) {
   if (/pit/.test(w)) return 'pit';
   if (/log/.test(w)) return 'log';
   if (/crawler/.test(w)) return 'crawler';
+  { const nm = /(shell snapper|sludge splitter|reed seed|heron spear|root grabber)/.exec(w); if (nm) return { 'shell snapper': 'shellsnapper', 'sludge splitter': 'sludgesplitter', 'reed seed': 'reedsniper', 'heron spear': 'heronstalker', 'root grabber': 'rootgrabber' }[nm[1]]; }   // the 10-29 ground mobs
   if (/snap/.test(w)) return 'snapjaw';
   if (/bogjaw/.test(w)) return 'bogjaw';
   if (/gloomwing/.test(w)) return 'gloomwing';
